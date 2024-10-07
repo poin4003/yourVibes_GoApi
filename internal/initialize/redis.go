@@ -34,7 +34,7 @@ func InitRedis() {
 }
 
 func redisExample() {
-	err := global.Rdb.Set(ctx, "yourvibes", 100, 0).Err()
+	err := global.Rdb.Set(ctx, "score", 100, 0).Err()
 	if err != nil {
 		fmt.Println("Error redis setting:", zap.Error(err))
 		return

@@ -41,7 +41,7 @@ func BuildMessage(mail Mail) string {
 
 func SendTextEmailOtp(to []string, from string, otp string) error {
 	contentEmail := Mail{
-		From:    EmailAddress{Address: from, Name: "Shopdevgo"},
+		From:    EmailAddress{Address: from, Name: "YourVibes"},
 		To:      to,
 		Subject: "OTP Verification",
 		Body:    fmt.Sprintf("Your OTP is %s. Please enter it to verify your account.", otp),
@@ -88,7 +88,7 @@ func getMailTemplate(nameTemplate string, dataTemplate map[string]interface{}) (
 
 func send(to []string, from string, htmlTemplate string) error {
 	contentEmail := Mail{
-		From:    EmailAddress{Address: from, Name: "Shopdevgo"},
+		From:    EmailAddress{Address: from, Name: "YourVibes"},
 		To:      to,
 		Subject: "OTP Verification",
 		Body:    htmlTemplate,

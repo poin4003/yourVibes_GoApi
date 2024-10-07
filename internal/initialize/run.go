@@ -14,6 +14,7 @@ func Run() {
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
 	InitRedis()
 	InitPostgreSql()
+	InitServiceInterface(global.Pdb)
 
 	r := InitRouter()
 

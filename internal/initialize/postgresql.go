@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"go.uber.org/zap"
 	"time"
 
@@ -29,6 +30,11 @@ func InitPostgreSql() {
 	global.Logger.Info("Initializing PostgreSQL Successfully")
 
 	SetPool()
+
+	//db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+	//if err := DBMigrator(db); err != nil {
+	//	log.Fatalln("Unable to migrate database", err)
+	//}
 }
 
 func checkErrorPanic(err error, errString string) {
@@ -47,4 +53,11 @@ func SetPool() {
 	sqlDb.SetConnMaxIdleTime(time.Duration(m.MaxIdleConns) * time.Second)
 	sqlDb.SetMaxOpenConns(m.MaxOpenConns)
 	sqlDb.SetConnMaxLifetime(time.Duration(m.ConnMaxLifetime) * time.Second)
+}
+
+func DBMigrator(db *gorm.DB) error {
+	err := db.AutoMigrate(
+		&model.User{},
+	)
+	return err
 }
