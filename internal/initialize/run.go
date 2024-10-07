@@ -13,7 +13,7 @@ func Run() {
 	InitLogger()
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
 	InitRedis()
-	InitPostgreSqlc()
+	InitPostgreSql()
 
 	r := InitRouter()
 
