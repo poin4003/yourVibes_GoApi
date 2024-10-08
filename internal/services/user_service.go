@@ -8,7 +8,7 @@ import (
 
 type (
 	IUserAuth interface {
-		Login(ctx context.Context, in *vo.LoginCredentials) (string, *model.User, error)
+		Login(ctx context.Context, in *vo.LoginCredentials) (string, string, *model.User, error)
 		Register(ctx context.Context, in *vo.RegisterCredentials) (int, error)
 		VerifyEmail(ctx context.Context, email string) (int, error)
 	}

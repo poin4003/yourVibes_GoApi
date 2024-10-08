@@ -2,6 +2,7 @@ package repository_implement
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"gorm.io/gorm"
@@ -54,6 +55,17 @@ func (r *rUser) GetUserById(ctx context.Context, userId uuid.UUID) (*model.User,
 		return nil, err
 	}
 
+	return &user, nil
+}
+
+func (r *rUser) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
 	return &user, nil
 }
 

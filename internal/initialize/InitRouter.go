@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/routers"
@@ -19,6 +20,12 @@ func InitRouter() *gin.Engine {
 	}
 
 	// middlewares
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,                                                // Cho phép tất cả các origin
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Cho phép các phương thức HTTP
+		AllowHeaders:    []string{"Origin", "Content-Type", "Authorization"}, // Cho phép các header cụ thể
+		ExposeHeaders:   []string{"Content-Length"},
+	}))
 	//r.Use() // logging
 	//r.Use() // cross
 	//r.Use() // limiter global

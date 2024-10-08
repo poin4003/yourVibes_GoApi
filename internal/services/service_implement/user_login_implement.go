@@ -27,8 +27,27 @@ func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
 	return &sUserAuth{repo: repo}
 }
 
-func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, *model.User, error) {
-	return "", &model.User{}, nil
+func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, string, *model.User, error) {
+	//user, err := s.repo.GetUserByEmail(ctx, in.Email)
+	//
+	//if err != nil {
+	//	if errors.Is(err, gorm.ErrRecordNotFound) {
+	//		return "", "", nil, fmt.Errorf("invalid credentials")
+	//	}
+	//	return "", "", nil, err
+	//}
+	//
+	//if !crypto.CheckPasswordHash(in.Password, user.Password) {
+	//	return "", "", nil, fmt.Errorf("invalid credentials")
+	//}
+	//
+	//accessClaims := jwt.MapClaims{
+	//	"id": user.ID,
+	//	"exp": time.Now().Add(time.Minute * 15).Unix(),
+	//}
+	//
+	//accessToken, err :=
+	return "", "", &model.User{}, nil
 }
 
 func (s *sUserAuth) Register(ctx context.Context, in *vo.RegisterCredentials) (int, error) {
