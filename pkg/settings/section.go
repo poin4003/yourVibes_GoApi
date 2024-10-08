@@ -1,10 +1,11 @@
 package settings
 
 type Config struct {
-	Server     ServerSetting     `mapstructure:"server"`
-	PostgreSql PostgreSqlSetting `mapstructure:"postgreSql"`
-	Logger     LoggerSetting     `mapstructure:"logger"`
-	Redis      RedisSetting      `mapstructure:"redis"`
+	Server         ServerSetting         `mapstructure:"server"`
+	PostgreSql     PostgreSqlSetting     `mapstructure:"postgreSql"`
+	Logger         LoggerSetting         `mapstructure:"logger"`
+	Redis          RedisSetting          `mapstructure:"redis"`
+	Authentication AuthenticationSetting `mapstructure:"authentication"`
 }
 
 type ServerSetting struct {
@@ -38,4 +39,8 @@ type LoggerSetting struct {
 	MaxAge      int    `mapstructure:"max_age"`
 	MaxSize     int    `mapstructure:"max_size"`
 	Compress    bool   `mapstructure:"compress"`
+}
+
+type AuthenticationSetting struct {
+	JwtScretKey string `mapstructure:"jwtScretKey"`
 }

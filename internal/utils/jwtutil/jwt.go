@@ -1,4 +1,4 @@
-package json_web_token
+package jwtutil
 
 import (
 	"fmt"

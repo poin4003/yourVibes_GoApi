@@ -2,18 +2,22 @@ package service_implement
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/crypto"
+	jwtutil "github.com/poin4003/yourVibes_GoApi/internal/utils/jwtutil"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/random"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/sendto"
 	"github.com/poin4003/yourVibes_GoApi/internal/vo"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 	"strconv"
 	"strings"
 	"time"
@@ -27,27 +31,31 @@ func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
 	return &sUserAuth{repo: repo}
 }
 
-func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, string, *model.User, error) {
-	//user, err := s.repo.GetUserByEmail(ctx, in.Email)
-	//
-	//if err != nil {
-	//	if errors.Is(err, gorm.ErrRecordNotFound) {
-	//		return "", "", nil, fmt.Errorf("invalid credentials")
-	//	}
-	//	return "", "", nil, err
-	//}
-	//
-	//if !crypto.CheckPasswordHash(in.Password, user.Password) {
-	//	return "", "", nil, fmt.Errorf("invalid credentials")
-	//}
-	//
-	//accessClaims := jwt.MapClaims{
-	//	"id": user.ID,
-	//	"exp": time.Now().Add(time.Minute * 15).Unix(),
-	//}
-	//
-	//accessToken, err :=
-	return "", "", &model.User{}, nil
+func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, *model.User, error) {
+	user, err := s.repo.GetUserByEmail(ctx, in.Email)
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", nil, fmt.Errorf("invalid credentials")
+		}
+		return "", nil, err
+	}
+
+	if !crypto.CheckPasswordHash(in.Password, user.Password) {
+		return "", nil, fmt.Errorf("invalid credentials")
+	}
+
+	accessClaims := jwt.MapClaims{
+		"id":  user.ID,
+		"exp": time.Now().Add(time.Hour * 720).Unix(),
+	}
+
+	accessToken, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtScretKey)
+	if err != nil {
+		return "", nil, fmt.Errorf("Cannot create access token: %v", err)
+	}
+
+	return accessToken, user, nil
 }
 
 func (s *sUserAuth) Register(ctx context.Context, in *vo.RegisterCredentials) (int, error) {

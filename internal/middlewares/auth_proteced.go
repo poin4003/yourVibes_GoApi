@@ -1,72 +1,64 @@
 package middlewares
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
-	"log"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"gorm.io/gorm"
 	"strings"
 )
 
-func AuthProtected() gin.HandlerFunc {
-	db := global.Pdb
-	cf := global.Config
-
-	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
+func AuthProteced() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 
 		if authHeader == "" {
-			log.Warn("empty authorization header")
-			ctx.JSON(401, gin.H{
-				"status":  "fail",
-				"message": "Unauthorized",
-			})
-			ctx.Abort()
+			response.ErrorResponse(c, response.ErrInvalidToken, "Unauthorized")
+			c.Abort()
 			return
 		}
 
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			log.Warn("invalid token parts")
-			ctx.JSON(401, gin.H{
-				"status":  "fail",
-				"message": "Unauthorized",
-			})
-			ctx.Abort()
+			response.ErrorResponse(c, response.ErrInvalidToken, "Unauthorized")
+			c.Abort()
 			return
 		}
 
 		tokenStr := tokenParts[1]
-		secret := cf.Authentication.JwtScretKey
+		secret := []byte(global.Config.Authentication.JwtScretKey)
 
-		claims, err := utils.VerifyJWT(tokenStr, secret)
-		if err != nil {
-			log.Warnf("invalid token: %v", err)
-			ctx.JSON(401, gin.H{
-				"status":  "fail",
-				"message": "Unauthorized",
-			})
-			ctx.Abort()
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			if token.Method.Alg() != jwt.GetSigningMethod("HS256").Alg() {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return secret, nil
+		})
+
+		if err != nil || !token.Valid {
+			response.ErrorResponse(c, response.ErrInvalidToken, "Unauthorized")
+			c.Abort()
 			return
 		}
 
-		userIdFloat := claims["id"].(float64)
-		userId := uint(userIdFloat)
-		role := claims["role"]
+		userId := token.Claims.(jwt.MapClaims)["id"]
 
-		if err := db.Model(&model.User{}).Where("id = ?", userId).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Warn("user not found in the db")
-			ctx.JSON(401, gin.H{
-				"status":  "fail",
-				"message": "Unauthorized",
-			})
-			ctx.Abort()
+		if err := global.Pdb.Model(&model.User{}).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				response.ErrorResponse(c, response.ErrInvalidToken, "Unauthorized")
+				c.Abort()
+				return
+			}
+			response.ErrorResponse(c, response.ErrInvalidToken, "Internal server error")
+			c.Abort()
 			return
 		}
 
-		// Set user ID and role in context
-		ctx.Set("userId", userId)
-		ctx.Set("role", role)
-		ctx.Next()
+		c.Set("userId", userId)
+
+		c.Next()
 	}
 }
