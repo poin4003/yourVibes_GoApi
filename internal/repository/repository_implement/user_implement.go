@@ -2,7 +2,6 @@ package repository_implement
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"gorm.io/gorm"
@@ -58,15 +57,14 @@ func (r *rUser) GetUserById(ctx context.Context, userId uuid.UUID) (*model.User,
 	return &user, nil
 }
 
-func (r *rUser) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
-	var user model.User
-	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
+func (r *rUser) GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error) {
+	user := &model.User{}
+
+	if res := r.db.Model(user).Where(query, args...).First(user); res.Error != nil {
+		return nil, res.Error
 	}
-	return &user, nil
+
+	return user, nil
 }
 
 func (r *rUser) GetAllUser(ctx context.Context) ([]*model.User, error) {

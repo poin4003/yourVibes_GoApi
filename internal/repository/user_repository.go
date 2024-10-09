@@ -12,7 +12,7 @@ type (
 		CreateOne(ctx context.Context, user *model.User) (*model.User, error)
 		UpdateOne(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error)
 		GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, error)
-		GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+		GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error)
 		GetAllUser(ctx context.Context) ([]*model.User, error)
 	}
 )

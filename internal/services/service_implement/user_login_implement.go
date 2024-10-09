@@ -32,7 +32,7 @@ func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
 }
 
 func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, *model.User, error) {
-	user, err := s.repo.GetUserByEmail(ctx, in.Email)
+	user, err := s.repo.GetUser(ctx, "email = ?", in.Email)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
