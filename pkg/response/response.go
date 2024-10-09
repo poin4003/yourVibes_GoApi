@@ -1,8 +1,6 @@
 package response
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,16 +19,16 @@ type ErrResponseChild struct {
 	Message string `json:"message"`
 }
 
-func SuccessResponse(c *gin.Context, code int, data interface{}) {
-	c.JSON(http.StatusOK, ResponseData{
+func SuccessResponse(c *gin.Context, code int, httpStatus int, data interface{}) {
+	c.JSON(httpStatus, ResponseData{
 		Code:    code,
 		Message: msg[code],
 		Data:    data,
 	})
 }
 
-func ErrorResponse(c *gin.Context, code int) {
-	c.JSON(http.StatusBadRequest, ErrResponse{
+func ErrorResponse(c *gin.Context, code int, httpStatus int) {
+	c.JSON(httpStatus, ErrResponse{
 		Error: ErrResponseChild{
 			Code:    code,
 			Message: msg[code],

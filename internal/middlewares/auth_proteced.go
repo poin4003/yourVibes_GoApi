@@ -8,6 +8,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 )
 
@@ -16,14 +17,14 @@ func AuthProteced() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 
 		if authHeader == "" {
-			response.ErrorResponse(c, response.ErrInvalidToken)
+			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusUnauthorized)
 			c.Abort()
 			return
 		}
 
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			response.ErrorResponse(c, response.ErrInvalidToken)
+			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusUnauthorized)
 			c.Abort()
 			return
 		}
@@ -39,7 +40,7 @@ func AuthProteced() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			response.ErrorResponse(c, response.ErrInvalidToken)
+			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusForbidden)
 			c.Abort()
 			return
 		}
@@ -48,11 +49,11 @@ func AuthProteced() gin.HandlerFunc {
 
 		if err := global.Pdb.Model(&model.User{}).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				response.ErrorResponse(c, response.ErrInvalidToken)
+				response.ErrorResponse(c, response.ErrInvalidToken, http.StatusForbidden)
 				c.Abort()
 				return
 			}
-			response.ErrorResponse(c, response.ErrInvalidToken)
+			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusInternalServerError)
 			c.Abort()
 			return
 		}
