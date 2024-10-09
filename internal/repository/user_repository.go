@@ -9,11 +9,10 @@ import (
 type (
 	IUserRepository interface {
 		CheckUserExistByEmail(ctx context.Context, email string) (bool, error)
-		CreateOne(ctx context.Context, user *model.User) (*model.User, error)
-		UpdateOne(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error)
-		GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, error)
+		CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+		UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error)
 		GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error)
-		GetAllUser(ctx context.Context) ([]*model.User, error)
+		GetManyUser(ctx context.Context) ([]*model.User, error)
 	}
 )
 

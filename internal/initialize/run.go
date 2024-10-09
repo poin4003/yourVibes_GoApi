@@ -7,6 +7,7 @@ import (
 )
 
 func Run() {
+	InitCustomValidator()
 	LoadConfig()
 	m := global.Config.PostgreSql
 	fmt.Println("Loading configuration postgreSql", m.Username, m.Port)

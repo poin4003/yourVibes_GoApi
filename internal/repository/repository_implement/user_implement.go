@@ -24,7 +24,7 @@ func (r *rUser) CheckUserExistByEmail(ctx context.Context, email string) (bool, 
 	return count > 0, nil
 }
 
-func (r *rUser) CreateOne(ctx context.Context, user *model.User) (*model.User, error) {
+func (r *rUser) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	res := r.db.WithContext(ctx).Create(user)
 
 	if res.Error != nil {
@@ -34,7 +34,7 @@ func (r *rUser) CreateOne(ctx context.Context, user *model.User) (*model.User, e
 	return user, nil
 }
 
-func (r *rUser) UpdateOne(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error) {
+func (r *rUser) UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error) {
 	var user model.User
 
 	if err := r.db.WithContext(ctx).First(&user, userId).Error; err != nil {
@@ -48,26 +48,17 @@ func (r *rUser) UpdateOne(ctx context.Context, userId uuid.UUID, updateData map[
 	return &user, nil
 }
 
-func (r *rUser) GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, error) {
-	var user model.User
-	if err := r.db.WithContext(ctx).First(&user, userId).Error; err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
 func (r *rUser) GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error) {
 	user := &model.User{}
 
-	if res := r.db.Model(user).Where(query, args...).First(user); res.Error != nil {
+	if res := r.db.WithContext(ctx).Model(user).Where(query, args...).First(user); res.Error != nil {
 		return nil, res.Error
 	}
 
 	return user, nil
 }
 
-func (r *rUser) GetAllUser(ctx context.Context) ([]*model.User, error) {
+func (r *rUser) GetManyUser(ctx context.Context) ([]*model.User, error) {
 	var users []*model.User
 	if err := r.db.WithContext(ctx).Find(&users).Error; err != nil {
 		return nil, err

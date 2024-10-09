@@ -58,6 +58,7 @@ func SetPool() {
 func DBMigrator(db *gorm.DB) error {
 	err := db.AutoMigrate(
 		&model.User{},
+		&model.Post{},
 	)
 	return err
 }

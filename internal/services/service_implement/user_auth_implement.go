@@ -31,8 +31,8 @@ func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
 	return &sUserAuth{repo: repo}
 }
 
-func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string, *model.User, error) {
-	user, err := s.repo.GetUser(ctx, "email = ?", in.Email)
+func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (accessToken string, user *model.User, err error) {
+	userFound, err := s.repo.GetUser(ctx, "email = ?", in.Email)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -41,24 +41,27 @@ func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (string,
 		return "", nil, err
 	}
 
-	if !crypto.CheckPasswordHash(in.Password, user.Password) {
+	if !crypto.CheckPasswordHash(in.Password, userFound.Password) {
 		return "", nil, fmt.Errorf("invalid credentials")
 	}
 
 	accessClaims := jwt.MapClaims{
-		"id":  user.ID,
+		"id":  userFound.ID,
 		"exp": time.Now().Add(time.Hour * 720).Unix(),
 	}
 
-	accessToken, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtScretKey)
+	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtScretKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("Cannot create access token: %v", err)
 	}
 
-	return accessToken, user, nil
+	return accessTokenGen, user, nil
 }
 
-func (s *sUserAuth) Register(ctx context.Context, in *vo.RegisterCredentials) (int, error) {
+func (s *sUserAuth) Register(
+	ctx context.Context,
+	in *vo.RegisterCredentials,
+) (resultCode int, err error) {
 	// 1. check user exist in user table
 	userFound, err := s.repo.CheckUserExistByEmail(ctx, in.Email)
 	if err != nil {
@@ -102,7 +105,7 @@ func (s *sUserAuth) Register(ctx context.Context, in *vo.RegisterCredentials) (i
 		Birthday:    in.Birthday,
 	}
 
-	_, err = s.repo.CreateOne(ctx, user)
+	_, err = s.repo.CreateUser(ctx, user)
 	if err != nil {
 		return response.ErrCreateUserFail, err
 	}
@@ -110,7 +113,10 @@ func (s *sUserAuth) Register(ctx context.Context, in *vo.RegisterCredentials) (i
 	return response.ErrCodeSuccess, nil
 }
 
-func (s *sUserAuth) VerifyEmail(ctx context.Context, email string) (int, error) {
+func (s *sUserAuth) VerifyEmail(
+	ctx context.Context,
+	email string,
+) (resultCode int, err error) {
 	// 1. hash Email
 	hashEmail := crypto.GetHash(strings.ToLower(email))
 
