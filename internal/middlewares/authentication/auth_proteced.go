@@ -1,4 +1,4 @@
-package middlewares
+package authentication
 
 import (
 	"fmt"

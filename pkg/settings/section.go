@@ -1,11 +1,12 @@
 package settings
 
 type Config struct {
-	Server         ServerSetting         `mapstructure:"server"`
-	PostgreSql     PostgreSqlSetting     `mapstructure:"postgreSql"`
-	Logger         LoggerSetting         `mapstructure:"logger"`
-	Redis          RedisSetting          `mapstructure:"redis"`
-	Authentication AuthenticationSetting `mapstructure:"authentication"`
+	Server            ServerSetting         `mapstructure:"server"`
+	PostgreSql        PostgreSqlSetting     `mapstructure:"postgreSql"`
+	Logger            LoggerSetting         `mapstructure:"logger"`
+	Redis             RedisSetting          `mapstructure:"redis"`
+	Authentication    AuthenticationSetting `mapstructure:"authentication"`
+	CloudinarySetting CloudinarySetting     `mapstructure:"cloudinary"`
 }
 
 type ServerSetting struct {
@@ -43,4 +44,11 @@ type LoggerSetting struct {
 
 type AuthenticationSetting struct {
 	JwtScretKey string `mapstructure:"jwtScretKey"`
+}
+
+type CloudinarySetting struct {
+	CloudName    string `mapstructure:"cloud_name"`
+	ApiKey       string `mapstructure:"api_key"`
+	ApiSecretKey string `mapstructure:"api_secret_key"`
+	Folder       string `mapstructure:"folder"`
 }

@@ -55,7 +55,7 @@ func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (accessT
 		return "", nil, fmt.Errorf("Cannot create access token: %v", err)
 	}
 
-	return accessTokenGen, user, nil
+	return accessTokenGen, userFound, nil
 }
 
 func (s *sUserAuth) Register(

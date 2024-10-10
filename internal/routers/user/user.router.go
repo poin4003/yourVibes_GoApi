@@ -3,7 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/controller/user_auth"
-	"github.com/poin4003/yourVibes_GoApi/internal/middlewares"
+	"github.com/poin4003/yourVibes_GoApi/internal/middlewares/authentication"
 )
 
 type UserRouter struct{}
@@ -20,7 +20,7 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 
 	// Private router
 	userRouterPrivate := Router.Group("/users")
-	userRouterPrivate.Use(middlewares.AuthProteced())
+	userRouterPrivate.Use(authentication.AuthProteced())
 	{
 		userRouterPrivate.GET("/get_info", func(c *gin.Context) {
 			c.JSON(200, gin.H{
