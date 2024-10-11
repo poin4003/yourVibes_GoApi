@@ -20,8 +20,9 @@ type Post struct {
 	Privacy         consts.PrivacyLevel `json:"privacy" gorm:"type:varchar(20);default:'public'"`
 	Location        string              `json:"location" gorm:"type:varchar(255);default:null"`
 	IsAdvertisement bool                `json:"is_advertisement" gorm:"type:boolean;default:false"`
-	Status          bool                `json:"status" gorm:"default:false"`
+	Status          bool                `json:"status" gorm:"default:true"`
 	CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
+	Media           []Media             `json:"media" gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

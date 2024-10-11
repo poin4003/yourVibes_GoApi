@@ -11,6 +11,7 @@ const (
 	ErrCodeUserHasExists         = 50001 // user has already registered
 	ErrCodeValidateParamRegister = 50002
 	ErrCodeValidateParamEmail    = 50003
+	ErrCodeValidate              = 50004
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -20,6 +21,7 @@ const (
 	// Err server failed
 	ErrCreateUserFail   = 70001
 	ErrHashPasswordFail = 70002
+	ErrServerFailed     = 70003
 )
 
 var msg = map[int]string{
@@ -32,10 +34,12 @@ var msg = map[int]string{
 	ErrCodeUserHasExists:         "User has already registered",
 	ErrCodeValidateParamRegister: "Validate param register failed",
 	ErrCodeValidateParamEmail:    "Validate param email failed",
+	ErrCodeValidate:              "Validate param failed",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",
 	ErrCodeOtpNotExists:       "Otp exist but not registered",
 	ErrCreateUserFail:         "Failed to create user",
 	ErrHashPasswordFail:       "Failed to hash password",
+	ErrServerFailed:           "Server failed",
 }

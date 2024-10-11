@@ -7,12 +7,13 @@ import (
 )
 
 func Run() {
-	InitCustomValidator()
 	LoadConfig()
+	InitCustomValidator()
 	m := global.Config.PostgreSql
 	fmt.Println("Loading configuration postgreSql", m.Username, m.Port)
 	InitLogger()
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
+	InitCloudinary()
 	InitRedis()
 	InitPostgreSql()
 	InitServiceInterface(global.Pdb)

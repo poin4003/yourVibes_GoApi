@@ -1,6 +1,6 @@
 package consts
 
-// Define enum for privacy
+// Define enum for validator
 type PrivacyLevel string
 
 const (

@@ -2,11 +2,12 @@ package settings
 
 type Config struct {
 	Server            ServerSetting         `mapstructure:"server"`
-	PostgreSql        PostgreSqlSetting     `mapstructure:"postgreSql"`
+	PostgreSql        PostgreSqlSetting     `mapstructure:"postgresql"`
 	Logger            LoggerSetting         `mapstructure:"logger"`
 	Redis             RedisSetting          `mapstructure:"redis"`
 	Authentication    AuthenticationSetting `mapstructure:"authentication"`
 	CloudinarySetting CloudinarySetting     `mapstructure:"cloudinary"`
+	MailService       MailServiceSetting    `mapstructure:"mail_service"`
 }
 
 type ServerSetting struct {
@@ -20,10 +21,10 @@ type PostgreSqlSetting struct {
 	Username        string `mapstructure:"username"`
 	Password        string `mapstructure:"password"`
 	Dbname          string `mapstructure:"dbname"`
-	MaxIdleConns    int    `mapstructure:"maxIdleConns"`
-	MaxOpenConns    int    `mapstructure:"maxOpenConns"`
-	ConnMaxLifetime int    `mapstructure:"connMaxLifetime"`
-	SslMode         string `mapstructure:"sslMode"`
+	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
+	MaxOpenConns    int    `mapstructure:"max_open_conns"`
+	ConnMaxLifetime int    `mapstructure:"conn_max_lifetime"`
+	SslMode         string `mapstructure:"ssl_mode"`
 }
 
 type RedisSetting struct {
@@ -51,4 +52,11 @@ type CloudinarySetting struct {
 	ApiKey       string `mapstructure:"api_key"`
 	ApiSecretKey string `mapstructure:"api_secret_key"`
 	Folder       string `mapstructure:"folder"`
+}
+
+type MailServiceSetting struct {
+	SMTPHost     string `mapstructure:"smtp_host"`
+	SMTPPort     string `mapstructure:"smtp_port"`
+	SMTPUsername string `mapstructure:"smtp_username"`
+	SMTPPassword string `mapstructure:"smtp_password"`
 }

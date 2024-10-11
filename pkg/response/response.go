@@ -15,8 +15,9 @@ type ResponseData struct {
 }
 
 type ErrResponseChild struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	DetailErr string `json:"detail_err"`
 }
 
 func SuccessResponse(c *gin.Context, code int, httpStatus int, data interface{}) {
@@ -27,11 +28,12 @@ func SuccessResponse(c *gin.Context, code int, httpStatus int, data interface{})
 	})
 }
 
-func ErrorResponse(c *gin.Context, code int, httpStatus int) {
+func ErrorResponse(c *gin.Context, code int, httpStatus int, err string) {
 	c.JSON(httpStatus, ErrResponse{
 		Error: ErrResponseChild{
-			Code:    code,
-			Message: msg[code],
+			Code:      code,
+			Message:   msg[code],
+			DetailErr: err,
 		},
 	})
 }

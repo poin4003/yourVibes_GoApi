@@ -15,7 +15,10 @@ func NewUserRepositoryImplement(db *gorm.DB) *rUser {
 	return &rUser{db: db}
 }
 
-func (r *rUser) CheckUserExistByEmail(ctx context.Context, email string) (bool, error) {
+func (r *rUser) CheckUserExistByEmail(
+	ctx context.Context,
+	email string,
+) (bool, error) {
 	var count int64
 
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
@@ -24,7 +27,10 @@ func (r *rUser) CheckUserExistByEmail(ctx context.Context, email string) (bool, 
 	return count > 0, nil
 }
 
-func (r *rUser) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (r *rUser) CreateUser(
+	ctx context.Context,
+	user *model.User,
+) (*model.User, error) {
 	res := r.db.WithContext(ctx).Create(user)
 
 	if res.Error != nil {
@@ -34,7 +40,11 @@ func (r *rUser) CreateUser(ctx context.Context, user *model.User) (*model.User, 
 	return user, nil
 }
 
-func (r *rUser) UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error) {
+func (r *rUser) UpdateUser(
+	ctx context.Context,
+	userId uuid.UUID,
+	updateData map[string]interface{},
+) (*model.User, error) {
 	var user model.User
 
 	if err := r.db.WithContext(ctx).First(&user, userId).Error; err != nil {
@@ -48,7 +58,11 @@ func (r *rUser) UpdateUser(ctx context.Context, userId uuid.UUID, updateData map
 	return &user, nil
 }
 
-func (r *rUser) GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error) {
+func (r *rUser) GetUser(
+	ctx context.Context,
+	query interface{},
+	args ...interface{},
+) (*model.User, error) {
 	user := &model.User{}
 
 	if res := r.db.WithContext(ctx).Model(user).Where(query, args...).First(user); res.Error != nil {

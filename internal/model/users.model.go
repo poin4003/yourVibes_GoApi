@@ -17,10 +17,10 @@ type User struct {
 	Birthday     time.Time           `json:"birthday" gorm:"type:timestamptz;not null"`
 	AvatarUrl    string              `json:"avatar_url" gorm:"type:varchar(255);default:null"`
 	CapwallUrl   string              `json:"capwall_url" gorm:"type:varchar(255);default:null"`
-	Privacy      consts.PrivacyLevel `json:"privacy" gorm:"type:varchar(20);default:'public'"`
+	Privacy      consts.PrivacyLevel `json:"validator" gorm:"type:varchar(20);default:'public'"`
 	AuthType     string              `json:"auth_type" gorm:"type:varchar(10);default:'local'"`
 	AuthGoogleId string              `json:"auth_google_id" gorm:"type:varchar(255);default:null"`
-	Status       bool                `json:"status" gorm:"default:false"`
+	Status       bool                `json:"status" gorm:"default:true"`
 	CreatedAt    time.Time           `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt      `json:"deleted_at" gorm:"index"`

@@ -1,17 +1,16 @@
 package vo
 
 import (
-	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"mime/multipart"
 )
 
 type CreatePostInput struct {
-	UserId   uuid.UUID           `json:"user_id" binding:"required"`
-	ParentId *uuid.UUID          `json:"parent_id,omitempty"`
-	Title    string              `json:"title" binding:"required"`
-	Content  string              `json:"content" binding:"required"`
-	Privacy  consts.PrivacyLevel `json:"privacy" binding:"required,privacy_enum"`
-	Location string              `json:"location,omitempty"`
+	Title    string                 `form:"title" binding:"required"`
+	Content  string                 `form:"content" binding:"required"`
+	Privacy  consts.PrivacyLevel    `form:"privacy" binding:"privacy_enum"`
+	Location string                 `form:"location,omitempty"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"file"`
 }
 
 type UpdatePostInput struct {

@@ -25,12 +25,18 @@ func main() {
 			return
 		}
 
+		log.Printf("Received file: %s, Size: %bytes\n", file.Filename, file.Size)
+
 		src, err := file.Open()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		defer src.Close()
+
+		log.Printf("file:::", src)
+
+		log.Printf("File metadata:\nFilename: %s\nSize: %d bytes\n", file.Filename, file.Size)
 
 		params := uploader.UploadParams{
 			Folder: "yourVibes",

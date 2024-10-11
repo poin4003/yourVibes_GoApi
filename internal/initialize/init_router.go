@@ -42,9 +42,12 @@ func InitRouter() *gin.Engine {
 	}
 	{
 		userRouter.InitUserRouter(MainGroup)
+		userRouter.InitPostRouter(MainGroup)
 	}
 	{
 		adminRouter.InitAdminRouter(MainGroup)
+	}
+	{
 	}
 	return r
 }

@@ -10,13 +10,6 @@ import (
 	"strings"
 )
 
-const (
-	SMTPHost     = "smtp.gmail.com"
-	SMTPPort     = "587"
-	SMTPUsername = "ticketplaza1000@gmail.com"
-	SMTPPassword = "mejj hvui xbkx vluo"
-)
-
 type EmailAddress struct {
 	Address string `json:"address"`
 	Name    string `json:"name"`
@@ -29,6 +22,13 @@ type Mail struct {
 	Body    string
 }
 
+func GetMailServiceSettings() (string, string, string, string) {
+	return global.Config.MailService.SMTPHost,
+		global.Config.MailService.SMTPPort,
+		global.Config.MailService.SMTPUsername,
+		global.Config.MailService.SMTPPassword
+}
+
 func BuildMessage(mail Mail) string {
 	msg := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\r\n"
 	msg += fmt.Sprintf("From: %s\r\n", mail.From.Name)
@@ -37,29 +37,6 @@ func BuildMessage(mail Mail) string {
 	msg += fmt.Sprintf("\r\n%s\r\n", mail.Body)
 
 	return msg
-}
-
-func SendTextEmailOtp(to []string, from string, otp string) error {
-	contentEmail := Mail{
-		From:    EmailAddress{Address: from, Name: "YourVibes"},
-		To:      to,
-		Subject: "OTP Verification",
-		Body:    fmt.Sprintf("Your OTP is %s. Please enter it to verify your account.", otp),
-	}
-
-	messageMail := BuildMessage(contentEmail)
-
-	// Send smtp
-	authentication := smtp.PlainAuth("", SMTPUsername, SMTPPassword, SMTPHost)
-
-	err := smtp.SendMail(SMTPHost+":587", authentication, from, to, []byte(messageMail))
-
-	if err != nil {
-		global.Logger.Error("Email send failed::", zap.Error(err))
-		return err
-	}
-
-	return nil
 }
 
 func SendTemplateEmailOtp(
@@ -96,10 +73,12 @@ func send(to []string, from string, htmlTemplate string) error {
 
 	messageMail := BuildMessage(contentEmail)
 
+	SMTPHost, SMTPPort, SMTPUsername, SMTPPassword := GetMailServiceSettings()
+
 	// Send smtp
 	authentication := smtp.PlainAuth("", SMTPUsername, SMTPPassword, SMTPHost)
 
-	err := smtp.SendMail(SMTPHost+":587", authentication, from, to, []byte(messageMail))
+	err := smtp.SendMail(SMTPHost+":"+SMTPPort, authentication, from, to, []byte(messageMail))
 
 	if err != nil {
 		global.Logger.Error("Email send failed::", zap.Error(err))

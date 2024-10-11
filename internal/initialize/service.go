@@ -9,11 +9,19 @@ import (
 )
 
 func InitServiceInterface(db *gorm.DB) {
-	// 1. Khởi tạo UserRepository
+	// 1. Initialize Repository
 	userRepo := repository_implement.NewUserRepositoryImplement(db)
-	repository.InitUserRepository(userRepo)
+	postRepo := repository_implement.NewPostRepositoryImplement(db)
+	mediaRepo := repository_implement.NewMediaRepositoryImplement(db)
 
-	// 2. Khởi tạo UserAuthService với UserRepository
+	repository.InitUserRepository(userRepo)
+	repository.InitPostRepository(postRepo)
+	repository.InitMediaRepository(mediaRepo)
+
+	// 2. Initialize Service
 	userAuthService := service_implement.NewUserLoginImplement(userRepo)
+	postUserService := service_implement.NewPostUserImplement(postRepo, mediaRepo)
+
 	services.InitUserAuth(userAuthService)
+	services.InitPostUser(postUserService)
 }
