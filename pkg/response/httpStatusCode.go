@@ -22,6 +22,12 @@ const (
 	ErrCreateUserFail   = 70001
 	ErrHashPasswordFail = 70002
 	ErrServerFailed     = 70003
+
+	// Users Code
+	NoUserID = 80001
+	UserNotFound = 80002
+	NoKeywordInFindUsers = 80003
+	FoundUsersFailed = 80004
 )
 
 var msg = map[int]string{
@@ -42,4 +48,9 @@ var msg = map[int]string{
 	ErrCreateUserFail:         "Failed to create user",
 	ErrHashPasswordFail:       "Failed to hash password",
 	ErrServerFailed:           "Server failed",
+
+	NoUserID: "User id not found",
+	UserNotFound: "User not found",
+	NoKeywordInFindUsers: "No keyword to find users",
+	FoundUsersFailed: "Failed to find users",
 }
