@@ -72,11 +72,28 @@ func (r *rUser) GetUser(
 	return user, nil
 }
 
-func (r *rUser) GetManyUser(ctx context.Context) ([]*model.User, error) {
+func (r *rUser) GetManyUser(
+	ctx context.Context,
+	limit, page int,
+	query interface{},
+	args ...interface{},
+) ([]*model.User, int64, error) {
 	var users []*model.User
-	if err := r.db.WithContext(ctx).Find(&users).Error; err != nil {
-		return nil, err
+	var count int64
+
+	// Query
+	dbQuery := r.db.WithContext(ctx).Model(&model.User{}).Where(query, args...)
+
+	// Count
+	if err := dbQuery.Count(&count).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return users, nil
+	// Paging
+	offset := (page - 1) * limit
+	if err := dbQuery.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, count, nil
 }

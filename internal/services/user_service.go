@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/vo"
 )
@@ -13,16 +14,15 @@ type (
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
 
-	//IUserInfo interface {
-	//	GetInfoByUserId(ctx context.Context) error
-	//	GetAllUser(ctx context.Context) error
-	//	FindOneUser(ctx context.Context) error
-	//}
+	IUserInfo interface {
+		GetInfoByUserId(ctx context.Context, id string) (*model.User, error)
+		GetUsersByName(ctx context.Context, keyword string, limit, page int) ([]*model.User, int64, error)
+	}
 )
 
 var (
 	localUserAuth IUserAuth
-	//localUserInfo  IUserInfo
+	localUserInfo  IUserInfo
 )
 
 func UserAuth() IUserAuth {
@@ -37,14 +37,14 @@ func InitUserAuth(i IUserAuth) {
 	localUserAuth = i
 }
 
-//func UserInfo() IUserInfo {
-//	if localUserInfo == nil {
-//		panic("repository_implement localUserInfo not found for interface IUserInfo")
-//	}
-//
-//	return localUserInfo
-//}
-//
-//func InitUserInfo(i IUserInfo) {
-//	localUserInfo = i
-//}
+func UserInfo() IUserInfo {
+	if localUserInfo == nil {
+		panic("repository_implement localUserInfo not found for interface IUserInfo")
+	}
+
+	return localUserInfo
+}
+
+func InitUserInfo(i IUserInfo) {
+	localUserInfo = i
+}
