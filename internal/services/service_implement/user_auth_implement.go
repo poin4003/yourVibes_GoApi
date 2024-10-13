@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/auth_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils"
@@ -14,7 +15,6 @@ import (
 	jwtutil "github.com/poin4003/yourVibes_GoApi/internal/utils/jwtutil"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/random"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/sendto"
-	"github.com/poin4003/yourVibes_GoApi/internal/vo"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -31,7 +31,7 @@ func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
 	return &sUserAuth{repo: repo}
 }
 
-func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (accessToken string, user *model.User, err error) {
+func (s *sUserAuth) Login(ctx context.Context, in *auth_dto.LoginCredentials) (accessToken string, user *model.User, err error) {
 	userFound, err := s.repo.GetUser(ctx, "email = ?", in.Email)
 
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *sUserAuth) Login(ctx context.Context, in *vo.LoginCredentials) (accessT
 
 func (s *sUserAuth) Register(
 	ctx context.Context,
-	in *vo.RegisterCredentials,
+	in *auth_dto.RegisterCredentials,
 ) (resultCode int, err error) {
 	// 1. check user exist in user table
 	userFound, err := s.repo.CheckUserExistByEmail(ctx, in.Email)

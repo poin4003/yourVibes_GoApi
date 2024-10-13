@@ -2,15 +2,14 @@ package services
 
 import (
 	"context"
-
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/auth_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
-	"github.com/poin4003/yourVibes_GoApi/internal/vo"
 )
 
 type (
 	IUserAuth interface {
-		Login(ctx context.Context, in *vo.LoginCredentials) (accessToken string, user *model.User, err error)
-		Register(ctx context.Context, in *vo.RegisterCredentials) (resultCode int, err error)
+		Login(ctx context.Context, in *auth_dto.LoginCredentials) (accessToken string, user *model.User, err error)
+		Register(ctx context.Context, in *auth_dto.RegisterCredentials) (resultCode int, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
 
@@ -22,7 +21,7 @@ type (
 
 var (
 	localUserAuth IUserAuth
-	localUserInfo  IUserInfo
+	localUserInfo IUserInfo
 )
 
 func UserAuth() IUserAuth {

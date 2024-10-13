@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"fmt"
-	_"log"
+	_ "log"
 	"time"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
@@ -33,11 +33,11 @@ func InitPostgreSql() {
 
 	SetPool()
 
-	// db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-	// db.Exec("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
-	// if err := DBMigrator(db); err != nil {
-	// 	log.Fatalln("Unable to migrate database", err)
-	// }
+	//db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+	//db.Exec("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
+	//if err := DBMigrator(db); err != nil {
+	//	log.Fatalln("Unable to migrate database", err)
+	//}
 }
 
 func checkErrorPanic(err error, errString string) {

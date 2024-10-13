@@ -1,7 +1,32 @@
 package main
 
-import "github.com/poin4003/yourVibes_GoApi/internal/initialize"
+import (
+	_ "github.com/poin4003/yourVibes_GoApi/cmd/swag/docs"
+	"github.com/poin4003/yourVibes_GoApi/internal/initialize"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+)
+
+// @title API Documentation YourVibes backend
+// @version 1.0.0
+// @description This is a sample YourVibes backend server
+// @termsOfService https://github.com/poin4003/yourVibes_GoApi
+
+// @contact.name TEAM HKTP
+// @contact.url https://github.com/poin4003/yourVibes_GoApi
+// @contact.email pchuy4003@gmail.com
+
+// @host localhost:8080
+// @BasePath /v1/2024
+// @schema http
+
+// @securityDefinitions.apiKey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description Token without 'Bearer ' prefix
 
 func main() {
-	initialize.Run()
+	r := initialize.Run()
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.Run(":8080")
 }

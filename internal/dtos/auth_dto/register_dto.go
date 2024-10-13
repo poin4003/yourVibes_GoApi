@@ -1,4 +1,4 @@
-package vo
+package auth_dto
 
 import "time"
 
@@ -10,13 +10,4 @@ type RegisterCredentials struct {
 	PhoneNumber string    `json:"phone_number" binding:"required"`
 	Birthday    time.Time `json:"birthday" binding:"required"`
 	Otp         string    `json:"otp" binding:"required"`
-}
-
-type LoginCredentials struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
-type VerifyEmailInput struct {
-	Email string `json:"email" binding:"required,email"`
 }

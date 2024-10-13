@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
+	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"gorm.io/gorm"
+	"time"
 )
 
 type rPost struct {
@@ -32,7 +34,7 @@ func (r *rPost) UpdatePost(
 ) (*model.Post, error) {
 	var post model.Post
 
-	if err := r.db.WithContext(ctx).First(&post, postId).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Media").Preload("User").First(&post, postId).Error; err != nil {
 		return nil, err
 	}
 
@@ -65,9 +67,79 @@ func (r *rPost) GetPost(
 	return post, nil
 }
 
-func (r *rPost) GetManyPost(ctx context.Context) ([]*model.Post, error) {
+func (r *rPost) GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, error) {
 	var posts []*model.Post
-	if err := r.db.WithContext(ctx).Find(&posts).Error; err != nil {
+
+	db := r.db.WithContext(ctx).Model(&model.Post{})
+
+	if query.UserID != uuid.Nil {
+		db = db.Where("user_id = ?", query.UserID)
+	}
+
+	if query.Title != "" {
+		db = db.Where("LOWER(title) LIKE LOWER(?)", "%"+query.Title+"%")
+	}
+
+	if query.Content != "" {
+		db = db.Where("LOWER(content) LIKE LOWER(?)", "%"+query.Content+"%")
+	}
+
+	if !query.CreatedAt.IsZero() {
+		createAt := query.CreatedAt.Truncate(24 * time.Hour)
+		db = db.Where("created_at = ?", createAt)
+	}
+
+	if query.Location != "" {
+		db = db.Where("LOWER(location) LIKE LOWER(?)", "%"+query.Location+"%")
+	}
+
+	if query.SortBy != "" {
+		switch query.SortBy {
+		case "id":
+			if query.IsDescending {
+				db = db.Order("id DESC")
+			} else {
+				db = db.Order("id ASC")
+			}
+		case "title":
+			if query.IsDescending {
+				db = db.Order("title DESC")
+			} else {
+				db = db.Order("title ASC")
+			}
+		case "content":
+			if query.IsDescending {
+				db = db.Order("content DESC")
+			} else {
+				db = db.Order("content ASC")
+			}
+		case "created_at":
+			if query.IsDescending {
+				db = db.Order("created_at DESC")
+			} else {
+				db = db.Order("created_at ASC")
+			}
+		case "location":
+			if query.IsDescending {
+				db = db.Order("location DESC")
+			} else {
+				db = db.Order("location ASC")
+			}
+		}
+	}
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	offset := (page - 1) * limit
+
+	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Preload("Media").Preload("User").Find(&posts).Error; err != nil {
 		return nil, err
 	}
 

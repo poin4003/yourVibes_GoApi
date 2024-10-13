@@ -56,7 +56,7 @@ func (r *rMedia) DeleteMedia(
 func (r *rMedia) GetMedia(ctx context.Context, query interface{}, args ...interface{}) (*model.Media, error) {
 	media := &model.Media{}
 
-	if res := r.db.WithContext(ctx).Model(media).Where(query, args...).First(query); res.Error != nil {
+	if res := r.db.WithContext(ctx).Model(media).Where(query, args...).First(media); res.Error != nil {
 		return nil, res.Error
 	}
 

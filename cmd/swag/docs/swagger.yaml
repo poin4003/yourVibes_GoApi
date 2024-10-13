@@ -1,0 +1,359 @@
+basePath: /v1/2024
+definitions:
+  auth_dto.LoginCredentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth_dto.RegisterCredentials:
+    properties:
+      birthday:
+        type: string
+      email:
+        type: string
+      family_name:
+        type: string
+      name:
+        type: string
+      otp:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone_number:
+        type: string
+    required:
+    - birthday
+    - email
+    - family_name
+    - name
+    - otp
+    - password
+    - phone_number
+    type: object
+  auth_dto.VerifyEmailInput:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  response.ErrResponse:
+    properties:
+      error:
+        $ref: '#/definitions/response.ErrResponseChild'
+    type: object
+  response.ErrResponseChild:
+    properties:
+      code:
+        type: integer
+      detail_err:
+        type: string
+      message:
+        type: string
+    type: object
+  response.PagingResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  response.ResponseData:
+    properties:
+      code:
+        description: Status code
+        type: integer
+      data:
+        description: Data
+      message:
+        description: Status message
+        type: string
+      paging:
+        allOf:
+        - $ref: '#/definitions/response.PagingResponse'
+        description: Paging (optional)
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: pchuy4003@gmail.com
+    name: TEAM HKTP
+    url: https://github.com/poin4003/yourVibes_GoApi
+  description: This is a sample YourVibes backend server
+  termsOfService: https://github.com/poin4003/yourVibes_GoApi
+  title: API Documentation YourVibes backend
+  version: 1.0.0
+paths:
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: When user want to get many post
+      parameters:
+      - description: Filter by post title
+        in: query
+        name: title
+        type: string
+      - description: Filter by content
+        in: query
+        name: content
+        type: string
+      - description: Filter by location
+        in: query
+        name: location
+        type: string
+      - description: Filter by advertisement
+        in: query
+        name: is_advertisement
+        type: boolean
+      - description: Filter by create time
+        in: query
+        name: created_at
+        type: string
+      - description: Which column sort by
+        in: query
+        name: sort_by
+        type: string
+      - description: Order by
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Limit in one page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get many post
+      tags:
+      - post
+  /posts/:
+    post:
+      consumes:
+      - multipart/form-data
+      description: When user create post
+      parameters:
+      - description: Title of the post
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Content of the post
+        in: formData
+        name: content
+        required: true
+        type: string
+      - description: Privacy level
+        in: formData
+        name: privacy
+        required: true
+        type: string
+      - description: Location of the post
+        in: formData
+        name: location
+        type: string
+      - description: Media files for the post
+        in: formData
+        name: media
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Post create post
+      tags:
+      - post
+  /posts/{postId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a post by its unique ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get post by ID
+      tags:
+      - post
+    patch:
+      consumes:
+      - multipart/form-data
+      description: When user need to update information of post or update media
+      parameters:
+      - description: Post Id
+        in: path
+        name: postId
+        required: true
+        type: string
+      - description: Post title
+        in: formData
+        name: title
+        type: string
+      - description: Post content
+        in: formData
+        name: content
+        type: string
+      - description: Post privacy
+        in: formData
+        name: privacy
+        type: string
+      - description: Post location
+        in: formData
+        name: location
+        type: string
+      - description: Array of mediaIds you want to delete
+        in: formData
+        name: media_ids
+        type: integer
+      - description: Array of media you want to upload
+        in: formData
+        name: media
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: update post
+      tags:
+      - post
+  /users/login/:
+    post:
+      consumes:
+      - application/json
+      description: When user login
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/auth_dto.LoginCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      summary: User login
+      tags:
+      - auth
+  /users/register/:
+    post:
+      consumes:
+      - application/json
+      description: When user registration
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/auth_dto.RegisterCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      summary: User Registration
+      tags:
+      - auth
+  /users/verifyemail/:
+    post:
+      consumes:
+      - application/json
+      description: Before user registration
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/auth_dto.VerifyEmailInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      summary: User verify email
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    description: Token without 'Bearer ' prefix
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

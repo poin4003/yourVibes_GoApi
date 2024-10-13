@@ -4,15 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ErrResponse struct {
-	Error ErrResponseChild `json:"error"`
-}
-
 type ResponseData struct {
 	Code    int            `json:"code"`             // Status code
 	Message string         `json:"message"`          // Status message
 	Data    interface{}    `json:"data"`             // Data
 	Paging  PagingResponse `json:"paging,omitempty"` // Paging (optional)
+}
+
+type ErrResponse struct {
+	Error ErrResponseChild `json:"error"`
 }
 
 type ErrResponseChild struct {
@@ -22,8 +22,8 @@ type ErrResponseChild struct {
 }
 
 type PagingResponse struct {
-	Limit int `json:"limit"`
-	Page  int `json:"page"`
+	Limit int   `json:"limit"`
+	Page  int   `json:"page"`
 	Total int64 `json:"total"`
 }
 

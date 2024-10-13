@@ -20,6 +20,7 @@ type User struct {
 	Privacy      consts.PrivacyLevel `json:"validator" gorm:"type:varchar(20);default:'public'"`
 	AuthType     string              `json:"auth_type" gorm:"type:varchar(10);default:'local'"`
 	AuthGoogleId string              `json:"auth_google_id" gorm:"type:varchar(255);default:null"`
+	PostCount    int                 `json:"post_count" gorm:"type:int;default:0"`
 	Status       bool                `json:"status" gorm:"default:true"`
 	CreatedAt    time.Time           `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
