@@ -80,16 +80,16 @@ func (s *sPostUser) UpdatePost(
 	// 2. delete media in database and delete media from cloudinary
 	if len(deleteMediaIds) > 0 {
 		for _, mediaId := range deleteMediaIds {
-			//// 2.1. Get media information from database
-			//media, err := s.mediaRepo.GetMedia(ctx, "id=?", mediaId)
-			//if err != nil {
-			//	return nil, http.StatusInternalServerError, fmt.Errorf("failed to get media record: %w", err)
-			//}
-			//
-			//// 2.2. Delete media from cloudinary
-			//if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
-			//	return nil, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
-			//}
+			// 2.1. Get media information from database
+			media, err := s.mediaRepo.GetMedia(ctx, "id=?", mediaId)
+			if err != nil {
+				return nil, http.StatusInternalServerError, fmt.Errorf("failed to get media record: %w", err)
+			}
+
+			// 2.2. Delete media from cloudinary
+			if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
+				return nil, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
+			}
 
 			// 2.3. Delete media from databases
 			if err := s.mediaRepo.DeleteMedia(ctx, mediaId); err != nil {
@@ -129,7 +129,27 @@ func (s *sPostUser) DeletePost(
 	ctx context.Context,
 	postId uuid.UUID,
 ) (resultCode int, err error) {
+	// 1. Get media array of post
+	medias, err := s.mediaRepo.GetManyMedia(ctx, "post_id=?", postId)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to get media records: %w", err)
+	}
+
+	// 2. Delete media from database and cloudinary
+	for _, media := range medias {
+		// 2.1. Delete media from cloudinary
+		if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
+			return response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+		}
+
+		// 2.1. Delete media from databases
+		if err := s.mediaRepo.DeleteMedia(ctx, media.ID); err != nil {
+			return response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+		}
+	}
+
 	deletePostErr := s.postRepo.DeletePost(ctx, postId)
+
 	if deletePostErr != nil {
 		return response.ErrServerFailed, fmt.Errorf(deletePostErr.Error())
 	}

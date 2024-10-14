@@ -115,6 +115,28 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	postFound, resultCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	if err != nil {
+		response.ErrorResponse(ctx, resultCodePostFound, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if postFound == nil {
+		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprintf("post id %s not found", postIdStr))
+		return
+	}
+
+	if userIdClaim != postFound.UserId {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
+		return
+	}
+
 	updateData := mapper.MapToPostFromUpdateDto(&updateInput)
 
 	deleteMediaIds := updateInput.MediaIDs
@@ -246,6 +268,28 @@ func (p *PostUserController) DeletePost(ctx *gin.Context) {
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	postFound, resultCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	if err != nil {
+		response.ErrorResponse(ctx, resultCodePostFound, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if postFound == nil {
+		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprintf("post id %s not found", postIdStr))
+		return
+	}
+
+	if userIdClaim != postFound.UserId {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not delete this post"))
 		return
 	}
 

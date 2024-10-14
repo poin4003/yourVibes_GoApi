@@ -12,6 +12,7 @@ const (
 	ErrCodeValidateParamRegister = 50002
 	ErrCodeValidateParamEmail    = 50003
 	ErrCodeValidate              = 50004
+	ErrDataNotFound              = 50005
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -24,10 +25,10 @@ const (
 	ErrServerFailed     = 70003
 
 	// Users Code
-	NoUserID = 80001
-	UserNotFound = 80002
+	NoUserID             = 80001
+	UserNotFound         = 80002
 	NoKeywordInFindUsers = 80003
-	FoundUsersFailed = 80004
+	FoundUsersFailed     = 80004
 )
 
 var msg = map[int]string{
@@ -41,6 +42,7 @@ var msg = map[int]string{
 	ErrCodeValidateParamRegister: "Validate param register failed",
 	ErrCodeValidateParamEmail:    "Validate param email failed",
 	ErrCodeValidate:              "Validate param failed",
+	ErrDataNotFound:              "Data not found",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",
@@ -49,8 +51,8 @@ var msg = map[int]string{
 	ErrHashPasswordFail:       "Failed to hash password",
 	ErrServerFailed:           "Server failed",
 
-	NoUserID: "User id not found",
-	UserNotFound: "User not found",
+	NoUserID:             "User id not found",
+	UserNotFound:         "User not found",
 	NoKeywordInFindUsers: "No keyword to find users",
-	FoundUsersFailed: "Failed to find users",
+	FoundUsersFailed:     "Failed to find users",
 }

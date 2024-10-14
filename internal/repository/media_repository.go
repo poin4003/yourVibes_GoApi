@@ -11,7 +11,7 @@ type (
 		UpdateMedia(ctx context.Context, mediaId uint, updateData map[string]interface{}) (*model.Media, error)
 		DeleteMedia(ctx context.Context, mediaId uint) error
 		GetMedia(ctx context.Context, query interface{}, args ...interface{}) (*model.Media, error)
-		GetManyMedia(ctx context.Context) ([]*model.Media, error)
+		GetManyMedia(ctx context.Context, query interface{}, args ...interface{}) ([]*model.Media, error)
 	}
 )
 
