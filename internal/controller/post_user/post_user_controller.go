@@ -139,32 +139,32 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 }
 
 // Get many post
-// @Summary Get many post
-// @Description When user want to get many post
+// @Summary Get many posts
+// @Description Retrieve multiple posts filtered by various criteria.
 // @Tags post
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
+// @Param userId path string true "User ID to filter posts"
 // @Param title query string false "Filter by post title"
 // @Param content query string false "Filter by content"
 // @Param location query string false "Filter by location"
 // @Param is_advertisement query boolean false "Filter by advertisement"
-// @Param created_at query string false "Filter by create time"
-// @Param sort_by query string false "Which column sort by"
-// @Param isDescending query boolean false "Order by"
-// @Param limit query int false "Limit in one page"
-// @Param page query int false "Page number"
+// @Param created_at query string false "Filter by creation time"
+// @Param sort_by query string false "Which column to sort by"
+// @Param isDescending query boolean false "Order by descending if true"
+// @Param limit query int false "Limit of posts per page"
+// @Param page query int false "Page number for pagination"
 // @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
+// @Failure 500 {object} response.ErrResponse "Internal server error"
 // @Security ApiKeyAuth
-// @Router /posts [get]
+// @Router /posts/getMany/{userId} [get]
 func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	var query query_object.PostQueryObject
+
 	if err := ctx.ShouldBindQuery(&query); err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	fmt.Println(query)
 
 	if query.Limit <= 0 {
 		query.Limit = 10
@@ -173,13 +173,14 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		query.Page = 1
 	}
 
-	userUUID, err := extensions.GetUserID(ctx)
+	userIdStr := ctx.Param("userId")
+	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	query.UserID = userUUID
+	query.UserID = userId
 
 	posts, resultCode, err := services.PostUser().GetManyPost(ctx, &query)
 	if err != nil {
