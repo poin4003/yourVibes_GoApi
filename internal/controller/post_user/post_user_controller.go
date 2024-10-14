@@ -229,3 +229,31 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, post)
 }
+
+// Delete post by id documentation
+// @Summary delete post by ID
+// @Description when user want to delete post
+// @Tags post
+// @Accept json
+// @Produce json
+// @Param postId path string true "Post ID"
+// @Success 200 {object} response.ResponseData
+// @Failure 500 {object} response.ErrResponse
+// @Security ApiKeyAuth
+// @Router /posts/{postId} [delete]
+func (p *PostUserController) DeletePost(ctx *gin.Context) {
+	postIdStr := ctx.Param("postId")
+	postId, err := uuid.Parse(postIdStr)
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resultCode, err := services.PostUser().DeletePost(ctx, postId)
+	if err != nil {
+		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusNoContent, postId)
+}

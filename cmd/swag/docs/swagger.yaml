@@ -138,6 +138,32 @@ paths:
       tags:
       - post
   /posts/{postId}:
+    delete:
+      consumes:
+      - application/json
+      description: when user want to delete post
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: delete post by ID
+      tags:
+      - post
     get:
       consumes:
       - application/json

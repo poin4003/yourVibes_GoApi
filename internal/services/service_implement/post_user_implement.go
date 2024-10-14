@@ -127,8 +127,14 @@ func (s *sPostUser) UpdatePost(
 
 func (s *sPostUser) DeletePost(
 	ctx context.Context,
-	email string) (resultCode int, err error) {
-	return 0, nil
+	postId uuid.UUID,
+) (resultCode int, err error) {
+	deletePostErr := s.postRepo.DeletePost(ctx, postId)
+	if deletePostErr != nil {
+		return response.ErrServerFailed, fmt.Errorf(deletePostErr.Error())
+	}
+
+	return response.ErrCodeSuccess, nil
 }
 
 func (s *sPostUser) GetPost(
