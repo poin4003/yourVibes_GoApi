@@ -80,7 +80,9 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, post)
+	postDto := mapper.MapPostToNewPostDto(post)
+
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
 // Update post documentation
@@ -157,7 +159,9 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, post)
+	postDto := mapper.MapPostToPostDto(post)
+
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
 // Get many post
@@ -218,7 +222,13 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		Total: total,
 	}
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, posts, paging)
+	var postDtos []post_dto.PostDto
+	for _, post := range posts {
+		postDto := mapper.MapPostToPostDto(post)
+		postDtos = append(postDtos, *postDto)
+	}
+
+	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, paging)
 }
 
 // Get post by id documentation
@@ -249,7 +259,9 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, post)
+	postDto := mapper.MapPostToPostDto(post)
+
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
 // Delete post by id documentation

@@ -24,3 +24,12 @@ func MapUserToUserDto(user *model.User) *user_dto.UserDto {
 		UpdatedAt:    user.UpdatedAt,
 	}
 }
+
+func MapUserToUserDtoShortVer(user *model.User) user_dto.UserDtoShortVer {
+	return user_dto.UserDtoShortVer{
+		ID:         user.ID,
+		FamilyName: user.FamilyName,
+		Name:       user.Name,
+		AvatarUrl:  user.AvatarUrl,
+	}
+}

@@ -10,7 +10,7 @@ func MapPostToPostDto(post *model.Post) *post_dto.PostDto {
 	return &post_dto.PostDto{
 		ID:              post.ID,
 		UserId:          post.UserId,
-		User:            post.User,
+		User:            MapUserToUserDtoShortVer(&post.User),
 		ParentId:        post.ParentId,
 		ParentPost:      post.ParentPost,
 		Title:           post.Title,
@@ -25,6 +25,26 @@ func MapPostToPostDto(post *model.Post) *post_dto.PostDto {
 		UpdatedAt:       post.UpdatedAt,
 		DeletedAt:       post.DeletedAt,
 		Media:           post.Media,
+	}
+}
+
+func MapPostToNewPostDto(post *model.Post) *post_dto.NewPostDto {
+	return &post_dto.NewPostDto{
+		ID:              post.ID,
+		UserId:          post.UserId,
+		ParentId:        post.ParentId,
+		ParentPost:      post.ParentPost,
+		Title:           post.Title,
+		Content:         post.Content,
+		LikeCount:       post.LikeCount,
+		CommentCount:    post.CommentCount,
+		Privacy:         post.Privacy,
+		Location:        post.Location,
+		IsAdvertisement: post.IsAdvertisement,
+		Status:          post.Status,
+		CreatedAt:       post.CreatedAt,
+		UpdatedAt:       post.UpdatedAt,
+		DeletedAt:       post.DeletedAt,
 	}
 }
 
