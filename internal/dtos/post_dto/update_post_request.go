@@ -11,5 +11,5 @@ type UpdatePostInput struct {
 	Privacy  *consts.PrivacyLevel   `form:"privacy,omitempty" binding:"privacy_enum"`
 	Location *string                `form:"location,omitempty"`
 	MediaIDs []uint                 `form:"media_ids,omitempty"`
-	Media    []multipart.FileHeader `form:"media,omitempty" binding:"file"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"files"`
 }

@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
+	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"gorm.io/gorm"
+	"time"
 )
 
 type rUser struct {
@@ -74,26 +76,90 @@ func (r *rUser) GetUser(
 
 func (r *rUser) GetManyUser(
 	ctx context.Context,
-	limit, page int,
-	query interface{},
-	args ...interface{},
-) ([]*model.User, int64, error) {
+	query *query_object.UserQueryObject,
+) ([]*model.User, error) {
 	var users []*model.User
-	var count int64
 
-	// Query
-	dbQuery := r.db.WithContext(ctx).Model(&model.User{}).Where(query, args...)
+	db := r.db.WithContext(ctx).Model(&model.User{})
 
-	// Count
-	if err := dbQuery.Count(&count).Error; err != nil {
-		return nil, 0, err
+	if query.Name != "" {
+		db = db.Where("unaccent(family_name) ILIKE unaccent(?) OR unaccent(name) ILIKE unaccent(?)", "%"+query.Name+"%", "%"+query.Name+"%")
 	}
 
-	// Paging
+	if query.Email != "" {
+		db = db.Where("email = ?", query.Email)
+	}
+
+	if query.PhoneNumber != "" {
+		db = db.Where("phonenumber = ?", query.PhoneNumber)
+	}
+
+	if !query.Birthday.IsZero() {
+		birthday := query.Birthday.Truncate(24 * time.Hour)
+		db = db.Where("birthday = ?", birthday)
+	}
+
+	if !query.CreatedAt.IsZero() {
+		createAt := query.CreatedAt.Truncate(24 * time.Hour)
+		db = db.Where("created_at = ?", createAt)
+	}
+
+	if query.SortBy != "" {
+		switch query.SortBy {
+		case "id":
+			if query.IsDescending {
+				db = db.Order("id DESC")
+			} else {
+				db = db.Order("id ASC")
+			}
+		case "name":
+			combinedName := "unaccent(family_name || ' ' name)"
+			if query.IsDescending {
+				db = db.Order(combinedName + "DESC")
+			} else {
+				db = db.Order(combinedName + "ASC")
+			}
+		case "email":
+			if query.IsDescending {
+				db = db.Order("email DESC")
+			} else {
+				db = db.Order("email ASC")
+			}
+		case "phone_number":
+			if query.IsDescending {
+				db = db.Order("phone_number DESC")
+			} else {
+				db = db.Order("phone_number ASC")
+			}
+		case "birthday":
+			if query.IsDescending {
+				db = db.Order("birthday DESC")
+			} else {
+				db = db.Order("birthday ASC")
+			}
+		case "created_at":
+			if query.IsDescending {
+				db = db.Order("created_at DESC")
+			} else {
+				db = db.Order("created_at ASC")
+			}
+		}
+	}
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+
 	offset := (page - 1) * limit
-	if err := dbQuery.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
-		return nil, 0, err
+
+	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+		return nil, err
 	}
 
-	return users, count, nil
+	return users, nil
 }

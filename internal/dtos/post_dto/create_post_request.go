@@ -10,5 +10,5 @@ type CreatePostInput struct {
 	Content  string                 `form:"content" binding:"required"`
 	Privacy  consts.PrivacyLevel    `form:"privacy" binding:"privacy_enum"`
 	Location string                 `form:"location,omitempty"`
-	Media    []multipart.FileHeader `form:"media,omitempty" binding:"file"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"files"`
 }

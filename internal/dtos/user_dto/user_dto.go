@@ -16,9 +16,11 @@ type UserDto struct {
 	AvatarUrl    string              `json:"avatar_url"`
 	CapwallUrl   string              `json:"capwall_url"`
 	Privacy      consts.PrivacyLevel `json:"validator"`
+	Biography    string              `json:"biography"`
 	AuthType     string              `json:"auth_type"`
 	AuthGoogleId string              `json:"auth_google_id"`
 	PostCount    int                 `json:"post_count"`
+	FriendCount  int                 `json:"friend_count"`
 	Status       bool                `json:"status"`
 	CreatedAt    time.Time           `json:"created_at"`
 	UpdatedAt    time.Time           `json:"updated_at"`

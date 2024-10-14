@@ -303,6 +303,151 @@ paths:
       summary: Get many posts
       tags:
       - post
+  /users/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve users based on filters such as name, email, phone number,
+        birthday, and created date. Supports pagination and sorting.
+      parameters:
+      - description: name to filter users
+        in: query
+        name: name
+        type: string
+      - description: Filter by email
+        in: query
+        name: email
+        type: string
+      - description: Filter by phone number
+        in: query
+        name: phone_number
+        type: string
+      - description: Filter by birthday
+        in: query
+        name: birthday
+        type: string
+      - description: Filter by creation day
+        in: query
+        name: created_at
+        type: string
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of users
+      tags:
+      - user
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update various fields of the user profile including name, email,
+        phone number, birthday, and upload avatar and capwall images.
+      parameters:
+      - description: User's family name
+        in: formData
+        name: family_name
+        type: string
+      - description: User's given name
+        in: formData
+        name: name
+        type: string
+      - description: User's email address
+        in: formData
+        name: email
+        type: string
+      - description: User's phone number
+        in: formData
+        name: phone_number
+        type: string
+      - description: User's birthday
+        in: formData
+        name: birthday
+        type: string
+      - description: Upload user avatar image
+        in: formData
+        name: avatar_url
+        type: file
+      - description: Upload user capwall image
+        in: formData
+        name: capwall_url
+        type: file
+      - description: User privacy level
+        in: formData
+        name: privacy
+        required: true
+        type: string
+      - description: User biography
+        in: formData
+        name: biography
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update user information
+      tags:
+      - user
+  /users/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user by its unique ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by ID
+      tags:
+      - user
   /users/login/:
     post:
       consumes:

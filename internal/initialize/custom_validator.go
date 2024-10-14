@@ -10,7 +10,7 @@ import (
 func InitCustomValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("privacy_enum", validatePrivacy)
-		v.RegisterValidation("file", validateFile)
+		v.RegisterValidation("files", validateFiles)
 	}
 }
 
@@ -23,7 +23,7 @@ func validatePrivacy(fl validator.FieldLevel) bool {
 	return false
 }
 
-func validateFile(fl validator.FieldLevel) bool {
+func validateFiles(fl validator.FieldLevel) bool {
 	files := fl.Field().Interface().([]multipart.FileHeader)
 
 	for _, file := range files {

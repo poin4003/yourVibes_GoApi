@@ -102,6 +102,7 @@ func (s *sUserAuth) Register(
 		Email:       in.Email,
 		Password:    hashedPassword,
 		PhoneNumber: in.PhoneNumber,
+		AvatarUrl:   "https://res.cloudinary.com/dkf51e57t/image/upload/v1728899949/yourVibes/tyvild61lxom0gdkfbm6.jpg",
 		Birthday:    in.Birthday,
 	}
 

@@ -2,47 +2,92 @@ package service_implement
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/internal/utils/cloudinary_util"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"mime/multipart"
+	"net/http"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
-	"gorm.io/gorm"
 )
 
 type sUserInfo struct {
-	repo repository.IUserRepository
+	userRepo repository.IUserRepository
 }
 
-func NewUserInfoImplement(repo repository.IUserRepository) *sUserInfo {
-	return &sUserInfo{repo: repo}
+func NewUserInfoImplement(userRepo repository.IUserRepository) *sUserInfo {
+	return &sUserInfo{userRepo: userRepo}
 }
 
-func (s *sUserInfo) GetInfoByUserId(ctx context.Context, id string) (*model.User, error) {
-	userFound, err := s.repo.GetUser(ctx, "id = ?", id)
+func (s *sUserInfo) GetInfoByUserId(
+	ctx context.Context,
+	userId uuid.UUID,
+) (user *model.User, resultCode int, err error) {
+	userModel, err := s.userRepo.GetUser(ctx, "id = ?", userId)
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("user not found")
+		return nil, response.ErrDataNotFound, err
+	}
+
+	return userModel, response.ErrCodeSuccess, nil
+}
+
+func (s *sUserInfo) GetManyUsers(
+	ctx context.Context,
+	query *query_object.UserQueryObject,
+) (users []*model.User, resultCode int, err error) {
+	userModels, err := s.userRepo.GetManyUser(ctx, query)
+
+	if err != nil {
+		return nil, response.ErrDataNotFound, err
+	}
+
+	return userModels, response.ErrCodeSuccess, nil
+}
+
+func (s *sUserInfo) UpdateUser(
+	ctx context.Context,
+	userId uuid.UUID,
+	updateData map[string]interface{},
+	inAvatarUrl multipart.File,
+	inCapwallUrl multipart.File,
+) (user *model.User, resultCode int, err error) {
+	// 1. update user information
+	userModel, err := s.userRepo.UpdateUser(ctx, userId, updateData)
+	if err != nil {
+		return nil, response.ErrDataNotFound, err
+	}
+
+	// 2. update Avatar
+	if inAvatarUrl != nil {
+		avatarUrl, err := cloudinary_util.UploadMediaToCloudinary(inAvatarUrl)
+		if err != nil {
+			return nil, http.StatusInternalServerError, fmt.Errorf("failed to upload Avatar: %w", err)
 		}
-		return nil, err
+
+		userModel.AvatarUrl = avatarUrl
+
+		_, err = s.userRepo.UpdateUser(ctx, userId, map[string]interface{}{
+			"avatar_url": userModel.AvatarUrl,
+		})
 	}
 
-	return userFound, nil
-}
+	// 3. update Capwall
+	if inCapwallUrl != nil {
+		capwallUrl, err := cloudinary_util.UploadMediaToCloudinary(inCapwallUrl)
+		if err != nil {
+			return nil, http.StatusInternalServerError, fmt.Errorf("failed to upload Capwall: %w", err)
+		}
 
-func (s *sUserInfo) GetUsersByName(ctx context.Context, keyword string, limit, page int) ([]*model.User, int64, error) {
-	query := "unaccent(family_name || ' ' || name) ILIKE unaccent(?)"
-	args := []interface{}{"%" + keyword + "%"}
+		userModel.CapwallUrl = capwallUrl
 
-	users, total, err := s.repo.GetManyUser(ctx, limit, page, query, args...)
-	if err != nil {
-		return nil, 0, err
+		_, err = s.userRepo.UpdateUser(ctx, userId, map[string]interface{}{
+			"capwall_url": userModel.CapwallUrl,
+		})
 	}
 
-	if users == nil {
-		users = []*model.User{}
-	}
-
-	return users, total, nil
+	return userModel, response.ErrCodeSuccess, nil
 }

@@ -12,9 +12,11 @@ import (
 type cUserAuth struct {
 }
 
-var UserAuth = new(cUserAuth)
+func NewUserAuthController() *cUserAuth {
+	return &cUserAuth{}
+}
 
-// User verify email documentation
+// VerifyEmail documentation
 // @Summary User verify email
 // @Description Before user registration
 // @Tags auth
@@ -41,7 +43,7 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 	response.SuccessResponse(ctx, code, http.StatusOK, nil)
 }
 
-// User  documentation
+// Register documentation
 // @Summary User Registration
 // @Description When user registration
 // @Tags auth
@@ -68,7 +70,7 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 	response.SuccessResponse(ctx, code, http.StatusOK, nil)
 }
 
-// User login documentation
+// Login documentation
 // @Summary User login
 // @Description When user login
 // @Tags auth

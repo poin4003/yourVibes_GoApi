@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
+	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 )
 
 type (
@@ -12,7 +13,7 @@ type (
 		CreateUser(ctx context.Context, user *model.User) (*model.User, error)
 		UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error)
 		GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error)
-		GetManyUser(ctx context.Context, limit, page int, query interface{}, args ...interface{}) ([]*model.User, int64, error)
+		GetManyUser(ctx context.Context, query *query_object.UserQueryObject) ([]*model.User, error)
 	}
 )
 

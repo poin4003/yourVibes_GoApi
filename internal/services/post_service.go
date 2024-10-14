@@ -14,7 +14,7 @@ type (
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *model.Post, resultCode int, err error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (resultCode int, err error)
 		GetPost(ctx context.Context, postId uuid.UUID) (post *model.Post, resultCode int, err error)
-		GetManyPost(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, err error)
+		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, err error)
 	}
 )
 

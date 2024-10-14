@@ -33,3 +33,39 @@ func MapUserToUserDtoShortVer(user *model.User) user_dto.UserDtoShortVer {
 		AvatarUrl:  user.AvatarUrl,
 	}
 }
+
+func MapToUserFromUpdateDto(
+	input *user_dto.UpdateUserInput,
+) map[string]interface{} {
+	updateData := make(map[string]interface{})
+
+	if input.FamilyName != nil {
+		updateData["family_name"] = input.FamilyName
+	}
+
+	if input.Name != nil {
+		updateData["name"] = input.Name
+	}
+
+	if input.Email != nil {
+		updateData["email"] = input.Email
+	}
+
+	if input.PhoneNumber != nil {
+		updateData["phone_number"] = input.PhoneNumber
+	}
+
+	if input.Birthday != nil {
+		updateData["birthday"] = input.Birthday
+	}
+
+	if input.Privacy != nil {
+		updateData["privacy"] = input.Privacy
+	}
+
+	if input.Biography != nil {
+		updateData["biography"] = input.Biography
+	}
+
+	return updateData
+}

@@ -18,9 +18,11 @@ type User struct {
 	AvatarUrl    string              `json:"avatar_url" gorm:"type:varchar(255);default:null"`
 	CapwallUrl   string              `json:"capwall_url" gorm:"type:varchar(255);default:null"`
 	Privacy      consts.PrivacyLevel `json:"validator" gorm:"type:varchar(20);default:'public'"`
+	Biography    string              `json:"biography" gorm:"type:text;default:null"`
 	AuthType     string              `json:"auth_type" gorm:"type:varchar(10);default:'local'"`
 	AuthGoogleId string              `json:"auth_google_id" gorm:"type:varchar(255);default:null"`
 	PostCount    int                 `json:"post_count" gorm:"type:int;default:0"`
+	FriendCount  int                 `json:"friend_count" gorm:"type:int;default:0"`
 	Status       bool                `json:"status" gorm:"default:true"`
 	CreatedAt    time.Time           `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time           `json:"updated_at" gorm:"autoUpdateTime"`

@@ -2,6 +2,7 @@ package post_user
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -13,23 +14,29 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/services"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/redis/go-redis/v9"
 	"mime/multipart"
 	"net/http"
+	"time"
 )
 
-type PostUserController struct{}
-
-func NewPostUserController() *PostUserController {
-	return &PostUserController{}
+type PostUserController struct {
+	redisClient *redis.Client
 }
 
-var PostUser = new(PostUserController)
+func NewPostUserController(
+	redisClient *redis.Client,
+) *PostUserController {
+	return &PostUserController{
+		redisClient: redisClient,
+	}
+}
 
 var (
 	validate = validator.New()
 )
 
-// User create post documentation
+// CreatePost documentation
 // @Summary Post create post
 // @Description When user create post
 // @Tags post
@@ -85,7 +92,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
-// Update post documentation
+// UpdatePost documentation
 // @Summary update post
 // @Description When user need to update information of post or update media
 // @Tags post
@@ -164,7 +171,7 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
-// Get many post
+// GetManyPost documentation
 // @Summary Get many posts
 // @Description Retrieve multiple posts filtered by various criteria.
 // @Tags post
@@ -208,7 +215,27 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 
 	query.UserID = userId
 
-	posts, resultCode, err := services.PostUser().GetManyPost(ctx, &query)
+	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", userIdStr, query.Page, query.Limit)
+	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
+	if err == nil {
+		var postDto []post_dto.PostDto
+		err = json.Unmarshal([]byte(cachePosts), &postDto)
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+			return
+		}
+		total := int64(len(cachePosts))
+
+		paging := response.PagingResponse{
+			Limit: query.Limit,
+			Page:  query.Page,
+			Total: total,
+		}
+
+		response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto, paging)
+	}
+
+	posts, resultCode, err := services.PostUser().GetManyPosts(ctx, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 		return
@@ -228,10 +255,13 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		postDtos = append(postDtos, *postDto)
 	}
 
+	postsJson, _ := json.Marshal(postDtos)
+	p.redisClient.Set(context.Background(), cacheKey, string(postsJson), time.Minute*3)
+
 	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, paging)
 }
 
-// Get post by id documentation
+// GetPostById documentation
 // @Summary Get post by ID
 // @Description Retrieve a post by its unique ID
 // @Tags post
@@ -250,6 +280,18 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 		return
 	}
 
+	cachedPost, err := p.redisClient.Get(context.Background(), postId.String()).Result()
+	if err == nil {
+		var postDto post_dto.PostDto
+		err = json.Unmarshal([]byte(cachedPost), &postDto)
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+			return
+		}
+		response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
+		return
+	}
+
 	var post *model.Post
 	var resultCode int
 
@@ -261,10 +303,13 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 
 	postDto := mapper.MapPostToPostDto(post)
 
+	postJson, _ := json.Marshal(postDto)
+	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*3)
+
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
-// Delete post by id documentation
+// DeletePost documentation
 // @Summary delete post by ID
 // @Description when user want to delete post
 // @Tags post
