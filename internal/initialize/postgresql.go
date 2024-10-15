@@ -63,6 +63,7 @@ func DBMigrator(db *gorm.DB) error {
 		&model.User{},
 		&model.Post{},
 		&model.Media{},
+		&model.Setting{},
 	)
 	return err
 }

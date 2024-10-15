@@ -24,15 +24,25 @@ import (
 )
 
 type sUserAuth struct {
-	repo repository.IUserRepository
+	userRepo    repository.IUserRepository
+	settingRepo repository.ISettingRepository
 }
 
-func NewUserLoginImplement(repo repository.IUserRepository) *sUserAuth {
-	return &sUserAuth{repo: repo}
+func NewUserLoginImplement(
+	userRepo repository.IUserRepository,
+	settingRepo repository.ISettingRepository,
+) *sUserAuth {
+	return &sUserAuth{
+		userRepo:    userRepo,
+		settingRepo: settingRepo,
+	}
 }
 
-func (s *sUserAuth) Login(ctx context.Context, in *auth_dto.LoginCredentials) (accessToken string, user *model.User, err error) {
-	userFound, err := s.repo.GetUser(ctx, "email = ?", in.Email)
+func (s *sUserAuth) Login(
+	ctx context.Context,
+	in *auth_dto.LoginCredentials,
+) (accessToken string, user *model.User, err error) {
+	userFound, err := s.userRepo.GetUser(ctx, "email = ?", in.Email)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -63,7 +73,7 @@ func (s *sUserAuth) Register(
 	in *auth_dto.RegisterCredentials,
 ) (resultCode int, err error) {
 	// 1. check user exist in user table
-	userFound, err := s.repo.CheckUserExistByEmail(ctx, in.Email)
+	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, in.Email)
 	if err != nil {
 		return response.ErrCodeUserHasExists, err
 	}
@@ -106,9 +116,20 @@ func (s *sUserAuth) Register(
 		Birthday:    in.Birthday,
 	}
 
-	_, err = s.repo.CreateUser(ctx, user)
+	newUser, err := s.userRepo.CreateUser(ctx, user)
 	if err != nil {
 		return response.ErrCreateUserFail, err
+	}
+
+	// 6. create setting for user
+	setting := &model.Setting{
+		UserId:   newUser.ID,
+		Language: consts.VI,
+	}
+
+	_, err = s.settingRepo.CreateSetting(ctx, setting)
+	if err != nil {
+		return response.ErrServerFailed, err
 	}
 
 	return response.ErrCodeSuccess, nil
@@ -122,7 +143,7 @@ func (s *sUserAuth) VerifyEmail(
 	hashEmail := crypto.GetHash(strings.ToLower(email))
 
 	// 2. check user exists in users table
-	userFound, err := s.repo.CheckUserExistByEmail(ctx, email)
+	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, email)
 	if err != nil {
 		return response.ErrCodeUserHasExists, err
 	}

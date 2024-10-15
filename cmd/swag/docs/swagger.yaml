@@ -211,6 +211,7 @@ paths:
       - description: Post privacy
         in: formData
         name: privacy
+        required: true
         type: string
       - description: Post location
         in: formData
@@ -404,6 +405,10 @@ paths:
       - description: User biography
         in: formData
         name: biography
+        type: string
+      - description: 'Setting language '
+        in: formData
+        name: language_setting
         type: string
       produces:
       - application/json

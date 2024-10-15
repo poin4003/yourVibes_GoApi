@@ -48,9 +48,19 @@ func (r *rPost) UpdatePost(
 func (r *rPost) DeletePost(
 	ctx context.Context,
 	postId uuid.UUID,
-) error {
-	res := r.db.WithContext(ctx).Delete(&model.Post{}, postId)
-	return res.Error
+) (*model.Post, error) {
+	post := &model.Post{}
+	res := r.db.WithContext(ctx).First(post, postId)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	res = r.db.WithContext(ctx).Delete(post)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return post, nil
 }
 
 func (r *rPost) GetPost(

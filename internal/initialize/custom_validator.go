@@ -11,12 +11,24 @@ func InitCustomValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("privacy_enum", validatePrivacy)
 		v.RegisterValidation("files", validateFiles)
+		v.RegisterValidation("language_setting", validateLanguageSetting)
 	}
 }
 
 func validatePrivacy(fl validator.FieldLevel) bool {
 	value := fl.Field().String()
+
 	if value == string(consts.PUBLIC) || value == string(consts.PRIVATE) || value == string(consts.FRIEND_ONLY) {
+		return true
+	}
+
+	return false
+}
+
+func validateLanguageSetting(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	if value == string(consts.VI) || value == string(consts.EN) {
 		return true
 	}
 

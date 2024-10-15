@@ -53,7 +53,7 @@ func (r *rUser) UpdateUser(
 		return nil, err
 	}
 
-	if err := r.db.WithContext(ctx).Model(&user).Updates(updateData).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&user).Preload("Setting").Updates(updateData).Error; err != nil {
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func (r *rUser) GetUser(
 ) (*model.User, error) {
 	user := &model.User{}
 
-	if res := r.db.WithContext(ctx).Model(user).Where(query, args...).First(user); res.Error != nil {
+	if res := r.db.WithContext(ctx).Model(user).Where(query, args...).Preload("Setting").First(user); res.Error != nil {
 		return nil, res.Error
 	}
 

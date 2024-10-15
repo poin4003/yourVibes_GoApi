@@ -101,7 +101,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // @Param postId path string true "PostId"
 // @Param title formData string false "Post title"
 // @Param content formData string false "Post content"
-// @Param privacy formData string false "Post privacy"
+// @Param privacy formData string true "Post privacy"
 // @Param location formData string false "Post location"
 // @Param media_ids formData int false "Array of mediaIds you want to delete"
 // @Param media formData file false "Array of media you want to upload"

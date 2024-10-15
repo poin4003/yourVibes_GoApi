@@ -28,4 +28,5 @@ type User struct {
 	UpdatedAt    time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 	Post         []Post              `json:"post" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Setting      Setting             `json:"setting" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

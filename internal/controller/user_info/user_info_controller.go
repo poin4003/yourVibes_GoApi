@@ -10,6 +10,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/services"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -47,7 +48,7 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 		return
 	}
 
-	userDto := mapper.MapUserToUserDto(user)
+	userDto := mapper.MapUserToUserDtoWithoutSetting(user)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDto)
 }
@@ -100,9 +101,9 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		Total: total,
 	}
 
-	var userDtos []user_dto.UserDto
+	var userDtos []user_dto.UserDtoWithoutSetting
 	for _, user := range users {
-		userDto := mapper.MapUserToUserDto(user)
+		userDto := mapper.MapUserToUserDtoWithoutSetting(user)
 		userDtos = append(userDtos, *userDto)
 	}
 
@@ -115,17 +116,18 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 // @Tags         user
 // @Accept       multipart/form-data
 // @Produce      json
-// @Param        family_name   formData  string  false  "User's family name"
-// @Param        name          formData  string  false  "User's given name"
-// @Param        email         formData  string  false  "User's email address"
-// @Param        phone_number  formData  string  false  "User's phone number"
-// @Param        birthday      formData  string  false  "User's birthday"
-// @Param        avatar_url    formData  file    false  "Upload user avatar image"
-// @Param        capwall_url   formData  file    false  "Upload user capwall image"
-// @Param        privacy       formData  string  true   "User privacy level"
-// @Param        biography     formData  string  false  "User biography"
-// @Success      200           {object}  response.ResponseData
-// @Failure      500           {object}  response.ErrResponse
+// @Param        family_name      formData  string  false  "User's family name"
+// @Param        name             formData  string  false  "User's given name"
+// @Param        email            formData  string  false  "User's email address"
+// @Param        phone_number     formData  string  false  "User's phone number"
+// @Param        birthday         formData  string  false  "User's birthday"
+// @Param        avatar_url       formData  file    false  "Upload user avatar image"
+// @Param        capwall_url      formData  file    false  "Upload user capwall image"
+// @Param        privacy          formData  string  true   "User privacy level"
+// @Param        biography        formData  string  false  "User biography"
+// @Param        language_setting formData  string  false  "Setting language "vi" or "en""
+// @Success      200              {object}  response.ResponseData
+// @Failure      500              {object}  response.ErrResponse
 // @Security ApiKeyAuth
 // @Router       /users/ [patch]
 func (*cUserInfo) UpdateUser(ctx *gin.Context) {
@@ -144,19 +146,26 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 
 	updateData := mapper.MapToUserFromUpdateDto(&updateInput)
 
-	openFileAvatar, err := updateInput.AvatarUrl.Open()
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-		return
+	var openFileAvatar multipart.File
+	var openFileCapwall multipart.File
+
+	if updateInput.AvatarUrl.Size != 0 {
+		openFileAvatar, err = updateInput.AvatarUrl.Open()
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
-	openFileCapwall, err := updateInput.CapwallUrl.Open()
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-		return
+	if updateInput.CapwallUrl.Size != 0 {
+		openFileCapwall, err = updateInput.CapwallUrl.Open()
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
-	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileCapwall, openFileAvatar)
+	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileCapwall, openFileAvatar, *updateInput.LanguageSetting)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 	}

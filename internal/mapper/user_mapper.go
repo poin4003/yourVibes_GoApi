@@ -22,6 +22,38 @@ func MapUserToUserDto(user *model.User) *user_dto.UserDto {
 		Status:       user.Status,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
+		Setting:      MapSettingToSettingDto(&user.Setting),
+	}
+}
+
+func MapUserToUserDtoWithoutSetting(user *model.User) *user_dto.UserDtoWithoutSetting {
+	return &user_dto.UserDtoWithoutSetting{
+		ID:           user.ID,
+		FamilyName:   user.FamilyName,
+		Name:         user.Name,
+		Email:        user.Email,
+		PhoneNumber:  user.PhoneNumber,
+		Birthday:     user.Birthday,
+		AvatarUrl:    user.AvatarUrl,
+		CapwallUrl:   user.CapwallUrl,
+		Privacy:      user.Privacy,
+		AuthType:     user.AuthType,
+		AuthGoogleId: user.AuthGoogleId,
+		PostCount:    user.PostCount,
+		Status:       user.Status,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+	}
+}
+
+func MapSettingToSettingDto(setting *model.Setting) user_dto.SettingDto {
+	return user_dto.SettingDto{
+		ID:        setting.ID,
+		UserId:    setting.UserId,
+		Language:  setting.Language,
+		Status:    setting.Status,
+		CreatedAt: setting.CreatedAt,
+		UpdatedAt: setting.UpdatedAt,
 	}
 }
 

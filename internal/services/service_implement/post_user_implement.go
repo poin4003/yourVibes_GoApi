@@ -162,10 +162,20 @@ func (s *sPostUser) DeletePost(
 		}
 	}
 
-	deletePostErr := s.postRepo.DeletePost(ctx, postId)
+	postModel, err := s.postRepo.DeletePost(ctx, postId)
 
-	if deletePostErr != nil {
-		return response.ErrServerFailed, fmt.Errorf(deletePostErr.Error())
+	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
+	if err != nil {
+		return response.ErrDataNotFound, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	userFound.PostCount--
+
+	_, err = s.userRepo.UpdateUser(ctx, userFound.ID, map[string]interface{}{
+		"post_count": userFound.PostCount,
+	})
+	if err != nil {
+		return response.ErrDataNotFound, fmt.Errorf("failed to update media records: %w", err)
 	}
 
 	return response.ErrCodeSuccess, nil

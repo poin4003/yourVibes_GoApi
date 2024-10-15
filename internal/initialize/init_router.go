@@ -21,13 +21,12 @@ func InitRouter() *gin.Engine {
 
 	// middlewares
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"*"},                                                // Cho phép tất cả các origin
-		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}, // Cho phép các phương thức HTTP
-		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},          // Cho phép các header cụ thể
+		AllowOrigins:  []string{"*"},
+		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders: []string{"Content-Length"},
 	}))
 	//r.Use() // logging
-	//r.Use() // cross
 	//r.Use() // limiter global
 	adminRouter := routers.RouterGroupApp.Admin
 	userRouter := routers.RouterGroupApp.User

@@ -310,7 +310,8 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Post privacy",
                         "name": "privacy",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -507,6 +508,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "User biography",
                         "name": "biography",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Setting language ",
+                        "name": "language_setting",
                         "in": "formData"
                     }
                 ],

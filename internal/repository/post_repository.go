@@ -11,7 +11,7 @@ type (
 	IPostRepository interface {
 		CreatePost(ctx context.Context, post *model.Post) (*model.Post, error)
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}) (*model.Post, error)
-		DeletePost(ctx context.Context, postId uuid.UUID) error
+		DeletePost(ctx context.Context, postId uuid.UUID) (*model.Post, error)
 		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*model.Post, error)
 		GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, error)
 	}
