@@ -11,6 +11,7 @@ func InitCustomValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("privacy_enum", validatePrivacy)
 		v.RegisterValidation("files", validateFiles)
+		v.RegisterValidation("file", validateFile)
 		v.RegisterValidation("language_setting", validateLanguageSetting)
 	}
 }
@@ -42,6 +43,19 @@ func validateFiles(fl validator.FieldLevel) bool {
 		if file.Size == 0 {
 			return false
 		}
+	}
+
+	return true
+}
+
+func validateFile(fl validator.FieldLevel) bool {
+	file, ok := fl.Field().Interface().(multipart.FileHeader)
+	if !ok {
+		return false
+	}
+
+	if file.Size == 0 {
+		return false
 	}
 
 	return true

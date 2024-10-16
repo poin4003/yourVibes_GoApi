@@ -57,8 +57,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Privacy level",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -310,8 +309,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Post privacy",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -501,8 +499,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "User privacy level",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",

@@ -51,8 +51,7 @@
                         "type": "string",
                         "description": "Privacy level",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -304,8 +303,7 @@
                         "type": "string",
                         "description": "Post privacy",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -495,8 +493,7 @@
                         "type": "string",
                         "description": "User privacy level",
                         "name": "privacy",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",

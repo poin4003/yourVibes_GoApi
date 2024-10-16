@@ -44,7 +44,7 @@ var (
 // @Produce json
 // @Param title formData string true "Title of the post"
 // @Param content formData string true "Content of the post"
-// @Param privacy formData string true "Privacy level"
+// @Param privacy formData string false "Privacy level"
 // @Param location formData string false "Location of the post"
 // @Param media formData file false "Media files for the post" multiple
 // @Success 200 {object} response.ResponseData
@@ -101,7 +101,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // @Param postId path string true "PostId"
 // @Param title formData string false "Post title"
 // @Param content formData string false "Post content"
-// @Param privacy formData string true "Post privacy"
+// @Param privacy formData string false "Post privacy"
 // @Param location formData string false "Post location"
 // @Param media_ids formData int false "Array of mediaIds you want to delete"
 // @Param media formData file false "Array of media you want to upload"

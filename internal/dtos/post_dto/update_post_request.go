@@ -8,8 +8,8 @@ import (
 type UpdatePostInput struct {
 	Title    *string                `form:"title,omitempty"`
 	Content  *string                `form:"content,omitempty"`
-	Privacy  *consts.PrivacyLevel   `form:"privacy,omitempty" binding:"privacy_enum"`
+	Privacy  *consts.PrivacyLevel   `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
 	Location *string                `form:"location,omitempty"`
 	MediaIDs []uint                 `form:"media_ids,omitempty"`
-	Media    []multipart.FileHeader `form:"media,omitempty" binding:"files"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty,files"`
 }

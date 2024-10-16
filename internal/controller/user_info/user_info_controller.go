@@ -3,6 +3,7 @@ package user_info
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
@@ -123,7 +124,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 // @Param        birthday         formData  string  false  "User's birthday"
 // @Param        avatar_url       formData  file    false  "Upload user avatar image"
 // @Param        capwall_url      formData  file    false  "Upload user capwall image"
-// @Param        privacy          formData  string  true   "User privacy level"
+// @Param        privacy          formData  string  false  "User privacy level"
 // @Param        biography        formData  string  false  "User biography"
 // @Param        language_setting formData  string  false  "Setting language "vi" or "en""
 // @Success      200              {object}  response.ResponseData
@@ -165,7 +166,12 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 		}
 	}
 
-	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileCapwall, openFileAvatar, *updateInput.LanguageSetting)
+	var languageSetting consts.Language
+	if updateInput.LanguageSetting != nil {
+		languageSetting = *updateInput.LanguageSetting
+	}
+
+	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileCapwall, openFileAvatar, languageSetting)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 	}

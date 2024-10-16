@@ -51,6 +51,10 @@ func (s *sPostUser) CreatePost(
 				return nil, response.ErrServerFailed, fmt.Errorf("failed to upload media to cloudinary: %w", err)
 			}
 
+			if mediaUrl == "" {
+				return nil, response.ErrServerFailed, fmt.Errorf("failed to upload media to cloudinary: empty media url")
+			}
+
 			// 2.2. create Media model and save to database
 			mediaTemp := &model.Media{
 				PostId:   newPost.ID,

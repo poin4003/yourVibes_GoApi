@@ -111,7 +111,6 @@ paths:
       - description: Privacy level
         in: formData
         name: privacy
-        required: true
         type: string
       - description: Location of the post
         in: formData
@@ -211,7 +210,6 @@ paths:
       - description: Post privacy
         in: formData
         name: privacy
-        required: true
         type: string
       - description: Post location
         in: formData
@@ -400,7 +398,6 @@ paths:
       - description: User privacy level
         in: formData
         name: privacy
-        required: true
         type: string
       - description: User biography
         in: formData
