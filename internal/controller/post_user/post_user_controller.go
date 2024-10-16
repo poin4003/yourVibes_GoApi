@@ -224,7 +224,8 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 			return
 		}
-		total := int64(len(cachePosts))
+
+		total := int64(len(postDto))
 
 		paging := response.PagingResponse{
 			Limit: query.Limit,
@@ -233,6 +234,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		}
 
 		response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto, paging)
+		return
 	}
 
 	posts, resultCode, err := services.PostUser().GetManyPosts(ctx, &query)
@@ -256,7 +258,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	}
 
 	postsJson, _ := json.Marshal(postDtos)
-	p.redisClient.Set(context.Background(), cacheKey, string(postsJson), time.Minute*3)
+	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*3)
 
 	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, paging)
 }
