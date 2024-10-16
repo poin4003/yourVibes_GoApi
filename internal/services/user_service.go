@@ -16,7 +16,6 @@ type (
 		Register(ctx context.Context, in *auth_dto.RegisterCredentials) (resultCode int, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
-
 	IUserInfo interface {
 		GetInfoByUserId(ctx context.Context, userId uuid.UUID) (user *model.User, resultCode int, err error)
 		GetManyUsers(ctx context.Context, query *query_object.UserQueryObject) (users []*model.User, resultCode int, err error)

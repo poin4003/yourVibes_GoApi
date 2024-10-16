@@ -15,10 +15,17 @@ type (
 		GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error)
 		GetManyUser(ctx context.Context, query *query_object.UserQueryObject) ([]*model.User, error)
 	}
+	ISettingRepository interface {
+		CreateSetting(ctx context.Context, setting *model.Setting) (*model.Setting, error)
+		UpdateSetting(ctx context.Context, settingId uint, updateData map[string]interface{}) (*model.Setting, error)
+		DeleteSetting(ctx context.Context, settingId uint) error
+		GetSetting(ctx context.Context, query interface{}, args ...interface{}) (*model.Setting, error)
+	}
 )
 
 var (
-	localUser IUserRepository
+	localUser    IUserRepository
+	localSetting ISettingRepository
 )
 
 func User() IUserRepository {
@@ -29,6 +36,18 @@ func User() IUserRepository {
 	return localUser
 }
 
+func Setting() ISettingRepository {
+	if localSetting == nil {
+		panic("repository_implement localSetting not found for interface ISetting")
+	}
+
+	return localSetting
+}
+
 func InitUserRepository(i IUserRepository) {
 	localUser = i
+}
+
+func InitSettingRepository(i ISettingRepository) {
+	localSetting = i
 }

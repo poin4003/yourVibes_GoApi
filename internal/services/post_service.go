@@ -16,11 +16,16 @@ type (
 		GetPost(ctx context.Context, postId uuid.UUID) (post *model.Post, resultCode int, err error)
 		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, err error)
 	}
+	IPostLike interface {
+		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error
+		DeleteLikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error
+		GetUsersOnLikes(ctx context.Context, postId uuid.UUID) ([]*model.User, error)
+	}
 )
 
 var (
-	localPostUser IPostUser
-	//localUserInfo  IUserInfo
+	localPostUser     IPostUser
+	localLikeUserPost IPostLike
 )
 
 func PostUser() IPostUser {
@@ -31,6 +36,18 @@ func PostUser() IPostUser {
 	return localPostUser
 }
 
+func LikeUserPost() IPostLike {
+	if localLikeUserPost == nil {
+		panic("repository_implement localLikeUserPost not found for interface ILikeUserPost")
+	}
+
+	return localLikeUserPost
+}
+
 func InitPostUser(i IPostUser) {
 	localPostUser = i
+}
+
+func InitLikeUserPost(i IPostLike) {
+	localLikeUserPost = i
 }

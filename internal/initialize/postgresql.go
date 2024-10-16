@@ -32,12 +32,6 @@ func InitPostgreSql() {
 	global.Logger.Info("Initializing PostgreSQL Successfully")
 
 	SetPool()
-
-	//db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-	//db.Exec("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
-	//if err := DBMigrator(db); err != nil {
-	//	log.Fatalln("Unable to migrate database", err)
-	//}
 }
 
 func checkErrorPanic(err error, errString string) {
@@ -59,6 +53,8 @@ func SetPool() {
 }
 
 func DBMigrator(db *gorm.DB) error {
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
 	err := db.AutoMigrate(
 		&model.User{},
 		&model.Post{},

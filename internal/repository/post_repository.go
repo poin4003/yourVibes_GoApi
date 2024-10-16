@@ -15,10 +15,24 @@ type (
 		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*model.Post, error)
 		GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, error)
 	}
+	IMediaRepository interface {
+		CreateMedia(ctx context.Context, media *model.Media) (*model.Media, error)
+		UpdateMedia(ctx context.Context, mediaId uint, updateData map[string]interface{}) (*model.Media, error)
+		DeleteMedia(ctx context.Context, mediaId uint) error
+		GetMedia(ctx context.Context, query interface{}, args ...interface{}) (*model.Media, error)
+		GetManyMedia(ctx context.Context, query interface{}, args ...interface{}) ([]*model.Media, error)
+	}
+	ILikeUserPostRepository interface {
+		CreateLikeUserPost(ctx context.Context, likeUserPost *model.LikeUserPost) error
+		DeleteLikeUserPost(ctx context.Context, likeUserPost *model.LikeUserPost) error
+		GetLikeUserPost(ctx context.Context, postId uuid.UUID) ([]*model.User, error)
+	}
 )
 
 var (
-	localPost IPostRepository
+	localMedia        IMediaRepository
+	localPost         IPostRepository
+	localLikeUserPost ILikeUserPostRepository
 )
 
 func Post() IPostRepository {
@@ -29,6 +43,30 @@ func Post() IPostRepository {
 	return localPost
 }
 
+func Media() IMediaRepository {
+	if localMedia == nil {
+		panic("repository_implement localMedia not found for interface IMedia")
+	}
+
+	return localMedia
+}
+
+func LikeUserPost() ILikeUserPostRepository {
+	if localLikeUserPost == nil {
+		panic("repository_implement localLikeUserPost not found for interface ILikeUserPost")
+	}
+
+	return localLikeUserPost
+}
+
 func InitPostRepository(i IPostRepository) {
 	localPost = i
+}
+
+func InitMediaRepository(i IMediaRepository) {
+	localMedia = i
+}
+
+func InitLikeUserPostRepository(i ILikeUserPostRepository) {
+	localLikeUserPost = i
 }
