@@ -93,6 +93,67 @@ info:
   version: 1.0.0
 paths:
   /posts/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve multiple posts filtered by various criteria.
+      parameters:
+      - description: User ID to filter posts
+        in: query
+        name: user_id
+        type: string
+      - description: Filter by post title
+        in: query
+        name: title
+        type: string
+      - description: Filter by content
+        in: query
+        name: content
+        type: string
+      - description: Filter by location
+        in: query
+        name: location
+        type: string
+      - description: Filter by advertisement
+        in: query
+        name: is_advertisement
+        type: boolean
+      - description: Filter by creation time
+        in: query
+        name: created_at
+        type: string
+      - description: Which column to sort by
+        in: query
+        name: sort_by
+        type: string
+      - description: Order by descending if true
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Limit of posts per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get many posts
+      tags:
+      - post
     post:
       consumes:
       - multipart/form-data
@@ -237,69 +298,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: update post
-      tags:
-      - post
-  /posts/getMany/{userId}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve multiple posts filtered by various criteria.
-      parameters:
-      - description: User ID to filter posts
-        in: path
-        name: userId
-        required: true
-        type: string
-      - description: Filter by post title
-        in: query
-        name: title
-        type: string
-      - description: Filter by content
-        in: query
-        name: content
-        type: string
-      - description: Filter by location
-        in: query
-        name: location
-        type: string
-      - description: Filter by advertisement
-        in: query
-        name: is_advertisement
-        type: boolean
-      - description: Filter by creation time
-        in: query
-        name: created_at
-        type: string
-      - description: Which column to sort by
-        in: query
-        name: sort_by
-        type: string
-      - description: Order by descending if true
-        in: query
-        name: isDescending
-        type: boolean
-      - description: Limit of posts per page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number for pagination
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get many posts
       tags:
       - post
   /users/:

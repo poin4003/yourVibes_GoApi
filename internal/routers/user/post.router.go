@@ -22,7 +22,7 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	postRouterPrivate.Use(authentication.AuthProteced())
 	{
 		postRouterPrivate.POST("/", postUserController.CreatePost)
-		postRouterPrivate.GET("/getMany/:userId", postUserController.GetManyPost)
+		postRouterPrivate.GET("/", postUserController.GetManyPost)
 		postRouterPrivate.GET("/:postId", postUserController.GetPostById)
 		postRouterPrivate.PATCH("/:postId", postUserController.UpdatePost)
 		postRouterPrivate.DELETE("/:postId", postUserController.DeletePost)

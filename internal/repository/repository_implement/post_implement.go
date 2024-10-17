@@ -82,7 +82,7 @@ func (r *rPost) GetManyPost(ctx context.Context, query *query_object.PostQueryOb
 
 	db := r.db.WithContext(ctx).Model(&model.Post{})
 
-	if query.UserID != uuid.Nil {
+	if query.UserID != "" {
 		db = db.Where("user_id = ?", query.UserID)
 	}
 

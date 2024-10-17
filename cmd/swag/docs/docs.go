@@ -21,74 +21,6 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/posts/": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When user create post",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post"
-                ],
-                "summary": "Post create post",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Title of the post",
-                        "name": "title",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Content of the post",
-                        "name": "content",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Privacy level",
-                        "name": "privacy",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Location of the post",
-                        "name": "location",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Media files for the post",
-                        "name": "media",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/posts/getMany/{userId}": {
             "get": {
                 "security": [
                     {
@@ -110,9 +42,8 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "User ID to filter posts",
-                        "name": "userId",
-                        "in": "path",
-                        "required": true
+                        "name": "user_id",
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -178,6 +109,72 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user create post",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post"
+                ],
+                "summary": "Post create post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Title of the post",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content of the post",
+                        "name": "content",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Privacy level",
+                        "name": "privacy",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Location of the post",
+                        "name": "location",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Media files for the post",
+                        "name": "media",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.ErrResponse"
                         }

@@ -1,12 +1,10 @@
 package query_object
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type UserQueryObject struct {
-	UserID       uuid.UUID
 	Name         string    `form:"name,omitempty"`
 	Email        string    `form:"email,omitempty"`
 	PhoneNumber  string    `form:"phone_number,omitempty"`

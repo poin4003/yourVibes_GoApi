@@ -177,7 +177,7 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 // @Tags post
 // @Accept json
 // @Produce json
-// @Param userId path string true "User ID to filter posts"
+// @Param user_id query string false "User ID to filter posts"
 // @Param title query string false "Filter by post title"
 // @Param content query string false "Filter by content"
 // @Param location query string false "Filter by location"
@@ -190,7 +190,7 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse "Internal server error"
 // @Security ApiKeyAuth
-// @Router /posts/getMany/{userId} [get]
+// @Router /posts/ [get]
 func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	var query query_object.PostQueryObject
 
@@ -206,16 +206,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		query.Page = 1
 	}
 
-	userIdStr := ctx.Param("userId")
-	userId, err := uuid.Parse(userIdStr)
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	query.UserID = userId
-
-	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", userIdStr, query.Page, query.Limit)
+	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", query.UserID, query.Page, query.Limit)
 	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
 	if err == nil {
 		var postDto []post_dto.PostDto
@@ -258,7 +249,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	}
 
 	postsJson, _ := json.Marshal(postDtos)
-	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*3)
+	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
 
 	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, paging)
 }
@@ -306,7 +297,7 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 	postDto := mapper.MapPostToPostDto(post)
 
 	postJson, _ := json.Marshal(postDto)
-	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*3)
+	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }

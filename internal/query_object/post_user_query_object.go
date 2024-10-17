@@ -1,12 +1,11 @@
 package query_object
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type PostQueryObject struct {
-	UserID          uuid.UUID
+	UserID          string    `form:"user_id,omitempty"`
 	Title           string    `form:"title,omitempty"`
 	Content         string    `form:"content,omitempty"`
 	Location        string    `form:"location,omitempty"`
