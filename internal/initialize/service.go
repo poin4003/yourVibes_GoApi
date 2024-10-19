@@ -14,18 +14,22 @@ func InitServiceInterface(db *gorm.DB) {
 	postRepo := repository_implement.NewPostRepositoryImplement(db)
 	mediaRepo := repository_implement.NewMediaRepositoryImplement(db)
 	settingRepo := repository_implement.NewSettingRepositoryImplement(db)
+	commentRepo := repository_implement.NewCommentRepositoryImplement(db)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
 	repository.InitMediaRepository(mediaRepo)
 	repository.InitSettingRepository(settingRepo)
+	repository.InitCommentRepository(commentRepo)
 
 	// 2. Initialize Service
 	userAuthService := service_implement.NewUserLoginImplement(userRepo, settingRepo)
 	postUserService := service_implement.NewPostUserImplement(userRepo, postRepo, mediaRepo)
 	userInfoService := service_implement.NewUserInfoImplement(userRepo, settingRepo)
+	commentUserService := service_implement.NewCommentUserImplement(commentRepo, userRepo, postRepo)
 
 	services.InitUserAuth(userAuthService)
 	services.InitUserInfo(userInfoService)
 	services.InitPostUser(postUserService)
+	services.InitCommentUser(commentUserService)
 }

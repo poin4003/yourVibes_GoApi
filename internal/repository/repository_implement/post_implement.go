@@ -70,14 +70,17 @@ func (r *rPost) GetPost(
 ) (*model.Post, error) {
 	post := &model.Post{}
 
-	if res := r.db.WithContext(ctx).Model(post).Where(query, args...).First(post); res.Error != nil {
+	if res := r.db.WithContext(ctx).Model(post).Preload("Media").Preload("User").Where(query, args...).First(post); res.Error != nil {
 		return nil, res.Error
 	}
 
 	return post, nil
 }
 
-func (r *rPost) GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, error) {
+func (r *rPost) GetManyPost(
+	ctx context.Context,
+	query *query_object.PostQueryObject,
+) ([]*model.Post, error) {
 	var posts []*model.Post
 
 	db := r.db.WithContext(ctx).Model(&model.Post{})
