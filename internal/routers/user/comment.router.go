@@ -22,5 +22,7 @@ func (cr *CommentRouter) InitCommentRouter(Router *gin.RouterGroup) {
 	{
 		commentRouterPrivate.POST("/", commentUserController.CreateComment)
 		commentRouterPrivate.GET("/", commentUserController.GetComment)
+		commentRouterPrivate.DELETE("/:comment_id", commentUserController.DeleteComment)
+		commentRouterPrivate.PATCH("/:comment_id", commentUserController.UpdateComment)
 	}
 }

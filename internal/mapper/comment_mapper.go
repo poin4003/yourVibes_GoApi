@@ -18,18 +18,31 @@ func MapToCommentFromCreateDto(
 	}
 }
 
+func MapToCommentFromUpdateDto(
+	input *comment_dto.UpdateCommentInput,
+) map[string]interface{} {
+	updateData := make(map[string]interface{})
+
+	if input.Content != nil {
+		updateData["content"] = *input.Content
+	}
+
+	return updateData
+}
+
 func MapCommentToCommentDto(
 	comment *model.Comment,
 ) *comment_dto.CommentDto {
 	return &comment_dto.CommentDto{
-		ID:        comment.ID,
-		PostId:    comment.PostId,
-		UserId:    comment.UserId,
-		ParentId:  comment.ParentId,
-		Content:   comment.Content,
-		LikeCount: comment.LikeCount,
-		CreatedAt: comment.CreatedAt,
-		UpdatedAt: comment.UpdatedAt,
-		User:      MapUserToUserDtoShortVer(&comment.User),
+		ID:              comment.ID,
+		PostId:          comment.PostId,
+		UserId:          comment.UserId,
+		ParentId:        comment.ParentId,
+		Content:         comment.Content,
+		LikeCount:       comment.LikeCount,
+		RepCommentCount: comment.RepCommentCount,
+		CreatedAt:       comment.CreatedAt,
+		UpdatedAt:       comment.UpdatedAt,
+		User:            MapUserToUserDtoShortVer(&comment.User),
 	}
 }

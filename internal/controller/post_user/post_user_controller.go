@@ -103,7 +103,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // @Tags post
 // @Accept multipart/form-data
 // @Produce json
-// @Param postId path string true "PostId"
+// @Param post_id path string true "PostId"
 // @Param title formData string false "Post title"
 // @Param content formData string false "Post content"
 // @Param privacy formData string false "Post privacy"
@@ -113,7 +113,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /posts/{postId} [patch]
+// @Router /posts/{post_id} [patch]
 func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 	var updateInput post_dto.UpdatePostInput
 
@@ -122,7 +122,7 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	postIdStr := ctx.Param("postId")
+	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
@@ -255,9 +255,9 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /posts/{postId} [get]
+// @Router /posts/{post_id} [get]
 func (p *PostUserController) GetPostById(ctx *gin.Context) {
-	postIdStr := ctx.Param("postId")
+	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
@@ -299,13 +299,13 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 // @Tags post
 // @Accept json
 // @Produce json
-// @Param postId path string true "Post ID"
+// @Param post_id path string true "Post ID"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /posts/{postId} [delete]
+// @Router /posts/{post_id} [delete]
 func (p *PostUserController) DeletePost(ctx *gin.Context) {
-	postIdStr := ctx.Param("postId")
+	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())

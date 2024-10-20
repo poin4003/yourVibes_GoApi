@@ -23,8 +23,8 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	{
 		postRouterPrivate.POST("/", postUserController.CreatePost)
 		postRouterPrivate.GET("/", postUserController.GetManyPost)
-		postRouterPrivate.GET("/:postId", postUserController.GetPostById)
-		postRouterPrivate.PATCH("/:postId", postUserController.UpdatePost)
-		postRouterPrivate.DELETE("/:postId", postUserController.DeletePost)
+		postRouterPrivate.GET("/:post_id", postUserController.GetPostById)
+		postRouterPrivate.PATCH("/:post_id", postUserController.UpdatePost)
+		postRouterPrivate.DELETE("/:post_id", postUserController.DeletePost)
 	}
 }

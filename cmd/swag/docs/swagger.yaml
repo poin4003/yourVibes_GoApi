@@ -43,6 +43,23 @@ definitions:
     required:
     - email
     type: object
+  comment_dto.CreateCommentInput:
+    properties:
+      content:
+        type: string
+      parent_id:
+        type: string
+      post_id:
+        type: string
+    required:
+    - content
+    - post_id
+    type: object
+  comment_dto.UpdateCommentInput:
+    properties:
+      content:
+        type: string
+    type: object
   response.ErrResponse:
     properties:
       error:
@@ -92,6 +109,131 @@ info:
   title: API Documentation YourVibes backend
   version: 1.0.0
 paths:
+  /comments/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve multiple comment filtered by various criteria.
+      parameters:
+      - description: Post ID to filter comment, get the first layer
+        in: query
+        name: post_id
+        required: true
+        type: string
+      - description: Filter by parent id, get the next layer
+        in: query
+        name: parent_id
+        type: string
+      - description: Limit of posts per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get many comment
+      tags:
+      - comment
+    post:
+      consumes:
+      - application/json
+      description: When user create comment or rep comment
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/comment_dto.CreateCommentInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Comment create comment
+      tags:
+      - comment
+  /comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: when user want to delete comment
+      parameters:
+      - description: comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: delete comment by ID
+      tags:
+      - comment
+    patch:
+      consumes:
+      - multipart/form-data
+      description: When user need to update information of comment
+      parameters:
+      - description: commentId
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/comment_dto.UpdateCommentInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: update comment
+      tags:
+      - comment
   /posts/:
     get:
       consumes:
@@ -195,7 +337,7 @@ paths:
       summary: Post create post
       tags:
       - post
-  /posts/{postId}:
+  /posts/{post_id}:
     delete:
       consumes:
       - application/json
@@ -203,7 +345,7 @@ paths:
       parameters:
       - description: Post ID
         in: path
-        name: postId
+        name: post_id
         required: true
         type: string
       produces:
@@ -255,7 +397,7 @@ paths:
       parameters:
       - description: PostId
         in: path
-        name: postId
+        name: post_id
         required: true
         type: string
       - description: Post title

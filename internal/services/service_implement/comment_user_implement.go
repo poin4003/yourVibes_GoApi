@@ -45,7 +45,7 @@ func (s *sCommentUser) CreateComment(
 	var rightValue int
 
 	if commentModel.ParentId != nil {
-		parentComment, err := s.commentRepo.GetComment(ctx, "id=?", *commentModel.ParentId)
+		parentComment, err := s.commentRepo.GetOneComment(ctx, "id=?", *commentModel.ParentId)
 		if err != nil {
 			return nil, response.ErrServerFailed, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
@@ -82,6 +82,12 @@ func (s *sCommentUser) CreateComment(
 			return nil, response.ErrServerFailed, fmt.Errorf("Error when update comment %w", err.Error())
 		}
 
+		// Update rep count +1
+		parentComment.RepCommentCount++
+		_, err = s.commentRepo.UpdateOneComment(ctx, parentComment.ID, map[string]interface{}{
+			"rep_comment_count": parentComment.RepCommentCount,
+		})
+
 		commentModel.CommentLeft = rightValue
 		commentModel.CommentRight = rightValue + 1
 	} else {
@@ -113,14 +119,86 @@ func (s *sCommentUser) UpdateComment(
 	commentId uuid.UUID,
 	updateData map[string]interface{},
 ) (comment *model.Comment, resultCode int, err error) {
-	return &model.Comment{}, 0, nil
+	commentUpdate, err := s.commentRepo.UpdateOneComment(ctx, commentId, updateData)
+	if err != nil {
+		return nil, response.ErrServerFailed, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	return commentUpdate, response.ErrCodeSuccess, nil
 }
 
 func (s *sCommentUser) DeleteComment(
 	ctx context.Context,
 	commentId uuid.UUID,
 ) (resultCode int, err error) {
-	return 0, nil
+	// 1. Find comment
+	comment, err := s.commentRepo.GetOneComment(ctx, "id=?", commentId)
+	if err != nil {
+		return response.ErrServerFailed, fmt.Errorf("Error when find comment %w", err.Error())
+	}
+
+	if comment == nil {
+		return response.ErrDataNotFound, fmt.Errorf("Comment not found")
+	}
+
+	// 2. Define width to delete
+	rightValue := comment.CommentRight
+	leftValue := comment.CommentLeft
+	width := rightValue - leftValue + 1
+
+	// 3. Delete all child comment
+	delete_conditions := map[string]interface{}{
+		"post_id":         comment.PostId,
+		"comment_left >=": leftValue,
+		"comment_left <=": rightValue,
+	}
+
+	err = s.commentRepo.DeleteManyComment(ctx, delete_conditions)
+	if err != nil {
+		return response.ErrServerFailed, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	// 4. Update rest of comment_right and comment_left
+	update_conditions := map[string]interface{}{
+		"post_id":        comment.PostId,
+		"comment_left >": rightValue,
+	}
+	updateLeft := map[string]interface{}{
+		"comment_left": gorm.Expr("comment_left - ?", width),
+	}
+	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, updateLeft)
+	if err != nil {
+		return response.ErrServerFailed, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	update_conditions = map[string]interface{}{
+		"post_id":         comment.PostId,
+		"comment_right >": rightValue,
+	}
+	update_right := map[string]interface{}{
+		"comment_right": gorm.Expr("comment_right - ?", width),
+	}
+	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, update_right)
+	if err != nil {
+		return response.ErrServerFailed, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	// 5. Update rep_comment_count of parent comment -1
+	parentComment, err := s.commentRepo.GetOneComment(ctx, "id=?", comment.ParentId)
+	if err != nil {
+		return response.ErrServerFailed, fmt.Errorf("Error when find parent comment %w", err.Error())
+	}
+
+	if parentComment == nil {
+		return response.ErrDataNotFound, fmt.Errorf("Parent comment not found")
+	}
+
+	parentComment.RepCommentCount--
+	_, err = s.commentRepo.UpdateOneComment(ctx, parentComment.ID, map[string]interface{}{
+		"rep_comment_count": parentComment.RepCommentCount,
+	})
+
+	return response.ErrCodeSuccess, nil
 }
 
 func (s *sCommentUser) GetManyComments(
@@ -130,7 +208,7 @@ func (s *sCommentUser) GetManyComments(
 	var queryResult []*model.Comment
 
 	if query.ParentId != "" {
-		parentComment, err := s.commentRepo.GetComment(ctx, "id=?", query.ParentId)
+		parentComment, err := s.commentRepo.GetOneComment(ctx, "id=?", query.ParentId)
 		if err != nil {
 			return nil, response.ErrServerFailed, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}

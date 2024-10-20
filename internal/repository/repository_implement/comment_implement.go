@@ -74,7 +74,7 @@ func (r *rComment) UpdateManyComment(
 	return nil
 }
 
-func (r *rComment) DeleteComment(
+func (r *rComment) DeleteOneComment(
 	ctx context.Context,
 	commentId uuid.UUID,
 ) (*model.Comment, error) {
@@ -92,7 +92,34 @@ func (r *rComment) DeleteComment(
 	return comment, nil
 }
 
-func (r *rComment) GetComment(
+func (r *rComment) DeleteManyComment(
+	ctx context.Context,
+	condition map[string]interface{},
+) error {
+	db := r.db.WithContext(ctx).Model(&model.Comment{})
+
+	for key, value := range condition {
+		if strings.Contains(key, ">=") {
+			db = db.Where(fmt.Sprintf("%s >= ?", key[:len(key)-3]), value)
+		} else if strings.Contains(key, ">") {
+			db = db.Where(fmt.Sprintf("%s > ?", key[:len(key)-2]), value)
+		} else if strings.Contains(key, "<=") {
+			db = db.Where(fmt.Sprintf("%s <= ?", key[:len(key)-3]), value)
+		} else if strings.Contains(key, "<") {
+			db = db.Where(fmt.Sprintf("%s < ?", key[:len(key)-2]), value)
+		} else {
+			db = db.Where(fmt.Sprintf("%s = ?", key), value)
+		}
+	}
+
+	if err := db.Delete(condition).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *rComment) GetOneComment(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
@@ -125,8 +152,8 @@ func (r *rComment) GetManyComment(
 		}
 
 		// 2.2. Find child comment by comment_left and comment_right of commentParent
-		db = db.Where("comment_left > ? AND comment_left < ? AND (comment_right = comment_left + 1 OR comment_right = comment_left + 2)",
-			parentComment.CommentLeft, parentComment.CommentRight)
+		//db = db.Where("comment_left > ? AND comment_right <= ? ", parentComment.CommentLeft, parentComment.CommentRight)
+		db = db.Where("parent_id = ?", parentComment.ID)
 	} else if query.PostId != "" {
 		db = db.Where("post_id = ? AND parent_id IS NULL", query.PostId)
 	}

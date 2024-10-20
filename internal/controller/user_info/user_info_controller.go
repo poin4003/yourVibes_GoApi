@@ -81,13 +81,6 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		return
 	}
 
-	if query.Limit <= 0 {
-		query.Limit = 10
-	}
-	if query.Page <= 0 {
-		query.Page = 1
-	}
-
 	users, resultCode, paging, err := services.UserInfo().GetManyUsers(ctx, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())

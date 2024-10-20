@@ -13,8 +13,9 @@ type (
 		CreateComment(ctx context.Context, comment *model.Comment) (*model.Comment, error)
 		UpdateOneComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (*model.Comment, error)
 		UpdateManyComment(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
-		DeleteComment(ctx context.Context, commentId uuid.UUID) (*model.Comment, error)
-		GetComment(ctx context.Context, query interface{}, args ...interface{}) (*model.Comment, error)
+		DeleteOneComment(ctx context.Context, commentId uuid.UUID) (*model.Comment, error)
+		DeleteManyComment(ctx context.Context, condition map[string]interface{}) error
+		GetOneComment(ctx context.Context, query interface{}, args ...interface{}) (*model.Comment, error)
 		GetManyComment(ctx context.Context, query *query_object.CommentQueryObject) ([]*model.Comment, *response.PagingResponse, error)
 		GetMaxCommentRightByPostId(ctx context.Context, postId uuid.UUID) (int, error)
 	}
