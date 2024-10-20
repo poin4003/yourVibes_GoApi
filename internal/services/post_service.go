@@ -17,9 +17,9 @@ type (
 		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, err error)
 	}
 	IPostLike interface {
-		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error
-		DeleteLikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error
-		GetUsersOnLikes(ctx context.Context, postId uuid.UUID) ([]*model.User, error)
+		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) (resultCode int, err error)
+		DeleteLikePost(ctx context.Context, likeUserPost *model.LikeUserPost) (resultCode int, err error)
+		GetUsersOnLikes(ctx context.Context, query *query_object.PostLikeQueryObject) (users []*model.User, resultCode int, err error)
 	}
 )
 

@@ -200,7 +200,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	}
 
 	if query.Limit <= 0 {
-		query.Limit = 10
+		query.Limit = 1
 	}
 	if query.Page <= 0 {
 		query.Page = 1

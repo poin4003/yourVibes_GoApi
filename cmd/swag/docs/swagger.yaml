@@ -300,6 +300,95 @@ paths:
       summary: update post
       tags:
       - post
+  /posts/delete_post/{postId}:
+    delete:
+      consumes:
+      - application/json
+      description: When user delete like post
+      parameters:
+      - description: Post ID to delete like post
+        in: path
+        name: postId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Post
+      tags:
+      - post
+  /posts/like_post/{postId}:
+    post:
+      consumes:
+      - application/json
+      description: When user like post
+      parameters:
+      - description: Post ID to create like post
+        in: path
+        name: postId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Like Post
+      tags:
+      - post
+  /posts/likeUser/{postId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve multiple posts filtered by various criteria.
+      parameters:
+      - description: Post ID to get user like post
+        in: path
+        name: postId
+        required: true
+        type: string
+      - description: Limit of posts per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get User like posts
+      tags:
+      - post
   /users/:
     get:
       consumes:

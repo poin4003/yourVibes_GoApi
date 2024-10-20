@@ -13,6 +13,7 @@ const (
 	ErrCodeValidateParamEmail    = 50003
 	ErrCodeValidate              = 50004
 	ErrDataNotFound              = 50005
+	ErrUserRequest               = 50006
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -37,6 +38,7 @@ var msg = map[int]string{
 	ErrInvalidToken:     "Token is invalid",
 	ErrInvalidOTP:       "OTP is invalid",
 	ErrSendEmailOTP:     "Failed to send email otp",
+	ErrUserRequest:      "Bad request, user do something wrong",
 
 	ErrCodeUserHasExists:         "User has already registered",
 	ErrCodeValidateParamRegister: "Validate param register failed",

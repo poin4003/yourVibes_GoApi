@@ -25,7 +25,7 @@ type (
 	ILikeUserPostRepository interface {
 		CreateLikeUserPost(ctx context.Context, likeUserPost *model.LikeUserPost) error
 		DeleteLikeUserPost(ctx context.Context, likeUserPost *model.LikeUserPost) error
-		GetLikeUserPost(ctx context.Context, postId uuid.UUID) ([]*model.User, error)
+		GetLikeUserPost(ctx context.Context, query *query_object.PostLikeQueryObject) ([]*model.User, error)
 	}
 )
 

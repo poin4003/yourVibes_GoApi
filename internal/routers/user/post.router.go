@@ -13,6 +13,7 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	// Public router
 
 	postUserController := post_user.NewPostUserController(global.Rdb)
+	postLikeController := post_user.NewPostLikeController(global.Rdb)
 	//userRouterPublic := Router.Group("/posts")
 	//{
 	//}
@@ -26,5 +27,9 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		postRouterPrivate.GET("/:postId", postUserController.GetPostById)
 		postRouterPrivate.PATCH("/:postId", postUserController.UpdatePost)
 		postRouterPrivate.DELETE("/:postId", postUserController.DeletePost)
+
+		postRouterPrivate.POST("/like_post/:postId", postLikeController.LikePost)
+		postRouterPrivate.DELETE("/delete_post/:postId", postLikeController.DeleteLikePost)
+		postRouterPrivate.GET("/likeUser/:postId", postLikeController.GetUserLikePost)
 	}
 }
