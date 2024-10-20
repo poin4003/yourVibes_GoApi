@@ -88,18 +88,10 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		query.Page = 1
 	}
 
-	users, resultCode, err := services.UserInfo().GetManyUsers(ctx, &query)
+	users, resultCode, paging, err := services.UserInfo().GetManyUsers(ctx, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	total := int64(len(users))
-
-	paging := response.PagingResponse{
-		Limit: query.Limit,
-		Page:  query.Page,
-		Total: total,
 	}
 
 	var userDtos []user_dto.UserDtoWithoutSetting
@@ -108,7 +100,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, *userDto)
 	}
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDtos, paging)
+	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDtos, *paging)
 }
 
 // UpdateUser godoc

@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -13,7 +14,7 @@ type (
 		CreateUser(ctx context.Context, user *model.User) (*model.User, error)
 		UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}) (*model.User, error)
 		GetUser(ctx context.Context, query interface{}, args ...interface{}) (*model.User, error)
-		GetManyUser(ctx context.Context, query *query_object.UserQueryObject) ([]*model.User, error)
+		GetManyUser(ctx context.Context, query *query_object.UserQueryObject) ([]*model.User, *response.PagingResponse, error)
 	}
 	ISettingRepository interface {
 		CreateSetting(ctx context.Context, setting *model.Setting) (*model.Setting, error)

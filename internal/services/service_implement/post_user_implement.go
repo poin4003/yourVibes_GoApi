@@ -105,8 +105,10 @@ func (s *sPostUser) UpdatePost(
 			}
 
 			// 2.2. Delete media from cloudinary
-			if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+			if media.MediaUrl != "" {
+				if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
+					return nil, response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+				}
 			}
 
 			// 2.3. Delete media from databases
@@ -116,7 +118,6 @@ func (s *sPostUser) UpdatePost(
 		}
 	}
 
-	fmt.Println(len(inMedia))
 	// 3. Create Media and upload media to cloudinary_util
 	if len(inMedia) > 0 {
 		for _, file := range inMedia {
@@ -200,12 +201,12 @@ func (s *sPostUser) GetPost(
 func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
 	query *query_object.PostQueryObject,
-) (posts []*model.Post, resultCode int, err error) {
-	postModels, err := s.postRepo.GetManyPost(ctx, query)
+) (posts []*model.Post, resultCode int, pagingResponse *response.PagingResponse, err error) {
+	postModels, paging, err := s.postRepo.GetManyPost(ctx, query)
 
 	if err != nil {
-		return nil, response.ErrDataNotFound, err
+		return nil, response.ErrDataNotFound, nil, err
 	}
 
-	return postModels, response.ErrCodeSuccess, nil
+	return postModels, response.ErrCodeSuccess, paging, nil
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/auth_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"mime/multipart"
 )
 
@@ -18,7 +19,7 @@ type (
 	}
 	IUserInfo interface {
 		GetInfoByUserId(ctx context.Context, userId uuid.UUID) (user *model.User, resultCode int, err error)
-		GetManyUsers(ctx context.Context, query *query_object.UserQueryObject) (users []*model.User, resultCode int, err error)
+		GetManyUsers(ctx context.Context, query *query_object.UserQueryObject) (users []*model.User, resultCode int, response *response.PagingResponse, err error)
 		UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}, inAvatarUrl multipart.File, inCapwallUrl multipart.File, languageSetting consts.Language) (user *model.User, resultCode int, err error)
 	}
 )

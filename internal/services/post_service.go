@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"mime/multipart"
 )
 
@@ -14,7 +15,7 @@ type (
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *model.Post, resultCode int, err error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (resultCode int, err error)
 		GetPost(ctx context.Context, postId uuid.UUID) (post *model.Post, resultCode int, err error)
-		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, err error)
+		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, response *response.PagingResponse, err error)
 	}
 	IPostLike interface {
 		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error

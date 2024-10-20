@@ -137,15 +137,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Title of the post",
                         "name": "title",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
                         "description": "Content of the post",
                         "name": "content",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",

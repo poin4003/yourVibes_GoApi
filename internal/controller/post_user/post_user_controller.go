@@ -42,8 +42,8 @@ var (
 // @Tags post
 // @Accept multipart/form-data
 // @Produce json
-// @Param title formData string true "Title of the post"
-// @Param content formData string true "Content of the post"
+// @Param title formData string false "Title of the post"
+// @Param content formData string false "Content of the post"
 // @Param privacy formData string false "Privacy level"
 // @Param location formData string false "Location of the post"
 // @Param media formData file false "Media files for the post" multiple
@@ -56,6 +56,11 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 
 	if err := ctx.ShouldBind(&postInput); err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if postInput.Content == "" && postInput.Media == nil {
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, "You must provide at least one of Content or Media")
 		return
 	}
 
@@ -199,47 +204,30 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 		return
 	}
 
-	if query.Limit <= 0 {
-		query.Limit = 10
-	}
-	if query.Page <= 0 {
-		query.Page = 1
-	}
-
 	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", query.UserID, query.Page, query.Limit)
 	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
 	if err == nil {
 		var postDto []post_dto.PostDto
 		err = json.Unmarshal([]byte(cachePosts), &postDto)
-		if err != nil {
-			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		if err == nil {
+			cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
+			cacheTatal, _ := p.redisClient.Get(context.Background(), cacheTotalKey).Int64()
+
+			paging := response.PagingResponse{
+				Limit: query.Limit,
+				Page:  query.Page,
+				Total: cacheTatal,
+			}
+
+			response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto, paging)
 			return
 		}
-
-		total := int64(len(postDto))
-
-		paging := response.PagingResponse{
-			Limit: query.Limit,
-			Page:  query.Page,
-			Total: total,
-		}
-
-		response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto, paging)
-		return
 	}
 
-	posts, resultCode, err := services.PostUser().GetManyPosts(ctx, &query)
+	posts, resultCode, paging, err := services.PostUser().GetManyPosts(ctx, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	total := int64(len(posts))
-
-	paging := response.PagingResponse{
-		Limit: query.Limit,
-		Page:  query.Page,
-		Total: total,
 	}
 
 	var postDtos []post_dto.PostDto
@@ -251,7 +239,10 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 	postsJson, _ := json.Marshal(postDtos)
 	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, paging)
+	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
+	p.redisClient.Set(context.Background(), cacheTotalKey, paging.Total, time.Minute*1)
+
+	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, *paging)
 }
 
 // GetPostById documentation

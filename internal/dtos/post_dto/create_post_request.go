@@ -6,9 +6,9 @@ import (
 )
 
 type CreatePostInput struct {
-	Title    string                 `form:"title" binding:"required"`
-	Content  string                 `form:"content" binding:"required"`
-	Privacy  consts.PrivacyLevel    `form:"privacy" binding:"omitempty,privacy_enum"`
+	Title    string                 `form:"title,omitempty" binding:"omitempty"`
+	Content  string                 `form:"content,omitempty" binding:"omitempty"`
+	Privacy  consts.PrivacyLevel    `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
 	Location string                 `form:"location,omitempty"`
 	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty,files"`
 }

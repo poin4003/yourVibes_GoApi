@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
 )
@@ -80,8 +81,9 @@ func (r *rPost) GetPost(
 func (r *rPost) GetManyPost(
 	ctx context.Context,
 	query *query_object.PostQueryObject,
-) ([]*model.Post, error) {
+) ([]*model.Post, *response.PagingResponse, error) {
 	var posts []*model.Post
+	var total int64
 
 	db := r.db.WithContext(ctx).Model(&model.Post{})
 
@@ -141,6 +143,11 @@ func (r *rPost) GetManyPost(
 		}
 	}
 
+	err := db.Count(&total).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
 	limit := query.Limit
 	page := query.Page
 	if limit <= 0 {
@@ -153,8 +160,14 @@ func (r *rPost) GetManyPost(
 	offset := (page - 1) * limit
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Preload("Media").Preload("User").Find(&posts).Error; err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return posts, nil
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	return posts, pagingResponse, nil
 }

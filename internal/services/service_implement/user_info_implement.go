@@ -46,14 +46,14 @@ func (s *sUserInfo) GetInfoByUserId(
 func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
 	query *query_object.UserQueryObject,
-) (users []*model.User, resultCode int, err error) {
-	userModels, err := s.userRepo.GetManyUser(ctx, query)
+) (users []*model.User, resultCode int, pagingResponse *response.PagingResponse, err error) {
+	userModels, paging, err := s.userRepo.GetManyUser(ctx, query)
 
 	if err != nil {
-		return nil, response.ErrDataNotFound, err
+		return nil, response.ErrDataNotFound, nil, err
 	}
 
-	return userModels, response.ErrCodeSuccess, nil
+	return userModels, response.ErrCodeSuccess, paging, nil
 }
 
 func (s *sUserInfo) UpdateUser(

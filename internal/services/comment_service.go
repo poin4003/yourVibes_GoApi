@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -12,7 +13,7 @@ type (
 		CreateComment(ctx context.Context, commentModel *model.Comment) (comment *model.Comment, resultCode int, err error)
 		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *model.Comment, resultCode int, err error)
 		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, err error)
-		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject) (comments []*model.Comment, resultCode int, err error)
+		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject) (comments []*model.Comment, resultCode int, pagingResponse *response.PagingResponse, err error)
 	}
 )
 

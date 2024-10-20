@@ -39,7 +39,9 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, comment)
+	commentDto := mapper.MapCommentToCommentDto(comment)
+
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
 }
 
 func (p *cCommentUser) GetComment(ctx *gin.Context) {
@@ -57,18 +59,17 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		query.Page = 1
 	}
 
-	comment, resultCode, err := services.CommentUser().GetManyComments(ctx, &query)
+	comments, resultCode, paging, err := services.CommentUser().GetManyComments(ctx, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	total := int64(len(comment))
-	paging := response.PagingResponse{
-		Limit: query.Limit,
-		Page:  query.Page,
-		Total: total,
+	var commentDtos []comment_dto.CommentDto
+	for _, comment := range comments {
+		commentDto := mapper.MapCommentToCommentDto(comment)
+		commentDtos = append(commentDtos, *commentDto)
 	}
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, comment, paging)
+	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, commentDtos, *paging)
 }

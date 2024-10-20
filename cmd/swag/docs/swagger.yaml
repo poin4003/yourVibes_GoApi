@@ -162,12 +162,10 @@ paths:
       - description: Title of the post
         in: formData
         name: title
-        required: true
         type: string
       - description: Content of the post
         in: formData
         name: content
-        required: true
         type: string
       - description: Privacy level
         in: formData

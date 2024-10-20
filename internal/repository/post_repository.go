@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -13,7 +14,7 @@ type (
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}) (*model.Post, error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (*model.Post, error)
 		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*model.Post, error)
-		GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, error)
+		GetManyPost(ctx context.Context, query *query_object.PostQueryObject) ([]*model.Post, *response.PagingResponse, error)
 	}
 	IMediaRepository interface {
 		CreateMedia(ctx context.Context, media *model.Media) (*model.Media, error)

@@ -126,30 +126,30 @@ func (s *sCommentUser) DeleteComment(
 func (s *sCommentUser) GetManyComments(
 	ctx context.Context,
 	query *query_object.CommentQueryObject,
-) (comments []*model.Comment, resultCode int, err error) {
+) (comments []*model.Comment, resultCode int, paingResponse *response.PagingResponse, err error) {
 	var queryResult []*model.Comment
 
 	if query.ParentId != "" {
 		parentComment, err := s.commentRepo.GetComment(ctx, "id=?", query.ParentId)
 		if err != nil {
-			return nil, response.ErrServerFailed, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, response.ErrServerFailed, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 		if parentComment == nil {
-			return nil, response.ErrDataNotFound, fmt.Errorf("Parent comment not found")
+			return nil, response.ErrDataNotFound, nil, fmt.Errorf("Parent comment not found")
 		}
 
-		queryResult, err := s.commentRepo.GetManyComment(ctx, query)
+		queryResult, pagingResponse, err := s.commentRepo.GetManyComment(ctx, query)
 		if err != nil {
-			return nil, response.ErrServerFailed, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, response.ErrServerFailed, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
-		return queryResult, response.ErrCodeSuccess, nil
+		return queryResult, response.ErrCodeSuccess, pagingResponse, nil
 	} else {
-		queryResult, err = s.commentRepo.GetManyComment(ctx, query)
+		queryResult, paingResponse, err = s.commentRepo.GetManyComment(ctx, query)
 		if err != nil {
-			return nil, response.ErrServerFailed, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, response.ErrServerFailed, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 	}
 
-	return queryResult, response.ErrCodeSuccess, nil
+	return queryResult, response.ErrCodeSuccess, paingResponse, nil
 }

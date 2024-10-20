@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -108,8 +109,9 @@ func (r *rComment) GetComment(
 func (r *rComment) GetManyComment(
 	ctx context.Context,
 	query *query_object.CommentQueryObject,
-) ([]*model.Comment, error) {
+) ([]*model.Comment, *response.PagingResponse, error) {
 	var comments []*model.Comment
+	var total int64
 
 	db := r.db.WithContext(ctx).Model(&model.Comment{})
 
@@ -119,13 +121,19 @@ func (r *rComment) GetManyComment(
 		var parentComment model.Comment
 		err := r.db.WithContext(ctx).Where("id = ?", query.ParentId).Find(&parentComment).Error
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// 2.2. Find child comment by comment_left and comment_right of commentParent
-		db = db.Where("comment_left > ? AND comment_right <= ?", parentComment.CommentLeft, parentComment.CommentRight)
+		db = db.Where("comment_left > ? AND comment_left < ? AND (comment_right = comment_left + 1 OR comment_right = comment_left + 2)",
+			parentComment.CommentLeft, parentComment.CommentRight)
 	} else if query.PostId != "" {
 		db = db.Where("post_id = ? AND parent_id IS NULL", query.PostId)
+	}
+
+	err := db.Count(&total).Error
+	if err != nil {
+		return nil, nil, err
 	}
 
 	limit := query.Limit
@@ -139,11 +147,17 @@ func (r *rComment) GetManyComment(
 
 	offset := (page - 1) * limit
 
-	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Order("comment_left ASC").Find(&comments).Error; err != nil {
-		return nil, err
+	if err := db.Offset(offset).Limit(limit).Order("comment_left ASC").Preload("User").Find(&comments).Error; err != nil {
+		return nil, nil, err
 	}
 
-	return comments, nil
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	return comments, pagingResponse, nil
 }
 
 func (r *rComment) GetMaxCommentRightByPostId(

@@ -17,3 +17,19 @@ func MapToCommentFromCreateDto(
 		Content:  input.Content,
 	}
 }
+
+func MapCommentToCommentDto(
+	comment *model.Comment,
+) *comment_dto.CommentDto {
+	return &comment_dto.CommentDto{
+		ID:        comment.ID,
+		PostId:    comment.PostId,
+		UserId:    comment.UserId,
+		ParentId:  comment.ParentId,
+		Content:   comment.Content,
+		LikeCount: comment.LikeCount,
+		CreatedAt: comment.CreatedAt,
+		UpdatedAt: comment.UpdatedAt,
+		User:      MapUserToUserDtoShortVer(&comment.User),
+	}
+}

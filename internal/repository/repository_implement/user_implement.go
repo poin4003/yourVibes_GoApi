@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
 )
@@ -77,8 +78,9 @@ func (r *rUser) GetUser(
 func (r *rUser) GetManyUser(
 	ctx context.Context,
 	query *query_object.UserQueryObject,
-) ([]*model.User, error) {
+) ([]*model.User, *response.PagingResponse, error) {
 	var users []*model.User
+	var total int64
 
 	db := r.db.WithContext(ctx).Model(&model.User{})
 
@@ -146,6 +148,11 @@ func (r *rUser) GetManyUser(
 		}
 	}
 
+	err := db.Count(&total).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
 	limit := query.Limit
 	page := query.Page
 	if limit <= 0 {
@@ -158,8 +165,14 @@ func (r *rUser) GetManyUser(
 	offset := (page - 1) * limit
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Find(&users).Error; err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return users, nil
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	return users, pagingResponse, nil
 }
