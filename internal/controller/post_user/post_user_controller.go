@@ -94,6 +94,9 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 
 	postDto := mapper.MapPostToNewPostDto(post)
 
+	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", userUUID)
+	p.redisClient.Del(context.Background(), cacheKey)
+
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
 
@@ -172,6 +175,12 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 	}
 
 	postDto := mapper.MapPostToPostDto(post)
+
+	// Delete cache
+	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", postFound.UserId)
+	cachePostKey := postId.String()
+	p.redisClient.Del(context.Background(), cacheKey)
+	p.redisClient.Del(context.Background(), cachePostKey)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
@@ -340,6 +349,12 @@ func (p *PostUserController) DeletePost(ctx *gin.Context) {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// Delete cache in redis
+	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", postFound.UserId)
+	cachePostKey := postId.String()
+	p.redisClient.Del(context.Background(), cacheKey)
+	p.redisClient.Del(context.Background(), cachePostKey)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusNoContent, postId)
 }
