@@ -757,7 +757,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User login",
                 "parameters": [
@@ -797,7 +797,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User Registration",
                 "parameters": [
@@ -837,7 +837,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User verify email",
                 "parameters": [

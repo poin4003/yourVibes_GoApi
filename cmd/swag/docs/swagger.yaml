@@ -628,7 +628,7 @@ paths:
             $ref: '#/definitions/response.ErrResponse'
       summary: User login
       tags:
-      - auth
+      - user_auth
   /users/register/:
     post:
       consumes:
@@ -654,7 +654,7 @@ paths:
             $ref: '#/definitions/response.ErrResponse'
       summary: User Registration
       tags:
-      - auth
+      - user_auth
   /users/verifyemail/:
     post:
       consumes:
@@ -680,7 +680,7 @@ paths:
             $ref: '#/definitions/response.ErrResponse'
       summary: User verify email
       tags:
-      - auth
+      - user_auth
 securityDefinitions:
   ApiKeyAuth:
     description: Token without 'Bearer ' prefix

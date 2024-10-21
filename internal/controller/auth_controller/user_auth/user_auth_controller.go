@@ -19,7 +19,7 @@ func NewUserAuthController() *cUserAuth {
 // VerifyEmail documentation
 // @Summary User verify email
 // @Description Before user registration
-// @Tags auth
+// @Tags user_auth
 // @Accept json
 // @Produce json
 // @Param input body auth_dto.VerifyEmailInput true "input"
@@ -46,7 +46,7 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 // Register documentation
 // @Summary User Registration
 // @Description When user registration
-// @Tags auth
+// @Tags user_auth
 // @Accept json
 // @Produce json
 // @Param input body auth_dto.RegisterCredentials true "input"
@@ -73,7 +73,7 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 // Login documentation
 // @Summary User login
 // @Description When user login
-// @Tags auth
+// @Tags user_auth
 // @Accept json
 // @Produce json
 // @Param input body auth_dto.LoginCredentials true "input"

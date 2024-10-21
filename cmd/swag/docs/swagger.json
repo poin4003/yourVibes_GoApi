@@ -751,7 +751,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User login",
                 "parameters": [
@@ -791,7 +791,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User Registration",
                 "parameters": [
@@ -831,7 +831,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user_auth"
                 ],
                 "summary": "User verify email",
                 "parameters": [
