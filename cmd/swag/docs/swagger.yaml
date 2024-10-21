@@ -147,7 +147,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get many comment
       tags:
-      - comment
+      - comment_user
     post:
       consumes:
       - application/json
@@ -174,7 +174,7 @@ paths:
       - ApiKeyAuth: []
       summary: Comment create comment
       tags:
-      - comment
+      - comment_user
   /comments/{comment_id}:
     delete:
       consumes:
@@ -201,7 +201,7 @@ paths:
       - ApiKeyAuth: []
       summary: delete comment by ID
       tags:
-      - comment
+      - comment_user
     patch:
       consumes:
       - multipart/form-data
@@ -233,7 +233,7 @@ paths:
       - ApiKeyAuth: []
       summary: update comment
       tags:
-      - comment
+      - comment_user
   /posts/:
     get:
       consumes:
@@ -513,7 +513,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get a list of users
       tags:
-      - user
+      - user_info
     patch:
       consumes:
       - multipart/form-data
@@ -575,7 +575,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update user information
       tags:
-      - user
+      - user_info
   /users/{userId}:
     get:
       consumes:
@@ -602,7 +602,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get user by ID
       tags:
-      - user
+      - user_info
   /users/login/:
     post:
       consumes:

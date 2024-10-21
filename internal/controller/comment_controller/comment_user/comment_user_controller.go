@@ -22,7 +22,7 @@ func NewCommentUserController() *cCommentUser {
 // CreateComment documentation
 // @Summary Comment create comment
 // @Description When user create comment or rep comment
-// @Tags comment
+// @Tags comment_user
 // @Accept json
 // @Produce json
 // @Param input body comment_dto.CreateCommentInput true "input"
@@ -45,21 +45,21 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	}
 
 	commentModel := mapper.MapToCommentFromCreateDto(&commentInput, userUUID)
-	comment, resultCode, err := services.CommentUser().CreateComment(ctx, commentModel)
+	comment, resultCode, httpStatusCode, err := services.CommentUser().CreateComment(ctx, commentModel)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
 	commentDto := mapper.MapCommentToCommentDto(comment)
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, commentDto)
 }
 
 // GetManyComment documentation
 // @Summary Get many comment
 // @Description Retrieve multiple comment filtered by various criteria.
-// @Tags comment
+// @Tags comment_user
 // @Accept json
 // @Produce json
 // @Param post_id query string true "Post ID to filter comment, get the first layer"
@@ -78,9 +78,9 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		return
 	}
 
-	comments, resultCode, paging, err := services.CommentUser().GetManyComments(ctx, &query)
+	comments, resultCode, httpStatusCode, paging, err := services.CommentUser().GetManyComments(ctx, &query)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -90,13 +90,13 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		commentDtos = append(commentDtos, *commentDto)
 	}
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, commentDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, commentDtos, *paging)
 }
 
 // DeleteComment documentation
 // @Summary delete comment by ID
 // @Description when user want to delete comment
-// @Tags comment
+// @Tags comment_user
 // @Accept json
 // @Produce json
 // @Param comment_id path string true "comment ID"
@@ -112,19 +112,19 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 		return
 	}
 
-	resultCode, err := services.CommentUser().DeleteComment(ctx, commentId)
+	resultCode, httpStatusCode, err := services.CommentUser().DeleteComment(ctx, commentId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, http.StatusOK)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, nil)
 }
 
 // UpdateComment documentation
 // @Summary update comment
 // @Description When user need to update information of comment
-// @Tags comment
+// @Tags comment_user
 // @Accept multipart/form-data
 // @Produce json
 // @Param comment_id path string true "commentId"
@@ -150,13 +150,13 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 
 	commentModel := mapper.MapToCommentFromUpdateDto(&updateInput)
 
-	comment, resultCode, err := services.CommentUser().UpdateComment(ctx, commentId, commentModel)
+	comment, resultCode, httpStatusCode, err := services.CommentUser().UpdateComment(ctx, commentId, commentModel)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
 	commentDto := mapper.MapCommentToCommentDto(comment)
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, commentDto)
 }

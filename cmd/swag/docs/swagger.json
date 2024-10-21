@@ -29,7 +29,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "Get many comment",
                 "parameters": [
@@ -88,7 +88,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "Comment create comment",
                 "parameters": [
@@ -133,7 +133,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "delete comment by ID",
                 "parameters": [
@@ -174,7 +174,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "update comment",
                 "parameters": [
@@ -572,7 +572,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Get a list of users",
                 "parameters": [
@@ -660,7 +660,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Update user information",
                 "parameters": [
@@ -876,7 +876,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Get user by ID",
                 "parameters": [

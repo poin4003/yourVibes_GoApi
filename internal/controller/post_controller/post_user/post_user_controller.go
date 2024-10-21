@@ -9,7 +9,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/services"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -80,9 +79,9 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	}
 
 	postModel := mapper.MapToPostFromCreateDto(&postInput, userUUID)
-	post, resultCode, err := services.PostUser().CreatePost(context.Background(), postModel, uploadedFiles)
+	post, resultCode, httpStatusCode, err := services.PostUser().CreatePost(context.Background(), postModel, uploadedFiles)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -102,7 +101,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
 }
 
 // UpdatePost documentation
@@ -142,14 +141,9 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if postFound == nil {
-		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprintf("post id %s not found", postIdStr))
+		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
 	}
 
@@ -172,9 +166,9 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		uploadedFiles = append(uploadedFiles, openFile)
 	}
 
-	post, resultCode, err := services.PostUser().UpdatePost(ctx, postId, updateData, deleteMediaIds, uploadedFiles)
+	post, resultCode, httpStatusCode, err := services.PostUser().UpdatePost(ctx, postId, updateData, deleteMediaIds, uploadedFiles)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -195,7 +189,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
 }
 
 // GetManyPost documentation
@@ -245,9 +239,9 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		}
 	}
 
-	posts, resultCode, paging, err := services.PostUser().GetManyPosts(ctx, &query)
+	posts, resultCode, httpStatusCode, paging, err := services.PostUser().GetManyPosts(ctx, &query)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -263,7 +257,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
 	p.redisClient.Set(context.Background(), cacheTotalKey, paging.Total, time.Minute*1)
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, postDtos, *paging)
 }
 
 // GetPostById documentation
@@ -298,12 +292,9 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	var post *model.Post
-	var resultCode int
-
-	post, resultCode, err = services.PostUser().GetPost(ctx, postId)
+	post, resultCode, httpStatusCode, err := services.PostUser().GetPost(ctx, postId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -312,7 +303,7 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	postJson, _ := json.Marshal(postDto)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
 }
 
 // DeletePost documentation
@@ -340,14 +331,9 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if postFound == nil {
-		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprintf("post id %s not found", postIdStr))
+		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
 	}
 
@@ -356,9 +342,9 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	resultCode, err := services.PostUser().DeletePost(ctx, postId)
+	resultCode, httpStatusCode, err := services.PostUser().DeletePost(ctx, postId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -377,5 +363,5 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusNoContent, postId)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, postId)
 }

@@ -35,7 +35,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "Get many comment",
                 "parameters": [
@@ -94,7 +94,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "Comment create comment",
                 "parameters": [
@@ -139,7 +139,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "delete comment by ID",
                 "parameters": [
@@ -180,7 +180,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "comment"
+                    "comment_user"
                 ],
                 "summary": "update comment",
                 "parameters": [
@@ -578,7 +578,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Get a list of users",
                 "parameters": [
@@ -666,7 +666,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Update user information",
                 "parameters": [
@@ -882,7 +882,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "user_info"
                 ],
                 "summary": "Get user by ID",
                 "parameters": [

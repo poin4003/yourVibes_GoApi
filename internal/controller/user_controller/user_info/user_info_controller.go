@@ -7,7 +7,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/services"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -24,7 +23,7 @@ func NewUserInfoController() *cUserInfo {
 // GetInfoByUserId documentation
 // @Summary Get user by ID
 // @Description Retrieve a user by its unique ID
-// @Tags user
+// @Tags user_info
 // @Accept json
 // @Produce json
 // @Param userId path string true "User ID"
@@ -40,24 +39,21 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 		return
 	}
 
-	var user *model.User
-	var resultCode int
-
-	user, resultCode, err = services.UserInfo().GetInfoByUserId(ctx, userId)
+	user, resultCode, httpStatusCode, err := services.UserInfo().GetInfoByUserId(ctx, userId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
 	userDto := mapper.MapUserToUserDtoWithoutSetting(user)
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, userDto)
 }
 
 // GetManyUsers documentation
 // @Summary      Get a list of users
 // @Description  Retrieve users based on filters such as name, email, phone number, birthday, and created date. Supports pagination and sorting.
-// @Tags         user
+// @Tags         user_info
 // @Accept       json
 // @Produce      json
 // @Param        name          query     string  false  "name to filter users"
@@ -81,9 +77,9 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		return
 	}
 
-	users, resultCode, paging, err := services.UserInfo().GetManyUsers(ctx, &query)
+	users, resultCode, httpStatusCode, paging, err := services.UserInfo().GetManyUsers(ctx, &query)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
@@ -93,13 +89,13 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, *userDto)
 	}
 
-	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, userDtos, *paging)
 }
 
 // UpdateUser godoc
 // @Summary      Update user information
 // @Description  Update various fields of the user profile including name, email, phone number, birthday, and upload avatar and capwall images.
-// @Tags         user
+// @Tags         user_info
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        family_name      formData  string  false  "User's family name"
@@ -156,12 +152,12 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 		languageSetting = *updateInput.LanguageSetting
 	}
 
-	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileAvatar, openFileCapwall, languageSetting)
+	user, resultCode, httpStatusCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileAvatar, openFileCapwall, languageSetting)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 	}
 
 	userDto := mapper.MapUserToUserDto(user)
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, userDto)
 }

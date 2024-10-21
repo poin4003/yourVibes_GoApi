@@ -2,6 +2,7 @@ package service_implement
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
@@ -9,7 +10,9 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/cloudinary_util"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"gorm.io/gorm"
 	"mime/multipart"
+	"net/http"
 )
 
 type sPostUser struct {
@@ -34,11 +37,11 @@ func (s *sPostUser) CreatePost(
 	ctx context.Context,
 	postModel *model.Post,
 	inMedia []multipart.File,
-) (post *model.Post, resultCode int, err error) {
+) (post *model.Post, resultCode int, httpStatusCode int, err error) {
 	// 1. CreatePost
 	newPost, err := s.postRepo.CreatePost(ctx, postModel)
 	if err != nil {
-		return nil, response.ErrDataNotFound, err
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
 	}
 
 	// 2. Create Media and upload media to cloudinary_util
@@ -48,11 +51,11 @@ func (s *sPostUser) CreatePost(
 			mediaUrl, err := cloudinary_util.UploadMediaToCloudinary(file)
 
 			if err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to upload media to cloudinary: %w", err)
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to upload media to cloudinary: %w", err)
 			}
 
 			if mediaUrl == "" {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to upload media to cloudinary: empty media url")
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to upload media to cloudinary: empty media url")
 			}
 
 			// 2.2. create Media model and save to database
@@ -63,14 +66,17 @@ func (s *sPostUser) CreatePost(
 
 			_, err = s.mediaRepo.CreateMedia(ctx, mediaTemp)
 			if err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to create media record: %w", err)
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create media record: %w", err)
 			}
 		}
 	}
 
 	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
 	if err != nil {
-		return nil, response.ErrDataNotFound, fmt.Errorf("failed to get user: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find user: %w", err)
+		}
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	userFound.PostCount++
@@ -79,7 +85,14 @@ func (s *sPostUser) CreatePost(
 		"post_count": userFound.PostCount,
 	})
 
-	return newPost, response.ErrCodeSuccess, nil
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to update user: %w", err)
+		}
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return newPost, response.ErrCodeSuccess, http.StatusInternalServerError, nil
 }
 
 func (s *sPostUser) UpdatePost(
@@ -88,11 +101,14 @@ func (s *sPostUser) UpdatePost(
 	updateData map[string]interface{},
 	deleteMediaIds []uint,
 	inMedia []multipart.File,
-) (post *model.Post, resultCode int, err error) {
+) (post *model.Post, resultCode int, httpStatusCode int, err error) {
 	// 1. update post information
 	postModel, err := s.postRepo.UpdatePost(ctx, postId, updateData)
 	if err != nil {
-		return nil, response.ErrServerFailed, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
 	}
 
 	// 2. delete media in database and delete media from cloudinary
@@ -101,19 +117,25 @@ func (s *sPostUser) UpdatePost(
 			// 2.1. Get media information from database
 			media, err := s.mediaRepo.GetMedia(ctx, "id=?", mediaId)
 			if err != nil {
-				return nil, response.ErrDataNotFound, fmt.Errorf("failed to get media record: %w", err)
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+				}
+				return nil, response.ErrDataNotFound, http.StatusInternalServerError, fmt.Errorf("failed to get media record: %w", err)
 			}
 
 			// 2.2. Delete media from cloudinary
 			if media.MediaUrl != "" {
 				if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
-					return nil, response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+					return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
 				}
 			}
 
 			// 2.3. Delete media from databases
 			if err := s.mediaRepo.DeleteMedia(ctx, mediaId); err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, response.ErrDataNotFound, http.StatusBadRequest, nil
+				}
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
 			}
 		}
 	}
@@ -125,7 +147,7 @@ func (s *sPostUser) UpdatePost(
 			mediaUrl, err := cloudinary_util.UploadMediaToCloudinary(file)
 
 			if err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to upload media to cloudinary: %w", err)
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to upload media to cloudinary: %w", err)
 			}
 
 			// 3.2. create Media model and save to database
@@ -136,45 +158,57 @@ func (s *sPostUser) UpdatePost(
 
 			_, err = s.mediaRepo.CreateMedia(ctx, mediaTemp)
 			if err != nil {
-				return nil, response.ErrServerFailed, fmt.Errorf("failed to create media record: %w", err)
+				return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create media record: %w", err)
 			}
 		}
 	}
 
-	return postModel, response.ErrCodeSuccess, nil
+	return postModel, response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sPostUser) DeletePost(
 	ctx context.Context,
 	postId uuid.UUID,
-) (resultCode int, err error) {
+) (resultCode int, httpStatusCode int, err error) {
 	// 1. Get media array of post
 	medias, err := s.mediaRepo.GetManyMedia(ctx, "post_id=?", postId)
 	if err != nil {
-		return response.ErrDataNotFound, fmt.Errorf("failed to get media records: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return response.ErrDataNotFound, http.StatusInternalServerError, fmt.Errorf("failed to get media records: %w", err)
 	}
 
 	// 2. Delete media from database and cloudinary
 	for _, media := range medias {
-		fmt.Println(media.PostId)
-		fmt.Println("---------------")
-		fmt.Println(media.MediaUrl)
 		// 2.1. Delete media from cloudinary
 		if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
-			return response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
 		}
 
 		// 2.1. Delete media from databases
 		if err := s.mediaRepo.DeleteMedia(ctx, media.ID); err != nil {
-			return response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.ErrDataNotFound, http.StatusBadRequest, nil
+			}
+			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media record: %w", err)
 		}
 	}
 
 	postModel, err := s.postRepo.DeletePost(ctx, postId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media records: %w", err)
+	}
 
 	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
 	if err != nil {
-		return response.ErrDataNotFound, fmt.Errorf("failed to get user: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	userFound.PostCount--
@@ -183,33 +217,39 @@ func (s *sPostUser) DeletePost(
 		"post_count": userFound.PostCount,
 	})
 	if err != nil {
-		return response.ErrDataNotFound, fmt.Errorf("failed to update media records: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return response.ErrDataNotFound, http.StatusInternalServerError, fmt.Errorf("failed to update media records: %w", err)
 	}
 
-	return response.ErrCodeSuccess, nil
+	return response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sPostUser) GetPost(
 	ctx context.Context,
 	postId uuid.UUID,
-) (post *model.Post, resultCode int, err error) {
+) (post *model.Post, resultCode int, httpStatusCode int, err error) {
 	postModel, err := s.postRepo.GetPost(ctx, "id=?", postId)
 	if err != nil {
-		return nil, response.ErrDataNotFound, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
 	}
 
-	return postModel, response.ErrCodeSuccess, nil
+	return postModel, response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
 	query *query_object.PostQueryObject,
-) (posts []*model.Post, resultCode int, pagingResponse *response.PagingResponse, err error) {
+) (posts []*model.Post, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error) {
 	postModels, paging, err := s.postRepo.GetManyPost(ctx, query)
 
 	if err != nil {
-		return nil, response.ErrDataNotFound, nil, err
+		return nil, response.ErrDataNotFound, http.StatusInternalServerError, nil, err
 	}
 
-	return postModels, response.ErrCodeSuccess, paging, nil
+	return postModels, response.ErrCodeSuccess, http.StatusOK, paging, nil
 }

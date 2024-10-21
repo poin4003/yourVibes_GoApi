@@ -43,14 +43,9 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if postFound == nil {
-		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprint("post id %s not found", postIdStr))
+		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
 	}
 
@@ -59,13 +54,13 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	postModel, resultCode, err := services.PostShare().SharePost(ctx, postId, userIdClaim)
+	postModel, resultCode, httpStatusCode, err := services.PostShare().SharePost(ctx, postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
 	postDto := mapper.MapPostToNewPostDto(postModel)
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
 }

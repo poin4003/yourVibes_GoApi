@@ -10,10 +10,10 @@ import (
 
 type (
 	ICommentUser interface {
-		CreateComment(ctx context.Context, commentModel *model.Comment) (comment *model.Comment, resultCode int, err error)
-		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *model.Comment, resultCode int, err error)
-		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, err error)
-		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject) (comments []*model.Comment, resultCode int, pagingResponse *response.PagingResponse, err error)
+		CreateComment(ctx context.Context, commentModel *model.Comment) (comment *model.Comment, resultCode int, httpStatusCode int, err error)
+		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *model.Comment, resultCode int, httpStatusCode int, err error)
+		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject) (comments []*model.Comment, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 )
 
