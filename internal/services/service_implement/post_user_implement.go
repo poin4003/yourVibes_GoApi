@@ -156,6 +156,9 @@ func (s *sPostUser) DeletePost(
 
 	// 2. Delete media from database and cloudinary
 	for _, media := range medias {
+		fmt.Println(media.PostId)
+		fmt.Println("---------------")
+		fmt.Println(media.MediaUrl)
 		// 2.1. Delete media from cloudinary
 		if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
 			return response.ErrServerFailed, fmt.Errorf("failed to delete media record: %w", err)

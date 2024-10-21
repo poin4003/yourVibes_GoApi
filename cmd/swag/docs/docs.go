@@ -399,7 +399,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Post ID",
-                        "name": "postId",
+                        "name": "post_id",
                         "in": "path",
                         "required": true
                     }

@@ -65,7 +65,7 @@ func (r *rMedia) GetMedia(ctx context.Context, query interface{}, args ...interf
 
 func (r *rMedia) GetManyMedia(ctx context.Context, query interface{}, args ...interface{}) ([]*model.Media, error) {
 	var medias []*model.Media
-	if err := r.db.WithContext(ctx).Find(&medias).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(query, args...).Find(&medias).Error; err != nil {
 		return nil, err
 	}
 

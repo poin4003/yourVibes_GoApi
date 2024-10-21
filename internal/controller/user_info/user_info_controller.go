@@ -156,7 +156,7 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 		languageSetting = *updateInput.LanguageSetting
 	}
 
-	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileCapwall, openFileAvatar, languageSetting)
+	user, resultCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileAvatar, openFileCapwall, languageSetting)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, http.StatusInternalServerError, err.Error())
 	}

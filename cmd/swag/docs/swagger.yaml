@@ -371,7 +371,7 @@ paths:
       parameters:
       - description: Post ID
         in: path
-        name: postId
+        name: post_id
         required: true
         type: string
       produces:

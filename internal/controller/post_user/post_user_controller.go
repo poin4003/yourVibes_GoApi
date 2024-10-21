@@ -251,13 +251,14 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 // @Tags post
 // @Accept json
 // @Produce json
-// @Param postId path string true "Post ID"
+// @Param post_id path string true "Post ID"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [get]
 func (p *PostUserController) GetPostById(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
+
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
