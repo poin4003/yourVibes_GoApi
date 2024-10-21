@@ -232,7 +232,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "post"
+                    "post_user"
                 ],
                 "summary": "Get many posts",
                 "parameters": [
@@ -240,12 +240,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "User ID to filter posts",
                         "name": "user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by post title",
-                        "name": "title",
                         "in": "query"
                     },
                     {
@@ -326,16 +320,10 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "post"
+                    "post_user"
                 ],
                 "summary": "Post create post",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Title of the post",
-                        "name": "title",
-                        "in": "formData"
-                    },
                     {
                         "type": "string",
                         "description": "Content of the post",
@@ -377,6 +365,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/posts/share_post/{post_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user want to share post of another user post's",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post_share"
+                ],
+                "summary": "share post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "PostId",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/posts/{post_id}": {
             "get": {
                 "security": [
@@ -392,7 +423,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "post"
+                    "post_user"
                 ],
                 "summary": "Get post by ID",
                 "parameters": [
@@ -433,7 +464,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "post"
+                    "post_user"
                 ],
                 "summary": "delete post by ID",
                 "parameters": [
@@ -474,7 +505,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "post"
+                    "post_user"
                 ],
                 "summary": "update post",
                 "parameters": [
@@ -484,12 +515,6 @@ const docTemplate = `{
                         "name": "post_id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Post title",
-                        "name": "title",
-                        "in": "formData"
                     },
                     {
                         "type": "string",

@@ -13,7 +13,6 @@ func MapPostToPostDto(post *model.Post) *post_dto.PostDto {
 		User:            MapUserToUserDtoShortVer(&post.User),
 		ParentId:        post.ParentId,
 		ParentPost:      post.ParentPost,
-		Title:           post.Title,
 		Content:         post.Content,
 		LikeCount:       post.LikeCount,
 		CommentCount:    post.CommentCount,
@@ -34,7 +33,6 @@ func MapPostToNewPostDto(post *model.Post) *post_dto.NewPostDto {
 		UserId:          post.UserId,
 		ParentId:        post.ParentId,
 		ParentPost:      post.ParentPost,
-		Title:           post.Title,
 		Content:         post.Content,
 		LikeCount:       post.LikeCount,
 		CommentCount:    post.CommentCount,
@@ -54,7 +52,6 @@ func MapToPostFromCreateDto(
 ) *model.Post {
 	return &model.Post{
 		UserId:   userId,
-		Title:    input.Title,
 		Content:  input.Content,
 		Privacy:  input.Privacy,
 		Location: input.Location,
@@ -66,9 +63,6 @@ func MapToPostFromUpdateDto(
 ) map[string]interface{} {
 	updateData := make(map[string]interface{})
 
-	if input.Title != nil {
-		updateData["title"] = *input.Title
-	}
 	if input.Content != nil {
 		updateData["content"] = *input.Content
 	}

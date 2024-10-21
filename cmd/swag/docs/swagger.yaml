@@ -244,10 +244,6 @@ paths:
         in: query
         name: user_id
         type: string
-      - description: Filter by post title
-        in: query
-        name: title
-        type: string
       - description: Filter by content
         in: query
         name: content
@@ -295,16 +291,12 @@ paths:
       - ApiKeyAuth: []
       summary: Get many posts
       tags:
-      - post
+      - post_user
     post:
       consumes:
       - multipart/form-data
       description: When user create post
       parameters:
-      - description: Title of the post
-        in: formData
-        name: title
-        type: string
       - description: Content of the post
         in: formData
         name: content
@@ -336,7 +328,7 @@ paths:
       - ApiKeyAuth: []
       summary: Post create post
       tags:
-      - post
+      - post_user
   /posts/{post_id}:
     delete:
       consumes:
@@ -363,7 +355,7 @@ paths:
       - ApiKeyAuth: []
       summary: delete post by ID
       tags:
-      - post
+      - post_user
     get:
       consumes:
       - application/json
@@ -389,7 +381,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get post by ID
       tags:
-      - post
+      - post_user
     patch:
       consumes:
       - multipart/form-data
@@ -399,10 +391,6 @@ paths:
         in: path
         name: post_id
         required: true
-        type: string
-      - description: Post title
-        in: formData
-        name: title
         type: string
       - description: Post content
         in: formData
@@ -439,7 +427,34 @@ paths:
       - ApiKeyAuth: []
       summary: update post
       tags:
-      - post
+      - post_user
+  /posts/share_post/{post_id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: When user want to share post of another user post's
+      parameters:
+      - description: PostId
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: share post
+      tags:
+      - post_share
   /users/:
     get:
       consumes:

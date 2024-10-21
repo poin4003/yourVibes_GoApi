@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/internal/controller/comment_user"
+	"github.com/poin4003/yourVibes_GoApi/internal/controller/comment_controller/comment_user"
 	"github.com/poin4003/yourVibes_GoApi/internal/middlewares/authentication"
 )
 

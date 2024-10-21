@@ -22,11 +22,15 @@ type (
 		DeleteLikePost(ctx context.Context, likeUserPost *model.LikeUserPost) error
 		GetUsersOnLikes(ctx context.Context, postId uuid.UUID) ([]*model.User, error)
 	}
+	IPostShare interface {
+		SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (post *model.Post, resultCode int, err error)
+	}
 )
 
 var (
 	localPostUser     IPostUser
 	localLikeUserPost IPostLike
+	localPostShare    IPostShare
 )
 
 func PostUser() IPostUser {
@@ -45,10 +49,22 @@ func LikeUserPost() IPostLike {
 	return localLikeUserPost
 }
 
+func PostShare() IPostShare {
+	if localPostShare == nil {
+		panic("repository_implement localPostShare not found for interface IPostShare")
+	}
+
+	return localPostShare
+}
+
 func InitPostUser(i IPostUser) {
 	localPostUser = i
 }
 
 func InitLikeUserPost(i IPostLike) {
 	localLikeUserPost = i
+}
+
+func InitPostShare(i IPostShare) {
+	localPostShare = i
 }

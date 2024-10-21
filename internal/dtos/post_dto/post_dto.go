@@ -13,7 +13,6 @@ type PostDto struct {
 	ID              uuid.UUID                `json:"id"`
 	ParentId        *uuid.UUID               `json:"parent_id"`
 	ParentPost      *model.Post              `json:"parent_post"`
-	Title           string                   `json:"title"`
 	Content         string                   `json:"content"`
 	LikeCount       int                      `json:"like_count"`
 	CommentCount    int                      `json:"comment_count"`
@@ -33,7 +32,6 @@ type NewPostDto struct {
 	ID              uuid.UUID           `json:"id"`
 	ParentId        *uuid.UUID          `json:"parent_id"`
 	ParentPost      *model.Post         `json:"parent_post"`
-	Title           string              `json:"title"`
 	Content         string              `json:"content"`
 	LikeCount       int                 `json:"like_count"`
 	CommentCount    int                 `json:"comment_count"`

@@ -6,7 +6,6 @@ import (
 
 type PostQueryObject struct {
 	UserID          string    `form:"user_id,omitempty"`
-	Title           string    `form:"title,omitempty"`
 	Content         string    `form:"content,omitempty"`
 	Location        string    `form:"location,omitempty"`
 	IsAdvertisement bool      `form:"is_advertisement,omitempty"`

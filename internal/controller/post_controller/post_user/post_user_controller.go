@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/extensions"
@@ -20,29 +19,24 @@ import (
 	"time"
 )
 
-type PostUserController struct {
+type cPostUser struct {
 	redisClient *redis.Client
 }
 
 func NewPostUserController(
 	redisClient *redis.Client,
-) *PostUserController {
-	return &PostUserController{
+) *cPostUser {
+	return &cPostUser{
 		redisClient: redisClient,
 	}
 }
 
-var (
-	validate = validator.New()
-)
-
 // CreatePost documentation
 // @Summary Post create post
 // @Description When user create post
-// @Tags post
+// @Tags post_user
 // @Accept multipart/form-data
 // @Produce json
-// @Param title formData string false "Title of the post"
 // @Param content formData string false "Content of the post"
 // @Param privacy formData string false "Privacy level"
 // @Param location formData string false "Location of the post"
@@ -51,7 +45,7 @@ var (
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/ [post]
-func (p *PostUserController) CreatePost(ctx *gin.Context) {
+func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	var postInput post_dto.CreatePostInput
 
 	if err := ctx.ShouldBind(&postInput); err != nil {
@@ -94,8 +88,19 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 
 	postDto := mapper.MapPostToNewPostDto(post)
 
-	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", userUUID)
-	p.redisClient.Del(context.Background(), cacheKey)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", userUUID)
+	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
+
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, key := range keys {
+		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
+			panic(er.Error())
+		}
+	}
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
@@ -103,11 +108,10 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // UpdatePost documentation
 // @Summary update post
 // @Description When user need to update information of post or update media
-// @Tags post
+// @Tags post_user
 // @Accept multipart/form-data
 // @Produce json
 // @Param post_id path string true "PostId"
-// @Param title formData string false "Post title"
 // @Param content formData string false "Post content"
 // @Param privacy formData string false "Post privacy"
 // @Param location formData string false "Post location"
@@ -117,7 +121,7 @@ func (p *PostUserController) CreatePost(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [patch]
-func (p *PostUserController) UpdatePost(ctx *gin.Context) {
+func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	var updateInput post_dto.UpdatePostInput
 
 	if err := ctx.ShouldBind(&updateInput); err != nil {
@@ -177,10 +181,19 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 	postDto := mapper.MapPostToPostDto(post)
 
 	// Delete cache
-	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", postFound.UserId)
-	cachePostKey := postId.String()
-	p.redisClient.Del(context.Background(), cacheKey)
-	p.redisClient.Del(context.Background(), cachePostKey)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
+
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, key := range keys {
+		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
+			panic(er.Error())
+		}
+	}
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, postDto)
 }
@@ -188,11 +201,10 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 // GetManyPost documentation
 // @Summary Get many posts
 // @Description Retrieve multiple posts filtered by various criteria.
-// @Tags post
+// @Tags post_user
 // @Accept json
 // @Produce json
 // @Param user_id query string false "User ID to filter posts"
-// @Param title query string false "Filter by post title"
 // @Param content query string false "Filter by content"
 // @Param location query string false "Filter by location"
 // @Param is_advertisement query boolean false "Filter by advertisement"
@@ -205,7 +217,7 @@ func (p *PostUserController) UpdatePost(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse "Internal server error"
 // @Security ApiKeyAuth
 // @Router /posts/ [get]
-func (p *PostUserController) GetManyPost(ctx *gin.Context) {
+func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	var query query_object.PostQueryObject
 
 	if err := ctx.ShouldBindQuery(&query); err != nil {
@@ -257,7 +269,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 // GetPostById documentation
 // @Summary Get post by ID
 // @Description Retrieve a post by its unique ID
-// @Tags post
+// @Tags post_user
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID"
@@ -265,7 +277,7 @@ func (p *PostUserController) GetManyPost(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [get]
-func (p *PostUserController) GetPostById(ctx *gin.Context) {
+func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 
 	postId, err := uuid.Parse(postIdStr)
@@ -306,7 +318,7 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 // DeletePost documentation
 // @Summary delete post by ID
 // @Description when user want to delete post
-// @Tags post
+// @Tags post_user
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID"
@@ -314,7 +326,7 @@ func (p *PostUserController) GetPostById(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [delete]
-func (p *PostUserController) DeletePost(ctx *gin.Context) {
+func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -351,10 +363,19 @@ func (p *PostUserController) DeletePost(ctx *gin.Context) {
 	}
 
 	// Delete cache in redis
-	cacheKey := fmt.Sprintf("posts:user:%s:page:*:limit:*", postFound.UserId)
-	cachePostKey := postId.String()
-	p.redisClient.Del(context.Background(), cacheKey)
-	p.redisClient.Del(context.Background(), cachePostKey)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
+
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, key := range keys {
+		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
+			panic(er.Error())
+		}
+	}
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusNoContent, postId)
 }

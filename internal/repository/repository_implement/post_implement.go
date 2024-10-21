@@ -91,10 +91,6 @@ func (r *rPost) GetManyPost(
 		db = db.Where("user_id = ?", query.UserID)
 	}
 
-	if query.Title != "" {
-		db = db.Where("LOWER(title) LIKE LOWER(?)", "%"+query.Title+"%")
-	}
-
 	if query.Content != "" {
 		db = db.Where("LOWER(content) LIKE LOWER(?)", "%"+query.Content+"%")
 	}

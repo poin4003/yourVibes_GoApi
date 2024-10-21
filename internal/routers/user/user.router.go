@@ -2,8 +2,8 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/internal/controller/user_auth"
-	"github.com/poin4003/yourVibes_GoApi/internal/controller/user_info"
+	"github.com/poin4003/yourVibes_GoApi/internal/controller/auth_controller/user_auth"
+	"github.com/poin4003/yourVibes_GoApi/internal/controller/user_controller/user_info"
 	"github.com/poin4003/yourVibes_GoApi/internal/middlewares/authentication"
 )
 

@@ -13,7 +13,6 @@ type Post struct {
 	User            User                `json:"user" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ParentId        *uuid.UUID          `json:"parent_id" gorm:"type:uuid;default:null"`
 	ParentPost      *Post               `json:"parent_post" gorm:"foreignKey:ParentId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Title           string              `json:"title" gorm:"type:varchar(255);not null"`
 	Content         string              `json:"content" gorm:"type:text;not null"`
 	LikeCount       int                 `json:"like_count" gorm:"type:int;default:0"`
 	CommentCount    int                 `json:"comment_count" gorm:"type:int;default:0"`
