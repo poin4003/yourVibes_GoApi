@@ -18,7 +18,10 @@ func NewPostRepositoryImplement(db *gorm.DB) *rPost {
 	return &rPost{db: db}
 }
 
-func (r *rPost) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
+func (r *rPost) CreatePost(
+	ctx context.Context,
+	post *model.Post,
+) (*model.Post, error) {
 	res := r.db.WithContext(ctx).Create(post)
 
 	if res.Error != nil {

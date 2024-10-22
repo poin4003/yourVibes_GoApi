@@ -19,10 +19,17 @@ type (
 		GetManyComment(ctx context.Context, query *query_object.CommentQueryObject) ([]*model.Comment, *response.PagingResponse, error)
 		GetMaxCommentRightByPostId(ctx context.Context, postId uuid.UUID) (int, error)
 	}
+	ILikeUserCommentRepository interface {
+		CreateLikeUserComment(ctx context.Context, likeUserComment *model.LikeUserComment) error
+		DeleteLikeUserComment(ctx context.Context, likeUserComment *model.LikeUserComment) error
+		GetLikeUserComment(ctx context.Context, commentId uuid.UUID, query *query_object.CommentLikeQueryObject) ([]*model.User, *response.PagingResponse, error)
+		CheckUserLikeComment(ctx context.Context, likeUserComment *model.LikeUserComment) (bool, error)
+	}
 )
 
 var (
-	localComment ICommentRepository
+	localComment         ICommentRepository
+	localLikeUserComment ILikeUserCommentRepository
 )
 
 func Comment() ICommentRepository {
@@ -33,6 +40,18 @@ func Comment() ICommentRepository {
 	return localComment
 }
 
+func LikeUserComment() ILikeUserCommentRepository {
+	if localLikeUserComment == nil {
+		panic("repository_implement localLikeUserComment not found for interface ILikeUserComment")
+	}
+
+	return localLikeUserComment
+}
+
 func InitCommentRepository(i ICommentRepository) {
 	localComment = i
+}
+
+func InitLikeUserCommentRepository(i ILikeUserCommentRepository) {
+	localLikeUserComment = i
 }

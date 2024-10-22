@@ -248,7 +248,7 @@ func (s *sPostUser) GetManyPosts(
 	postModels, paging, err := s.postRepo.GetManyPost(ctx, query)
 
 	if err != nil {
-		return nil, response.ErrDataNotFound, http.StatusInternalServerError, nil, err
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, err
 	}
 
 	return postModels, response.ErrCodeSuccess, http.StatusOK, paging, nil

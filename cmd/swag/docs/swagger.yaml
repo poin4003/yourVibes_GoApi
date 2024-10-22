@@ -234,6 +234,67 @@ paths:
       summary: update comment
       tags:
       - comment_user
+  /comments/like_comment/{comment_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve multiple user is like comment
+      parameters:
+      - description: comment ID to get user like comment
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Limit of users per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get User like comments
+      tags:
+      - Like_Comment
+    post:
+      consumes:
+      - application/json
+      description: When user like comment
+      parameters:
+      - description: comment ID to create like comment
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Like comment
+      tags:
+      - Like_Comment
   /posts/:
     get:
       consumes:
