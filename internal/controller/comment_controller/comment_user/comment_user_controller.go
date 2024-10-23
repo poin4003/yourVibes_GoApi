@@ -53,7 +53,7 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 
 	commentDto := mapper.MapCommentToCommentDto(comment)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, commentDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
 }
 
 // GetManyComment documentation
@@ -90,7 +90,7 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		commentDtos = append(commentDtos, *commentDto)
 	}
 
-	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, commentDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, commentDtos, *paging)
 }
 
 // DeleteComment documentation
@@ -118,7 +118,7 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, nil)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, nil)
 }
 
 // UpdateComment documentation
@@ -158,5 +158,5 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 
 	commentDto := mapper.MapCommentToCommentDto(comment)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, commentDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
 }

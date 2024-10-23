@@ -101,7 +101,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
 }
 
 // UpdatePost documentation
@@ -189,7 +189,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
 }
 
 // GetManyPost documentation
@@ -257,7 +257,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
 	p.redisClient.Set(context.Background(), cacheTotalKey, paging.Total, time.Minute*1)
 
-	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, postDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, postDtos, *paging)
 }
 
 // GetPostById documentation
@@ -303,7 +303,7 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	postJson, _ := json.Marshal(postDto)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
 }
 
 // DeletePost documentation
@@ -363,5 +363,5 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, postId)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, postId)
 }

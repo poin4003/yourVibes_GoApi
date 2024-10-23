@@ -47,7 +47,7 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 
 	userDto := mapper.MapUserToUserDtoWithoutSetting(user)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, userDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, userDto)
 }
 
 // GetManyUsers documentation
@@ -89,7 +89,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, *userDto)
 	}
 
-	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, userDtos, *paging)
+	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, userDtos, *paging)
 }
 
 // UpdateUser godoc
@@ -159,5 +159,5 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 
 	userDto := mapper.MapUserToUserDto(user)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, userDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, userDto)
 }

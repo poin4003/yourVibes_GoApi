@@ -62,5 +62,5 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 
 	postDto := mapper.MapPostToNewPostDto(postModel)
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, postDto)
+	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
 }

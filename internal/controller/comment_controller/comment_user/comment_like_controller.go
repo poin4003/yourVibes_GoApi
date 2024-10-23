@@ -52,7 +52,7 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, httpStatusCode, nil)
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, nil)
 }
 
 // GetUserLikeComment documentation
