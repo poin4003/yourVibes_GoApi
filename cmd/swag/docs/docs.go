@@ -461,6 +461,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/posts/get_like_user/{postId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve multiple posts filtered by various criteria.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Like_Post"
+                ],
+                "summary": "Get User like posts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID to get user like post",
+                        "name": "postId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit of posts per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts/like_post/{post_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user like post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Like_Post"
+                ],
+                "summary": "Like Post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID to create like post",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/posts/share_post/{post_id}": {
             "post": {
                 "security": [
