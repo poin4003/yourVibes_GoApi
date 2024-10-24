@@ -140,7 +140,7 @@ func (s *sCommentUser) UpdateComment(
 func (s *sCommentUser) DeleteComment(
 	ctx context.Context,
 	commentId uuid.UUID,
-) (resultCode int, httpStausCode int, err error) {
+) (resultCode int, httpStatusCode int, err error) {
 	// 1. Find comment
 	comment, err := s.commentRepo.GetOneComment(ctx, "id=?", commentId)
 	if err != nil {
@@ -190,6 +190,10 @@ func (s *sCommentUser) DeleteComment(
 	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, update_right)
 	if err != nil {
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	if comment.ParentComment == nil {
+		return response.ErrCodeSuccess, http.StatusOK, nil
 	}
 
 	// 5. Update rep_comment_count of parent comment -1
