@@ -51,7 +51,7 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 		return
 	}
 
-	commentDto := mapper.MapCommentToCommentDto(comment)
+	commentDto := mapper.MapCommentToNewCommentDto(comment)
 
 	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
 }
@@ -78,16 +78,16 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		return
 	}
 
-	comments, resultCode, httpStatusCode, paging, err := services.CommentUser().GetManyComments(ctx, &query)
+	userUUID, err := extensions.GetUserID(ctx)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	var commentDtos []comment_dto.CommentDto
-	for _, comment := range comments {
-		commentDto := mapper.MapCommentToCommentDto(comment)
-		commentDtos = append(commentDtos, *commentDto)
+	commentDtos, resultCode, httpStatusCode, paging, err := services.CommentUser().GetManyComments(ctx, &query, userUUID)
+	if err != nil {
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		return
 	}
 
 	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, commentDtos, *paging)
@@ -156,7 +156,7 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 		return
 	}
 
-	commentDto := mapper.MapCommentToCommentDto(comment)
+	commentDto := mapper.MapCommentToUpdatedCommentDto(comment)
 
 	response.SuccessResponse(ctx, resultCode, http.StatusOK, commentDto)
 }

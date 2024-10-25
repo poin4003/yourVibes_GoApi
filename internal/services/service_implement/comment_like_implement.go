@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/comment_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
@@ -34,7 +36,8 @@ func NewCommentLikeImplement(
 func (s *sCommentLike) LikeComment(
 	ctx context.Context,
 	likeUserComment *model.LikeUserComment,
-) (comment *model.Comment, resultCode int, httpStatusCode int, err error) {
+	userId uuid.UUID,
+) (commentDto *comment_dto.CommentDto, resultCode int, httpStatusCode int, err error) {
 	commentFound, err := s.commentRepo.GetOneComment(ctx, "id=?", likeUserComment.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -59,7 +62,14 @@ func (s *sCommentLike) LikeComment(
 			"like_count": commentFound.LikeCount,
 		})
 
-		return commentFound, response.ErrCodeSuccess, http.StatusOK, nil
+		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &model.LikeUserComment{
+			CommentId: commentFound.ID,
+			UserId:    userId,
+		})
+
+		commentDto = mapper.MapCommentToCommentDto(commentFound, isLiked)
+
+		return commentDto, response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserComment); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -74,7 +84,14 @@ func (s *sCommentLike) LikeComment(
 			"like_count": commentFound.LikeCount,
 		})
 
-		return commentFound, response.ErrCodeSuccess, http.StatusNoContent, nil
+		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &model.LikeUserComment{
+			CommentId: commentFound.ID,
+			UserId:    userId,
+		})
+
+		commentDto = mapper.MapCommentToCommentDto(commentFound, isLiked)
+
+		return commentDto, response.ErrCodeSuccess, http.StatusNoContent, nil
 	}
 }
 

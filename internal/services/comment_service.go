@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/comment_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -13,10 +14,10 @@ type (
 		CreateComment(ctx context.Context, commentModel *model.Comment) (comment *model.Comment, resultCode int, httpStatusCode int, err error)
 		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *model.Comment, resultCode int, httpStatusCode int, err error)
 		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject) (comments []*model.Comment, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
+		GetManyComments(ctx context.Context, query *query_object.CommentQueryObject, userId uuid.UUID) (commentDtos []*comment_dto.CommentDto, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 	ICommentLike interface {
-		LikeComment(ctx context.Context, likeUserComment *model.LikeUserComment) (comment *model.Comment, resultCode int, httpStatusCode int, err error)
+		LikeComment(ctx context.Context, likeUserComment *model.LikeUserComment, userId uuid.UUID) (commentDto *comment_dto.CommentDto, resultCode int, httpStatusCode int, err error)
 		GetUsersOnLikeComment(ctx context.Context, commentId uuid.UUID, query *query_object.CommentLikeQueryObject) (users []*model.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 )

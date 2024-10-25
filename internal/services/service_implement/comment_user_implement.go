@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/comment_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
@@ -14,20 +16,23 @@ import (
 )
 
 type sCommentUser struct {
-	commentRepo repository.ICommentRepository
-	userRepo    repository.IUserRepository
-	postRepo    repository.IPostRepository
+	commentRepo         repository.ICommentRepository
+	userRepo            repository.IUserRepository
+	postRepo            repository.IPostRepository
+	likeUserCommentRepo repository.ILikeUserCommentRepository
 }
 
 func NewCommentUserImplement(
 	commentRepo repository.ICommentRepository,
 	userRepo repository.IUserRepository,
 	postRepo repository.IPostRepository,
+	likeUserCommentRepo repository.ILikeUserCommentRepository,
 ) *sCommentUser {
 	return &sCommentUser{
-		commentRepo: commentRepo,
-		userRepo:    userRepo,
-		postRepo:    postRepo,
+		commentRepo:         commentRepo,
+		userRepo:            userRepo,
+		postRepo:            postRepo,
+		likeUserCommentRepo: likeUserCommentRepo,
 	}
 }
 
@@ -223,7 +228,8 @@ func (s *sCommentUser) DeleteComment(
 func (s *sCommentUser) GetManyComments(
 	ctx context.Context,
 	query *query_object.CommentQueryObject,
-) (comments []*model.Comment, resultCode int, httpStatusCode int, paingResponse *response.PagingResponse, err error) {
+	userId uuid.UUID,
+) (commentDtos []*comment_dto.CommentDto, resultCode int, httpStatusCode int, paingResponse *response.PagingResponse, err error) {
 	var queryResult []*model.Comment
 
 	if query.ParentId != "" {
@@ -240,13 +246,33 @@ func (s *sCommentUser) GetManyComments(
 			return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
-		return queryResult, response.ErrCodeSuccess, http.StatusOK, pagingResponse, nil
+		for _, comment := range queryResult {
+			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &model.LikeUserComment{
+				CommentId: comment.ID,
+				UserId:    userId,
+			})
+
+			commentDto := mapper.MapCommentToCommentDto(comment, isLiked)
+			commentDtos = append(commentDtos, commentDto)
+		}
+
+		return commentDtos, response.ErrCodeSuccess, http.StatusOK, pagingResponse, nil
 	} else {
 		queryResult, paingResponse, err = s.commentRepo.GetManyComment(ctx, query)
 		if err != nil {
 			return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
-	}
 
-	return queryResult, response.ErrCodeSuccess, http.StatusOK, paingResponse, nil
+		for _, comment := range queryResult {
+			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &model.LikeUserComment{
+				CommentId: comment.ID,
+				UserId:    userId,
+			})
+
+			commentDto := mapper.MapCommentToCommentDto(comment, isLiked)
+			commentDtos = append(commentDtos, commentDto)
+		}
+
+		return commentDtos, response.ErrCodeSuccess, http.StatusOK, paingResponse, nil
+	}
 }

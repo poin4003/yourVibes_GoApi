@@ -46,13 +46,11 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 
 	likeUserCommentModel := mapper.MapToLikeUserCommentFromCommentIdAndUserId(commentId, userUUID)
 
-	commentModel, resultCode, httpStatusCode, err := services.CommentLike().LikeComment(ctx, likeUserCommentModel)
+	commentDto, resultCode, httpStatusCode, err := services.CommentLike().LikeComment(ctx, likeUserCommentModel, userUUID)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
-
-	commentDto := mapper.MapCommentToCommentDto(commentModel)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, http.StatusOK, commentDto)
 }
