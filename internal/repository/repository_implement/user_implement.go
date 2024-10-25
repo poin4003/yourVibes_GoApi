@@ -85,7 +85,7 @@ func (r *rUser) GetManyUser(
 	db := r.db.WithContext(ctx).Model(&model.User{})
 
 	if query.Name != "" {
-		db = db.Where("unaccent(family_name) ILIKE unaccent(?) OR unaccent(name) ILIKE unaccent(?)", "%"+query.Name+"%", "%"+query.Name+"%")
+		db = db.Where("unaccent(family_name || ' ' || name) ILIKE unaccent(?)", "%"+query.Name+"%")
 	}
 
 	if query.Email != "" {
