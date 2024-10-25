@@ -50,13 +50,15 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 		return
 	}
 	likeUserPostModel := mapper.MapToLikeUserPostFromPostIdAndUserId(postId, userUUID)
-	resultCode, httpStatusCode, err := services.LikeUserPost().LikePost(ctx, likeUserPostModel)
+	postModel, resultCode, httpStatusCode, err := services.LikeUserPost().LikePost(ctx, likeUserPostModel)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, response.ErrCodeSuccess, httpStatusCode, nil)
+	postDto := mapper.MapPostToPostDto(postModel)
+
+	response.SuccessResponse(ctx, response.ErrCodeSuccess, httpStatusCode, postDto)
 }
 
 // GetUserLikePost documentation

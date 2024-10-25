@@ -18,7 +18,7 @@ type (
 		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
 	}
 	IPostLike interface {
-		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) (resultCode int, httpStatusCode int, err error)
+		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) (post *model.Post, resultCode int, httpStatusCode int, err error)
 		GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query_object.PostLikeQueryObject) (users []*model.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 	IPostShare interface {

@@ -34,23 +34,23 @@ func NewCommentLikeImplement(
 func (s *sCommentLike) LikeComment(
 	ctx context.Context,
 	likeUserComment *model.LikeUserComment,
-) (resultCode int, httpStatusCode int, err error) {
+) (comment *model.Comment, resultCode int, httpStatusCode int, err error) {
 	commentFound, err := s.commentRepo.GetOneComment(ctx, "id=?", likeUserComment.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
 	}
 
 	checkLikeComment, err := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserComment)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
 	}
 
 	if !checkLikeComment {
 		if err := s.likeUserCommentRepo.CreateLikeUserComment(ctx, likeUserComment); err != nil {
-			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
+			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
 		}
 
 		commentFound.LikeCount++
@@ -59,13 +59,13 @@ func (s *sCommentLike) LikeComment(
 			"like_count": commentFound.LikeCount,
 		})
 
-		return response.ErrCodeSuccess, http.StatusOK, nil
+		return commentFound, response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserComment); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find delete like: %w", err)
+				return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find delete like: %w", err)
 			}
-			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
+			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
 		}
 
 		commentFound.LikeCount--
@@ -74,7 +74,7 @@ func (s *sCommentLike) LikeComment(
 			"like_count": commentFound.LikeCount,
 		})
 
-		return response.ErrCodeSuccess, http.StatusNoContent, nil
+		return commentFound, response.ErrCodeSuccess, http.StatusNoContent, nil
 	}
 }
 

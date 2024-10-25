@@ -34,23 +34,23 @@ func NewPostLikeImplement(
 func (s *sPostLike) LikePost(
 	ctx context.Context,
 	likeUserPostModel *model.LikeUserPost,
-) (resultCode int, httpStatusCode int, err error) {
+) (post *model.Post, resultCode int, httpStatusCode int, err error) {
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", likeUserPostModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
 	}
 
 	checkLike, err := s.postLikeRepo.CheckUserLikePost(ctx, likeUserPostModel)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
 	}
 
 	if !checkLike {
 		if err := s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostModel); err != nil {
-			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
+			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
 		}
 
 		postFound.LikeCount++
@@ -59,13 +59,13 @@ func (s *sPostLike) LikePost(
 			"like_count": postFound.LikeCount,
 		})
 
-		return response.ErrCodeSuccess, http.StatusOK, nil
+		return postFound, response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostModel); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find delete like: %w", err)
+				return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find delete like: %w", err)
 			}
-			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
+			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
 		}
 
 		postFound.LikeCount--
@@ -74,7 +74,7 @@ func (s *sPostLike) LikePost(
 			"like_count": postFound.LikeCount,
 		})
 
-		return response.ErrCodeSuccess, http.StatusNoContent, nil
+		return postFound, response.ErrCodeSuccess, http.StatusOK, nil
 	}
 }
 
