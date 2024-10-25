@@ -74,7 +74,11 @@ func (r *rPost) GetPost(
 ) (*model.Post, error) {
 	post := &model.Post{}
 
-	if res := r.db.WithContext(ctx).Model(post).Preload("Media").Preload("User").Where(query, args...).First(post); res.Error != nil {
+	if res := r.db.WithContext(ctx).Model(post).
+		Preload("Media").
+		Preload("User").
+		Preload("ParentPost.User").
+		Where(query, args...).First(post); res.Error != nil {
 		return nil, res.Error
 	}
 
@@ -158,7 +162,11 @@ func (r *rPost) GetManyPost(
 
 	offset := (page - 1) * limit
 
-	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Preload("Media").Preload("User").Find(&posts).Error; err != nil {
+	if err := db.WithContext(ctx).Offset(offset).Limit(limit).
+		Preload("Media").
+		Preload("User").
+		Preload("ParentPost.User").
+		Find(&posts).Error; err != nil {
 		return nil, nil, err
 	}
 

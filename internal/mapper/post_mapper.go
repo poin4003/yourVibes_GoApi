@@ -7,12 +7,34 @@ import (
 )
 
 func MapPostToPostDto(post *model.Post, isLiked bool) *post_dto.PostDto {
+	var parentPost *post_dto.ParentPostDto
+
+	if post.ParentPost != nil {
+		parentPost = &post_dto.ParentPostDto{
+			ID:              post.ParentPost.ID,
+			UserId:          post.ParentPost.UserId,
+			User:            MapUserToUserDtoShortVer(&post.ParentPost.User),
+			Content:         post.ParentPost.Content,
+			LikeCount:       post.ParentPost.LikeCount,
+			CommentCount:    post.ParentPost.CommentCount,
+			Privacy:         post.ParentPost.Privacy,
+			Location:        post.ParentPost.Location,
+			IsAdvertisement: post.ParentPost.IsAdvertisement,
+			Status:          post.ParentPost.Status,
+			IsLiked:         isLiked,
+			CreatedAt:       post.ParentPost.CreatedAt,
+			UpdatedAt:       post.ParentPost.UpdatedAt,
+			DeletedAt:       post.ParentPost.DeletedAt,
+			Media:           post.ParentPost.Media,
+		}
+	}
+
 	return &post_dto.PostDto{
 		ID:              post.ID,
 		UserId:          post.UserId,
 		User:            MapUserToUserDtoShortVer(&post.User),
 		ParentId:        post.ParentId,
-		ParentPost:      post.ParentPost,
+		ParentPost:      parentPost,
 		Content:         post.Content,
 		LikeCount:       post.LikeCount,
 		CommentCount:    post.CommentCount,
