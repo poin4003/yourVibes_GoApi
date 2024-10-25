@@ -35,7 +35,7 @@ func (s *sCommentLike) LikeComment(
 	ctx context.Context,
 	likeUserComment *model.LikeUserComment,
 ) (resultCode int, httpStatusCode int, err error) {
-	_, err = s.commentRepo.GetOneComment(ctx, "id=?", likeUserComment.CommentId)
+	commentFound, err := s.commentRepo.GetOneComment(ctx, "id=?", likeUserComment.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ErrDataNotFound, http.StatusBadRequest, err
@@ -47,10 +47,18 @@ func (s *sCommentLike) LikeComment(
 	if err != nil {
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
 	}
+
 	if !checkLikeComment {
 		if err := s.likeUserCommentRepo.CreateLikeUserComment(ctx, likeUserComment); err != nil {
 			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
 		}
+
+		commentFound.LikeCount++
+
+		_, err = s.commentRepo.UpdateOneComment(ctx, commentFound.ID, map[string]interface{}{
+			"like_count": commentFound.LikeCount,
+		})
+
 		return response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserComment); err != nil {
@@ -59,6 +67,13 @@ func (s *sCommentLike) LikeComment(
 			}
 			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
 		}
+
+		commentFound.LikeCount--
+
+		_, err = s.commentRepo.UpdateOneComment(ctx, commentFound.ID, map[string]interface{}{
+			"like_count": commentFound.LikeCount,
+		})
+
 		return response.ErrCodeSuccess, http.StatusNoContent, nil
 	}
 }

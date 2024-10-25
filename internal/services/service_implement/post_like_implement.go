@@ -35,7 +35,7 @@ func (s *sPostLike) LikePost(
 	ctx context.Context,
 	likeUserPostModel *model.LikeUserPost,
 ) (resultCode int, httpStatusCode int, err error) {
-	_, err = s.postRepo.GetPost(ctx, "id=?", likeUserPostModel.PostId)
+	postFound, err := s.postRepo.GetPost(ctx, "id=?", likeUserPostModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ErrDataNotFound, http.StatusBadRequest, err
@@ -47,10 +47,18 @@ func (s *sPostLike) LikePost(
 	if err != nil {
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
 	}
+
 	if !checkLike {
 		if err := s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostModel); err != nil {
 			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
 		}
+
+		postFound.LikeCount++
+
+		_, err = s.postRepo.UpdatePost(ctx, postFound.ID, map[string]interface{}{
+			"like_count": postFound.LikeCount,
+		})
+
 		return response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostModel); err != nil {
@@ -59,9 +67,15 @@ func (s *sPostLike) LikePost(
 			}
 			return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
 		}
+
+		postFound.LikeCount--
+
+		_, err = s.postRepo.UpdatePost(ctx, postFound.ID, map[string]interface{}{
+			"like_count": postFound.LikeCount,
+		})
+
 		return response.ErrCodeSuccess, http.StatusNoContent, nil
 	}
-
 }
 
 func (s *sPostLike) GetUsersOnLikes(

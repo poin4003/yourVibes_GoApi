@@ -65,30 +65,27 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 // @Tags Like_Post
 // @Accept json
 // @Produce json
-// @Param postId path string true "Post ID to get user like post"
+// @Param post_id path string true "Post ID to get user like post"
 // @Param limit query int false "Limit of posts per page"
 // @Param page query int false "Page number for pagination"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse "Internal server error"
 // @Security ApiKeyAuth
-// @Router /posts/get_like_user/{postId} [get]
+// @Router /posts/like_post/{post_id} [get]
 func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
-	// Lấy postId từ URL và kiểm tra tính hợp lệ
-	postIdStr := ctx.Param("postId")
-	postId, err := uuid.Parse(postIdStr) // Kiểm tra postId có đúng định dạng UUID không
+	postIdStr := ctx.Param("post_id")
+	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, "Invalid postId format")
 		return
 	}
 
-	// Ràng buộc query parameters với PostLikeQueryObject
 	var query query_object.PostLikeQueryObject
 	if err := ctx.ShouldBindQuery(&query); err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, "Invalid query parameters")
 		return
 	}
 
-	// Gọi service để lấy danh sách user đã like
 	likeUserPost, resultCode, httpStatusCode, paging, err := services.LikeUserPost().GetUsersOnLikes(ctx, postId, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
@@ -101,6 +98,5 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 		userDtos = append(userDtos, userDto)
 	}
 
-	// Trả về kết quả thành công
 	response.SuccessPagingResponse(ctx, response.ErrCodeSuccess, http.StatusOK, userDtos, *paging)
 }

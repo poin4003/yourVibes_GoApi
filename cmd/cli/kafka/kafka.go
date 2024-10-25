@@ -38,7 +38,7 @@ func getKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
 		CommitInterval: time.Second,
-		StartOffset:    kafka.FirstOffset,
+		StartOffset:    kafka.LastOffset,
 	})
 }
 
@@ -88,7 +88,7 @@ func actionStock(c *gin.Context) {
 // Wait to buy ATC
 func RegisterComsumerATC(id int) {
 	// Group consumer??
-	kafkaGroupId := "consumer-group-"
+	kafkaGroupId := fmt.Sprintf("consumer-group-%d", id) //"consumer-group-"
 	reader := getKafkaReader(kafkaURL, kafkaTopic, kafkaGroupId)
 	defer reader.Close()
 
@@ -98,7 +98,7 @@ func RegisterComsumerATC(id int) {
 		if err != nil {
 			fmt.Printf("Consumer(%d) error: %v", id, err)
 		}
-		fmt.Printf("Consumer(%d), wait topic:%v, partition:%v, offset:%v, time:%d %s = %s", id, m.Topic, m.Partition, m.Offset, m.Time.Unix(), string(m.Key), string(m.Value))
+		fmt.Printf("Consumer(%d), wait topic:%v, partition:%v, offset:%v, time:%d %s = %s\n", id, m.Topic, m.Partition, m.Offset, m.Time.Unix(), string(m.Key), string(m.Value))
 	}
 }
 
@@ -112,6 +112,8 @@ func main() {
 	// Register waiting
 	go RegisterComsumerATC(1)
 	go RegisterComsumerATC(2)
+	go RegisterComsumerATC(3)
+	go RegisterComsumerATC(4)
 
 	r.Run(":8999")
 }

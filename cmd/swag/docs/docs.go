@@ -461,7 +461,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/posts/get_like_user/{postId}": {
+        "/posts/like_post/{post_id}": {
             "get": {
                 "security": [
                     {
@@ -483,7 +483,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Post ID to get user like post",
-                        "name": "postId",
+                        "name": "post_id",
                         "in": "path",
                         "required": true
                     },
@@ -514,9 +514,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/posts/like_post/{post_id}": {
+            },
             "post": {
                 "security": [
                     {

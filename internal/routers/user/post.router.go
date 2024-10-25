@@ -29,8 +29,9 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		postRouterPrivate.PATCH("/:post_id", postUserController.UpdatePost)
 		postRouterPrivate.DELETE("/:post_id", postUserController.DeletePost)
 
+		// post_like
 		postRouterPrivate.POST("/like_post/:post_id", postLikeController.LikePost)
-		postRouterPrivate.GET("/get_like_user/:postId", postLikeController.GetUserLikePost)
+		postRouterPrivate.GET("/like_post/:post_id", postLikeController.GetUserLikePost)
 
 		// post_share
 		postRouterPrivate.POST("/share_post/:post_id", postShareController.SharePost)

@@ -489,7 +489,7 @@ paths:
       summary: update post
       tags:
       - post_user
-  /posts/get_like_user/{postId}:
+  /posts/like_post/{post_id}:
     get:
       consumes:
       - application/json
@@ -497,7 +497,7 @@ paths:
       parameters:
       - description: Post ID to get user like post
         in: path
-        name: postId
+        name: post_id
         required: true
         type: string
       - description: Limit of posts per page
@@ -524,7 +524,6 @@ paths:
       summary: Get User like posts
       tags:
       - Like_Post
-  /posts/like_post/{post_id}:
     post:
       consumes:
       - application/json
