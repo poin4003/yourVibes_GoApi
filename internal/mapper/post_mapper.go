@@ -6,8 +6,30 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 )
 
-func MapPostToPostDto(post *model.Post) *post_dto.PostDto {
+func MapPostToPostDto(post *model.Post, isLiked bool) *post_dto.PostDto {
 	return &post_dto.PostDto{
+		ID:              post.ID,
+		UserId:          post.UserId,
+		User:            MapUserToUserDtoShortVer(&post.User),
+		ParentId:        post.ParentId,
+		ParentPost:      post.ParentPost,
+		Content:         post.Content,
+		LikeCount:       post.LikeCount,
+		CommentCount:    post.CommentCount,
+		Privacy:         post.Privacy,
+		Location:        post.Location,
+		IsAdvertisement: post.IsAdvertisement,
+		Status:          post.Status,
+		IsLiked:         isLiked,
+		CreatedAt:       post.CreatedAt,
+		UpdatedAt:       post.UpdatedAt,
+		DeletedAt:       post.DeletedAt,
+		Media:           post.Media,
+	}
+}
+
+func MapPostToUpdatedPostDto(post *model.Post) *post_dto.UpdatedPostDto {
+	return &post_dto.UpdatedPostDto{
 		ID:              post.ID,
 		UserId:          post.UserId,
 		User:            MapUserToUserDtoShortVer(&post.User),

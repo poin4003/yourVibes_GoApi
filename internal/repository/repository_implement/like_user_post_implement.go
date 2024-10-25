@@ -79,6 +79,7 @@ func (r *rLikeUserPost) GetLikeUserPost(
 
 	return users, pagingResponse, nil
 }
+
 func (r *rLikeUserPost) CheckUserLikePost(
 	ctx context.Context,
 	likeUserPost *model.LikeUserPost,
@@ -88,5 +89,4 @@ func (r *rLikeUserPost) CheckUserLikePost(
 	if err := r.db.WithContext(ctx).Model(&model.LikeUserPost{}).Where("post_id = ? AND user_id =?", likeUserPost.PostId, likeUserPost.UserId).Count(&count).Error; err != nil {
 	}
 	return count > 0, nil
-
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
@@ -34,7 +36,8 @@ func NewPostLikeImplement(
 func (s *sPostLike) LikePost(
 	ctx context.Context,
 	likeUserPostModel *model.LikeUserPost,
-) (post *model.Post, resultCode int, httpStatusCode int, err error) {
+	userId uuid.UUID,
+) (postDto *post_dto.PostDto, resultCode int, httpStatusCode int, err error) {
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", likeUserPostModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -43,12 +46,12 @@ func (s *sPostLike) LikePost(
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
 	}
 
-	checkLike, err := s.postLikeRepo.CheckUserLikePost(ctx, likeUserPostModel)
+	checkLiked, err := s.postLikeRepo.CheckUserLikePost(ctx, likeUserPostModel)
 	if err != nil {
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
 	}
 
-	if !checkLike {
+	if !checkLiked {
 		if err := s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostModel); err != nil {
 			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
 		}
@@ -59,7 +62,14 @@ func (s *sPostLike) LikePost(
 			"like_count": postFound.LikeCount,
 		})
 
-		return postFound, response.ErrCodeSuccess, http.StatusOK, nil
+		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &model.LikeUserPost{
+			PostId: postFound.ID,
+			UserId: userId,
+		})
+
+		postDto = mapper.MapPostToPostDto(postFound, isLiked)
+
+		return postDto, response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		if err := s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostModel); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -74,7 +84,14 @@ func (s *sPostLike) LikePost(
 			"like_count": postFound.LikeCount,
 		})
 
-		return postFound, response.ErrCodeSuccess, http.StatusOK, nil
+		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &model.LikeUserPost{
+			PostId: postFound.ID,
+			UserId: userId,
+		})
+
+		postDto = mapper.MapPostToPostDto(postFound, isLiked)
+
+		return postDto, response.ErrCodeSuccess, http.StatusOK, nil
 	}
 }
 

@@ -141,7 +141,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
@@ -172,7 +172,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	postDto := mapper.MapPostToPostDto(post)
+	postDto := mapper.MapPostToUpdatedPostDto(post)
 
 	// Delete cache
 	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
@@ -239,16 +239,16 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		}
 	}
 
-	posts, resultCode, httpStatusCode, paging, err := services.PostUser().GetManyPosts(ctx, &query)
+	userUUID, err := extensions.GetUserID(ctx)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	var postDtos []post_dto.PostDto
-	for _, post := range posts {
-		postDto := mapper.MapPostToPostDto(post)
-		postDtos = append(postDtos, *postDto)
+	postDtos, resultCode, httpStatusCode, paging, err := services.PostUser().GetManyPosts(ctx, &query, userUUID)
+	if err != nil {
+		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		return
 	}
 
 	postsJson, _ := json.Marshal(postDtos)
@@ -280,6 +280,12 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
 	cachedPost, err := p.redisClient.Get(context.Background(), postId.String()).Result()
 	if err == nil {
 		var postDto post_dto.PostDto
@@ -292,13 +298,11 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	post, resultCode, httpStatusCode, err := services.PostUser().GetPost(ctx, postId)
+	postDto, resultCode, httpStatusCode, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
-
-	postDto := mapper.MapPostToPostDto(post)
 
 	postJson, _ := json.Marshal(postDto)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
@@ -331,7 +335,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return

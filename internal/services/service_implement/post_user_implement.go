@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
@@ -16,20 +18,23 @@ import (
 )
 
 type sPostUser struct {
-	userRepo  repository.IUserRepository
-	postRepo  repository.IPostRepository
-	mediaRepo repository.IMediaRepository
+	userRepo         repository.IUserRepository
+	postRepo         repository.IPostRepository
+	mediaRepo        repository.IMediaRepository
+	likeUserPostRepo repository.ILikeUserPostRepository
 }
 
 func NewPostUserImplement(
 	userRepo repository.IUserRepository,
 	postRepo repository.IPostRepository,
 	mediaRepo repository.IMediaRepository,
+	likeUserPostRepo repository.ILikeUserPostRepository,
 ) *sPostUser {
 	return &sPostUser{
-		userRepo:  userRepo,
-		postRepo:  postRepo,
-		mediaRepo: mediaRepo,
+		userRepo:         userRepo,
+		postRepo:         postRepo,
+		mediaRepo:        mediaRepo,
+		likeUserPostRepo: likeUserPostRepo,
 	}
 }
 
@@ -229,7 +234,8 @@ func (s *sPostUser) DeletePost(
 func (s *sPostUser) GetPost(
 	ctx context.Context,
 	postId uuid.UUID,
-) (post *model.Post, resultCode int, httpStatusCode int, err error) {
+	userId uuid.UUID,
+) (postDto *post_dto.PostDto, resultCode int, httpStatusCode int, err error) {
 	postModel, err := s.postRepo.GetPost(ctx, "id=?", postId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -238,18 +244,35 @@ func (s *sPostUser) GetPost(
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
 	}
 
-	return postModel, response.ErrCodeSuccess, http.StatusOK, nil
+	isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, &model.LikeUserPost{
+		PostId: postId,
+		UserId: userId,
+	})
+
+	postDto = mapper.MapPostToPostDto(postModel, isLiked)
+
+	return postDto, response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
 	query *query_object.PostQueryObject,
-) (posts []*model.Post, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error) {
+	userId uuid.UUID,
+) (postDtos []*post_dto.PostDto, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error) {
 	postModels, paging, err := s.postRepo.GetManyPost(ctx, query)
-
 	if err != nil {
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, err
 	}
 
-	return postModels, response.ErrCodeSuccess, http.StatusOK, paging, nil
+	for _, post := range postModels {
+		isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, &model.LikeUserPost{
+			PostId: post.ID,
+			UserId: userId,
+		})
+
+		postDto := mapper.MapPostToPostDto(post, isLiked)
+		postDtos = append(postDtos, postDto)
+	}
+
+	return postDtos, response.ErrCodeSuccess, http.StatusOK, paging, nil
 }

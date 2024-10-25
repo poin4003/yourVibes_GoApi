@@ -15,11 +15,11 @@ type (
 		CreatePost(ctx context.Context, postModel *model.Post, inMedia []multipart.File) (post *model.Post, resultCode int, httpStatusCode int, err error)
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *model.Post, resultCode int, httpStatusCode int, err error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetPost(ctx context.Context, postId uuid.UUID) (post *model.Post, resultCode int, httpStatusCode int, err error)
-		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject) (posts []*model.Post, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
+		GetPost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (postDto *post_dto.PostDto, resultCode int, httpStatusCode int, err error)
+		GetManyPosts(ctx context.Context, query *query_object.PostQueryObject, userId uuid.UUID) (postDtos []*post_dto.PostDto, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
 	}
 	IPostLike interface {
-		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost) (post *model.Post, resultCode int, httpStatusCode int, err error)
+		LikePost(ctx context.Context, likeUserPost *model.LikeUserPost, userId uuid.UUID) (postDto *post_dto.PostDto, resultCode int, httpStatusCode int, err error)
 		GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query_object.PostLikeQueryObject) (users []*model.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 	IPostShare interface {

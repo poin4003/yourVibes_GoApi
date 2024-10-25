@@ -44,19 +44,17 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 		return
 	}
 
-	userUUID, err := extensions.GetUserID(ctx)
+	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
-	likeUserPostModel := mapper.MapToLikeUserPostFromPostIdAndUserId(postId, userUUID)
-	postModel, resultCode, httpStatusCode, err := services.LikeUserPost().LikePost(ctx, likeUserPostModel)
+	likeUserPostModel := mapper.MapToLikeUserPostFromPostIdAndUserId(postId, userIdClaim)
+	postDto, resultCode, httpStatusCode, err := services.LikeUserPost().LikePost(ctx, likeUserPostModel, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
-
-	postDto := mapper.MapPostToPostDto(postModel)
 
 	response.SuccessResponse(ctx, response.ErrCodeSuccess, httpStatusCode, postDto)
 }

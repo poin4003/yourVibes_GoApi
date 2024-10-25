@@ -53,7 +53,7 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	_, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	_, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
