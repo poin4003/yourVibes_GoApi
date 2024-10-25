@@ -582,6 +582,24 @@ const docTemplate = `{
                         "name": "post_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content of the post",
+                        "name": "content",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Privacy level",
+                        "name": "privacy",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Location of the post",
+                        "name": "location",
+                        "in": "formData"
                     }
                 ],
                 "responses": {

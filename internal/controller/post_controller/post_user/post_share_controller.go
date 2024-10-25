@@ -1,9 +1,9 @@
 package post_user
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/services"
@@ -25,11 +25,21 @@ func NewPostShareController() *cPostShare {
 // @Accept multipart/form-data
 // @Produce json
 // @Param post_id path string true "PostId"
+// @Param content formData string false "Content of the post"
+// @Param privacy formData string false "Privacy level"
+// @Param location formData string false "Location of the post"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/share_post/{post_id} [post]
 func (p *cPostShare) SharePost(ctx *gin.Context) {
+	var sharePostInput post_dto.SharePostInput
+
+	if err := ctx.ShouldBind(&sharePostInput); err != nil {
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -43,18 +53,13 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
+	_, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
 		return
 	}
 
-	if userIdClaim == postFound.UserId {
-		response.ErrorResponse(ctx, response.ErrDataNotFound, http.StatusBadRequest, fmt.Sprintf("You can not share your own post!"))
-		return
-	}
-
-	postModel, resultCode, httpStatusCode, err := services.PostShare().SharePost(ctx, postId, userIdClaim)
+	postModel, resultCode, httpStatusCode, err := services.PostShare().SharePost(ctx, postId, userIdClaim, &sharePostInput)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return

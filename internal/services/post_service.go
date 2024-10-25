@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -22,7 +23,7 @@ type (
 		GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query_object.PostLikeQueryObject) (users []*model.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 	IPostShare interface {
-		SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (post *model.Post, resultCode int, httpStatusCode int, err error)
+		SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID, shareInput *post_dto.SharePostInput) (post *model.Post, resultCode int, httpStatusCode int, err error)
 	}
 )
 
