@@ -22,11 +22,20 @@ type (
 		DeleteSetting(ctx context.Context, settingId uint) error
 		GetSetting(ctx context.Context, query interface{}, args ...interface{}) (*model.Setting, error)
 	}
+	INotificationRepository interface {
+		CreateNotification(ctx context.Context, notification *model.Notification) (*model.Notification, error)
+		UpdateOneNotification(ctx context.Context, notificationId uint, updateData map[string]interface{}) (*model.Notification, error)
+		UpdateManyNotification(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
+		DeleteNotification(ctx context.Context, notificationId uint) (*model.Notification, error)
+		GetOneNotification(ctx context.Context, query interface{}, args ...interface{}) (*model.Notification, error)
+		GetManyNotification(ctx context.Context, userId uuid.UUID, query *query_object.NotificationQueryObject) ([]*model.Notification, *response.PagingResponse, error)
+	}
 )
 
 var (
-	localUser    IUserRepository
-	localSetting ISettingRepository
+	localUser         IUserRepository
+	localSetting      ISettingRepository
+	localNotification INotificationRepository
 )
 
 func User() IUserRepository {
@@ -45,10 +54,22 @@ func Setting() ISettingRepository {
 	return localSetting
 }
 
+func Notification() INotificationRepository {
+	if localNotification == nil {
+		panic("repository_implement localNotification not found for interface INotification")
+	}
+
+	return localNotification
+}
+
 func InitUserRepository(i IUserRepository) {
 	localUser = i
 }
 
 func InitSettingRepository(i ISettingRepository) {
 	localSetting = i
+}
+
+func InitNotificationRepository(i INotificationRepository) {
+	localNotification = i
 }

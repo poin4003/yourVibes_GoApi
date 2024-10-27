@@ -57,6 +57,7 @@ func DBMigrator(db *gorm.DB) error {
 	db.Exec("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
 	err := db.AutoMigrate(
 		&model.User{},
+		&model.Notification{},
 		&model.Post{},
 		&model.Media{},
 		&model.Setting{},

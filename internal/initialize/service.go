@@ -17,6 +17,7 @@ func InitServiceInterface(db *gorm.DB) {
 	settingRepo := repository_implement.NewSettingRepositoryImplement(db)
 	commentRepo := repository_implement.NewCommentRepositoryImplement(db)
 	likeUserCommentRepo := repository_implement.NewLikeUserCommentRepositoryImplement(db)
+	notificationRepo := repository_implement.NewNotificationRepositoryImplement(db)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
@@ -25,11 +26,13 @@ func InitServiceInterface(db *gorm.DB) {
 	repository.InitSettingRepository(settingRepo)
 	repository.InitCommentRepository(commentRepo)
 	repository.InitLikeUserCommentRepository(likeUserCommentRepo)
+	repository.InitNotificationRepository(notificationRepo)
 
 	// 2. Initialize Service
 	userAuthService := service_implement.NewUserLoginImplement(userRepo, settingRepo)
+	userNotification := service_implement.NewUserNotificationImplement(userRepo, notificationRepo)
 	postUserService := service_implement.NewPostUserImplement(userRepo, postRepo, mediaRepo, postLikeRepo)
-	postLikeService := service_implement.NewPostLikeImplement(userRepo, postRepo, postLikeRepo)
+	postLikeService := service_implement.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
 	postShareService := service_implement.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	userInfoService := service_implement.NewUserInfoImplement(userRepo, settingRepo)
 	commentUserService := service_implement.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
@@ -37,6 +40,7 @@ func InitServiceInterface(db *gorm.DB) {
 
 	services.InitUserAuth(userAuthService)
 	services.InitUserInfo(userInfoService)
+	services.InitUserNotification(userNotification)
 	services.InitLikeUserPost(postLikeService)
 	services.InitPostUser(postUserService)
 	services.InitPostShare(postShareService)

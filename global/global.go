@@ -4,6 +4,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/poin4003/yourVibes_GoApi/pkg/logger"
 	"github.com/poin4003/yourVibes_GoApi/pkg/settings"
+	"github.com/poin4003/yourVibes_GoApi/pkg/socket_hub"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -14,4 +15,5 @@ var (
 	Rdb        *redis.Client
 	Pdb        *gorm.DB
 	Cloudinary *cloudinary.Cloudinary
+	SocketHub  *socket_hub.WebSocketHub
 )

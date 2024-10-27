@@ -24,5 +24,4 @@ type Post struct {
 	UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 	Media           []Media             `json:"media" gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Comment         []Comment           `json:"comment" gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

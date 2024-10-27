@@ -17,6 +17,7 @@ func Run() *gin.Engine {
 	InitCloudinary()
 	InitRedis()
 	InitPostgreSql()
+	InitSocketHub()
 	InitServiceInterface(global.Pdb)
 
 	r := InitRouter()
