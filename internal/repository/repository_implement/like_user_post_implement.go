@@ -86,7 +86,10 @@ func (r *rLikeUserPost) CheckUserLikePost(
 ) (bool, error) {
 	var count int64
 
-	if err := r.db.WithContext(ctx).Model(&model.LikeUserPost{}).Where("post_id = ? AND user_id =?", likeUserPost.PostId, likeUserPost.UserId).Count(&count).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Model(&model.LikeUserPost{}).
+		Where("post_id = ? AND user_id =?", likeUserPost.PostId, likeUserPost.UserId).
+		Count(&count).Error; err != nil {
 	}
 	return count > 0, nil
 }

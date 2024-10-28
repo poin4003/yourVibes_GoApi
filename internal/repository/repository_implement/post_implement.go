@@ -78,6 +78,7 @@ func (r *rPost) GetPost(
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
+		Preload("ParentPost.Media").
 		Where(query, args...).First(post); res.Error != nil {
 		return nil, res.Error
 	}
@@ -166,6 +167,7 @@ func (r *rPost) GetManyPost(
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
+		Preload("ParentPost.Media").
 		Find(&posts).Error; err != nil {
 		return nil, nil, err
 	}

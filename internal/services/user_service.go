@@ -28,6 +28,13 @@ type (
 		UpdateOneStatusNotification(ctx context.Context, notificationID uint) (resultCode int, httpStatusCode int, err error)
 		UpdateManyStatusNotification(ctx context.Context, userId uuid.UUID) (resultCode int, httpStatusCode int, err error)
 	}
+	IUserFriend interface {
+		//SendAddFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		//GetFriendRequests(ctx context.Context, userId uuid.UUID) (users []*modelresultCode int, httpStatusCode int, err error)
+		//AcceptFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		//RejectFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		//GetFriends(ctx context.Context, userId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+	}
 )
 
 var (

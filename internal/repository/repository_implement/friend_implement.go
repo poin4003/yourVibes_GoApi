@@ -9,19 +9,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type rFriendRequest struct {
+type rFriend struct {
 	db *gorm.DB
 }
 
-func NewFriendRequestImplement(db *gorm.DB) *rMedia {
+func NewFriendImplement(db *gorm.DB) *rMedia {
 	return &rMedia{db: db}
 }
 
-func (r *rFriendRequest) CreateFriendRequest(
+func (r *rFriend) CreateFriend(
 	ctx context.Context,
-	friendRequest *model.FriendRequest,
+	friend *model.Friend,
 ) error {
-	res := r.db.WithContext(ctx).Create(friendRequest)
+	res := r.db.WithContext(ctx).Create(friend)
 
 	if res.Error != nil {
 		return res.Error
@@ -29,19 +29,20 @@ func (r *rFriendRequest) CreateFriendRequest(
 	return nil
 }
 
-func (r *rFriendRequest) DeleteFriendRequest(
+func (r *rFriend) DeleteFriend(
 	ctx context.Context,
-	friendRequest *model.FriendRequest,
+	friend *model.Friend,
 ) error {
-	res := r.db.WithContext(ctx).Delete(friendRequest)
+	res := r.db.WithContext(ctx).Delete(friend)
 
 	if res.Error != nil {
 		return res.Error
 	}
+
 	return nil
 }
 
-func (r *rFriendRequest) GetFriendRequest(
+func (r *rFriend) GetFriendRequest(
 	ctx context.Context,
 	userId uuid.UUID,
 	query *query_object.FriendRequestQueryObject,
@@ -61,8 +62,8 @@ func (r *rFriendRequest) GetFriendRequest(
 
 	db := r.db.WithContext(ctx).Model(&model.User{})
 
-	err := db.Joins("JOIN friend_requests ON friend_requests.user_id = users.id").
-		Where("friend_requests.user_id = ?", userId).
+	err := db.Joins("JOIN friends ON friends.user_id = users.id").
+		Where("friends.user_id = ?", userId).
 		Count(&total).
 		Offset(offset).
 		Limit(limit).
@@ -81,15 +82,15 @@ func (r *rFriendRequest) GetFriendRequest(
 	return users, pagingResponse, nil
 }
 
-func (r *rFriendRequest) CheckFriendRequestExist(
+func (r *rFriend) CheckFriendExist(
 	ctx context.Context,
-	friendRequest *model.FriendRequest,
+	friend *model.Friend,
 ) (bool, error) {
 	var count int64
 
 	if err := r.db.WithContext(ctx).
-		Model(&model.FriendRequest{}).
-		Where("friend_id = ? AND user_id = ?", friendRequest.FriendId, friendRequest.UserId).
+		Model(&model.Friend{}).
+		Where("friend_id = ? AND user_id = ?", friend.FriendId, friend.UserId).
 		Count(&count).Error; err != nil {
 	}
 

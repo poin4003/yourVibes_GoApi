@@ -36,12 +36,20 @@ type (
 		GetFriendRequest(ctx context.Context, userId uuid.UUID, query *query_object.FriendRequestQueryObject) ([]*model.User, *response.PagingResponse, error)
 		CheckFriendRequestExist(ctx context.Context, friendRequest *model.FriendRequest) (bool, error)
 	}
+	IFriendRepository interface {
+		CreateFriend(ctx context.Context, friend *model.Friend) error
+		DeleteFriend(ctx context.Context, friend *model.Friend) error
+		GetFriendRequest(ctx context.Context, userId uuid.UUID, query *query_object.FriendRequestQueryObject) ([]*model.User, *response.PagingResponse, error)
+		CheckFriendExist(ctx context.Context, friend *model.Friend) (bool, error)
+	}
 )
 
 var (
-	localUser         IUserRepository
-	localSetting      ISettingRepository
-	localNotification INotificationRepository
+	localUser          IUserRepository
+	localSetting       ISettingRepository
+	localNotification  INotificationRepository
+	localFriendRequest IFriendRequestRepository
+	localFriend        IFriendRepository
 )
 
 func User() IUserRepository {
@@ -68,6 +76,22 @@ func Notification() INotificationRepository {
 	return localNotification
 }
 
+func FriendRequest() IFriendRequestRepository {
+	if localFriendRequest == nil {
+		panic("repository_implement localFriendRequest not found for interface IFriendRequest")
+	}
+
+	return localFriendRequest
+}
+
+func Friend() IFriendRepository {
+	if localFriend == nil {
+		panic("repository_implement localFriendRequest not found for interface IFriend")
+	}
+
+	return localFriend
+}
+
 func InitUserRepository(i IUserRepository) {
 	localUser = i
 }
@@ -78,4 +102,12 @@ func InitSettingRepository(i ISettingRepository) {
 
 func InitNotificationRepository(i INotificationRepository) {
 	localNotification = i
+}
+
+func InitFriendRequestRepository(i IFriendRequestRepository) {
+	localFriendRequest = i
+}
+
+func InitFriendRepository(i IFriendRepository) {
+	localFriend = i
 }
