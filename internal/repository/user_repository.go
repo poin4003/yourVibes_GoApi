@@ -33,7 +33,7 @@ type (
 	IFriendRequestRepository interface {
 		CreateFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) error
 		DeleteFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) error
-		GetFriendRequest(ctx context.Context, userId uuid.UUID, query) (*model.FriendRequest, error)
+		//GetFriendRequest(ctx context.Context, userId uuid.UUID, query) (*model.FriendRequest, error)
 	}
 )
 

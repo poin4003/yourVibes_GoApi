@@ -1,7 +1,6 @@
 package socket_hub
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/notification_dto"
 	"sync"
@@ -45,12 +44,7 @@ func (hub *WebSocketHub) SendNotification(userId string, notification *notificat
 		return nil
 	}
 
-	jsonMessage, err := json.Marshal(notification)
-	if err != nil {
-		return err
-	}
-
-	err = conn.WriteJSON(jsonMessage)
+	err := conn.WriteJSON(notification)
 	if err != nil {
 		hub.RemoveConnection(userId)
 		return err
