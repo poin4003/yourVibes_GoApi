@@ -64,6 +64,8 @@ func DBMigrator(db *gorm.DB) error {
 		&model.LikeUserPost{},
 		&model.Comment{},
 		&model.LikeUserComment{},
+		&model.FriendRequest{},
+		&model.Friend{},
 	)
 	return err
 }

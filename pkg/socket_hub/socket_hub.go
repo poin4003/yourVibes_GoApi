@@ -50,7 +50,7 @@ func (hub *WebSocketHub) SendNotification(userId string, notification *notificat
 		return err
 	}
 
-	err = conn.WriteMessage(websocket.TextMessage, jsonMessage)
+	err = conn.WriteJSON(jsonMessage)
 	if err != nil {
 		hub.RemoveConnection(userId)
 		return err

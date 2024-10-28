@@ -30,6 +30,11 @@ type (
 		GetOneNotification(ctx context.Context, query interface{}, args ...interface{}) (*model.Notification, error)
 		GetManyNotification(ctx context.Context, userId uuid.UUID, query *query_object.NotificationQueryObject) ([]*model.Notification, *response.PagingResponse, error)
 	}
+	IFriendRequestRepository interface {
+		CreateFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) error
+		DeleteFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) error
+		GetFriendRequest(ctx context.Context, userId uuid.UUID, query) (*model.FriendRequest, error)
+	}
 )
 
 var (
