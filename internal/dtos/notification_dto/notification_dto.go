@@ -13,6 +13,7 @@ type NotificationDto struct {
 	UserId           uuid.UUID                `json:"user_id"`
 	User             user_dto.UserDtoShortVer `json:"user"`
 	NotificationType string                   `json:"notification_type"`
+	Content          string                   `json:"content"`
 	Status           bool                     `json:"status"`
 	CreatedAt        time.Time                `json:"created_at"`
 	UpdatedAt        time.Time                `json:"updated_at"`

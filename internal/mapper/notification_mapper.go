@@ -15,6 +15,7 @@ func MapNotificationToNotificationDto(
 		UserId:           notification.UserId,
 		User:             MapUserToUserDtoShortVer(&notification.User),
 		NotificationType: notification.NotificationType,
+		Content:          notification.Content,
 		Status:           notification.Status,
 		CreatedAt:        notification.CreatedAt,
 		UpdatedAt:        notification.UpdatedAt,

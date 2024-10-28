@@ -13,6 +13,7 @@ type Notification struct {
 	UserId           uuid.UUID      `json:"user_id" gorm:"type:uuid;not null"`
 	User             User           `json:"user" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	NotificationType string         `json:"notification_type" gorm:"type:varchar(50);"`
+	Content          string         `json:"content" gorm:"type:varchar(50);"`
 	Status           bool           `json:"status" gorm:"default:true"`
 	CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt        time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
