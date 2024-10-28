@@ -88,7 +88,7 @@ func (s *sPostLike) LikePost(
 
 		// 4.1.4. Push notification to owner of the post
 		notificationModel := &model.Notification{
-			From:             userLike.FamilyName + userLike.Name,
+			From:             userLike.FamilyName + " " + userLike.Name,
 			FromUrl:          userLike.AvatarUrl,
 			UserId:           postFound.UserId,
 			NotificationType: consts.LIKE_POST,

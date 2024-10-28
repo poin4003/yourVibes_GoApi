@@ -28,7 +28,7 @@ func NewPostLikeController(
 // LikePost documentation
 // @Summary Like Post
 // @Description When user like post
-// @Tags Like_Post
+// @Tags like_post
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID to create like post"
@@ -62,7 +62,7 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 // GetUserLikePost documentation
 // @Summary Get User like posts
 // @Description Retrieve multiple posts filtered by various criteria.
-// @Tags Like_Post
+// @Tags like_post
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID to get user like post"

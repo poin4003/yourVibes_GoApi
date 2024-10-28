@@ -13,8 +13,8 @@ type rFriendRequest struct {
 	db *gorm.DB
 }
 
-func NewFriendRequestImplement(db *gorm.DB) *rMedia {
-	return &rMedia{db: db}
+func NewFriendRequestImplement(db *gorm.DB) *rFriendRequest {
+	return &rFriendRequest{db: db}
 }
 
 func (r *rFriendRequest) CreateFriendRequest(
@@ -62,7 +62,7 @@ func (r *rFriendRequest) GetFriendRequest(
 	db := r.db.WithContext(ctx).Model(&model.User{})
 
 	err := db.Joins("JOIN friend_requests ON friend_requests.user_id = users.id").
-		Where("friend_requests.user_id = ?", userId).
+		Where("friend_requests.friend_id = ?", userId).
 		Count(&total).
 		Offset(offset).
 		Limit(limit).

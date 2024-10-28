@@ -1,4 +1,4 @@
-package user_info
+package user_user
 
 import (
 	"github.com/gin-gonic/gin"

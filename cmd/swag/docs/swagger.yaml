@@ -268,7 +268,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get User like comments
       tags:
-      - Like_Comment
+      - like_comment
     post:
       consumes:
       - application/json
@@ -294,121 +294,7 @@ paths:
       - ApiKeyAuth: []
       summary: Like comment
       tags:
-      - Like_Comment
-  /notifications:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Filter notifications by sender
-        in: query
-        name: from
-        type: string
-      - description: Filter notifications by type
-        in: query
-        name: notification_type
-        type: string
-      - description: Filter notifications created at this date
-        in: query
-        name: created_at
-        type: string
-      - description: Sort notifications by this field
-        in: query
-        name: sort_by
-        type: string
-      - description: Sort notifications in descending order
-        in: query
-        name: isDescending
-        type: boolean
-      - description: Limit the number of notifications returned
-        in: query
-        name: limit
-        type: integer
-      - description: 'Pagination: page number'
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get notifications
-      tags:
-      - Notification
-  /notifications/:
-    patch:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update all notification status to false
-      tags:
-      - Notification
-  /notifications/{notification_id}:
-    patch:
-      consumes:
-      - application/json
-      parameters:
-      - description: Notification ID
-        in: path
-        name: notification_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update notification status to false
-      tags:
-      - Notification
-  /notifications/ws/{user_id}:
-    get:
-      consumes:
-      - application/json
-      description: Establish a WebSocket connection for real-time notifications
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: WebSocket connection established
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      summary: Connect to WebSocket
-      tags:
-      - Notification
+      - like_comment
   /posts/:
     get:
       consumes:
@@ -637,7 +523,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get User like posts
       tags:
-      - Like_Post
+      - like_post
     post:
       consumes:
       - application/json
@@ -663,7 +549,7 @@ paths:
       - ApiKeyAuth: []
       summary: Like Post
       tags:
-      - Like_Post
+      - like_post
   /posts/share_post/{post_id}:
     post:
       consumes:
@@ -851,6 +737,171 @@ paths:
       summary: Get user by ID
       tags:
       - user_info
+  /users/friends/:
+    get:
+      description: Get a list of friend
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of friend
+      tags:
+      - user_friend
+  /users/friends/{friend_id}/:
+    delete:
+      description: unfriend
+      parameters:
+      - description: User id you want to unfriend
+        in: path
+        name: friend_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: unfriend
+      tags:
+      - user_friend
+  /users/friends/friend_request:
+    get:
+      description: Get a list of friend request
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of friend request
+      tags:
+      - user_friend
+  /users/friends/friend_request/{friend_id}/:
+    delete:
+      description: Undo add friend request
+      parameters:
+      - description: User id you want to undo add request
+        in: path
+        name: friend_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Undo add friend request
+      tags:
+      - user_friend
+    post:
+      description: Send add friend request to another people
+      parameters:
+      - description: User id you want to send add request
+        in: path
+        name: friend_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Send add friend request
+      tags:
+      - user_friend
+  /users/friends/friend_response/{friend_id}/:
+    delete:
+      description: Delete friend request
+      parameters:
+      - description: User id you want to reject friend request
+        in: path
+        name: friend_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Reject friend request
+      tags:
+      - user_friend
+    post:
+      description: Accept friend request
+      parameters:
+      - description: User id you want to accept friend request
+        in: path
+        name: friend_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Accept friend request
+      tags:
+      - user_friend
   /users/login/:
     post:
       consumes:
@@ -877,6 +928,120 @@ paths:
       summary: User login
       tags:
       - user_auth
+  /users/notifications:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Filter notifications by sender
+        in: query
+        name: from
+        type: string
+      - description: Filter notifications by type
+        in: query
+        name: notification_type
+        type: string
+      - description: Filter notifications created at this date
+        in: query
+        name: created_at
+        type: string
+      - description: Sort notifications by this field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort notifications in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Limit the number of notifications returned
+        in: query
+        name: limit
+        type: integer
+      - description: 'Pagination: page number'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get notifications
+      tags:
+      - user_notification
+  /users/notifications/:
+    patch:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update all notification status to false
+      tags:
+      - user_notification
+  /users/notifications/{notification_id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Notification ID
+        in: path
+        name: notification_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update notification status to false
+      tags:
+      - user_notification
+  /users/notifications/ws/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Establish a WebSocket connection for real-time notifications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WebSocket connection established
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      summary: Connect to WebSocket
+      tags:
+      - user_notification
   /users/register/:
     post:
       consumes:

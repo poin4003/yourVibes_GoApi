@@ -13,8 +13,8 @@ type rFriend struct {
 	db *gorm.DB
 }
 
-func NewFriendImplement(db *gorm.DB) *rMedia {
-	return &rMedia{db: db}
+func NewFriendImplement(db *gorm.DB) *rFriend {
+	return &rFriend{db: db}
 }
 
 func (r *rFriend) CreateFriend(
@@ -42,10 +42,10 @@ func (r *rFriend) DeleteFriend(
 	return nil
 }
 
-func (r *rFriend) GetFriendRequest(
+func (r *rFriend) GetFriend(
 	ctx context.Context,
 	userId uuid.UUID,
-	query *query_object.FriendRequestQueryObject,
+	query *query_object.FriendQueryObject,
 ) ([]*model.User, *response.PagingResponse, error) {
 	var users []*model.User
 	var total int64

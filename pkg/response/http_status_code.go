@@ -8,11 +8,16 @@ const (
 	ErrSendEmailOTP     = 30003
 
 	// Register Code
-	ErrCodeUserHasExists         = 50001 // user has already registered
-	ErrCodeValidateParamRegister = 50002
-	ErrCodeValidateParamEmail    = 50003
-	ErrCodeValidate              = 50004
-	ErrDataNotFound              = 50005
+	ErrCodeUserHasExists             = 50001 // user has already registered
+	ErrCodeValidateParamRegister     = 50002
+	ErrCodeValidateParamEmail        = 50003
+	ErrCodeValidate                  = 50004
+	ErrDataNotFound                  = 50005
+	ErrFriendRequestHasAlreadyExists = 50006
+	ErrFriendHasAlreadyExists        = 50007
+	ErrFriendRequestNotExists        = 50008
+	ErrFriendNotExist                = 50009
+	ErrMakeFriendWithYourSelf        = 50010
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -38,11 +43,16 @@ var msg = map[int]string{
 	ErrInvalidOTP:       "OTP is invalid",
 	ErrSendEmailOTP:     "Failed to send email otp",
 
-	ErrCodeUserHasExists:         "User has already registered",
-	ErrCodeValidateParamRegister: "Validate param register failed",
-	ErrCodeValidateParamEmail:    "Validate param email failed",
-	ErrCodeValidate:              "Validate param failed",
-	ErrDataNotFound:              "Data not found",
+	ErrCodeUserHasExists:             "User has already registered",
+	ErrCodeValidateParamRegister:     "Validate param register failed",
+	ErrCodeValidateParamEmail:        "Validate param email failed",
+	ErrCodeValidate:                  "Validate param failed",
+	ErrDataNotFound:                  "Data not found",
+	ErrFriendRequestHasAlreadyExists: "Friend request has already exist",
+	ErrFriendHasAlreadyExists:        "Friend has already exist",
+	ErrFriendRequestNotExists:        "Friend request has not exist",
+	ErrFriendNotExist:                "Friend has not exist",
+	ErrMakeFriendWithYourSelf:        "You can't make friend with yourself",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",

@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/auth_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/notification_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -29,11 +30,12 @@ type (
 		UpdateManyStatusNotification(ctx context.Context, userId uuid.UUID) (resultCode int, httpStatusCode int, err error)
 	}
 	IUserFriend interface {
-		//SendAddFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		//GetFriendRequests(ctx context.Context, userId uuid.UUID) (users []*modelresultCode int, httpStatusCode int, err error)
-		//AcceptFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		//RejectFriendRequest(ctx context.Context, userId uuid.UUID, friendId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		//GetFriends(ctx context.Context, userId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		SendAddFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) (resultCode int, httpStatusCode int, err error)
+		GetFriendRequests(ctx context.Context, userId uuid.UUID, query *query_object.FriendRequestQueryObject) (userDtos []*user_dto.UserDtoShortVer, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
+		AcceptFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) (resultCode int, httpStatusCode int, err error)
+		RemoveFriendRequest(ctx context.Context, friendRequest *model.FriendRequest) (resultCode int, httpStatusCode int, err error)
+		UnFriend(ctx context.Context, friend *model.Friend) (resultCode int, httpStatusCode int, err error)
+		GetFriends(ctx context.Context, userId uuid.UUID, query *query_object.FriendQueryObject) (userDtos []*user_dto.UserDtoShortVer, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
 	}
 )
 
@@ -41,6 +43,7 @@ var (
 	localUserAuth         IUserAuth
 	localUserInfo         IUserInfo
 	localUserNotification IUserNotification
+	localUserFriend       IUserFriend
 )
 
 func UserAuth() IUserAuth {
@@ -67,6 +70,14 @@ func UserNotification() IUserNotification {
 	return localUserNotification
 }
 
+func UserFriend() IUserFriend {
+	if localUserFriend == nil {
+		panic("repository_implement localUserFriend not found for interface IUserFriend")
+	}
+
+	return localUserFriend
+}
+
 func InitUserAuth(i IUserAuth) {
 	localUserAuth = i
 }
@@ -77,4 +88,8 @@ func InitUserInfo(i IUserInfo) {
 
 func InitUserNotification(i IUserNotification) {
 	localUserNotification = i
+}
+
+func InitUserFriend(i IUserFriend) {
+	localUserFriend = i
 }

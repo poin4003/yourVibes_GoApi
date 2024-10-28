@@ -39,7 +39,7 @@ type (
 	IFriendRepository interface {
 		CreateFriend(ctx context.Context, friend *model.Friend) error
 		DeleteFriend(ctx context.Context, friend *model.Friend) error
-		GetFriendRequest(ctx context.Context, userId uuid.UUID, query *query_object.FriendRequestQueryObject) ([]*model.User, *response.PagingResponse, error)
+		GetFriend(ctx context.Context, userId uuid.UUID, query *query_object.FriendQueryObject) ([]*model.User, *response.PagingResponse, error)
 		CheckFriendExist(ctx context.Context, friend *model.Friend) (bool, error)
 	}
 )

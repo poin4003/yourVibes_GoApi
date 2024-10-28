@@ -1,4 +1,4 @@
-package notification_controller
+package user_user
 
 import (
 	"fmt"
@@ -29,12 +29,12 @@ func NewNotificationController() *cNotification {
 // SendNotification documentation
 // @Summary Connect to WebSocket
 // @Description Establish a WebSocket connection for real-time notifications
-// @Tags Notification
+// @Tags user_notification
 // @Accept json
 // @Produce json
 // @Success 200 {string} string "WebSocket connection established"
 // @Failure 500 {object} response.ErrResponse
-// @Router /notifications/ws/{user_id} [get]
+// @Router /users/notifications/ws/{user_id} [get]
 func (c *cNotification) SendNotification(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -73,7 +73,7 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 
 // GetNotification Get notifications
 // @Summary Get notifications
-// @Tags Notification
+// @Tags user_notification
 // @Accept json
 // @Produce json
 // @Param from query string false "Filter notifications by sender"
@@ -86,7 +86,7 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /notifications [get]
+// @Router /users/notifications [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
 	var query query_object.NotificationQueryObject
 
@@ -112,14 +112,14 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 
 // UpdateOneStatusNotifications Update status of notification to false
 // @Summary Update notification status to false
-// @Tags Notification
+// @Tags user_notification
 // @Accept json
 // @Produce json
 // @Param notification_id path string true "Notification ID"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /notifications/{notification_id} [patch]
+// @Router /users/notifications/{notification_id} [patch]
 func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	notificationIdStr := ctx.Param("notification_id")
 	notificationID, err := strconv.ParseUint(notificationIdStr, 10, 32)
@@ -139,13 +139,13 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 
 // UpdateManyStatusNotifications Update all status of notification to false
 // @Summary Update all notification status to false
-// @Tags Notification
+// @Tags user_notification
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /notifications/ [patch]
+// @Router /users/notifications/ [patch]
 func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {

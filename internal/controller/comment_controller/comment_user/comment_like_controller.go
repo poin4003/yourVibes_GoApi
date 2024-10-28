@@ -22,7 +22,7 @@ func NewCommentLikeController() *cCommentLike {
 // LikeComment documentation
 // @Summary Like comment
 // @Description When user like comment
-// @Tags Like_Comment
+// @Tags like_comment
 // @Accept json
 // @Produce json
 // @Param comment_id path string true "comment ID to create like comment"
@@ -58,7 +58,7 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 // GetUserLikeComment documentation
 // @Summary Get User like comments
 // @Description Retrieve multiple user is like comment
-// @Tags Like_Comment
+// @Tags like_comment
 // @Accept json
 // @Produce json
 // @Param comment_id path string true "comment ID to get user like comment"

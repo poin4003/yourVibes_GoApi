@@ -4,5 +4,4 @@ type UserRouterGroup struct {
 	UserRouter
 	PostRouter
 	CommentRouter
-	NotificationRouter
 }
