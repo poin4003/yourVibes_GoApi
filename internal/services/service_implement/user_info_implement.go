@@ -20,20 +20,23 @@ import (
 )
 
 type sUserInfo struct {
-	userRepo    repository.IUserRepository
-	settingRepo repository.ISettingRepository
-	friendRepo  repository.IFriendRepository
+	userRepo          repository.IUserRepository
+	settingRepo       repository.ISettingRepository
+	friendRepo        repository.IFriendRepository
+	friendRequestRepo repository.IFriendRequestRepository
 }
 
 func NewUserInfoImplement(
 	userRepo repository.IUserRepository,
 	settingRepo repository.ISettingRepository,
 	friendRepo repository.IFriendRepository,
+	friendRequestRepo repository.IFriendRequestRepository,
 ) *sUserInfo {
 	return &sUserInfo{
-		userRepo:    userRepo,
-		settingRepo: settingRepo,
-		friendRepo:  friendRepo,
+		userRepo:          userRepo,
+		settingRepo:       settingRepo,
+		friendRepo:        friendRepo,
+		friendRequestRepo: friendRequestRepo,
 	}
 }
 
@@ -52,12 +55,47 @@ func (s *sUserInfo) GetInfoByUserId(
 	}
 
 	// 2. Check if user is friend
-	isFriend, _ := s.friendRepo.CheckFriendExist(ctx, &model.Friend{
+	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &model.Friend{
 		UserId:   authenticatedUserId,
 		FriendId: userModel.ID,
 	})
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
+	}
 
-	userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, isFriend)
+	if isFriend {
+		userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, consts.IS_FRIEND)
+
+		return userDto, response.ErrCodeSuccess, http.StatusOK, nil
+	}
+
+	// 3. Check if user are send add friend request
+	isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &model.FriendRequest{
+		UserId:   authenticatedUserId,
+		FriendId: userModel.ID,
+	})
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
+	}
+
+	if isSendFriendRequest {
+		userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, consts.SEND_FRIEND_REQUEST)
+
+		return userDto, response.ErrCodeSuccess, http.StatusOK, nil
+	}
+
+	// 4. Check if user are receive add friend request
+	isReceiveFriendRequest, _ := s.friendRequestRepo.CheckFriendRequestExist(ctx, &model.FriendRequest{
+		UserId:   userModel.ID,
+		FriendId: authenticatedUserId,
+	})
+	if isReceiveFriendRequest {
+		userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, consts.RECEIVE_FRIEND_REQUEST)
+
+		return userDto, response.ErrCodeSuccess, http.StatusOK, nil
+	}
+
+	userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, consts.NOT_FRIEND)
 
 	return userDto, response.ErrCodeSuccess, http.StatusOK, nil
 }

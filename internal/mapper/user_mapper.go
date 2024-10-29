@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 )
@@ -29,7 +30,7 @@ func MapUserToUserDto(user *model.User) *user_dto.UserDto {
 
 func MapUserToUserDtoWithoutSetting(
 	user *model.User,
-	isFriend bool,
+	friendStatus consts.FriendStatus,
 ) *user_dto.UserDtoWithoutSetting {
 	return &user_dto.UserDtoWithoutSetting{
 		ID:           user.ID,
@@ -46,7 +47,7 @@ func MapUserToUserDtoWithoutSetting(
 		AuthGoogleId: user.AuthGoogleId,
 		PostCount:    user.PostCount,
 		Status:       user.Status,
-		IsFriend:     isFriend,
+		FriendStatus: friendStatus,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 	}

@@ -42,6 +42,11 @@ type (
 		GetFriend(ctx context.Context, userId uuid.UUID, query *query_object.FriendQueryObject) ([]*model.User, *response.PagingResponse, error)
 		CheckFriendExist(ctx context.Context, friend *model.Friend) (bool, error)
 	}
+	INewFeedRepository interface {
+		CreateManyNewFeed(ctx context.Context, newFeed *model.NewFeed) error
+		DeleteNewFeed(ctx context.Context, newFeed *model.NewFeed) error
+		GetManyNewFeed(ctx context.Context, userId uuid.UUID, query *query_object.NewFeedQueryObject) ([]*model.Post, *response.PagingResponse, error)
+	}
 )
 
 var (
@@ -50,6 +55,7 @@ var (
 	localNotification  INotificationRepository
 	localFriendRequest IFriendRequestRepository
 	localFriend        IFriendRepository
+	localNewFeed       INewFeedRepository
 )
 
 func User() IUserRepository {
@@ -84,6 +90,14 @@ func FriendRequest() IFriendRequestRepository {
 	return localFriendRequest
 }
 
+func NewFeed() INewFeedRepository {
+	if localNewFeed == nil {
+		panic("repository_implement localNewFeed not found for interface INewFeed")
+	}
+
+	return localNewFeed
+}
+
 func Friend() IFriendRepository {
 	if localFriend == nil {
 		panic("repository_implement localFriendRequest not found for interface IFriend")
@@ -110,4 +124,8 @@ func InitFriendRequestRepository(i IFriendRequestRepository) {
 
 func InitFriendRepository(i IFriendRepository) {
 	localFriend = i
+}
+
+func InitNewFeedRepository(i INewFeedRepository) {
+	localNewFeed = i
 }
