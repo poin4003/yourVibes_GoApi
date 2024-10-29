@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/cloudinary_util"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -20,24 +22,28 @@ import (
 type sUserInfo struct {
 	userRepo    repository.IUserRepository
 	settingRepo repository.ISettingRepository
+	friendRepo  repository.IFriendRepository
 }
 
 func NewUserInfoImplement(
 	userRepo repository.IUserRepository,
 	settingRepo repository.ISettingRepository,
+	friendRepo repository.IFriendRepository,
 ) *sUserInfo {
 	return &sUserInfo{
 		userRepo:    userRepo,
 		settingRepo: settingRepo,
+		friendRepo:  friendRepo,
 	}
 }
 
 func (s *sUserInfo) GetInfoByUserId(
 	ctx context.Context,
 	userId uuid.UUID,
-) (user *model.User, resultCode int, httpStatusCode int, err error) {
+	authenticatedUserId uuid.UUID,
+) (userDto *user_dto.UserDtoWithoutSetting, resultCode int, httpStatusCode int, err error) {
+	// 1. Find User
 	userModel, err := s.userRepo.GetUser(ctx, "id = ?", userId)
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
@@ -45,7 +51,15 @@ func (s *sUserInfo) GetInfoByUserId(
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
 	}
 
-	return userModel, response.ErrCodeSuccess, http.StatusOK, nil
+	// 2. Check if user is friend
+	isFriend, _ := s.friendRepo.CheckFriendExist(ctx, &model.Friend{
+		UserId:   authenticatedUserId,
+		FriendId: userModel.ID,
+	})
+
+	userDto = mapper.MapUserToUserDtoWithoutSetting(userModel, isFriend)
+
+	return userDto, response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sUserInfo) GetManyUsers(

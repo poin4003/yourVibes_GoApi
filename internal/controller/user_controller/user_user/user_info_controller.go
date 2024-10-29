@@ -32,6 +32,7 @@ func NewUserInfoController() *cUserInfo {
 // @Security ApiKeyAuth
 // @Router /users/{userId} [get]
 func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
+	// 1. Get userId from param path
 	userIdStr := ctx.Param("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
@@ -39,14 +40,21 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 		return
 	}
 
-	user, resultCode, httpStatusCode, err := services.UserInfo().GetInfoByUserId(ctx, userId)
+	// 2. Get userId from jwt
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	// 3. Call services
+	userDto, resultCode, httpStatusCode, err := services.UserInfo().GetInfoByUserId(ctx, userId, userIdClaim)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
 	}
 
-	userDto := mapper.MapUserToUserDtoWithoutSetting(user)
-
+	// 4. Response for user
 	response.SuccessResponse(ctx, resultCode, http.StatusOK, userDto)
 }
 
@@ -83,10 +91,10 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		return
 	}
 
-	var userDtos []user_dto.UserDtoWithoutSetting
+	var userDtos []user_dto.UserDtoShortVer
 	for _, user := range users {
-		userDto := mapper.MapUserToUserDtoWithoutSetting(user)
-		userDtos = append(userDtos, *userDto)
+		userDto := mapper.MapUserToUserDtoShortVer(user)
+		userDtos = append(userDtos, userDto)
 	}
 
 	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, userDtos, *paging)

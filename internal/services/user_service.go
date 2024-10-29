@@ -20,7 +20,7 @@ type (
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
 	IUserInfo interface {
-		GetInfoByUserId(ctx context.Context, userId uuid.UUID) (user *model.User, resultCode int, httpStatusCode int, err error)
+		GetInfoByUserId(ctx context.Context, userId uuid.UUID, authenticatedUserId uuid.UUID) (userDto *user_dto.UserDtoWithoutSetting, resultCode int, httpStatusCode int, err error)
 		GetManyUsers(ctx context.Context, query *query_object.UserQueryObject) (users []*model.User, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
 		UpdateUser(ctx context.Context, userId uuid.UUID, updateData map[string]interface{}, inAvatarUrl multipart.File, inCapwallUrl multipart.File, languageSetting consts.Language) (user *model.User, resultCode int, httpStatusCode int, err error)
 	}

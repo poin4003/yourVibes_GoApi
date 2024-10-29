@@ -27,7 +27,10 @@ func MapUserToUserDto(user *model.User) *user_dto.UserDto {
 	}
 }
 
-func MapUserToUserDtoWithoutSetting(user *model.User) *user_dto.UserDtoWithoutSetting {
+func MapUserToUserDtoWithoutSetting(
+	user *model.User,
+	isFriend bool,
+) *user_dto.UserDtoWithoutSetting {
 	return &user_dto.UserDtoWithoutSetting{
 		ID:           user.ID,
 		FamilyName:   user.FamilyName,
@@ -43,6 +46,7 @@ func MapUserToUserDtoWithoutSetting(user *model.User) *user_dto.UserDtoWithoutSe
 		AuthGoogleId: user.AuthGoogleId,
 		PostCount:    user.PostCount,
 		Status:       user.Status,
+		IsFriend:     isFriend,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 	}

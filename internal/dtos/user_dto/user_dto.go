@@ -43,6 +43,7 @@ type UserDtoWithoutSetting struct {
 	PostCount    int                 `json:"post_count"`
 	FriendCount  int                 `json:"friend_count"`
 	Status       bool                `json:"status"`
+	IsFriend     bool                `json:"is_friend"`
 	CreatedAt    time.Time           `json:"created_at"`
 	UpdatedAt    time.Time           `json:"updated_at"`
 }
