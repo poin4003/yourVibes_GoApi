@@ -40,6 +40,7 @@ func (s *sCommentUser) CreateComment(
 	ctx context.Context,
 	commentModel *model.Comment,
 ) (comment *model.Comment, resultCode int, httpStatusCode int, err error) {
+	// 1. Find post
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", commentModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -160,6 +161,15 @@ func (s *sCommentUser) DeleteComment(
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
 	}
 
+	// 2. Find post
+	postFound, err := s.postRepo.GetPost(ctx, "id=?", comment.PostId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.ErrDataNotFound, http.StatusBadRequest, err
+		}
+		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
+	}
+
 	// 2. Define width to delete
 	rightValue := comment.CommentRight
 	leftValue := comment.CommentLeft
@@ -200,6 +210,15 @@ func (s *sCommentUser) DeleteComment(
 	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, update_right)
 	if err != nil {
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+	}
+
+	postFound.CommentCount--
+	_, err = s.postRepo.UpdatePost(ctx, postFound.ID, map[string]interface{}{
+		"comment_count": postFound.CommentCount,
+	})
+
+	if err != nil {
+		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment count %w", err.Error())
 	}
 
 	if comment.ParentComment == nil {
