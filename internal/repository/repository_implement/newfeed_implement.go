@@ -73,11 +73,21 @@ func (r *rNewFeed) GetManyNewFeed(
 	}
 	offset := (page - 1) * limit
 
-	db := r.db.WithContext(ctx).Model(&model.NewFeed{})
+	db := r.db.WithContext(ctx)
 
-	err := db.Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
+	err := db.Model(&model.Post{}).
+		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("new_feeds.user_id = ?", userId).
-		Count(&total).
+		Count(&total).Error
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = db.Model(&model.Post{}).
+		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
+		Where("new_feeds.user_id = ?", userId).
+		Preload("User").
 		Offset(offset).
 		Limit(limit).
 		Find(&posts).Error
