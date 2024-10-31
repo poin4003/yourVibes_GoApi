@@ -40,7 +40,7 @@ func (s *sCommentUser) CreateComment(
 	ctx context.Context,
 	commentModel *model.Comment,
 ) (comment *model.Comment, resultCode int, httpStatusCode int, err error) {
-	_, err = s.postRepo.GetPost(ctx, "id=?", commentModel.PostId)
+	postFound, err := s.postRepo.GetPost(ctx, "id=?", commentModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
@@ -122,6 +122,11 @@ func (s *sCommentUser) CreateComment(
 	if err != nil {
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when create comment %w", err.Error())
 	}
+
+	postFound.CommentCount++
+	_, err = s.postRepo.UpdatePost(ctx, postFound.ID, map[string]interface{}{
+		"comment_count": postFound.CommentCount,
+	})
 
 	return newComment, response.ErrCodeSuccess, http.StatusOK, nil
 }
