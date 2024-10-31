@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/auth_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/notification_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/user_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
@@ -37,6 +38,10 @@ type (
 		UnFriend(ctx context.Context, friend *model.Friend) (resultCode int, httpStatusCode int, err error)
 		GetFriends(ctx context.Context, userId uuid.UUID, query *query_object.FriendQueryObject) (userDtos []*user_dto.UserDtoShortVer, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
 	}
+	IUserNewFeed interface {
+		DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		GetNewFeeds(ctx context.Context, userId uuid.UUID, query *query_object.NewFeedQueryObject) (postDtos []*post_dto.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
+	}
 )
 
 var (
@@ -44,6 +49,7 @@ var (
 	localUserInfo         IUserInfo
 	localUserNotification IUserNotification
 	localUserFriend       IUserFriend
+	localUserNewFeed      IUserNewFeed
 )
 
 func UserAuth() IUserAuth {
@@ -78,6 +84,14 @@ func UserFriend() IUserFriend {
 	return localUserFriend
 }
 
+func UserNewFeed() IUserNewFeed {
+	if localUserNewFeed == nil {
+		panic("repository_implement localUserNewFeed not found for interface IUserNewFeed")
+	}
+
+	return localUserNewFeed
+}
+
 func InitUserAuth(i IUserAuth) {
 	localUserAuth = i
 }
@@ -92,4 +106,8 @@ func InitUserNotification(i IUserNotification) {
 
 func InitUserFriend(i IUserFriend) {
 	localUserFriend = i
+}
+
+func InitUserNewFeed(i IUserNewFeed) {
+	localUserNewFeed = i
 }

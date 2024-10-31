@@ -14,6 +14,7 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	UserInfoController := user_user.NewUserInfoController()
 	UserNotificationController := user_user.NewNotificationController()
 	UserFriendController := user_user.NewUserFriendController()
+	UserNewFeedController := user_user.NewUserNewFeedController()
 	// Public router
 
 	userRouterPublic := Router.Group("/users")
@@ -49,5 +50,9 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.DELETE("/friends/friend_response/:friend_id", UserFriendController.RejectFriendRequest)
 		userRouterPrivate.DELETE("/friends/:friend_id", UserFriendController.UnFriend)
 		userRouterPrivate.GET("/friends/", UserFriendController.GetFriends)
+
+		// user_new_feed
+		userRouterPrivate.DELETE("/new_feeds/:post_id", UserNewFeedController.DeleteNewFeed)
+		userRouterPrivate.GET("/new_feeds/", UserNewFeedController.GetNewFeeds)
 	}
 }

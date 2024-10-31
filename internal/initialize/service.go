@@ -20,6 +20,7 @@ func InitServiceInterface(db *gorm.DB) {
 	notificationRepo := repository_implement.NewNotificationRepositoryImplement(db)
 	friendRepo := repository_implement.NewFriendImplement(db)
 	friendRequestRepo := repository_implement.NewFriendRequestImplement(db)
+	newFeedRepo := repository_implement.NewNewFeedRepositoryImplement(db)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
@@ -31,12 +32,14 @@ func InitServiceInterface(db *gorm.DB) {
 	repository.InitNotificationRepository(notificationRepo)
 	repository.InitFriendRepository(friendRepo)
 	repository.InitFriendRequestRepository(friendRequestRepo)
+	repository.InitNewFeedRepository(newFeedRepo)
 
 	// 2. Initialize Service
 	userAuthService := service_implement.NewUserLoginImplement(userRepo, settingRepo)
 	userNotification := service_implement.NewUserNotificationImplement(userRepo, notificationRepo)
 	userFriendService := service_implement.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, notificationRepo)
-	postUserService := service_implement.NewPostUserImplement(userRepo, postRepo, mediaRepo, postLikeRepo)
+	userNewFeedService := service_implement.NewUserNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo)
+	postUserService := service_implement.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo)
 	postLikeService := service_implement.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
 	postShareService := service_implement.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	userInfoService := service_implement.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
@@ -47,6 +50,7 @@ func InitServiceInterface(db *gorm.DB) {
 	services.InitUserInfo(userInfoService)
 	services.InitUserNotification(userNotification)
 	services.InitUserFriend(userFriendService)
+	services.InitUserNewFeed(userNewFeedService)
 	services.InitLikeUserPost(postLikeService)
 	services.InitPostUser(postUserService)
 	services.InitPostShare(postShareService)

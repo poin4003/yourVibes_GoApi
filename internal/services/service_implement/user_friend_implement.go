@@ -111,7 +111,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 		FromUrl:          userFound.AvatarUrl,
 		UserId:           friendFound.ID,
 		NotificationType: consts.FRIEND_REQUEST,
-		Content:          (friendFound.ID).String(),
+		ContentId:        (friendFound.ID).String(),
 	}
 	notification, err := s.notificationRepo.CreateNotification(ctx, notificationModel)
 	if err != nil {
@@ -215,7 +215,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 		FromUrl:          friendFound.AvatarUrl,
 		UserId:           userFound.ID,
 		NotificationType: consts.ACCEPT_FRIEND_REQUEST,
-		Content:          (userFound.ID).String(),
+		ContentId:        (userFound.ID).String(),
 	}
 	notification, err := s.notificationRepo.CreateNotification(ctx, notificationModel)
 	if err != nil {

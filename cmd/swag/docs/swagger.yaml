@@ -928,6 +928,55 @@ paths:
       summary: User login
       tags:
       - user_auth
+  /users/new_feeds/:
+    get:
+      description: Get a list of new feed
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of new feed
+      tags:
+      - user_new_feed
+  /users/new_feeds/{post_id}/:
+    delete:
+      description: delete new feeds
+      parameters:
+      - description: post_id you want to delete over your newfeed
+        in: path
+        name: post_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: DeleteNewFeeds
+      tags:
+      - user_new_feed
   /users/notifications:
     get:
       consumes:

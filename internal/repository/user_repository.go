@@ -24,6 +24,7 @@ type (
 	}
 	INotificationRepository interface {
 		CreateNotification(ctx context.Context, notification *model.Notification) (*model.Notification, error)
+		CreateManyNotification(ctx context.Context, notifications []*model.Notification) ([]*model.Notification, error)
 		UpdateOneNotification(ctx context.Context, notificationId uint, updateData map[string]interface{}) (*model.Notification, error)
 		UpdateManyNotification(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
 		DeleteNotification(ctx context.Context, notificationId uint) (*model.Notification, error)
@@ -40,11 +41,12 @@ type (
 		CreateFriend(ctx context.Context, friend *model.Friend) error
 		DeleteFriend(ctx context.Context, friend *model.Friend) error
 		GetFriend(ctx context.Context, userId uuid.UUID, query *query_object.FriendQueryObject) ([]*model.User, *response.PagingResponse, error)
+		GetFriendIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 		CheckFriendExist(ctx context.Context, friend *model.Friend) (bool, error)
 	}
 	INewFeedRepository interface {
-		CreateManyNewFeed(ctx context.Context, newFeed *model.NewFeed) error
-		DeleteNewFeed(ctx context.Context, newFeed *model.NewFeed) error
+		CreateManyNewFeed(ctx context.Context, postId uuid.UUID, friendIds []uuid.UUID) error
+		DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
 		GetManyNewFeed(ctx context.Context, userId uuid.UUID, query *query_object.NewFeedQueryObject) ([]*model.Post, *response.PagingResponse, error)
 	}
 )

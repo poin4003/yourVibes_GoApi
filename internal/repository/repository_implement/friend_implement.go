@@ -82,6 +82,24 @@ func (r *rFriend) GetFriend(
 	return users, pagingResponse, nil
 }
 
+func (r *rFriend) GetFriendIds(
+	ctx context.Context,
+	userId uuid.UUID,
+) ([]uuid.UUID, error) {
+	friendIds := []uuid.UUID{}
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Friend{}).
+		Where("user_id = ?", userId).
+		Pluck("friend_id", &friendIds).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return friendIds, nil
+}
+
 func (r *rFriend) CheckFriendExist(
 	ctx context.Context,
 	friend *model.Friend,

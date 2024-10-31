@@ -52,3 +52,25 @@ func (hub *WebSocketHub) SendNotification(userId string, notification *notificat
 
 	return nil
 }
+
+// Send many notification to user
+func (hub *WebSocketHub) SendMultipleNotifications(
+	userIds []string,
+	notifications *notification_dto.NotificationDto,
+) error {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
+
+	for _, userId := range userIds {
+		conn, ok := hub.connections[userId]
+		if ok {
+			err := conn.WriteJSON(notifications)
+			if err != nil {
+				hub.RemoveConnection(userId)
+				continue
+			}
+		}
+	}
+
+	return nil
+}

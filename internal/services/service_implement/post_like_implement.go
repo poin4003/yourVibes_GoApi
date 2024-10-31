@@ -92,7 +92,8 @@ func (s *sPostLike) LikePost(
 			FromUrl:          userLike.AvatarUrl,
 			UserId:           postFound.UserId,
 			NotificationType: consts.LIKE_POST,
-			Content:          (postFound.ID).String(),
+			ContentId:        (postFound.ID).String(),
+			Content:          postFound.Content,
 		}
 		notification, err := s.notificationRepo.CreateNotification(ctx, notificationModel)
 		if err != nil {

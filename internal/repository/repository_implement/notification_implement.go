@@ -31,6 +31,18 @@ func (r *rNotification) CreateNotification(
 	return notification, nil
 }
 
+func (r *rNotification) CreateManyNotification(
+	ctx context.Context,
+	notifications []*model.Notification,
+) ([]*model.Notification, error) {
+	err := r.db.WithContext(ctx).Create(&notifications).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return notifications, nil
+}
+
 func (r *rNotification) UpdateOneNotification(
 	ctx context.Context,
 	notificationId uint,

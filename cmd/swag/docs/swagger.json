@@ -1256,6 +1256,85 @@
                 }
             }
         },
+        "/users/new_feeds/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of new feed",
+                "tags": [
+                    "user_new_feed"
+                ],
+                "summary": "Get a list of new feed",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/new_feeds/{post_id}/": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete new feeds",
+                "tags": [
+                    "user_new_feed"
+                ],
+                "summary": "DeleteNewFeeds",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post_id you want to delete over your newfeed",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/notifications": {
             "get": {
                 "security": [

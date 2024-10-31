@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/dtos/post_dto"
 	"github.com/poin4003/yourVibes_GoApi/internal/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/model"
 	"github.com/poin4003/yourVibes_GoApi/internal/query_object"
 	"github.com/poin4003/yourVibes_GoApi/internal/repository"
 	"github.com/poin4003/yourVibes_GoApi/internal/utils/cloudinary_util"
+	"github.com/poin4003/yourVibes_GoApi/internal/utils/truncate"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"mime/multipart"
@@ -19,22 +22,31 @@ import (
 
 type sPostUser struct {
 	userRepo         repository.IUserRepository
+	FriendRepo       repository.IFriendRepository
+	NewFeedRepo      repository.INewFeedRepository
 	postRepo         repository.IPostRepository
 	mediaRepo        repository.IMediaRepository
 	likeUserPostRepo repository.ILikeUserPostRepository
+	notificationRepo repository.INotificationRepository
 }
 
 func NewPostUserImplement(
 	userRepo repository.IUserRepository,
+	FriendRepo repository.IFriendRepository,
+	NewFeedRepo repository.INewFeedRepository,
 	postRepo repository.IPostRepository,
 	mediaRepo repository.IMediaRepository,
 	likeUserPostRepo repository.ILikeUserPostRepository,
+	notificationRepo repository.INotificationRepository,
 ) *sPostUser {
 	return &sPostUser{
 		userRepo:         userRepo,
+		FriendRepo:       FriendRepo,
+		NewFeedRepo:      NewFeedRepo,
 		postRepo:         postRepo,
 		mediaRepo:        mediaRepo,
 		likeUserPostRepo: likeUserPostRepo,
+		notificationRepo: notificationRepo,
 	}
 }
 
@@ -76,6 +88,7 @@ func (s *sPostUser) CreatePost(
 		}
 	}
 
+	// 3. Find user
 	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -84,8 +97,8 @@ func (s *sPostUser) CreatePost(
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	// 4. Update post count for user
 	userFound.PostCount++
-
 	_, err = s.userRepo.UpdateUser(ctx, userFound.ID, map[string]interface{}{
 		"post_count": userFound.PostCount,
 	})
@@ -95,6 +108,55 @@ func (s *sPostUser) CreatePost(
 			return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to update user: %w", err)
 		}
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// 5. Create new feed for user friend
+	// 5.1. Get friend id of user friend list
+	friendIds, err := s.FriendRepo.GetFriendIds(ctx, userFound.ID)
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to get friends: %w", err)
+	}
+
+	// 5.2. If user don't have friend, return
+	if len(friendIds) == 0 {
+		return newPost, response.ErrCodeSuccess, http.StatusOK, nil
+	}
+
+	// 5.3. Create new feed for friend
+	err = s.NewFeedRepo.CreateManyNewFeed(ctx, newPost.ID, friendIds)
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create new feed: %w", err)
+	}
+
+	// 5.4. Create notification for friend
+	notificationModels := make([]*model.Notification, len(friendIds))
+	for i, friendId := range friendIds {
+		content := truncate.TruncateContent(newPost.Content, 20)
+		notificationModels[i] = &model.Notification{
+			From:             userFound.FamilyName + " " + userFound.Name,
+			FromUrl:          userFound.AvatarUrl,
+			UserId:           friendId,
+			NotificationType: consts.NEW_POST,
+			ContentId:        newPost.ID.String(),
+			Content:          content,
+		}
+	}
+
+	createdNotifications, err := s.notificationRepo.CreateManyNotification(ctx, notificationModels)
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create notifications: %w", err)
+	}
+
+	// 5.5. Send realtime notification (websocket)
+	notificationDto := mapper.MapNotificationToNotificationDto(createdNotifications[0])
+	userIds := make([]string, len(friendIds))
+	for i, friendId := range friendIds {
+		userIds[i] = friendId.String()
+	}
+
+	err = global.SocketHub.SendMultipleNotifications(userIds, notificationDto)
+	if err != nil {
+		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to send notifications: %w", err)
 	}
 
 	return newPost, response.ErrCodeSuccess, http.StatusInternalServerError, nil
