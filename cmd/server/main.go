@@ -2,7 +2,7 @@ package main
 
 import (
 	_ "github.com/poin4003/yourVibes_GoApi/cmd/swag/docs"
-	"github.com/poin4003/yourVibes_GoApi/internal/initialize"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/initialize"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

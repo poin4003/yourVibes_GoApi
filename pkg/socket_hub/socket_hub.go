@@ -2,7 +2,7 @@ package socket_hub
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/poin4003/yourVibes_GoApi/internal/dtos/notification_dto"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"sync"
 )
 
@@ -35,7 +35,7 @@ func (hub *WebSocketHub) RemoveConnection(userId string) {
 }
 
 // Send notification to User
-func (hub *WebSocketHub) SendNotification(userId string, notification *notification_dto.NotificationDto) error {
+func (hub *WebSocketHub) SendNotification(userId string, notification *consts.NotificationSocketResponse) error {
 	hub.mu.RLock()
 	conn, ok := hub.connections[userId]
 	hub.mu.RUnlock()
@@ -56,7 +56,7 @@ func (hub *WebSocketHub) SendNotification(userId string, notification *notificat
 // Send many notification to user
 func (hub *WebSocketHub) SendMultipleNotifications(
 	userIds []string,
-	notifications *notification_dto.NotificationDto,
+	notifications *consts.NotificationSocketResponse,
 ) error {
 	hub.mu.RLock()
 	defer hub.mu.RUnlock()
