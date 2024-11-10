@@ -4,12 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
-	user_dto2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/request"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"mime/multipart"
 	"net/http"
@@ -33,6 +30,8 @@ func NewUserInfoController() *cUserInfo {
 // @Security ApiKeyAuth
 // @Router /users/{userId} [get]
 func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
+	var userRequest query.UserQueryObject
+
 	// 1. Get userId from param path
 	userIdStr := ctx.Param("userId")
 	userId, err := uuid.Parse(userIdStr)
@@ -49,14 +48,16 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 	}
 
 	// 3. Call services
-	userDto, resultCode, httpStatusCode, err := services.UserInfo().GetInfoByUserId(ctx, userId, userIdClaim)
+	getOneUserQuery, err := userRequest.ToGetOneUserQuery(userId, userIdClaim)
+
+	result, err := services.UserInfo().GetInfoByUserId(ctx, getOneUserQuery)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Response for user
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, userDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.User)
 }
 
 // GetManyUsers documentation
@@ -86,19 +87,15 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		return
 	}
 
-	users, resultCode, httpStatusCode, paging, err := services.UserInfo().GetManyUsers(ctx, &query)
+	getManyUserQuery, err := query.ToGetManyUserQuery()
+
+	result, err := services.UserInfo().GetManyUsers(ctx, getManyUserQuery)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	var userDtos []response2.UserDtoShortVer
-	for _, user := range users {
-		userDto := mapper.MapUserToUserDtoShortVer(user)
-		userDtos = append(userDtos, userDto)
-	}
-
-	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, userDtos, *paging)
+	response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, result.Users, *result.PagingResponse)
 }
 
 // UpdateUser godoc
@@ -122,7 +119,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router       /users/ [patch]
 func (*cUserInfo) UpdateUser(ctx *gin.Context) {
-	var updateInput user_dto2.UpdateUserInput
+	var updateInput request.UpdateUserRequest
 
 	if err := ctx.ShouldBind(&updateInput); err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
@@ -135,38 +132,31 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	updateData := mapper.MapToUserFromUpdateDto(&updateInput)
-
 	var openFileAvatar multipart.File
 	var openFileCapwall multipart.File
 
-	if updateInput.AvatarUrl.Size != 0 {
-		openFileAvatar, err = updateInput.AvatarUrl.Open()
+	if updateInput.Avatar.Size != 0 {
+		openFileAvatar, err = updateInput.Avatar.Open()
 		if err != nil {
 			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	if updateInput.CapwallUrl.Size != 0 {
-		openFileCapwall, err = updateInput.CapwallUrl.Open()
+	if updateInput.Capwall.Size != 0 {
+		openFileCapwall, err = updateInput.Capwall.Open()
 		if err != nil {
 			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	var languageSetting consts.Language
-	if updateInput.LanguageSetting != nil {
-		languageSetting = *updateInput.LanguageSetting
-	}
+	updateUserCommand, err := updateInput.ToUpdateUserCommand(userIdClaim, openFileAvatar, openFileCapwall)
 
-	user, resultCode, httpStatusCode, err := services.UserInfo().UpdateUser(ctx, userIdClaim, updateData, openFileAvatar, openFileCapwall, languageSetting)
+	result, err := services.UserInfo().UpdateUser(ctx, updateUserCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 	}
 
-	userDto := mapper.MapUserToUserDto(user)
-
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, userDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.User)
 }

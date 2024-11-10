@@ -3,7 +3,6 @@ package entities
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
 )
 
 type Friend struct {
@@ -21,16 +20,12 @@ func (f *Friend) Validate() error {
 func NewFriend(
 	userId uuid.UUID,
 	friendId uuid.UUID,
-	user user_validator.ValidatedUser,
-	friend user_validator.ValidatedUser,
 ) (*Friend, error) {
 	newFriend := &Friend{
 		UserId:   userId,
 		FriendId: friendId,
-		User:     user.User,
-		Friend:   friend.User,
 	}
-	if err := friend.Validate(); err != nil {
+	if err := newFriend.Validate(); err != nil {
 		return nil, err
 	}
 

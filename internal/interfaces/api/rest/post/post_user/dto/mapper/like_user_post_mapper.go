@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
 func MapToLikeUserPostFromPostIdAndUserId(

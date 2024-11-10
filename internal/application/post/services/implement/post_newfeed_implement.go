@@ -3,10 +3,11 @@ package implement
 import (
 	"context"
 	"github.com/google/uuid"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repository"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/mapper"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
+	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
@@ -18,7 +19,7 @@ type sUserNewFeed struct {
 	newFeedRepo      post_repo.INewFeedRepository
 }
 
-func NewUserNewFeedImplement(
+func NewPostNewFeedImplement(
 	userRepo post_repo.IUserRepository,
 	postRepo post_repo.IPostRepository,
 	likeUserPostRepo post_repo.ILikeUserPostRepository,

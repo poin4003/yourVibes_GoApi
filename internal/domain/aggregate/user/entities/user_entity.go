@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -95,134 +94,31 @@ func NewUser(
 	return user, nil
 }
 
-func (u *UserUpdate) SetUpdatedAt() {
-	now := time.Now()
-	u.UpdatedAt = &now
-}
-
-func (u *UserUpdate) UpdateFamilyName(familyName *string) error {
-	u.FamilyName = familyName
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateName(name *string) error {
-	u.Name = name
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateEmail(email *string) error {
-	u.Email = email
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdatePassword(password *string) error {
-	u.Password = password
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdatePhoneNumber(phoneNumber *string) error {
-	u.PhoneNumber = phoneNumber
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateBirthday(birthday *time.Time) error {
-	u.Birthday = birthday
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateAvatarUrl(avatarUrl *string) error {
-	u.AvatarUrl = avatarUrl
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateCapwallUrl(capwallUrl *string) error {
-	u.CapwallUrl = capwallUrl
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdatePrivacy(privacy *consts.PrivacyLevel) error {
-	if !consts.IsValidPrivacyLevel(*privacy) {
-		return errors.New("invalid privacy level")
+func NewUserUpdate(
+	updateData *UserUpdate,
+) (*UserUpdate, error) {
+	userUpdate := &UserUpdate{
+		FamilyName:   updateData.FamilyName,
+		Name:         updateData.Name,
+		Email:        updateData.Email,
+		Password:     updateData.Password,
+		PhoneNumber:  updateData.PhoneNumber,
+		Birthday:     updateData.Birthday,
+		AvatarUrl:    updateData.AvatarUrl,
+		CapwallUrl:   updateData.CapwallUrl,
+		Privacy:      updateData.Privacy,
+		Biography:    updateData.Biography,
+		AuthType:     updateData.AuthType,
+		AuthGoogleId: updateData.AuthGoogleId,
+		PostCount:    updateData.PostCount,
+		FriendCount:  updateData.FriendCount,
+		Status:       updateData.Status,
+		UpdatedAt:    updateData.UpdatedAt,
 	}
-	u.Privacy = privacy
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
 
-func (u *UserUpdate) UpdateBiography(biography *string) error {
-	u.Biography = biography
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateAuthType(authType *consts.AuthType) error {
-	u.AuthType = authType
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) UpdateAuthGoogleId(authGoogleId *string) error {
-	u.AuthGoogleId = authGoogleId
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) IncreasePostCount() error {
-	if u.PostCount == nil {
-		initialCount := 0
-		u.PostCount = &initialCount
+	if err := userUpdate.ValidateUserUpdate(); err != nil {
+		return nil, err
 	}
-	*u.PostCount++
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
 
-func (u *UserUpdate) DecreasePostCount() error {
-	if u.PostCount == nil {
-		initialCount := 0
-		u.PostCount = &initialCount
-	}
-	*u.PostCount--
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) IncreaseFriendCount() error {
-	if u.FriendCount == nil {
-		initialCount := 0
-		u.FriendCount = &initialCount
-	}
-	*u.FriendCount++
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) DecreaseFriendCount() error {
-	if u.FriendCount == nil {
-		initialCount := 0
-		u.FriendCount = &initialCount
-	}
-	*u.FriendCount--
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) Activate() error {
-	*u.Status = true
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
-}
-
-func (u *UserUpdate) Deactivate() error {
-	*u.Status = false
-	u.SetUpdatedAt()
-	return u.ValidateUserUpdate()
+	return userUpdate, nil
 }

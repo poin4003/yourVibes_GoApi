@@ -3,32 +3,32 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
-	entities2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/entities"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/request"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
+	dto_response "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"mime/multipart"
 )
 
 type (
 	IPostUser interface {
-		CreatePost(ctx context.Context, postModel *entities2.Post, inMedia []multipart.File) (post *entities2.Post, resultCode int, httpStatusCode int, err error)
-		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *entities2.Post, resultCode int, httpStatusCode int, err error)
+		CreatePost(ctx context.Context, postModel *models.Post, inMedia []multipart.File) (post *models.Post, resultCode int, httpStatusCode int, err error)
+		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *models.Post, resultCode int, httpStatusCode int, err error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetPost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (postDto *response2.PostDto, resultCode int, httpStatusCode int, err error)
-		GetManyPosts(ctx context.Context, query *query.PostQueryObject, userId uuid.UUID) (postDtos []*response2.PostDto, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
+		GetPost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (postDto *dto_response.PostDto, resultCode int, httpStatusCode int, err error)
+		GetManyPosts(ctx context.Context, query *query.PostQueryObject, userId uuid.UUID) (postDtos []*dto_response.PostDto, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
 	}
 	IPostLike interface {
-		LikePost(ctx context.Context, likeUserPost *entities2.LikeUserPost, userId uuid.UUID) (postDto *response2.PostDto, resultCode int, httpStatusCode int, err error)
-		GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query.PostLikeQueryObject) (users []*entities2.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
+		LikePost(ctx context.Context, likeUserPost *models.LikeUserPost, userId uuid.UUID) (postDto *dto_response.PostDto, resultCode int, httpStatusCode int, err error)
+		GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query.PostLikeQueryObject) (users []*models.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
 	}
 	IPostShare interface {
-		SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID, shareInput *request.SharePostInput) (post *entities2.Post, resultCode int, httpStatusCode int, err error)
+		SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID, shareInput *request.SharePostInput) (post *models.Post, resultCode int, httpStatusCode int, err error)
 	}
 	IPostNewFeed interface {
 		DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetNewFeeds(ctx context.Context, userId uuid.UUID, query *query2.NewFeedQueryObject) (postDtos []*response3.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
+		GetNewFeeds(ctx context.Context, userId uuid.UUID, query *query.NewFeedQueryObject) (postDtos []*dto_response.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
 	}
 )
 

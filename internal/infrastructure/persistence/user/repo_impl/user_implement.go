@@ -3,10 +3,10 @@ package repo_impl
 import (
 	"context"
 	"github.com/google/uuid"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
@@ -38,23 +38,23 @@ func (r *rUser) CheckUserExistByEmail(
 
 func (r *rUser) GetById(
 	ctx context.Context,
-	userId uuid.UUID,
-) (*user_entity.User, error) {
+	id uuid.UUID,
+) (*entities.User, error) {
 	var userModel models.User
 	if err := r.db.WithContext(ctx).
-		First(&userModel, userId).
+		First(&userModel, id).
 		Preload("Setting").
 		Error; err != nil {
 		return nil, err
 	}
-	return user_mapper.FromUserModel(&userModel), nil
+	return mapper.FromUserModel(&userModel), nil
 }
 
 func (r *rUser) CreateOne(
 	ctx context.Context,
-	userEntity *user_entity.User,
-) (*user_entity.User, error) {
-	userModel := user_mapper.ToUserModel(userEntity)
+	entity *entities.User,
+) (*entities.User, error) {
+	userModel := mapper.ToUserModel(entity)
 
 	if err := r.db.WithContext(ctx).
 		Create(userModel).
@@ -67,91 +67,91 @@ func (r *rUser) CreateOne(
 
 func (r *rUser) UpdateOne(
 	ctx context.Context,
-	userId uuid.UUID,
-	userUpdateEntity *user_entity.UserUpdate,
-) (*user_entity.User, error) {
+	id uuid.UUID,
+	updateData *entities.UserUpdate,
+) (*entities.User, error) {
 	updates := map[string]interface{}{}
 
-	if userUpdateEntity.FamilyName != nil {
-		updates["family_name"] = userUpdateEntity.FamilyName
+	if updateData.FamilyName != nil {
+		updates["family_name"] = updateData.FamilyName
 	}
 
-	if userUpdateEntity.Name != nil {
-		updates["name"] = userUpdateEntity.Name
+	if updateData.Name != nil {
+		updates["name"] = updateData.Name
 	}
 
-	if userUpdateEntity.Email != nil {
-		updates["email"] = userUpdateEntity.Email
+	if updateData.Email != nil {
+		updates["email"] = updateData.Email
 	}
 
-	if userUpdateEntity.Password != nil {
-		updates["password"] = userUpdateEntity.Password
+	if updateData.Password != nil {
+		updates["password"] = updateData.Password
 	}
 
-	if userUpdateEntity.PhoneNumber != nil {
-		updates["phone_number"] = userUpdateEntity.PhoneNumber
+	if updateData.PhoneNumber != nil {
+		updates["phone_number"] = updateData.PhoneNumber
 	}
 
-	if userUpdateEntity.Birthday != nil {
-		updates["birthday"] = userUpdateEntity.Birthday
+	if updateData.Birthday != nil {
+		updates["birthday"] = updateData.Birthday
 	}
 
-	if userUpdateEntity.AvatarUrl != nil {
-		updates["avatar_url"] = userUpdateEntity.AvatarUrl
+	if updateData.AvatarUrl != nil {
+		updates["avatar_url"] = updateData.AvatarUrl
 	}
 
-	if userUpdateEntity.CapwallUrl != nil {
-		updates["capwall_url"] = userUpdateEntity.CapwallUrl
+	if updateData.CapwallUrl != nil {
+		updates["capwall_url"] = updateData.CapwallUrl
 	}
 
-	if userUpdateEntity.Privacy != nil {
-		updates["privacy"] = userUpdateEntity.Privacy
+	if updateData.Privacy != nil {
+		updates["privacy"] = updateData.Privacy
 	}
 
-	if userUpdateEntity.Biography != nil {
-		updates["biography"] = userUpdateEntity.Biography
+	if updateData.Biography != nil {
+		updates["biography"] = updateData.Biography
 	}
 
-	if userUpdateEntity.AuthType != nil {
-		updates["auth_type"] = userUpdateEntity.AuthType
+	if updateData.AuthType != nil {
+		updates["auth_type"] = updateData.AuthType
 	}
 
-	if userUpdateEntity.AuthGoogleId != nil {
-		updates["auth_google_id"] = userUpdateEntity.AuthGoogleId
+	if updateData.AuthGoogleId != nil {
+		updates["auth_google_id"] = updateData.AuthGoogleId
 	}
 
-	if userUpdateEntity.PostCount != nil {
-		updates["post_count"] = userUpdateEntity.PostCount
+	if updateData.PostCount != nil {
+		updates["post_count"] = updateData.PostCount
 	}
 
-	if userUpdateEntity.FriendCount != nil {
-		updates["friend_count"] = userUpdateEntity.FriendCount
+	if updateData.FriendCount != nil {
+		updates["friend_count"] = updateData.FriendCount
 	}
 
-	if userUpdateEntity.Status != nil {
-		updates["status"] = userUpdateEntity.Status
+	if updateData.Status != nil {
+		updates["status"] = updateData.Status
 	}
 
-	if userUpdateEntity.UpdatedAt != nil {
-		updates["updated_at"] = userUpdateEntity.UpdatedAt
+	if updateData.UpdatedAt != nil {
+		updates["updated_at"] = updateData.UpdatedAt
 	}
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.User{}).
-		Where("id = ?", userId).
+		Where("id = ?", id).
 		Updates(updates).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return r.GetById(ctx, userId)
+	return r.GetById(ctx, id)
 }
 
 func (r *rUser) GetOne(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
-) (*user_entity.User, error) {
+) (*entities.User, error) {
 	var userModel models.User
 
 	if err := r.db.WithContext(ctx).
@@ -168,8 +168,8 @@ func (r *rUser) GetOne(
 
 func (r *rUser) GetMany(
 	ctx context.Context,
-	query *query.UserQueryObject,
-) ([]*user_entity.User, *response.PagingResponse, error) {
+	query *query.GetManyUserQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
 	var userModels []models.User
 	var total int64
 
@@ -269,9 +269,9 @@ func (r *rUser) GetMany(
 		Total: total,
 	}
 
-	users := make([]*user_entity.User, len(userModels))
+	users := make([]*entities.User, len(userModels))
 	for i, user := range userModels {
-		users[i] = user_mapper.FromUserModel(&user)
+		users[i] = mapper.FromUserModel(&user)
 	}
 
 	return users, pagingResponse, nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"

@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repository"
-	entities2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/entities"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/mapper"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/query"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
+	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -38,15 +38,15 @@ func NewCommentUserImplement(
 
 func (s *sCommentUser) CreateComment(
 	ctx context.Context,
-	commentModel *entities2.Comment,
-) (comment *entities2.Comment, resultCode int, httpStatusCode int, err error) {
+	commentModel *models.Comment,
+) (comment *models.Comment, resultCode int, httpStatusCode int, err error) {
 	// 1. Find post
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", commentModel.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+			return nil, pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
+		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
 	}
 
 	var rightValue int
@@ -55,9 +55,9 @@ func (s *sCommentUser) CreateComment(
 		parentComment, err := s.commentRepo.GetOneComment(ctx, "id=?", *commentModel.ParentId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+				return nil, pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 			}
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		rightValue = parentComment.CommentRight
@@ -72,7 +72,7 @@ func (s *sCommentUser) CreateComment(
 		}
 		err = s.commentRepo.UpdateManyComment(ctx, conditions, updateRight)
 		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 		}
 
 		// Find comment by postId and update all comment.comment_left +2 if that comment.comment_left greater than rightValue
@@ -85,7 +85,7 @@ func (s *sCommentUser) CreateComment(
 		}
 		err = s.commentRepo.UpdateManyComment(ctx, conditions, updateLeft)
 		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 		}
 
 		// Update rep count +1
@@ -96,9 +96,9 @@ func (s *sCommentUser) CreateComment(
 
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, response.ErrDataNotFound, http.StatusInternalServerError, err
+				return nil, pkg_response.ErrDataNotFound, http.StatusInternalServerError, err
 			}
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 		}
 
 		commentModel.CommentLeft = rightValue
@@ -106,7 +106,7 @@ func (s *sCommentUser) CreateComment(
 	} else {
 		maxRightValue, err := s.commentRepo.GetMaxCommentRightByPostId(ctx, commentModel.PostId)
 		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find max comment right: %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find max comment right: %w", err.Error())
 		}
 
 		if maxRightValue != 0 {
@@ -121,7 +121,7 @@ func (s *sCommentUser) CreateComment(
 
 	newComment, err := s.commentRepo.CreateComment(ctx, commentModel)
 	if err != nil {
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when create comment %w", err.Error())
+		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when create comment %w", err.Error())
 	}
 
 	postFound.CommentCount++
@@ -129,23 +129,23 @@ func (s *sCommentUser) CreateComment(
 		"comment_count": postFound.CommentCount,
 	})
 
-	return newComment, response.ErrCodeSuccess, http.StatusOK, nil
+	return newComment, pkg_response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sCommentUser) UpdateComment(
 	ctx context.Context,
 	commentId uuid.UUID,
 	updateData map[string]interface{},
-) (comment *entities2.Comment, resultCode int, httpStatusCode int, err error) {
+) (comment *models.Comment, resultCode int, httpStatusCode int, err error) {
 	commentUpdate, err := s.commentRepo.UpdateOneComment(ctx, commentId, updateData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+			return nil, pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 	}
 
-	return commentUpdate, response.ErrCodeSuccess, http.StatusOK, nil
+	return commentUpdate, pkg_response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sCommentUser) DeleteComment(
@@ -156,18 +156,18 @@ func (s *sCommentUser) DeleteComment(
 	comment, err := s.commentRepo.GetOneComment(ctx, "id=?", commentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
 	}
 
 	// 2. Find post
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", comment.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find post %w", err.Error())
 	}
 
 	// 2. Define width to delete
@@ -184,7 +184,7 @@ func (s *sCommentUser) DeleteComment(
 
 	err = s.commentRepo.DeleteManyComment(ctx, delete_conditions)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 	}
 
 	// 4. Update rest of comment_right and comment_left
@@ -197,7 +197,7 @@ func (s *sCommentUser) DeleteComment(
 	}
 	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, updateLeft)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 	}
 
 	update_conditions = map[string]interface{}{
@@ -209,7 +209,7 @@ func (s *sCommentUser) DeleteComment(
 	}
 	err = s.commentRepo.UpdateManyComment(ctx, update_conditions, update_right)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment %w", err.Error())
 	}
 
 	postFound.CommentCount--
@@ -218,20 +218,20 @@ func (s *sCommentUser) DeleteComment(
 	})
 
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment count %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update comment count %w", err.Error())
 	}
 
 	if comment.ParentComment == nil {
-		return response.ErrCodeSuccess, http.StatusOK, nil
+		return pkg_response.ErrCodeSuccess, http.StatusOK, nil
 	}
 
 	// 5. Update rep_comment_count of parent comment -1
 	parentComment, err := s.commentRepo.GetOneComment(ctx, "id=?", comment.ParentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find parent comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find parent comment %w", err.Error())
 	}
 
 	parentComment.RepCommentCount--
@@ -241,37 +241,37 @@ func (s *sCommentUser) DeleteComment(
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ErrDataNotFound, http.StatusBadRequest, err
+			return pkg_response.ErrDataNotFound, http.StatusBadRequest, err
 		}
-		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update parent comment %w", err.Error())
+		return pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when update parent comment %w", err.Error())
 	}
 
-	return response.ErrCodeSuccess, http.StatusOK, nil
+	return pkg_response.ErrCodeSuccess, http.StatusOK, nil
 }
 
 func (s *sCommentUser) GetManyComments(
 	ctx context.Context,
 	query *query.CommentQueryObject,
 	userId uuid.UUID,
-) (commentDtos []*response2.CommentDto, resultCode int, httpStatusCode int, paingResponse *response.PagingResponse, err error) {
-	var queryResult []*entities2.Comment
+) (commentDtos []*response.CommentDto, resultCode int, httpStatusCode int, paingpkg_response *pkg_response.PagingResponse, err error) {
+	var queryResult []*models.Comment
 
 	if query.ParentId != "" {
 		_, err = s.commentRepo.GetOneComment(ctx, "id=?", query.ParentId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, response.ErrDataNotFound, http.StatusNotFound, nil, err
+				return nil, pkg_response.ErrDataNotFound, http.StatusNotFound, nil, err
 			}
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
-		queryResult, pagingResponse, err := s.commentRepo.GetManyComment(ctx, query)
+		queryResult, pagingpkg_response, err := s.commentRepo.GetManyComment(ctx, query)
 		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		for _, comment := range queryResult {
-			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &entities2.LikeUserComment{
+			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &models.LikeUserComment{
 				CommentId: comment.ID,
 				UserId:    userId,
 			})
@@ -280,15 +280,15 @@ func (s *sCommentUser) GetManyComments(
 			commentDtos = append(commentDtos, commentDto)
 		}
 
-		return commentDtos, response.ErrCodeSuccess, http.StatusOK, pagingResponse, nil
+		return commentDtos, pkg_response.ErrCodeSuccess, http.StatusOK, pagingpkg_response, nil
 	} else {
-		queryResult, paingResponse, err = s.commentRepo.GetManyComment(ctx, query)
+		queryResult, paingpkg_response, err = s.commentRepo.GetManyComment(ctx, query)
 		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
+			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, nil, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		for _, comment := range queryResult {
-			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &entities2.LikeUserComment{
+			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &models.LikeUserComment{
 				CommentId: comment.ID,
 				UserId:    userId,
 			})
@@ -297,6 +297,6 @@ func (s *sCommentUser) GetManyComments(
 			commentDtos = append(commentDtos, commentDto)
 		}
 
-		return commentDtos, response.ErrCodeSuccess, http.StatusOK, paingResponse, nil
+		return commentDtos, pkg_response.ErrCodeSuccess, http.StatusOK, paingpkg_response, nil
 	}
 }

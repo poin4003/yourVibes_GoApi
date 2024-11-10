@@ -17,7 +17,7 @@ type UserDtoWithoutSetting struct {
 	CapwallUrl   string              `json:"capwall_url"`
 	Privacy      consts.PrivacyLevel `json:"privacy"`
 	Biography    string              `json:"biography"`
-	AuthType     string              `json:"auth_type"`
+	AuthType     consts.AuthType     `json:"auth_type"`
 	AuthGoogleId string              `json:"auth_google_id"`
 	PostCount    int                 `json:"post_count"`
 	FriendCount  int                 `json:"friend_count"`

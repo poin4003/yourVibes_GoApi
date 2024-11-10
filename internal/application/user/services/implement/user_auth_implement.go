@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
@@ -42,10 +42,10 @@ func NewUserLoginImplement(
 
 func (s *sUserAuth) Login(
 	ctx context.Context,
-	loginCommand *user_command.LoginCommand,
-) (*user_command.LoginCommandResult, error) {
+	command *command.LoginCommand,
+) (result *command.LoginCommandResult, err error) {
 	// 1. Find User
-	userFound, err := s.userRepo.GetOne(ctx, "email = ?", loginCommand.Email)
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -55,7 +55,7 @@ func (s *sUserAuth) Login(
 	}
 
 	// 2. Hash password
-	if !crypto.CheckPasswordHash(loginCommand.Password, userFound.Password) {
+	if !crypto.CheckPasswordHash(command.Password, userFound.Password) {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
@@ -72,26 +72,18 @@ func (s *sUserAuth) Login(
 	}
 
 	// 5. Map to command result
-	result := user_command.LoginCommandResult{
-		User:        user_mapper.NewUserResultFromEntity(userFound),
-		AccessToken: accessTokenGen,
-	}
+	result.User = mapper.NewUserResultFromEntity(userFound)
+	result.AccessToken = accessTokenGen
 
-	return &result, nil
+	return result, nil
 }
 
 func (s *sUserAuth) Register(
 	ctx context.Context,
-	registerCommand *user_command.RegisterCommand,
-) (result *user_command.RegisterCommandResult, err error) {
-	// 1. Create registerCommandResult
-	result = &user_command.RegisterCommandResult{
-		User:       nil,
-		ResultCode: 0,
-	}
-
-	// 2. Check user exist in user table
-	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
+	command *command.RegisterCommand,
+) (result *command.RegisterCommandResult, err error) {
+	// 1. Check user exist in user table
+	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, command.Email)
 	if err != nil {
 		result.ResultCode = response.ErrCodeUserHasExists
 		return result, err
@@ -99,31 +91,31 @@ func (s *sUserAuth) Register(
 
 	if userFound {
 		result.ResultCode = response.ErrCodeUserHasExists
-		return result, fmt.Errorf("user %s already exists", registerCommand.Email)
+		return result, fmt.Errorf("user %s already exists", command.Email)
 	}
 
 	// 3. Get Otp from Redis
-	hashEmail := crypto.GetHash(strings.ToLower(registerCommand.Email))
+	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
 	userKey := utils.GetUserKey(hashEmail)
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	if err != nil {
 		if err == redis.Nil {
 			result.ResultCode = response.ErrCodeOtpNotExists
-			return result, fmt.Errorf("no OTP found for %s", registerCommand.Email)
+			return result, fmt.Errorf("no OTP found for %s", command.Email)
 		}
 		result.ResultCode = response.ErrCodeOtpNotExists
 		return result, err
 	}
 
 	// 3. Compare Otp
-	if otpFound != registerCommand.Otp {
+	if otpFound != command.Otp {
 		result.ResultCode = response.ErrInvalidOTP
-		return result, fmt.Errorf("otp does not match for %s", registerCommand.Email)
+		return result, fmt.Errorf("otp does not match for %s", command.Email)
 	}
 
 	// 4. Hash password
-	hashedPassword, err := crypto.HashPassword(registerCommand.Password)
+	hashedPassword, err := crypto.HashPassword(command.Password)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		return result, err
@@ -131,12 +123,12 @@ func (s *sUserAuth) Register(
 
 	// 5. Create new user
 	newUser, err := user_entity.NewUser(
-		registerCommand.FamilyName,
-		registerCommand.Name,
-		registerCommand.Email,
+		command.FamilyName,
+		command.Name,
+		command.Email,
 		hashedPassword,
-		registerCommand.PhoneNumber,
-		registerCommand.Birthday,
+		command.PhoneNumber,
+		command.Birthday,
 		consts.LOCAL_AUTH,
 		nil,
 	)
@@ -167,7 +159,7 @@ func (s *sUserAuth) Register(
 	// 7. Validate user
 	validatedUser, err := user_validator.NewValidatedUser(createdUser)
 
-	result.User = user_mapper.NewUserResultFromValidateEntity(validatedUser)
+	result.User = mapper.NewUserResultFromValidateEntity(validatedUser)
 	result.ResultCode = response.ErrCodeSuccess
 	return result, nil
 }

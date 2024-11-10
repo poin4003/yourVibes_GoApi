@@ -5,16 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repository"
-	mapper2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/mapper"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
+	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	mapper2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/cloudinary_util"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"net/http"
@@ -89,7 +88,7 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 3. Find user
-	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
+	userFound, err := s.userRepo.GetOne(ctx, "id=?", postModel.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find user: %w", err)
@@ -99,9 +98,10 @@ func (s *sPostUser) CreatePost(
 
 	// 4. Update post count for user
 	userFound.PostCount++
-	_, err = s.userRepo.UpdateUser(ctx, userFound.ID, map[string]interface{}{
-		"post_count": userFound.PostCount,
-	})
+	userUpdate := &user_entity.UserUpdate{
+		PostCount: &userFound.PostCount,
+	}
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdate)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -129,35 +129,41 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 5.4. Create notification for friend
-	notificationModels := make([]*models.Notification, len(friendIds))
-	for i, friendId := range friendIds {
-		content := truncate.TruncateContent(newPost.Content, 20)
-		notificationModels[i] = &models.Notification{
-			From:             userFound.FamilyName + " " + userFound.Name,
-			FromUrl:          userFound.AvatarUrl,
-			UserId:           friendId,
-			NotificationType: consts.NEW_POST,
-			ContentId:        newPost.ID.String(),
-			Content:          content,
-		}
-	}
-
-	createdNotifications, err := s.notificationRepo.CreateManyNotification(ctx, notificationModels)
-	if err != nil {
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create notifications: %w", err)
-	}
-
-	// 5.5. Send realtime notification (websocket)
-	notificationDto := mapper.MapNotificationToNotificationDto(createdNotifications[0])
-	userIds := make([]string, len(friendIds))
-	for i, friendId := range friendIds {
-		userIds[i] = friendId.String()
-	}
-
-	err = global.SocketHub.SendMultipleNotifications(userIds, notificationDto)
-	if err != nil {
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to send notifications: %w", err)
-	}
+	//notificationEntities := make([]user_entity.Notification, len(friendIds))
+	//for i, friendId := range friendIds {
+	//	content := truncate.TruncateContent(newPost.Content, 20)
+	//	notificationEntity, err := user_entity.NewNotification(
+	//		userFound.FamilyName+" "+userFound.Name,
+	//		userFound.AvatarUrl,
+	//		friendId,
+	//		consts.NEW_POST,
+	//		newPost.ID.String(),
+	//		content,
+	//	)
+	//
+	//	if err != nil {
+	//		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
+	//	}
+	//
+	//	notificationEntities[i] = *notificationEntity
+	//}
+	//
+	//createdNotifications, err := s.notificationRepo.CreateMany(ctx, notificationEntities)
+	//if err != nil {
+	//	return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create notifications: %w", err)
+	//}
+	//
+	//// 5.5. Send realtime notification (websocket)
+	//notificationDto := mapper.MapNotificationToNotificationDto(createdNotifications[0])
+	//userIds := make([]string, len(friendIds))
+	//for i, friendId := range friendIds {
+	//	userIds[i] = friendId.String()
+	//}
+	//
+	//err = global.SocketHub.SendMultipleNotifications(userIds, notificationDto)
+	//if err != nil {
+	//	return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to send notifications: %w", err)
+	//}
 
 	return newPost, response.ErrCodeSuccess, http.StatusInternalServerError, nil
 }
@@ -270,7 +276,7 @@ func (s *sPostUser) DeletePost(
 		return response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete media records: %w", err)
 	}
 
-	userFound, err := s.userRepo.GetUser(ctx, "id=?", postModel.UserId)
+	userFound, err := s.userRepo.GetOne(ctx, "id=?", postModel.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ErrDataNotFound, http.StatusBadRequest, err
@@ -279,10 +285,13 @@ func (s *sPostUser) DeletePost(
 	}
 
 	userFound.PostCount--
+	userUpdateEntity := &user_entity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}
+	newUserUpdateEntity, err := user_entity.NewUserUpdate(userUpdateEntity)
+	if err != nil {
+		return response.ErrCodeValidate, http.StatusBadRequest, fmt.Errorf("failed to validate: %w", err)
+	}
 
-	_, err = s.userRepo.UpdateUser(ctx, userFound.ID, map[string]interface{}{
-		"post_count": userFound.PostCount,
-	})
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, newUserUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ErrDataNotFound, http.StatusBadRequest, err

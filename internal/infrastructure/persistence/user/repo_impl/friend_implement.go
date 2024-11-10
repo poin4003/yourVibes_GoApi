@@ -3,10 +3,10 @@ package repo_impl
 import (
 	"context"
 	"github.com/google/uuid"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
@@ -21,9 +21,9 @@ func NewFriendImplement(db *gorm.DB) *rFriend {
 
 func (r *rFriend) CreateOne(
 	ctx context.Context,
-	friendEntity *user_entity.Friend,
+	entity *entities.Friend,
 ) error {
-	friendModel := user_mapper.ToFriendModel(friendEntity)
+	friendModel := mapper.ToFriendModel(entity)
 
 	res := r.db.WithContext(ctx).Create(friendModel)
 
@@ -36,9 +36,9 @@ func (r *rFriend) CreateOne(
 
 func (r *rFriend) DeleteOne(
 	ctx context.Context,
-	friendEntity *user_entity.Friend,
+	entity *entities.Friend,
 ) error {
-	friendModel := user_mapper.ToFriendModel(friendEntity)
+	friendModel := mapper.ToFriendModel(entity)
 
 	res := r.db.WithContext(ctx).Delete(friendModel)
 
@@ -51,8 +51,8 @@ func (r *rFriend) DeleteOne(
 
 func (r *rFriend) GetFriends(
 	ctx context.Context,
-	query *user_query.FriendQuery,
-) ([]*user_entity.User, *response.PagingResponse, error) {
+	query *query.FriendQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
 
@@ -85,7 +85,7 @@ func (r *rFriend) GetFriends(
 		Total: total,
 	}
 
-	userEntities := user_mapper.FromUserModelList(users)
+	userEntities := mapper.FromUserModelList(users)
 
 	return userEntities, pagingResponse, nil
 }
@@ -110,9 +110,9 @@ func (r *rFriend) GetFriendIds(
 
 func (r *rFriend) CheckFriendExist(
 	ctx context.Context,
-	friendEntity *user_entity.Friend,
+	entity *entities.Friend,
 ) (bool, error) {
-	friend := user_mapper.ToFriendModel(friendEntity)
+	friend := mapper.ToFriendModel(entity)
 	var count int64
 
 	if err := r.db.WithContext(ctx).

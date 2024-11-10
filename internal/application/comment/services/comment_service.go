@@ -3,22 +3,22 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
-	entities2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/entities"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/query"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
+	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
 	ICommentUser interface {
-		CreateComment(ctx context.Context, commentModel *entities2.Comment) (comment *entities2.Comment, resultCode int, httpStatusCode int, err error)
-		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *entities2.Comment, resultCode int, httpStatusCode int, err error)
+		CreateComment(ctx context.Context, commentModel *models.Comment) (comment *models.Comment, resultCode int, httpStatusCode int, err error)
+		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *models.Comment, resultCode int, httpStatusCode int, err error)
 		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetManyComments(ctx context.Context, query *query.CommentQueryObject, userId uuid.UUID) (commentDtos []*response2.CommentDto, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
+		GetManyComments(ctx context.Context, query *query.CommentQueryObject, userId uuid.UUID) (commentDtos []*response.CommentDto, resultCode int, httpStatusCode int, pagingResponse *pkg_response.PagingResponse, err error)
 	}
 	ICommentLike interface {
-		LikeComment(ctx context.Context, likeUserComment *entities2.LikeUserComment, userId uuid.UUID) (commentDto *response2.CommentDto, resultCode int, httpStatusCode int, err error)
-		GetUsersOnLikeComment(ctx context.Context, commentId uuid.UUID, query *query.CommentLikeQueryObject) (users []*entities2.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
+		LikeComment(ctx context.Context, likeUserComment *models.LikeUserComment, userId uuid.UUID) (commentDto *response.CommentDto, resultCode int, httpStatusCode int, err error)
+		GetUsersOnLikeComment(ctx context.Context, commentId uuid.UUID, query *query.CommentLikeQueryObject) (users []*models.User, resultCode int, httpStatusCode int, pagingResponse *pkg_response.PagingResponse, err error)
 	}
 )
 

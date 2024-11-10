@@ -2,9 +2,9 @@ package repo_impl
 
 import (
 	"context"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	setting_mapper "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"gorm.io/gorm"
 )
 
@@ -18,23 +18,23 @@ func NewSettingRepositoryImplement(db *gorm.DB) *rSetting {
 
 func (r *rSetting) GetById(
 	ctx context.Context,
-	settingId uint,
-) (*user_entity.Setting, error) {
+	id uint,
+) (*entities.Setting, error) {
 	var settingModel models.Setting
 	if err := r.db.WithContext(ctx).
-		First(&settingModel, settingId).
+		First(&settingModel, id).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return setting_mapper.FromSettingModel(&settingModel), nil
+	return mapper.FromSettingModel(&settingModel), nil
 }
 
 func (r *rSetting) CreateOne(
 	ctx context.Context,
-	settingEntity *user_entity.Setting,
-) (*user_entity.Setting, error) {
-	settingModel := setting_mapper.ToSettingModel(settingEntity)
+	entity *entities.Setting,
+) (*entities.Setting, error) {
+	settingModel := mapper.ToSettingModel(entity)
 
 	if err := r.db.WithContext(ctx).
 		Create(settingModel).
@@ -47,36 +47,36 @@ func (r *rSetting) CreateOne(
 
 func (r *rSetting) UpdateOne(
 	ctx context.Context,
-	settingId uint,
-	settingUpdateEntity *user_entity.SettingUpdate,
-) (*user_entity.Setting, error) {
+	id uint,
+	updateData *entities.SettingUpdate,
+) (*entities.Setting, error) {
 	updates := map[string]interface{}{}
 
-	if settingUpdateEntity.Language != nil {
-		updates["language"] = *settingUpdateEntity.Language
+	if updateData.Language != nil {
+		updates["language"] = *updateData.Language
 	}
 
-	if settingUpdateEntity.UpdatedAt != nil {
-		updates["updated_at"] = *settingUpdateEntity.UpdatedAt
+	if updateData.UpdatedAt != nil {
+		updates["updated_at"] = *updateData.UpdatedAt
 	}
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.Setting{}).
-		Where("id = ?", settingId).
+		Where("id = ?", id).
 		Updates(updates).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return r.GetById(ctx, settingId)
+	return r.GetById(ctx, id)
 }
 
 func (r *rSetting) DeleteOne(
 	ctx context.Context,
-	settingId uint,
+	id uint,
 ) error {
 	res := r.db.WithContext(ctx).
-		Delete(&models.Setting{}, settingId)
+		Delete(&models.Setting{}, id)
 	return res.Error
 }
 
@@ -84,7 +84,7 @@ func (r *rSetting) GetSetting(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
-) (*user_entity.Setting, error) {
+) (*entities.Setting, error) {
 	var settingModel models.Setting
 
 	if err := r.db.WithContext(ctx).

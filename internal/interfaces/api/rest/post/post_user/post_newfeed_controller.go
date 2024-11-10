@@ -1,19 +1,19 @@
-package user_user
+package post_user
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
-type cUserNewFeed struct{}
+type cPostNewFeed struct{}
 
-func NewUserNewFeedController() *cUserNewFeed {
-	return &cUserNewFeed{}
+func NewPostNewFeedController() *cPostNewFeed {
+	return &cPostNewFeed{}
 }
 
 // DeleteNewFeed godoc
@@ -25,7 +25,7 @@ func NewUserNewFeedController() *cUserNewFeed {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /users/new_feeds/{post_id}/ [delete]
-func (c *cUserNewFeed) DeleteNewFeed(ctx *gin.Context) {
+func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 	// 1. Get post id from param path
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
@@ -42,7 +42,7 @@ func (c *cUserNewFeed) DeleteNewFeed(ctx *gin.Context) {
 	}
 
 	// 3. Call service
-	resultCode, httpStatusCode, err := services.UserNewFeed().DeleteNewFeed(ctx, userIdClaim, postId)
+	resultCode, httpStatusCode, err := services.PostNewFeed().DeleteNewFeed(ctx, userIdClaim, postId)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return
@@ -61,7 +61,7 @@ func (c *cUserNewFeed) DeleteNewFeed(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /users/new_feeds/ [get]
-func (c *cUserNewFeed) GetNewFeeds(ctx *gin.Context) {
+func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
 	// 1. Validate and get query object from query
 	var query query.NewFeedQueryObject
 
@@ -78,7 +78,7 @@ func (c *cUserNewFeed) GetNewFeeds(ctx *gin.Context) {
 	}
 
 	// 3. Call services
-	postDtos, paging, resultCode, httpStatusCode, err := services.UserNewFeed().GetNewFeeds(ctx, userIdClaim, &query)
+	postDtos, paging, resultCode, httpStatusCode, err := services.PostNewFeed().GetNewFeeds(ctx, userIdClaim, &query)
 	if err != nil {
 		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
 		return

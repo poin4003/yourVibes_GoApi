@@ -3,7 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/controller/comment/comment_user"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user"
 )
 
 type CommentRouter struct{}

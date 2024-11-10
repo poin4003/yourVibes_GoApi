@@ -2,9 +2,10 @@ package mapper
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/request"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/response"
-	mapper2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/mapper"
 )
 
 func MapToCommentFromCreateDto(
@@ -46,7 +47,7 @@ func MapCommentToCommentDto(
 		IsLiked:         isLiked,
 		CreatedAt:       comment.CreatedAt,
 		UpdatedAt:       comment.UpdatedAt,
-		User:            mapper2.MapUserToUserDtoShortVer(&comment.User),
+		User:            mapper.MapUserToUserDtoShortVer(&comment.User),
 	}
 }
 
@@ -79,6 +80,6 @@ func MapCommentToUpdatedCommentDto(
 		RepCommentCount: comment.RepCommentCount,
 		CreatedAt:       comment.CreatedAt,
 		UpdatedAt:       comment.UpdatedAt,
-		User:            mapper2.MapUserToUserDtoShortVer(&comment.User),
+		User:            mapper.MapUserToUserDtoShortVer(&comment.User),
 	}
 }

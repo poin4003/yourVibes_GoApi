@@ -11,7 +11,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/cloudinary_util"
 	"gorm.io/gorm"
@@ -41,10 +40,10 @@ func NewUserInfoImplement(
 
 func (s *sUserInfo) GetInfoByUserId(
 	ctx context.Context,
-	getOneUserQuery *user_query.GetOneUserQuery,
+	query *user_query.GetOneUserQuery,
 ) (result *user_query.UserQueryResult, err error) {
 	// 1. Find User
-	userFound, err := s.userRepo.GetOne(ctx, "id = ?", getOneUserQuery.UserId)
+	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.User = nil
@@ -60,8 +59,8 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	// 2. Check if user is friend
 	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
-		UserId:   getOneUserQuery.AuthenticatedUserId,
-		FriendId: getOneUserQuery.UserId,
+		UserId:   query.AuthenticatedUserId,
+		FriendId: query.UserId,
 	})
 	if err != nil {
 		result.User = nil
@@ -79,8 +78,8 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	// 3. Check if user are send add friend request
 	isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
-		UserId:   getOneUserQuery.AuthenticatedUserId,
-		FriendId: getOneUserQuery.UserId,
+		UserId:   query.AuthenticatedUserId,
+		FriendId: query.UserId,
 	})
 	if err != nil {
 		result.User = nil
@@ -98,8 +97,8 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	// 4. Check if user are receive add friend request
 	isReceiveFriendRequest, _ := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
-		UserId:   getOneUserQuery.UserId,
-		FriendId: getOneUserQuery.AuthenticatedUserId,
+		UserId:   query.UserId,
+		FriendId: query.AuthenticatedUserId,
 	})
 	if isReceiveFriendRequest {
 		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.RECEIVE_FRIEND_REQUEST)
@@ -116,7 +115,7 @@ func (s *sUserInfo) GetInfoByUserId(
 
 func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
-	query *query.UserQueryObject,
+	query *user_query.GetManyUserQuery,
 ) (result *user_query.UserQueryListResult, err error) {
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
@@ -128,9 +127,9 @@ func (s *sUserInfo) GetManyUsers(
 		return result, err
 	}
 
-	var userResultList []*common.UserWithSettingResult
+	var userResultList []*common.UserShortVerResult
 	for i, userEntity := range userEntities {
-		userResultList[i] = user_mapper.NewUserResultFromEntity(userEntity)
+		userResultList[i] = user_mapper.NewUserShortVerEntity(userEntity)
 	}
 
 	result.Users = userResultList
@@ -165,14 +164,24 @@ func (s *sUserInfo) UpdateUser(
 	}
 
 	// 2. update user information
-	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, &user_entity.UserUpdate{
+	updateUserEntity := &user_entity.UserUpdate{
 		FamilyName:  command.FamilyName,
 		Name:        command.Name,
 		PhoneNumber: command.PhoneNumber,
 		Birthday:    command.Birthday,
 		Privacy:     command.Privacy,
 		Biography:   command.Biography,
-	})
+	}
+
+	newUserUpdateEntity, err := user_entity.NewUserUpdate(updateUserEntity)
+	if err != nil {
+		result.User = nil
+		result.ResultCode = response.ErrCodeValidate
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, err
+	}
+
+	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, newUserUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.User = nil

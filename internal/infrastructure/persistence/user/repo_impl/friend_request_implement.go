@@ -2,10 +2,10 @@ package repo_impl
 
 import (
 	"context"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
@@ -20,9 +20,9 @@ func NewFriendRequestImplement(db *gorm.DB) *rFriendRequest {
 
 func (r *rFriendRequest) CreateOne(
 	ctx context.Context,
-	friendRequestEntity *user_entity.FriendRequest,
+	entity *entities.FriendRequest,
 ) error {
-	friendRequestModel := user_mapper.ToFriendRequestModel(friendRequestEntity)
+	friendRequestModel := mapper.ToFriendRequestModel(entity)
 
 	res := r.db.WithContext(ctx).Create(friendRequestModel)
 
@@ -35,9 +35,9 @@ func (r *rFriendRequest) CreateOne(
 
 func (r *rFriendRequest) DeleteOne(
 	ctx context.Context,
-	friendRequestEntity *user_entity.FriendRequest,
+	entity *entities.FriendRequest,
 ) error {
-	friendRequestModel := user_mapper.ToFriendRequestModel(friendRequestEntity)
+	friendRequestModel := mapper.ToFriendRequestModel(entity)
 
 	res := r.db.WithContext(ctx).Delete(friendRequestModel)
 
@@ -50,8 +50,8 @@ func (r *rFriendRequest) DeleteOne(
 
 func (r *rFriendRequest) GetFriendRequests(
 	ctx context.Context,
-	query *user_query.FriendRequestQuery,
-) ([]*user_entity.User, *response.PagingResponse, error) {
+	query *query.FriendRequestQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
 
@@ -84,16 +84,16 @@ func (r *rFriendRequest) GetFriendRequests(
 		Total: total,
 	}
 
-	userEntities := user_mapper.FromUserModelList(users)
+	userEntities := mapper.FromUserModelList(users)
 
 	return userEntities, pagingResponse, nil
 }
 
 func (r *rFriendRequest) CheckFriendRequestExist(
 	ctx context.Context,
-	friendRequestEntity *user_entity.FriendRequest,
+	entity *entities.FriendRequest,
 ) (bool, error) {
-	friendRequest := user_mapper.ToFriendRequestModel(friendRequestEntity)
+	friendRequest := mapper.ToFriendRequestModel(entity)
 	var count int64
 
 	if err := r.db.WithContext(ctx).

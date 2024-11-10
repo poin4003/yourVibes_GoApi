@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/dto/request"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )

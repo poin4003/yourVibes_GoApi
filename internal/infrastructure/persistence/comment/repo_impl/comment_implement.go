@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/comment/comment_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"strings"

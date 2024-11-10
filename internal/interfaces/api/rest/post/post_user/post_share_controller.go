@@ -5,8 +5,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )

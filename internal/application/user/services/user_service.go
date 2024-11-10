@@ -2,36 +2,33 @@ package services
 
 import (
 	"context"
-	"github.com/google/uuid"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 )
 
 type (
 	IUserAuth interface {
-		Login(ctx context.Context, loginCommand *user_command.LoginCommand) (result *user_command.LoginCommandResult, err error)
-		Register(ctx context.Context, registerCommand *user_command.RegisterCommand) (result *user_command.RegisterCommandResult, err error)
+		Login(ctx context.Context, command *command.LoginCommand) (result *command.LoginCommandResult, err error)
+		Register(ctx context.Context, command *command.RegisterCommand) (result *command.RegisterCommandResult, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
 	IUserInfo interface {
-		GetInfoByUserId(ctx context.Context, getOneUserQuery *user_query.GetOneUserQuery) (result *user_query.UserQueryResult, err error)
-		GetManyUsers(ctx context.Context, query *query.UserQueryObject) (result *user_query.UserQueryListResult, err error)
-		UpdateUser(ctx context.Context, command *user_command.UpdateUserCommand) (result *user_command.UpdateUserCommandResult, err error)
+		GetInfoByUserId(ctx context.Context, query *query.GetOneUserQuery) (result *query.UserQueryResult, err error)
+		GetManyUsers(ctx context.Context, query *query.GetManyUserQuery) (result *query.UserQueryListResult, err error)
+		UpdateUser(ctx context.Context, command *command.UpdateUserCommand) (result *command.UpdateUserCommandResult, err error)
 	}
 	IUserNotification interface {
-		GetNotificationByUserId(ctx context.Context, userId uuid.UUID, query query.NotificationQueryObject) (notificationDtos []*response2.NotificationDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
-		UpdateOneStatusNotification(ctx context.Context, notificationID uint) (resultCode int, httpStatusCode int, err error)
-		UpdateManyStatusNotification(ctx context.Context, userId uuid.UUID) (resultCode int, httpStatusCode int, err error)
+		GetNotificationByUserId(ctx context.Context, query *query.GetManyNotificationQuery) (result *query.GetManyNotificationQueryResult, err error)
+		UpdateOneStatusNotification(ctx context.Context, command *command.UpdateOneStatusNotificationCommand) (result *command.UpdateOneStatusNotificationCommandResult, err error)
+		UpdateManyStatusNotification(ctx context.Context, command *command.UpdateManyStatusNotificationCommand) (result *command.UpdateManyStatusNotificationCommandResult, err error)
 	}
 	IUserFriend interface {
-		SendAddFriendRequest(ctx context.Context, command *user_command.SendAddFriendRequestCommand) (result *user_command.SendAddFriendRequestCommandResult, err error)
-		GetFriendRequests(ctx context.Context, query *user_query.FriendRequestQuery) (result *user_query.FriendRequestQueryResult, err error)
-		AcceptFriendRequest(ctx context.Context, command *user_command.AcceptFriendRequestCommand) (result *user_command.AcceptFriendRequestCommandResult, err error)
-		RemoveFriendRequest(ctx context.Context, command *user_command.RemoveFriendRequestCommand) (result *user_command.RemoveFriendRequestCommandResult, err error)
-		UnFriend(ctx context.Context, command *user_command.UnFriendCommand) (result *user_command.UnFriendCommandResult, err error)
-		GetFriends(ctx context.Context, query *user_query.FriendQuery) (result *user_query.FriendQueryResult, err error)
+		SendAddFriendRequest(ctx context.Context, command *command.SendAddFriendRequestCommand) (result *command.SendAddFriendRequestCommandResult, err error)
+		GetFriendRequests(ctx context.Context, query *query.FriendRequestQuery) (result *query.FriendRequestQueryResult, err error)
+		AcceptFriendRequest(ctx context.Context, command *command.AcceptFriendRequestCommand) (result *command.AcceptFriendRequestCommandResult, err error)
+		RemoveFriendRequest(ctx context.Context, command *command.RemoveFriendRequestCommand) (result *command.RemoveFriendRequestCommandResult, err error)
+		UnFriend(ctx context.Context, command *command.UnFriendCommand) (result *command.UnFriendCommandResult, err error)
+		GetFriends(ctx context.Context, query *query.FriendQuery) (result *query.FriendQueryResult, err error)
 	}
 )
 

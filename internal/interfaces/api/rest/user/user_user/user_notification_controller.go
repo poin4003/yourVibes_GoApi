@@ -6,9 +6,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 	"strconv"
@@ -101,13 +102,15 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 		return
 	}
 
-	notificationDtos, paging, resultCode, httpStatusCode, err := services.UserNotification().GetNotificationByUserId(ctx, userIdClaim, query)
+	getManyNotificationQuery, err := query.ToGetManyNotificationQuery(userIdClaim)
+
+	result, err := services.UserNotification().GetNotificationByUserId(ctx, getManyNotificationQuery)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessPagingResponse(ctx, resultCode, httpStatusCode, notificationDtos, *paging)
+	response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, result.Notifications, *result.PagingResponse)
 }
 
 // UpdateOneStatusNotifications Update status of notification to false
@@ -128,13 +131,17 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 		return
 	}
 
-	resultCode, httpStatusCode, err := services.UserNotification().UpdateOneStatusNotification(ctx, uint(notificationID))
+	updateOneStatusNotificationCommand := &command.UpdateOneStatusNotificationCommand{
+		NotificationId: uint(notificationID),
+	}
+
+	result, err := services.UserNotification().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, nil)
+	response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
 
 // UpdateManyStatusNotifications Update all status of notification to false
@@ -153,11 +160,15 @@ func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 		return
 	}
 
-	resultCode, httpStatusCode, err := services.UserNotification().UpdateManyStatusNotification(ctx, userIdClaim)
+	updatemanyStatusNotificationCommand := &command.UpdateManyStatusNotificationCommand{
+		UserId: userIdClaim,
+	}
+
+	result, err := services.UserNotification().UpdateManyStatusNotification(ctx, updatemanyStatusNotificationCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, resultCode, httpStatusCode, nil)
+	response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

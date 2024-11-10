@@ -5,14 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repository"
-	entities2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/entities"
-	mapper2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/mapper"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
+	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	post_mapper "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
+	dto_response "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"net/http"
@@ -41,9 +38,9 @@ func NewPostLikeImplement(
 
 func (s *sPostLike) LikePost(
 	ctx context.Context,
-	likeUserPostModel *entities2.LikeUserPost,
+	likeUserPostModel *models.LikeUserPost,
 	userId uuid.UUID,
-) (postDto *response2.PostDto, resultCode int, httpStatusCode int, err error) {
+) (postDto *dto_response.PostDto, resultCode int, httpStatusCode int, err error) {
 	// 1. Find exist post
 	postFound, err := s.postRepo.GetPost(ctx, "id=?", likeUserPostModel.PostId)
 	if err != nil {
@@ -54,7 +51,7 @@ func (s *sPostLike) LikePost(
 	}
 
 	// 2. Find exist user
-	userLike, err := s.userRepo.GetUser(ctx, "id=?", userId)
+	_, err = s.userRepo.GetOne(ctx, "id=?", userId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
@@ -82,35 +79,36 @@ func (s *sPostLike) LikePost(
 		})
 
 		// 4.1.3. Check if Authenticated User liked the post
-		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &entities2.LikeUserPost{
+		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
 			PostId: postFound.ID,
 			UserId: userId,
 		})
 
 		// 4.1.4. Push notification to owner of the post
-		notificationModel := &entities2.Notification{
-			From:             userLike.FamilyName + " " + userLike.Name,
-			FromUrl:          userLike.AvatarUrl,
-			UserId:           postFound.UserId,
-			NotificationType: consts.LIKE_POST,
-			ContentId:        (postFound.ID).String(),
-			Content:          postFound.Content,
-		}
-		notification, err := s.notificationRepo.CreateNotification(ctx, notificationModel)
-		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create notification: %w", err)
-		}
-
-		// 4.1.5. Send realtime notification (websocket)
-		notificationDto := mapper.MapNotificationToNotificationDto(notification)
-
-		err = global.SocketHub.SendNotification(postFound.UserId.String(), notificationDto)
-		if err != nil {
-			return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to send notification: %w", err)
-		}
+		//notificationEntity := &user_entity.Notification{
+		//	From:             userLike.FamilyName + " " + userLike.Name,
+		//	FromUrl:          userLike.AvatarUrl,
+		//	UserId:           postFound.UserId,
+		//	NotificationType: consts.LIKE_POST,
+		//	ContentId:        (postFound.ID).String(),
+		//	Content:          postFound.Content,
+		//}
+		//
+		//notification, err := s.notificationRepo.CreateOne(ctx, notificationEntity)
+		//if err != nil {
+		//	return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create notification: %w", err)
+		//}
+		//
+		//// 4.1.5. Send realtime notification (websocket)
+		//notificationDto := mapper.MapNotificationToNotificationDto(notification)
+		//
+		//err = global.SocketHub.SendNotification(postFound.UserId.String(), notificationDto)
+		//if err != nil {
+		//	return nil, response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to send notification: %w", err)
+		//}
 
 		// 4.1.6. Map Post to PostDto to response for client
-		postDto = mapper2.MapPostToPostDto(postFound, isLiked)
+		postDto = post_mapper.MapPostToPostDto(postFound, isLiked)
 
 		// 4.1.7. Response for controller
 		return postDto, response.ErrCodeSuccess, http.StatusOK, nil
@@ -130,13 +128,13 @@ func (s *sPostLike) LikePost(
 		})
 
 		// 4.2.3. Check if Authenticated User liked the post
-		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &entities2.LikeUserPost{
+		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
 			PostId: postFound.ID,
 			UserId: userId,
 		})
 
 		// 4.2.4. Map post to postDto
-		postDto = mapper2.MapPostToPostDto(postFound, isLiked)
+		postDto = post_mapper.MapPostToPostDto(postFound, isLiked)
 
 		// 4.2.5. Response for controller
 		return postDto, response.ErrCodeSuccess, http.StatusOK, nil
@@ -147,7 +145,7 @@ func (s *sPostLike) GetUsersOnLikes(
 	ctx context.Context,
 	postId uuid.UUID,
 	query *query.PostLikeQueryObject,
-) (users []*entities2.User, resultCode int, httpStatusCode int, responsePaging *response.PagingResponse, err error) {
+) (users []*models.User, resultCode int, httpStatusCode int, responsePaging *response.PagingResponse, err error) {
 	likeUserPostModel, paging, err := s.postLikeRepo.GetLikeUserPost(ctx, postId, query)
 	if err != nil {
 		return nil, response.ErrServerFailed, http.StatusInternalServerError, nil, err

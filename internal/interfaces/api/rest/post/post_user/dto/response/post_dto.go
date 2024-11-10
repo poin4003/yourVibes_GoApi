@@ -3,7 +3,8 @@ package response
 import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"gorm.io/gorm"
 	"time"
 )

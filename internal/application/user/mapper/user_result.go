@@ -28,13 +28,6 @@ func NewUserShortVerEntity(
 	}
 }
 
-func NewUserResultWithoutSettingValidateEntity(
-	user *user_validator.ValidatedUser,
-	friendStatus consts.FriendStatus,
-) *common.UserWithoutSettingResult {
-	return NewUserResultWithoutSettingEntity(&user.User, friendStatus)
-}
-
 func NewUserResultWithoutSettingEntity(
 	user *user_entity.User,
 	friendStatus consts.FriendStatus,
@@ -94,12 +87,6 @@ func NewUserResultFromEntity(
 		UpdatedAt:   user.UpdatedAt,
 		Setting:     NewSettingResultFromEntity(user.Setting),
 	}
-}
-
-func NewSettingResultFromValidatedEntity(
-	setting *user_validator.ValidatedSetting,
-) *common.SettingResult {
-	return NewSettingResultFromEntity(&setting.Setting)
 }
 
 func NewSettingResultFromEntity(

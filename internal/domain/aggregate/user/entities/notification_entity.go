@@ -97,49 +97,22 @@ func NewNotification(
 	return notification, nil
 }
 
-func (n *NotificationUpdate) SetUpdatedAt() {
-	now := time.Now()
-	n.UpdatedAt = &now
-}
+func NewNotificationUpdate(
+	updateData *NotificationUpdate,
+) (*NotificationUpdate, error) {
+	notificationUpdate := &NotificationUpdate{
+		From:             updateData.From,
+		FromUrl:          updateData.FromUrl,
+		NotificationType: updateData.NotificationType,
+		ContentId:        updateData.ContentId,
+		Content:          updateData.Content,
+		Status:           updateData.Status,
+		UpdatedAt:        updateData.UpdatedAt,
+	}
 
-func (n *NotificationUpdate) UpdateFrom(from *string) error {
-	n.From = from
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
+	if err := notificationUpdate.ValidateNotificationUpdate(); err != nil {
+		return nil, err
+	}
 
-func (n *NotificationUpdate) UpdateFromUrl(fromUrl *string) error {
-	n.FromUrl = fromUrl
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
-
-func (n *NotificationUpdate) UpdateNotificationType(notificationType *consts.NotificationType) error {
-	n.NotificationType = notificationType
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
-
-func (n *NotificationUpdate) UpdateContentId(contentId *string) error {
-	n.ContentId = contentId
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
-
-func (n *NotificationUpdate) UpdateContent(content *string) error {
-	n.Content = content
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
-
-func (n *NotificationUpdate) Activate() error {
-	*n.Status = true
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
-}
-
-func (n *NotificationUpdate) Deactivate() error {
-	*n.Status = false
-	n.SetUpdatedAt()
-	return n.ValidateNotificationUpdate()
+	return notificationUpdate, nil
 }

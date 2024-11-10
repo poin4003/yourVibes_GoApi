@@ -2,12 +2,13 @@ package implement
 
 import (
 	"context"
-	"github.com/google/uuid"
-	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repository"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"net/http"
 )
 
@@ -28,53 +29,69 @@ func NewUserNotificationImplement(
 
 func (s *sUserNotification) GetNotificationByUserId(
 	ctx context.Context,
-	userId uuid.UUID,
-	query query.NotificationQueryObject,
-) (notificationDtos []*response2.NotificationDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error) {
-	notificationModels, paging, err := s.notificationRepo.GetManyNotification(ctx, userId, &query)
+	query *query.GetManyNotificationQuery,
+) (result *query.GetManyNotificationQueryResult, err error) {
+	notificationEntities, paging, err := s.notificationRepo.GetMany(ctx, query)
 	if err != nil {
-		return nil, nil, response.ErrServerFailed, http.StatusInternalServerError, err
+		result.Notifications = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
 	}
 
-	for _, notification := range notificationModels {
-		notificationDto := mapper.MapNotificationToNotificationDto(notification)
-		notificationDtos = append(notificationDtos, notificationDto)
+	for i, notificationResult := range notificationEntities {
+		result.Notifications[i] = *mapper.NewNotificationResult(notificationResult)
 	}
 
-	return notificationDtos, paging, response.ErrCodeSuccess, http.StatusOK, nil
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	result.PagingResponse = paging
+	return result, nil
 }
 
 func (s *sUserNotification) UpdateOneStatusNotification(
 	ctx context.Context,
-	notificationID uint,
-) (resultCode int, httpStatusCode int, err error) {
-	_, err = s.notificationRepo.UpdateOneNotification(ctx, notificationID, map[string]interface{}{
-		"status": false,
-	})
-
-	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, err
+	command *command.UpdateOneStatusNotificationCommand,
+) (result *command.UpdateOneStatusNotificationCommandResult, err error) {
+	notificationUpdateEntity := &user_entity.NotificationUpdate{
+		Status: pointer.Ptr(false),
 	}
 
-	return response.ErrCodeSuccess, http.StatusOK, nil
+	newNotificationUpdateEntity, err := user_entity.NewNotificationUpdate(notificationUpdateEntity)
+
+	_, err = s.notificationRepo.UpdateOne(ctx, command.NotificationId, newNotificationUpdateEntity)
+
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }
 
 func (s *sUserNotification) UpdateManyStatusNotification(
 	ctx context.Context,
-	userId uuid.UUID,
-) (resultCode int, httpStatusCode int, err error) {
+	command *command.UpdateManyStatusNotificationCommand,
+) (result *command.UpdateManyStatusNotificationCommandResult, err error) {
 	update_conditions := map[string]interface{}{
 		"status":  true,
-		"user_id": userId,
+		"user_id": command.UserId,
 	}
 	update_data := map[string]interface{}{
 		"status": false,
 	}
 
-	err = s.notificationRepo.UpdateManyNotification(ctx, update_conditions, update_data)
+	err = s.notificationRepo.UpdateMany(ctx, update_conditions, update_data)
 	if err != nil {
-		return response.ErrServerFailed, http.StatusInternalServerError, err
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
 	}
 
-	return response.ErrCodeSuccess, http.StatusOK, nil
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }

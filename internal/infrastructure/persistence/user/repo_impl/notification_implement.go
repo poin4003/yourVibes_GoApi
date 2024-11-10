@@ -2,11 +2,10 @@ package repo_impl
 
 import (
 	"context"
-	"github.com/google/uuid"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	notification_mapper "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
@@ -20,26 +19,26 @@ func NewNotificationRepositoryImplement(db *gorm.DB) *rNotification {
 	return &rNotification{db: db}
 }
 
-func (r *rNotification) GetById (
+func (r *rNotification) GetById(
 	ctx context.Context,
-	notificationId uint,
-) (*user_entity.Notification, error) {
+	id uint,
+) (*entities.Notification, error) {
 	var notificationModel models.Notification
 	if err := r.db.WithContext(ctx).
-		First(&notificationModel, notificationId).
+		First(&notificationModel, id).
 		Preload("User").
 		Error; err != nil {
 		return nil, err
 	}
 
-	return notification_mapper.FromNotificationModel(&notificationModel), nil
+	return mapper.FromNotificationModel(&notificationModel), nil
 }
 
 func (r *rNotification) CreateOne(
 	ctx context.Context,
-	notificationEntity *user_entity.Notification,
-) (*user_entity.Notification, error) {
-	notificationModel := notification_mapper.ToNotificationModel(notificationEntity)
+	entity *entities.Notification,
+) (*entities.Notification, error) {
+	notificationModel := mapper.ToNotificationModel(entity)
 
 	res := r.db.WithContext(ctx).Create(notificationModel)
 
@@ -52,11 +51,11 @@ func (r *rNotification) CreateOne(
 
 func (r *rNotification) CreateMany(
 	ctx context.Context,
-	notificationEntities []*user_entity.Notification,
-) ([]*user_entity.Notification, error) {
+	notificationEntities []*entities.Notification,
+) ([]*entities.Notification, error) {
 	var notificationModels []*models.Notification
 	for i, notification := range notificationEntities {
-		notificationModels[i] = notification_mapper.ToNotificationModel(notification)
+		notificationModels[i] = mapper.ToNotificationModel(notification)
 	}
 
 	err := r.db.WithContext(ctx).Create(&notificationModels).Error
@@ -64,9 +63,9 @@ func (r *rNotification) CreateMany(
 		return nil, err
 	}
 
-	notificationEntityList := make([]*user_entity.Notification, len(notificationModels))
+	notificationEntityList := make([]*entities.Notification, len(notificationModels))
 	for i, notificationEntity := range notificationModels {
-		notificationEntityList[i] = notification_mapper.FromNotificationModel(notificationEntity)
+		notificationEntityList[i] = mapper.FromNotificationModel(notificationEntity)
 	}
 
 	return notificationEntityList, nil
@@ -75,8 +74,8 @@ func (r *rNotification) CreateMany(
 func (r *rNotification) UpdateOne(
 	ctx context.Context,
 	notificationId uint,
-	updateData *user_entity.NotificationUpdate,
-) (*user_entity.Notification, error) {
+	updateData *entities.NotificationUpdate,
+) (*entities.Notification, error) {
 	updates := map[string]interface{}{}
 
 	if updateData.From != nil {
@@ -136,22 +135,22 @@ func (r *rNotification) UpdateMany(
 
 func (r *rNotification) DeleteOne(
 	ctx context.Context,
-	notificationId uint,
-) (*user_entity.Notification, error) {
+	id uint,
+) (*entities.Notification, error) {
 	res := r.db.WithContext(ctx).
-		Delete(&models.Notification{}, notificationId)
+		Delete(&models.Notification{}, id)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	return r.GetById(ctx, notificationId)
+	return r.GetById(ctx, id)
 }
 
 func (r *rNotification) GetOne(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
-) (*user_entity.Notification, error) {
+) (*entities.Notification, error) {
 	var notificationModel models.Notification
 
 	if res := r.db.WithContext(ctx).
@@ -167,9 +166,8 @@ func (r *rNotification) GetOne(
 
 func (r *rNotification) GetMany(
 	ctx context.Context,
-	userId uuid.UUID,
-	query *query.NotificationQueryObject,
-) ([]*user_entity.Notification, *response.PagingResponse, error) {
+	query *query.GetManyNotificationQuery,
+) ([]*entities.Notification, *response.PagingResponse, error) {
 	var notificationModels []*models.Notification
 	var total int64
 
@@ -234,7 +232,7 @@ func (r *rNotification) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).
-		Where("user_id=?", userId).
+		Where("user_id=?", query.UserId).
 		Preload("User").
 		Find(&notificationModels).
 		Error; err != nil {
@@ -247,9 +245,9 @@ func (r *rNotification) GetMany(
 		Total: total,
 	}
 
-	notifications := make([]*user_entity.Notification, len(notificationModels))
+	notifications := make([]*entities.Notification, len(notificationModels))
 	for i, notification := range notificationModels {
-		notifications[i] = notification_mapper.FromNotificationModel(notification)
+		notifications[i] = mapper.FromNotificationModel(notification)
 	}
 
 	return notifications, &pagingResponse, nil

@@ -2,9 +2,10 @@ package mapper
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/request"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/post/post_user/dto/response"
-	mapper2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/rest/user/user_user/dto/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/mapper"
 )
 
 func MapPostToPostDto(post *models.Post, isLiked bool) *response.PostDto {
@@ -14,7 +15,7 @@ func MapPostToPostDto(post *models.Post, isLiked bool) *response.PostDto {
 		parentPost = &response.ParentPostDto{
 			ID:              post.ParentPost.ID,
 			UserId:          post.ParentPost.UserId,
-			User:            mapper2.MapUserToUserDtoShortVer(&post.ParentPost.User),
+			User:            mapper.MapUserToUserDtoShortVer(&post.ParentPost.User),
 			Content:         post.ParentPost.Content,
 			LikeCount:       post.ParentPost.LikeCount,
 			CommentCount:    post.ParentPost.CommentCount,
@@ -33,7 +34,7 @@ func MapPostToPostDto(post *models.Post, isLiked bool) *response.PostDto {
 	return &response.PostDto{
 		ID:              post.ID,
 		UserId:          post.UserId,
-		User:            mapper2.MapUserToUserDtoShortVer(&post.User),
+		User:            mapper.MapUserToUserDtoShortVer(&post.User),
 		ParentId:        post.ParentId,
 		ParentPost:      parentPost,
 		Content:         post.Content,
@@ -55,7 +56,7 @@ func MapPostToUpdatedPostDto(post *models.Post) *response.UpdatedPostDto {
 	return &response.UpdatedPostDto{
 		ID:              post.ID,
 		UserId:          post.UserId,
-		User:            mapper2.MapUserToUserDtoShortVer(&post.User),
+		User:            mapper.MapUserToUserDtoShortVer(&post.User),
 		ParentId:        post.ParentId,
 		ParentPost:      post.ParentPost,
 		Content:         post.Content,

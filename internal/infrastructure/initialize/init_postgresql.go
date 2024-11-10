@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	_ "log"
 	"time"
 

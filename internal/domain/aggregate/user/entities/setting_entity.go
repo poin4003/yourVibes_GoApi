@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -51,28 +50,18 @@ func NewSetting(
 	return setting, nil
 }
 
-func (s *SettingUpdate) setUpdatedAt() {
-	now := time.Now()
-	s.UpdatedAt = &now
-}
-
-func (s *SettingUpdate) UpdateLanguage(language *consts.Language) error {
-	if *language != consts.VI && *language != consts.EN {
-		return errors.New("invalid language")
+func NewSettingUpdate(
+	updateData *SettingUpdate,
+) (*SettingUpdate, error) {
+	settingUpdate := &SettingUpdate{
+		Language:  updateData.Language,
+		Status:    updateData.Status,
+		UpdatedAt: updateData.UpdatedAt,
 	}
-	s.Language = language
-	s.setUpdatedAt()
-	return s.ValidateSettingUpdate()
-}
 
-func (s *SettingUpdate) Activate() error {
-	*s.Status = true
-	s.setUpdatedAt()
-	return s.ValidateSettingUpdate()
-}
+	if err := settingUpdate.ValidateSettingUpdate(); err != nil {
+		return nil, err
+	}
 
-func (s *SettingUpdate) Deactivate() error {
-	*s.Status = false
-	s.setUpdatedAt()
-	return s.ValidateSettingUpdate()
+	return settingUpdate, nil
 }
