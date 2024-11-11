@@ -42,8 +42,8 @@ func (r *rUser) GetById(
 ) (*entities.User, error) {
 	var userModel models.User
 	if err := r.db.WithContext(ctx).
-		First(&userModel, id).
 		Preload("Setting").
+		First(&userModel, id).
 		Error; err != nil {
 		return nil, err
 	}

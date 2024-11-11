@@ -25,8 +25,8 @@ func (r *rNotification) GetById(
 ) (*entities.Notification, error) {
 	var notificationModel models.Notification
 	if err := r.db.WithContext(ctx).
-		First(&notificationModel, id).
 		Preload("User").
+		First(&notificationModel, id).
 		Error; err != nil {
 		return nil, err
 	}
