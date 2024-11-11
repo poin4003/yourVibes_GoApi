@@ -74,67 +74,67 @@ func (r *rUser) UpdateOne(
 	updates := map[string]interface{}{}
 
 	if updateData.FamilyName != nil {
-		updates["family_name"] = updateData.FamilyName
+		updates["family_name"] = *updateData.FamilyName
 	}
 
 	if updateData.Name != nil {
-		updates["name"] = updateData.Name
+		updates["name"] = *updateData.Name
 	}
 
 	if updateData.Email != nil {
-		updates["email"] = updateData.Email
+		updates["email"] = *updateData.Email
 	}
 
 	if updateData.Password != nil {
-		updates["password"] = updateData.Password
+		updates["password"] = *updateData.Password
 	}
 
 	if updateData.PhoneNumber != nil {
-		updates["phone_number"] = updateData.PhoneNumber
+		updates["phone_number"] = *updateData.PhoneNumber
 	}
 
 	if updateData.Birthday != nil {
-		updates["birthday"] = updateData.Birthday
+		updates["birthday"] = *updateData.Birthday
 	}
 
 	if updateData.AvatarUrl != nil {
-		updates["avatar_url"] = updateData.AvatarUrl
+		updates["avatar_url"] = *updateData.AvatarUrl
 	}
 
 	if updateData.CapwallUrl != nil {
-		updates["capwall_url"] = updateData.CapwallUrl
+		updates["capwall_url"] = *updateData.CapwallUrl
 	}
 
 	if updateData.Privacy != nil {
-		updates["privacy"] = updateData.Privacy
+		updates["privacy"] = *updateData.Privacy
 	}
 
 	if updateData.Biography != nil {
-		updates["biography"] = updateData.Biography
+		updates["biography"] = *updateData.Biography
 	}
 
 	if updateData.AuthType != nil {
-		updates["auth_type"] = updateData.AuthType
+		updates["auth_type"] = *updateData.AuthType
 	}
 
 	if updateData.AuthGoogleId != nil {
-		updates["auth_google_id"] = updateData.AuthGoogleId
+		updates["auth_google_id"] = *updateData.AuthGoogleId
 	}
 
 	if updateData.PostCount != nil {
-		updates["post_count"] = updateData.PostCount
+		updates["post_count"] = *updateData.PostCount
 	}
 
 	if updateData.FriendCount != nil {
-		updates["friend_count"] = updateData.FriendCount
+		updates["friend_count"] = *updateData.FriendCount
 	}
 
 	if updateData.Status != nil {
-		updates["status"] = updateData.Status
+		updates["status"] = *updateData.Status
 	}
 
 	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = updateData.UpdatedAt
+		updates["updated_at"] = *updateData.UpdatedAt
 	}
 
 	if err := r.db.WithContext(ctx).

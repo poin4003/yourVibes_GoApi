@@ -79,37 +79,37 @@ func (r *rNotification) UpdateOne(
 	updates := map[string]interface{}{}
 
 	if updateData.From != nil {
-		updates["from"] = updateData.From
+		updates["from"] = *updateData.From
 	}
 
 	if updateData.FromUrl != nil {
-		updates["from_url"] = updateData.FromUrl
+		updates["from_url"] = *updateData.FromUrl
 	}
 
 	if updateData.NotificationType != nil {
-		updates["notification_type"] = updateData.NotificationType
+		updates["notification_type"] = *updateData.NotificationType
 	}
 
 	if updateData.ContentId != nil {
-		updates["content_id"] = updateData.ContentId
+		updates["content_id"] = *updateData.ContentId
 	}
 
 	if updateData.Content != nil {
-		updates["content"] = updateData.Content
+		updates["content"] = *updateData.Content
 	}
 
 	if updateData.Status != nil {
-		updates["status"] = updateData.Status
+		updates["status"] = *updateData.Status
 	}
 
 	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = updateData.UpdatedAt
+		updates["updated_at"] = *updateData.UpdatedAt
 	}
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.Notification{}).
 		Where("id = ?", notificationId).
-		Updates(updates).
+		Updates(&updates).
 		Error; err != nil {
 		return nil, err
 	}

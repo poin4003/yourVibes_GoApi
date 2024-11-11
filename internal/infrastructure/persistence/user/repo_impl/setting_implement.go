@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
@@ -63,7 +64,7 @@ func (r *rSetting) UpdateOne(
 	if err := r.db.WithContext(ctx).
 		Model(&models.Setting{}).
 		Where("id = ?", id).
-		Updates(updates).
+		Updates(&updates).
 		Error; err != nil {
 		return nil, err
 	}
@@ -87,10 +88,12 @@ func (r *rSetting) GetSetting(
 ) (*entities.Setting, error) {
 	var settingModel models.Setting
 
+	fmt.Println(args)
+
 	if err := r.db.WithContext(ctx).
 		Model(&settingModel).
-		Where(query, args...).
-		First(settingModel).
+		Where(query, args).
+		First(&settingModel).
 		Error; err != nil {
 		return nil, err
 	}

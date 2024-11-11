@@ -130,8 +130,8 @@ func (s *sUserInfo) GetManyUsers(
 	}
 
 	var userResultList []*common.UserShortVerResult
-	for i, userEntity := range userEntities {
-		userResultList[i] = user_mapper.NewUserShortVerEntity(userEntity)
+	for _, userEntity := range userEntities {
+		userResultList = append(userResultList, user_mapper.NewUserShortVerEntity(userEntity))
 	}
 
 	result.Users = userResultList
@@ -177,6 +177,7 @@ func (s *sUserInfo) UpdateUser(
 	}
 
 	newUserUpdateEntity, err := user_entity.NewUserUpdate(updateUserEntity)
+
 	if err != nil {
 		result.User = nil
 		result.ResultCode = response.ErrCodeValidate

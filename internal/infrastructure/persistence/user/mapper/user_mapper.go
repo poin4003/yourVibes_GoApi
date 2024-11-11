@@ -66,9 +66,9 @@ func FromUserModel(userModel *models.User) *user_entity.User {
 }
 
 func FromUserModelList(userModelList []*models.User) []*user_entity.User {
-	userEntityList := make([]*user_entity.User, len(userModelList))
-	for i, userModel := range userModelList {
-		userEntityList[i] = FromUserModel(userModel)
+	userEntityList := []*user_entity.User{}
+	for _, userModel := range userModelList {
+		userEntityList = append(userEntityList, FromUserModel(userModel))
 	}
 
 	return userEntityList

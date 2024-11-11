@@ -35,7 +35,7 @@ type UserUpdate struct {
 	Email        *string              `validate:"omitempty,email"`
 	Password     *string              `validate:"omitempty,min=8"`
 	PhoneNumber  *string              `validate:"omitempty,min=10,max=14,numeric"`
-	Birthday     *time.Time           `validate:"omitempty,date"`
+	Birthday     *time.Time           `validate:"omitempty"`
 	AvatarUrl    *string              `validate:"omitempty,url"`
 	CapwallUrl   *string              `validate:"omitempty,url"`
 	Privacy      *consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
