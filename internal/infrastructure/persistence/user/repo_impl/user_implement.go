@@ -159,7 +159,7 @@ func (r *rUser) GetOne(
 		Model(&userModel).
 		Where(query, args...).
 		Preload("Setting").
-		First(userModel).
+		First(&userModel).
 		Error; err != nil {
 		return nil, err
 	}

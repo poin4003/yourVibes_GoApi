@@ -151,14 +151,20 @@ func (s *sUserAuth) Register(
 		return result, err
 	}
 
-	_, err = s.settingRepo.CreateOne(ctx, newSetting)
+	createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
+	createdUser.Setting = createdSetting
+
 	// 7. Validate user
 	validatedUser, err := user_validator.NewValidatedUser(createdUser)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		return result, err
+	}
 
 	result.User = mapper.NewUserResultFromValidateEntity(validatedUser)
 	result.ResultCode = response.ErrCodeSuccess
