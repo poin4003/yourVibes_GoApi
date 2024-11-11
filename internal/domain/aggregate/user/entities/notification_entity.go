@@ -8,7 +8,7 @@ import (
 )
 
 type Notification struct {
-	ID               uint                    `validated:"required"`
+	ID               uint                    `validated:"omitempty"`
 	From             string                  `validated:"required,min=2"`
 	FromUrl          string                  `validated:"required,url"`
 	UserId           uuid.UUID               `validated:"required,uuid4"`

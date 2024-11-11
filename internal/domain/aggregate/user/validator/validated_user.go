@@ -1,6 +1,9 @@
 package validator
 
-import user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+import (
+	"fmt"
+	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+)
 
 type ValidatedUser struct {
 	user_entity.User
@@ -12,6 +15,10 @@ func (vu *ValidatedUser) IsValid() bool {
 }
 
 func NewValidatedUser(user *user_entity.User) (*ValidatedUser, error) {
+	if user == nil {
+		return nil, fmt.Errorf("NewValidatedUser: user is nil")
+	}
+
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}

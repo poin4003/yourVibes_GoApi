@@ -22,12 +22,12 @@ func NewUserAuthController() *cUserAuth {
 // @Tags user_auth
 // @Accept json
 // @Produce json
-// @Param input body auth_dto.VerifyEmailInput true "input"
+// @Param input body request.VerifyEmailRequest true "input"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Router /users/verifyemail/ [post]
 func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
-	var input request.VerifyEmailInput
+	var input request.VerifyEmailRequest
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidateParamEmail, http.StatusBadRequest, err.Error())
@@ -49,7 +49,7 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 // @Tags user_auth
 // @Accept json
 // @Produce json
-// @Param input body auth_dto.RegisterCredentials true "input"
+// @Param input body request.RegisterRequest true "input"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Router /users/register/ [post]
@@ -82,7 +82,7 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 // @Tags user_auth
 // @Accept json
 // @Produce json
-// @Param input body auth_dto.LoginCredentials true "input"
+// @Param input body request.LoginRequest true "input"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Router /users/login/ [post]

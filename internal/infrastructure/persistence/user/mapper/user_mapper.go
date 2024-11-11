@@ -60,7 +60,7 @@ func FromUserModel(userModel *models.User) *user_entity.User {
 		UpdatedAt:    userModel.UpdatedAt,
 		Setting:      setting,
 	}
-	user.ID = user.ID
+	user.ID = userModel.ID
 
 	return user
 }

@@ -47,6 +47,7 @@ func (r *rUser) GetById(
 		Error; err != nil {
 		return nil, err
 	}
+	//fmt.Println(mapper.FromUserModel(&userModel))
 	return mapper.FromUserModel(&userModel), nil
 }
 

@@ -33,8 +33,6 @@ func NewPostLikeController(
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID to create like post"
-// @Success 200 {object} pkg_response.pkg_responseData
-// @Failure 500 {object} pkg_response.Errpkg_response
 // @Security ApiKeyAuth
 // @Router /posts/like_post/{post_id} [post]
 func (p *PostLikeController) LikePost(ctx *gin.Context) {
@@ -69,8 +67,6 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 // @Param post_id path string true "Post ID to get user like post"
 // @Param limit query int false "Limit of posts per page"
 // @Param page query int false "Page number for pagination"
-// @Success 200 {object} pkg_response.pkg_responseData
-// @Failure 500 {object} pkg_response.Errpkg_response "Internal server error"
 // @Security ApiKeyAuth
 // @Router /posts/like_post/{post_id} [get]
 func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {

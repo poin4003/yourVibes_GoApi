@@ -27,8 +27,6 @@ func NewCommentLikeController() *cCommentLike {
 // @Accept json
 // @Produce json
 // @Param comment_id path string true "comment ID to create like comment"
-// @Success 200 {object} pkg_response.pkg_responseData
-// @Failure 500 {object} pkg_response.Errpkg_response
 // @Security ApiKeyAuth
 // @Router /comments/like_comment/{comment_id} [post]
 func (p *cCommentLike) LikeComment(ctx *gin.Context) {
@@ -65,8 +63,6 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 // @Param comment_id path string true "comment ID to get user like comment"
 // @Param limit query int false "Limit of users per page"
 // @Param page query int false "Page number for pagination"
-// @Success 200 {object} pkg_response.pkg_responseData
-// @Failure 500 {object} pkg_response.Errpkg_response "Internal server error"
 // @Security ApiKeyAuth
 // @Router /comments/like_comment/{comment_id} [get]
 func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {

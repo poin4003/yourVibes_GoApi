@@ -1,6 +1,18 @@
 basePath: /v1/2024
 definitions:
-  auth_dto.LoginCredentials:
+  request.CreateCommentInput:
+    properties:
+      content:
+        type: string
+      parent_id:
+        type: string
+      post_id:
+        type: string
+    required:
+    - content
+    - post_id
+    type: object
+  request.LoginRequest:
     properties:
       email:
         type: string
@@ -10,7 +22,7 @@ definitions:
     - email
     - password
     type: object
-  auth_dto.RegisterCredentials:
+  request.RegisterRequest:
     properties:
       birthday:
         type: string
@@ -36,29 +48,17 @@ definitions:
     - password
     - phone_number
     type: object
-  auth_dto.VerifyEmailInput:
+  request.UpdateCommentInput:
+    properties:
+      content:
+        type: string
+    type: object
+  request.VerifyEmailRequest:
     properties:
       email:
         type: string
     required:
     - email
-    type: object
-  comment_dto.CreateCommentInput:
-    properties:
-      content:
-        type: string
-      parent_id:
-        type: string
-      post_id:
-        type: string
-    required:
-    - content
-    - post_id
-    type: object
-  comment_dto.UpdateCommentInput:
-    properties:
-      content:
-        type: string
     type: object
   response.ErrResponse:
     properties:
@@ -158,7 +158,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/comment_dto.CreateCommentInput'
+          $ref: '#/definitions/request.CreateCommentInput'
       produces:
       - application/json
       responses:
@@ -217,7 +217,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/comment_dto.UpdateCommentInput'
+          $ref: '#/definitions/request.UpdateCommentInput'
       produces:
       - application/json
       responses:
@@ -255,15 +255,7 @@ paths:
         type: integer
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get User like comments
@@ -281,15 +273,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Like comment
@@ -510,15 +494,7 @@ paths:
         type: integer
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get User like posts
@@ -536,6 +512,24 @@ paths:
         type: string
       produces:
       - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Like Post
+      tags:
+      - like_post
+  /posts/new_feeds/:
+    get:
+      description: Get a list of new feed
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
       responses:
         "200":
           description: OK
@@ -547,9 +541,32 @@ paths:
             $ref: '#/definitions/response.ErrResponse'
       security:
       - ApiKeyAuth: []
-      summary: Like Post
+      summary: Get a list of new feed
       tags:
-      - like_post
+      - post_new_feed
+  /posts/new_feeds/{post_id}/:
+    delete:
+      description: delete new feeds
+      parameters:
+      - description: post_id you want to delete over your newfeed
+        in: path
+        name: post_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: DeleteNewFeeds
+      tags:
+      - post_new_feed
   /posts/share_post/{post_id}:
     post:
       consumes:
@@ -913,7 +930,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/auth_dto.LoginCredentials'
+          $ref: '#/definitions/request.LoginRequest'
       produces:
       - application/json
       responses:
@@ -928,55 +945,6 @@ paths:
       summary: User login
       tags:
       - user_auth
-  /users/new_feeds/:
-    get:
-      description: Get a list of new feed
-      parameters:
-      - description: limit on page
-        in: query
-        name: limit
-        type: integer
-      - description: current page
-        in: query
-        name: page
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a list of new feed
-      tags:
-      - user_new_feed
-  /users/new_feeds/{post_id}/:
-    delete:
-      description: delete new feeds
-      parameters:
-      - description: post_id you want to delete over your newfeed
-        in: path
-        name: post_id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: DeleteNewFeeds
-      tags:
-      - user_new_feed
   /users/notifications:
     get:
       consumes:
@@ -1102,7 +1070,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/auth_dto.RegisterCredentials'
+          $ref: '#/definitions/request.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -1128,7 +1096,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/auth_dto.VerifyEmailInput'
+          $ref: '#/definitions/request.VerifyEmailRequest'
       produces:
       - application/json
       responses:

@@ -8,7 +8,7 @@ import (
 )
 
 type Setting struct {
-	ID        uint            `validate:"required"`
+	ID        uint            `validate:"omitempty"`
 	UserId    uuid.UUID       `validate:"required,uuid4"`
 	Language  consts.Language `validate:"required,oneof=vi en"`
 	Status    bool            `validate:"required"`

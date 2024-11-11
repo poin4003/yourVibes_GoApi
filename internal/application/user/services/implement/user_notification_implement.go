@@ -2,9 +2,9 @@ package implement
 
 import (
 	"context"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -29,8 +29,9 @@ func NewUserNotificationImplement(
 
 func (s *sUserNotification) GetNotificationByUserId(
 	ctx context.Context,
-	query *query.GetManyNotificationQuery,
-) (result *query.GetManyNotificationQueryResult, err error) {
+	query *user_query.GetManyNotificationQuery,
+) (result *user_query.GetManyNotificationQueryResult, err error) {
+	result = &user_query.GetManyNotificationQueryResult{}
 	notificationEntities, paging, err := s.notificationRepo.GetMany(ctx, query)
 	if err != nil {
 		result.Notifications = nil
@@ -51,8 +52,9 @@ func (s *sUserNotification) GetNotificationByUserId(
 
 func (s *sUserNotification) UpdateOneStatusNotification(
 	ctx context.Context,
-	command *command.UpdateOneStatusNotificationCommand,
-) (result *command.UpdateOneStatusNotificationCommandResult, err error) {
+	command *user_command.UpdateOneStatusNotificationCommand,
+) (result *user_command.UpdateOneStatusNotificationCommandResult, err error) {
+	result = &user_command.UpdateOneStatusNotificationCommandResult{}
 	notificationUpdateEntity := &user_entity.NotificationUpdate{
 		Status: pointer.Ptr(false),
 	}
@@ -74,8 +76,9 @@ func (s *sUserNotification) UpdateOneStatusNotification(
 
 func (s *sUserNotification) UpdateManyStatusNotification(
 	ctx context.Context,
-	command *command.UpdateManyStatusNotificationCommand,
-) (result *command.UpdateManyStatusNotificationCommandResult, err error) {
+	command *user_command.UpdateManyStatusNotificationCommand,
+) (result *user_command.UpdateManyStatusNotificationCommandResult, err error) {
+	result = &user_command.UpdateManyStatusNotificationCommandResult{}
 	update_conditions := map[string]interface{}{
 		"status":  true,
 		"user_id": command.UserId,

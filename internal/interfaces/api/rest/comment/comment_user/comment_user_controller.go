@@ -25,7 +25,7 @@ func NewCommentUserController() *cCommentUser {
 // @Tags comment_user
 // @Accept json
 // @Produce json
-// @Param input body comment_dto.CreateCommentInput true "input"
+// @Param input body request.CreateCommentInput true "input"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
@@ -128,7 +128,7 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Param comment_id path string true "commentId"
-// @Param input body comment_dto.UpdateCommentInput true "input"
+// @Param input body request.UpdateCommentInput true "input"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth

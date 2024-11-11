@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID           `validate:"required,uuid4"`
+	ID           uuid.UUID           `validate:"omitempty,uuid4"`
 	FamilyName   string              `validate:"required,min=2"`
 	Name         string              `validate:"required,min=2"`
 	Email        string              `validate:"required,email"`
 	Password     string              `validate:"required,min=8"`
 	PhoneNumber  string              `validate:"required,min=10,max=14,numeric"`
-	Birthday     time.Time           `validate:"required,date"`
+	Birthday     time.Time           `validate:"required"`
 	AvatarUrl    string              `validate:"omitempty,url"`
 	CapwallUrl   string              `validate:"omitempty,url"`
 	Privacy      consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
@@ -26,7 +26,7 @@ type User struct {
 	Status       bool                `validate:"required"`
 	CreatedAt    time.Time           `validate:"required"`
 	UpdatedAt    time.Time           `validate:"required,gtefield=CreatedAt"`
-	Setting      *Setting            `validate:"required"`
+	Setting      *Setting            `validate:"omitempty"`
 }
 
 type UserUpdate struct {
@@ -66,7 +66,6 @@ func NewUser(
 	phoneNumber string,
 	birthday time.Time,
 	authType consts.AuthType,
-	setting *Setting,
 ) (*User, error) {
 	user := &User{
 		ID:          uuid.New(),
@@ -85,7 +84,6 @@ func NewUser(
 		Status:      true,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Setting:     setting,
 	}
 	if err := user.Validate(); err != nil {
 		return nil, err

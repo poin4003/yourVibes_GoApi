@@ -42,6 +42,7 @@ func (s *sUserInfo) GetInfoByUserId(
 	ctx context.Context,
 	query *user_query.GetOneUserQuery,
 ) (result *user_query.UserQueryResult, err error) {
+	result = &user_query.UserQueryResult{}
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
@@ -117,6 +118,7 @@ func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
 	query *user_query.GetManyUserQuery,
 ) (result *user_query.UserQueryListResult, err error) {
+	result = &user_query.UserQueryListResult{}
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
 	if err != nil {
@@ -143,6 +145,7 @@ func (s *sUserInfo) UpdateUser(
 	ctx context.Context,
 	command *user_command.UpdateUserCommand,
 ) (result *user_command.UpdateUserCommandResult, err error) {
+	result = &user_command.UpdateUserCommandResult{}
 	// 1. update setting language
 	if command.LanguageSetting != nil {
 		settingFound, err := s.settingRepo.GetSetting(ctx, "user_id=?", command.UserId)

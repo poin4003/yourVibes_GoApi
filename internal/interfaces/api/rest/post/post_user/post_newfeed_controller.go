@@ -19,12 +19,12 @@ func NewPostNewFeedController() *cPostNewFeed {
 // DeleteNewFeed godoc
 // @Summary DeleteNewFeeds
 // @Description delete new feeds
-// @Tags user_new_feed
+// @Tags post_new_feed
 // @Param post_id path string true "post_id you want to delete over your newfeed"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /users/new_feeds/{post_id}/ [delete]
+// @Router /posts/new_feeds/{post_id}/ [delete]
 func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 	// 1. Get post id from param path
 	postIdStr := ctx.Param("post_id")
@@ -54,13 +54,13 @@ func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 // GetNewFeeds godoc
 // @Summary Get a list of new feed
 // @Description Get a list of new feed
-// @Tags user_new_feed
+// @Tags post_new_feed
 // @Param limit query int false "limit on page"
 // @Param page query int false "current page"
 // @Success 200 {object} response.ResponseData
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
-// @Router /users/new_feeds/ [get]
+// @Router /posts/new_feeds/ [get]
 func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
 	// 1. Validate and get query object from query
 	var query query.NewFeedQueryObject

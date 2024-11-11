@@ -104,7 +104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/comment_dto.CreateCommentInput"
+                            "$ref": "#/definitions/request.CreateCommentInput"
                         }
                     }
                 ],
@@ -163,20 +163,7 @@ const docTemplate = `{
                         "in": "query"
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             },
             "post": {
                 "security": [
@@ -204,20 +191,7 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/comments/{comment_id}": {
@@ -293,7 +267,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/comment_dto.UpdateCommentInput"
+                            "$ref": "#/definitions/request.UpdateCommentInput"
                         }
                     }
                 ],
@@ -500,20 +474,7 @@ const docTemplate = `{
                         "in": "query"
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             },
             "post": {
                 "security": [
@@ -536,6 +497,72 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Post ID to create like post",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/new_feeds/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of new feed",
+                "tags": [
+                    "post_new_feed"
+                ],
+                "summary": "Get a list of new feed",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts/new_feeds/{post_id}/": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete new feeds",
+                "tags": [
+                    "post_new_feed"
+                ],
+                "summary": "DeleteNewFeeds",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post_id you want to delete over your newfeed",
                         "name": "post_id",
                         "in": "path",
                         "required": true
@@ -1242,87 +1269,8 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth_dto.LoginCredentials"
+                            "$ref": "#/definitions/request.LoginRequest"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/new_feeds/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of new feed",
-                "tags": [
-                    "user_new_feed"
-                ],
-                "summary": "Get a list of new feed",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "limit on page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "current page",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/new_feeds/{post_id}/": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "delete new feeds",
-                "tags": [
-                    "user_new_feed"
-                ],
-                "summary": "DeleteNewFeeds",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "post_id you want to delete over your newfeed",
-                        "name": "post_id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1542,7 +1490,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth_dto.RegisterCredentials"
+                            "$ref": "#/definitions/request.RegisterRequest"
                         }
                     }
                 ],
@@ -1582,7 +1530,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth_dto.VerifyEmailInput"
+                            "$ref": "#/definitions/request.VerifyEmailRequest"
                         }
                     }
                 ],
@@ -1647,7 +1595,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth_dto.LoginCredentials": {
+        "request.CreateCommentInput": {
+            "type": "object",
+            "required": [
+                "content",
+                "post_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -1662,7 +1628,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth_dto.RegisterCredentials": {
+        "request.RegisterRequest": {
             "type": "object",
             "required": [
                 "birthday",
@@ -1698,39 +1664,21 @@ const docTemplate = `{
                 }
             }
         },
-        "auth_dto.VerifyEmailInput": {
+        "request.UpdateCommentInput": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.VerifyEmailRequest": {
             "type": "object",
             "required": [
                 "email"
             ],
             "properties": {
                 "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "comment_dto.CreateCommentInput": {
-            "type": "object",
-            "required": [
-                "content",
-                "post_id"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "parent_id": {
-                    "type": "string"
-                },
-                "post_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "comment_dto.UpdateCommentInput": {
-            "type": "object",
-            "properties": {
-                "content": {
                     "type": "string"
                 }
             }

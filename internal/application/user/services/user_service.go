@@ -8,8 +8,8 @@ import (
 
 type (
 	IUserAuth interface {
-		Login(ctx context.Context, command *command.LoginCommand) (result *command.LoginCommandResult, err error)
-		Register(ctx context.Context, command *command.RegisterCommand) (result *command.RegisterCommandResult, err error)
+		Login(ctx context.Context, loginCommand *command.LoginCommand) (result *command.LoginCommandResult, err error)
+		Register(ctx context.Context, registerCommand *command.RegisterCommand) (result *command.RegisterCommandResult, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 	}
 	IUserInfo interface {

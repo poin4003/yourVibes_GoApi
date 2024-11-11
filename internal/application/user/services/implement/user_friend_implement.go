@@ -41,6 +41,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 	ctx context.Context,
 	command *user_command.SendAddFriendRequestCommand,
 ) (result *user_command.SendAddFriendRequestCommandResult, err error) {
+	result = &user_command.SendAddFriendRequestCommandResult{}
 	// 1. Check exist friend
 	friendEntity, err := user_entity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
@@ -187,6 +188,7 @@ func (s *sUserFriend) GetFriendRequests(
 	ctx context.Context,
 	query *user_query.FriendRequestQuery,
 ) (result *user_query.FriendRequestQueryResult, err error) {
+	result = &user_query.FriendRequestQueryResult{}
 	// 1. Get list of user request to add friend
 	userEntities, paging, err := s.friendRequestRepo.GetFriendRequests(ctx, query)
 	if err != nil {
@@ -213,6 +215,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 	ctx context.Context,
 	command *user_command.AcceptFriendRequestCommand,
 ) (result *user_command.AcceptFriendRequestCommandResult, err error) {
+	result = &user_command.AcceptFriendRequestCommandResult{}
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := user_entity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
@@ -350,6 +353,7 @@ func (s *sUserFriend) RemoveFriendRequest(
 	ctx context.Context,
 	command *user_command.RemoveFriendRequestCommand,
 ) (result *user_command.RemoveFriendRequestCommandResult, err error) {
+	result = &user_command.RemoveFriendRequestCommandResult{}
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := user_entity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
@@ -392,6 +396,7 @@ func (s *sUserFriend) UnFriend(
 	ctx context.Context,
 	command *user_command.UnFriendCommand,
 ) (result *user_command.UnFriendCommandResult, err error) {
+	result = &user_command.UnFriendCommandResult{}
 	// 1. Check friend exist
 	friendEntity, err := user_entity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
@@ -444,6 +449,7 @@ func (s *sUserFriend) GetFriends(
 	ctx context.Context,
 	query *user_query.FriendQuery,
 ) (result *user_query.FriendQueryResult, err error) {
+	result = &user_query.FriendQueryResult{}
 	// 1. Get list of friend
 	userEntities, paging, err := s.friendRepo.GetFriends(ctx, query)
 	if err != nil {
