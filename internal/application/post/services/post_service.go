@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	dto_response "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"mime/multipart"
 )
@@ -16,7 +17,7 @@ type (
 		CreatePost(ctx context.Context, postModel *models.Post, inMedia []multipart.File) (post *models.Post, resultCode int, httpStatusCode int, err error)
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}, deleteMediaIds []uint, inMedia []multipart.File) (post *models.Post, resultCode int, httpStatusCode int, err error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-		GetPost(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (postDto *dto_response.PostDto, resultCode int, httpStatusCode int, err error)
+		GetPost(ctx context.Context, query *post_query.GetOnePostQuery) (result *post_query.PostQueryResult, err error)
 		GetManyPosts(ctx context.Context, query *query.PostQueryObject, userId uuid.UUID) (postDtos []*dto_response.PostDto, resultCode int, httpStatusCode int, response *response.PagingResponse, err error)
 	}
 	IPostLike interface {

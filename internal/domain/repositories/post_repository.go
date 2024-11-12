@@ -2,7 +2,9 @@ package repositories
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -13,7 +15,7 @@ type (
 		CreatePost(ctx context.Context, post *models.Post) (*models.Post, error)
 		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}) (*models.Post, error)
 		DeletePost(ctx context.Context, postId uuid.UUID) (*models.Post, error)
-		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*models.Post, error)
+		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*entities.Post, error)
 		GetManyPost(ctx context.Context, query *query.PostQueryObject) ([]*models.Post, *response.PagingResponse, error)
 	}
 	IMediaRepository interface {

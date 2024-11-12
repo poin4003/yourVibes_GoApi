@@ -142,13 +142,19 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	var postRequest query.PostQueryObject
+	getOnePostQuery, err := postRequest.ToGetonePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	if userIdClaim != postFound.UserId {
+	if userIdClaim != result.Post.UserId {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
 		return
 	}
@@ -176,7 +182,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	postDto := mapper.MapPostToUpdatedPostDto(post)
 
 	// Delete cache
-	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", result.Post.UserId)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
 
 	if err != nil {
@@ -299,16 +305,22 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	postDto, resultCode, httpStatusCode, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	var postRequest query.PostQueryObject
+	getOnePostQuery, err := postRequest.ToGetonePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	postJson, _ := json.Marshal(postDto)
+	postJson, _ := json.Marshal(result.Post)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
 }
 
 // DeletePost documentation
@@ -336,13 +348,20 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	var postRequest query.PostQueryObject
+	getOnePostQuery, err := postRequest.ToGetonePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if userIdClaim != postFound.UserId {
+	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	if userIdClaim != result.Post.UserId {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not delete this post"))
 		return
 	}
@@ -354,7 +373,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	}
 
 	// Delete cache in redis
-	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", result.Post.UserId)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
 
 	if err != nil {

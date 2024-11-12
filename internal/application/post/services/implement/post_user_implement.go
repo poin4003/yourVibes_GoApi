@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	post_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
+	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
@@ -304,25 +306,36 @@ func (s *sPostUser) DeletePost(
 
 func (s *sPostUser) GetPost(
 	ctx context.Context,
-	postId uuid.UUID,
-	userId uuid.UUID,
-) (postDto *response2.PostDto, resultCode int, httpStatusCode int, err error) {
-	postModel, err := s.postRepo.GetPost(ctx, "id=?", postId)
+	query *post_query.GetOnePostQuery,
+) (result *post_query.PostQueryResult, err error) {
+	postFound, err := s.postRepo.GetPost(ctx, "id=?", query.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, response.ErrDataNotFound, http.StatusBadRequest, err
+			result.Post = nil
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
 		}
-		return nil, response.ErrServerFailed, http.StatusInternalServerError, err
+		result.Post = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
 	}
 
 	isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
-		PostId: postId,
-		UserId: userId,
+		PostId: query.PostId,
+		UserId: query.UserId,
 	})
 
-	postDto = mapper2.MapPostToPostDto(postModel, isLiked)
-
-	return postDto, response.ErrCodeSuccess, http.StatusOK, nil
+	result.Post = post_mapper.NewPostWithIsLiked(postFound, isLiked)
+	if result.Post == nil {
+		result.ResultCode = response.ErrDataNotFound
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, errors.New("failed to map post")
+	}
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }
 
 func (s *sPostUser) GetManyPosts(

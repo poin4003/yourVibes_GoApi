@@ -79,10 +79,10 @@ func (s *sPostLike) LikePost(
 		})
 
 		// 4.1.3. Check if Authenticated User liked the post
-		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
-			PostId: postFound.ID,
-			UserId: userId,
-		})
+		// isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
+		// 	PostId: postFound.ID,
+		// 	UserId: userId,
+		// })
 
 		// 4.1.4. Push notification to owner of the post
 		//notificationEntity := &user_entity.Notification{
@@ -108,10 +108,10 @@ func (s *sPostLike) LikePost(
 		//}
 
 		// 4.1.6. Map Post to PostDto to response for client
-		postDto = post_mapper.MapPostToPostDto(postFound, isLiked)
+		// postDto = post_mapper.MapPostToPostDto(postFound, isLiked)
 
 		// 4.1.7. Response for controller
-		return postDto, response.ErrCodeSuccess, http.StatusOK, nil
+		return nil, response.ErrCodeSuccess, http.StatusOK, nil
 	} else {
 		// 4.2.1. Delete like if it exits
 		if err := s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostModel); err != nil {
@@ -134,7 +134,7 @@ func (s *sPostLike) LikePost(
 		})
 
 		// 4.2.4. Map post to postDto
-		postDto = post_mapper.MapPostToPostDto(postFound, isLiked)
+		postDto = post_mapper.MapPostToPostDto(nil, isLiked)
 
 		// 4.2.5. Response for controller
 		return postDto, response.ErrCodeSuccess, http.StatusOK, nil

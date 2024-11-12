@@ -1,14 +1,16 @@
 package post_user
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cPostShare struct {
@@ -53,9 +55,16 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	_, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	var postRequest query.PostQueryObject
+	getOnePostQuery, err := postRequest.ToGetonePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
+		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 

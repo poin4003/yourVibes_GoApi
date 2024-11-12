@@ -2,12 +2,15 @@ package repo_impl
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rPost struct {
@@ -16,6 +19,23 @@ type rPost struct {
 
 func NewPostRepositoryImplement(db *gorm.DB) *rPost {
 	return &rPost{db: db}
+}
+
+func (r *rPost) GetById(
+	ctx context.Context,
+	id uuid.UUID,
+) (*entities.Post, error) {
+	var postModel models.Post
+	if err := r.db.WithContext(ctx).
+		Preload("Media").
+		Preload("User").
+		Preload("ParentPost.User").
+		Preload("ParentPost.Media").
+		First(&postModel, id).
+		Error; err != nil {
+		return nil, err
+	}
+	return mapper.FromPostModel(&postModel), nil
 }
 
 func (r *rPost) CreatePost(
@@ -71,19 +91,22 @@ func (r *rPost) GetPost(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
-) (*models.Post, error) {
-	post := &models.Post{}
+) (*entities.Post, error) {
+	var postModel models.Post
 
-	if res := r.db.WithContext(ctx).Model(post).
+	if err := r.db.WithContext(ctx).
+		Model(&postModel).
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
-		Where(query, args...).First(post); res.Error != nil {
-		return nil, res.Error
+		Where(query, args...).
+		First(&postModel).
+		Error; err != nil {
+		return nil, err
 	}
 
-	return post, nil
+	return r.GetById(ctx, postModel.ID)
 }
 
 func (r *rPost) GetManyPost(
