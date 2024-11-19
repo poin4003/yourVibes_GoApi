@@ -24,16 +24,6 @@ type (
 		DeleteOne(ctx context.Context, id uint) error
 		GetSetting(ctx context.Context, query interface{}, args ...interface{}) (*entities.Setting, error)
 	}
-	INotificationRepository interface {
-		CreateOne(ctx context.Context, entity *entities.Notification) (*entities.Notification, error)
-		CreateMany(ctx context.Context, entity []*entities.Notification) ([]*entities.Notification, error)
-		UpdateOne(ctx context.Context, id uint, updateData *entities.NotificationUpdate) (*entities.Notification, error)
-		UpdateMany(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
-		DeleteOne(ctx context.Context, id uint) (*entities.Notification, error)
-		GetById(ctx context.Context, id uint) (*entities.Notification, error)
-		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Notification, error)
-		GetMany(ctx context.Context, query *query.GetManyNotificationQuery) ([]*entities.Notification, *response.PagingResponse, error)
-	}
 	IFriendRequestRepository interface {
 		CreateOne(ctx context.Context, entity *entities.FriendRequest) error
 		DeleteOne(ctx context.Context, entity *entities.FriendRequest) error
@@ -52,7 +42,6 @@ type (
 var (
 	localUser          IUserRepository
 	localSetting       ISettingRepository
-	localNotification  INotificationRepository
 	localFriendRequest IFriendRequestRepository
 	localFriend        IFriendRepository
 )
@@ -71,14 +60,6 @@ func Setting() ISettingRepository {
 	}
 
 	return localSetting
-}
-
-func Notification() INotificationRepository {
-	if localNotification == nil {
-		panic("repository_implement localNotification not found for interface INotification")
-	}
-
-	return localNotification
 }
 
 func FriendRequest() IFriendRequestRepository {
@@ -103,10 +84,6 @@ func InitUserRepository(i IUserRepository) {
 
 func InitSettingRepository(i ISettingRepository) {
 	localSetting = i
-}
-
-func InitNotificationRepository(i INotificationRepository) {
-	localNotification = i
 }
 
 func InitFriendRequestRepository(i IFriendRequestRepository) {

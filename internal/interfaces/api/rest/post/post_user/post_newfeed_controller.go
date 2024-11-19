@@ -1,15 +1,5 @@
 package post_user
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
-)
-
 type cPostNewFeed struct{}
 
 func NewPostNewFeedController() *cPostNewFeed {
@@ -25,31 +15,31 @@ func NewPostNewFeedController() *cPostNewFeed {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/new_feeds/{post_id}/ [delete]
-func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
-	// 1. Get post id from param path
-	postIdStr := ctx.Param("post_id")
-	postId, err := uuid.Parse(postIdStr)
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// 2. Get user id claim from jwt
-	userIdClaim, err := extensions.GetUserID(ctx)
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	// 3. Call service
-	resultCode, httpStatusCode, err := services.PostNewFeed().DeleteNewFeed(ctx, userIdClaim, postId)
-	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
-		return
-	}
-
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, nil)
-}
+//func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
+//	// 1. Get post id from param path
+//	postIdStr := ctx.Param("post_id")
+//	postId, err := uuid.Parse(postIdStr)
+//	if err != nil {
+//		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+//		return
+//	}
+//
+//	// 2. Get user id claim from jwt
+//	userIdClaim, err := extensions.GetUserID(ctx)
+//	if err != nil {
+//		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+//		return
+//	}
+//
+//	// 3. Call service
+//	resultCode, httpStatusCode, err := services.PostNewFeed().DeleteNewFeed(ctx, userIdClaim, postId)
+//	if err != nil {
+//		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+//		return
+//	}
+//
+//	response.SuccessResponse(ctx, resultCode, http.StatusOK, nil)
+//}
 
 // GetNewFeeds godoc
 // @Summary Get a list of new feed
@@ -61,28 +51,28 @@ func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/new_feeds/ [get]
-func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
-	// 1. Validate and get query object from query
-	var query query.NewFeedQueryObject
-
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// 2. Get user id claim from jwt
-	userIdClaim, err := extensions.GetUserID(ctx)
-	if err != nil {
-		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	// 3. Call services
-	postDtos, paging, resultCode, httpStatusCode, err := services.PostNewFeed().GetNewFeeds(ctx, userIdClaim, &query)
-	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
-		return
-	}
-
-	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, postDtos, *paging)
-}
+//func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
+//	// 1. Validate and get query object from query
+//	var query query.NewFeedQueryObject
+//
+//	if err := ctx.ShouldBindQuery(&query); err != nil {
+//		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+//		return
+//	}
+//
+//	// 2. Get user id claim from jwt
+//	userIdClaim, err := extensions.GetUserID(ctx)
+//	if err != nil {
+//		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+//		return
+//	}
+//
+//	// 3. Call services
+//	postDtos, paging, resultCode, httpStatusCode, err := services.PostNewFeed().GetNewFeeds(ctx, userIdClaim, &query)
+//	if err != nil {
+//		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+//		return
+//	}
+//
+//	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, postDtos, *paging)
+//}

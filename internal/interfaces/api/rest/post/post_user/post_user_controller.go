@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
@@ -73,22 +73,27 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 
 	fmt.Println("Files retrieved:", len(files))
 
-	userUUID, err := extensions.GetUserID(ctx)
+	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	postModel := mapper.MapToPostFromCreateDto(&postInput, userUUID)
-	post, resultCode, httpStatusCode, err := services.PostUser().CreatePost(context.Background(), postModel, uploadedFiles)
+	createPostCommand, err := postInput.ToCreatePostCommand(userIdClaim, uploadedFiles)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	postDto := mapper.MapPostToNewPostDto(post)
+	result, err := services.PostUser().CreatePost(context.Background(), createPostCommand)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
 
-	cacheKey := fmt.Sprintf("posts:user:%s:*", userUUID)
+	//postDto := mapper.MapPostToNewPostDto(post)
+
+	cacheKey := fmt.Sprintf("posts:user:%s:*", userIdClaim)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
 
 	if err != nil {
@@ -102,7 +107,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
 }
 
 // UpdatePost documentation
@@ -123,12 +128,15 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 // @Router /posts/{post_id} [patch]
 func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	var updateInput request.UpdatePostInput
+	var postRequest query.PostQueryObject
 
+	// 1. Validate form input
 	if err := ctx.ShouldBind(&updateInput); err != nil {
 		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// 2. Get post_id from params
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -136,27 +144,32 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
+	// 3. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	// 4. Call service to check owner
+	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	if userIdClaim != postFound.UserId {
+	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
+		return
+	}
+
+	if userIdClaim != query_result.Post.UserId {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
 		return
 	}
 
-	updateData := mapper.MapToPostFromUpdateDto(&updateInput)
-
-	deleteMediaIds := updateInput.MediaIDs
-
+	// 5. Get upload image from form
 	var uploadedFiles []multipart.File
 	for _, fileHeader := range updateInput.Media {
 		openFile, err := fileHeader.Open()
@@ -167,16 +180,20 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		uploadedFiles = append(uploadedFiles, openFile)
 	}
 
-	post, resultCode, httpStatusCode, err := services.PostUser().UpdatePost(ctx, postId, updateData, deleteMediaIds, uploadedFiles)
+	updatePostCommand, err := updateInput.ToUpdatePostCommand(&postId, uploadedFiles)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	postDto := mapper.MapPostToUpdatedPostDto(post)
+	result, err := services.PostUser().UpdatePost(ctx, updatePostCommand)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
 
 	// Delete cache
-	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", result.Post.UserId)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
 
 	if err != nil {
@@ -190,7 +207,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
 }
 
 // GetManyPost documentation
@@ -240,25 +257,27 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		}
 	}
 
-	userUUID, err := extensions.GetUserID(ctx)
+	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	postDtos, resultCode, httpStatusCode, paging, err := services.PostUser().GetManyPosts(ctx, &query, userUUID)
+	getManyPostQuery, err := query.ToGetManyPostQuery(userIdClaim)
+
+	result, err := services.PostUser().GetManyPosts(ctx, getManyPostQuery)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	postsJson, _ := json.Marshal(postDtos)
+	postsJson, _ := json.Marshal(result.Posts)
 	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
 
 	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
-	p.redisClient.Set(context.Background(), cacheTotalKey, paging.Total, time.Minute*1)
+	p.redisClient.Set(context.Background(), cacheTotalKey, result.PagingResponse.Total, time.Minute*1)
 
-	response.SuccessPagingResponse(ctx, resultCode, http.StatusOK, postDtos, *paging)
+	response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, result.Posts, *result.PagingResponse)
 }
 
 // GetPostById documentation
@@ -273,6 +292,8 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [get]
 func (p *cPostUser) GetPostById(ctx *gin.Context) {
+	var postRequest query.PostQueryObject
+
 	postIdStr := ctx.Param("post_id")
 
 	postId, err := uuid.Parse(postIdStr)
@@ -299,16 +320,22 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	postDto, resultCode, httpStatusCode, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	postJson, _ := json.Marshal(postDto)
+	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	postJson, _ := json.Marshal(result.Post)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postDto)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
 }
 
 // DeletePost documentation
@@ -323,6 +350,9 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [delete]
 func (p *cPostUser) DeletePost(ctx *gin.Context) {
+	var postRequest query.PostQueryObject
+
+	// 1. Get post id from param
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -330,31 +360,42 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
+	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	postFound, resultCodePostFound, httpStatusCodePostFound, err := services.PostUser().GetPost(ctx, postId, userIdClaim)
+	// 3. Check post owner
+	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCodePostFound, httpStatusCodePostFound, err.Error())
+		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	if userIdClaim != postFound.UserId {
+	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	if err != nil {
+		response.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
+		return
+	}
+
+	if userIdClaim != query_result.Post.UserId {
 		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not delete this post"))
 		return
 	}
 
-	resultCode, httpStatusCode, err := services.PostUser().DeletePost(ctx, postId)
+	// 4. Call service delete
+	deletePostCommand := &command.DeletePostCommand{PostId: &postId}
+
+	result, err := services.PostUser().DeletePost(ctx, deletePostCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, resultCode, httpStatusCode, err.Error())
+		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// Delete cache in redis
-	cacheKey := fmt.Sprintf("posts:user:%s:*", postFound.UserId)
+	cacheKey := fmt.Sprintf("posts:user:%s:*", query_result.Post.UserId)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
 
 	if err != nil {
@@ -368,5 +409,5 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		}
 	}
 
-	response.SuccessResponse(ctx, resultCode, http.StatusOK, postId)
+	response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postId)
 }

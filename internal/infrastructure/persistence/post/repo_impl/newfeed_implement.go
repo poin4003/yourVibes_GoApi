@@ -3,8 +3,10 @@ package repo_impl
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
@@ -17,7 +19,7 @@ func NewNewFeedRepositoryImplement(db *gorm.DB) *rNewFeed {
 	return &rNewFeed{db: db}
 }
 
-func (r *rNewFeed) CreateManyNewFeed(
+func (r *rNewFeed) CreateMany(
 	ctx context.Context,
 	postId uuid.UUID,
 	friendIds []uuid.UUID,
@@ -39,7 +41,7 @@ func (r *rNewFeed) CreateManyNewFeed(
 	return nil
 }
 
-func (r *rNewFeed) DeleteNewFeed(
+func (r *rNewFeed) DeleteOne(
 	ctx context.Context,
 	userId uuid.UUID,
 	postId uuid.UUID,
@@ -55,11 +57,10 @@ func (r *rNewFeed) DeleteNewFeed(
 	return nil
 }
 
-func (r *rNewFeed) GetManyNewFeed(
+func (r *rNewFeed) GetMany(
 	ctx context.Context,
-	userId uuid.UUID,
-	query *query.NewFeedQueryObject,
-) ([]*models.Post, *response.PagingResponse, error) {
+	query *query.GetNewFeedQuery,
+) ([]*entities.Post, *response.PagingResponse, error) {
 	var posts []*models.Post
 	var total int64
 
@@ -77,7 +78,7 @@ func (r *rNewFeed) GetManyNewFeed(
 
 	err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
-		Where("new_feeds.user_id = ?", userId).
+		Where("new_feeds.user_id = ?", query.UserId).
 		Count(&total).Error
 
 	if err != nil {
@@ -86,7 +87,7 @@ func (r *rNewFeed) GetManyNewFeed(
 
 	err = db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
-		Where("new_feeds.user_id = ?", userId).
+		Where("new_feeds.user_id = ?", query.UserId).
 		Preload("User").
 		Offset(offset).
 		Limit(limit).
@@ -102,5 +103,11 @@ func (r *rNewFeed) GetManyNewFeed(
 		Total: total,
 	}
 
-	return posts, pagingResponse, nil
+	var postEntities []*entities.Post
+	for _, post := range posts {
+		postEntity := mapper.FromPostModel(post)
+		postEntities = append(postEntities, postEntity)
+	}
+
+	return postEntities, pagingResponse, nil
 }

@@ -2,9 +2,10 @@ package repo_impl
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
@@ -19,33 +20,34 @@ func NewLikeUserPostRepositoryImplement(db *gorm.DB) *rLikeUserPost {
 
 func (r *rLikeUserPost) CreateLikeUserPost(
 	ctx context.Context,
-	likeUserPost *models.LikeUserPost,
+	entity *entities.LikeUserPost,
 ) error {
-	res := r.db.WithContext(ctx).Create(likeUserPost)
-
-	if res.Error != nil {
-		return res.Error
+	if err := r.db.WithContext(ctx).
+		Create(mapper.ToLikeUserPostModel(entity)).
+		Error; err != nil {
+		return err
 	}
+
 	return nil
 }
 
 func (r *rLikeUserPost) DeleteLikeUserPost(
 	ctx context.Context,
-	likeUserPost *models.LikeUserPost,
+	entity *entities.LikeUserPost,
 ) error {
-	res := r.db.WithContext(ctx).Delete(likeUserPost)
-
-	if res.Error != nil {
-		return res.Error
+	if err := r.db.WithContext(ctx).
+		Delete(mapper.ToLikeUserPostModel(entity)).
+		Error; err != nil {
+		return err
 	}
+
 	return nil
 }
 
 func (r *rLikeUserPost) GetLikeUserPost(
 	ctx context.Context,
-	postId uuid.UUID,
-	query *query.PostLikeQueryObject,
-) ([]*models.User, *response.PagingResponse, error) {
+	query *query.GetPostLikeQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
 
@@ -62,7 +64,7 @@ func (r *rLikeUserPost) GetLikeUserPost(
 	db := r.db.WithContext(ctx).Model(&models.User{})
 
 	err := db.Joins("JOIN like_user_posts ON like_user_posts.user_id = users.id").
-		Where("like_user_posts.post_id = ?", postId).
+		Where("like_user_posts.post_id = ?", query.PostId).
 		Count(&total).
 		Offset(offset).
 		Limit(limit).
@@ -77,18 +79,24 @@ func (r *rLikeUserPost) GetLikeUserPost(
 		Total: total,
 	}
 
-	return users, pagingResponse, nil
+	var userEntities []*entities.User
+	for _, user := range users {
+		userEntity := mapper.FromUserModel(user)
+		userEntities = append(userEntities, userEntity)
+	}
+
+	return userEntities, pagingResponse, nil
 }
 
 func (r *rLikeUserPost) CheckUserLikePost(
 	ctx context.Context,
-	likeUserPost *models.LikeUserPost,
+	entity *entities.LikeUserPost,
 ) (bool, error) {
 	var count int64
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.LikeUserPost{}).
-		Where("post_id = ? AND user_id =?", likeUserPost.PostId, likeUserPost.UserId).
+		Where("post_id = ? AND user_id =?", entity.PostId, entity.UserId).
 		Count(&count).Error; err != nil {
 	}
 	return count > 0, nil

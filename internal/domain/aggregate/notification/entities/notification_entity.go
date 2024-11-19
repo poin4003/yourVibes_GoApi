@@ -12,7 +12,7 @@ type Notification struct {
 	From             string                  `validated:"required,min=2"`
 	FromUrl          string                  `validated:"required,url"`
 	UserId           uuid.UUID               `validated:"required,uuid4"`
-	User             User                    `validated:"required"`
+	User             *User                   `validated:"required"`
 	NotificationType consts.NotificationType `validated:"required,notification_type"`
 	ContentId        string                  `validated:"required,min=2"`
 	Content          string                  `validated:"required,min=2"`

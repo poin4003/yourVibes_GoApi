@@ -3,9 +3,9 @@ package repo_impl
 import (
 	"context"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
@@ -54,8 +54,8 @@ func (r *rNotification) CreateMany(
 	notificationEntities []*entities.Notification,
 ) ([]*entities.Notification, error) {
 	var notificationModels []*models.Notification
-	for i, notification := range notificationEntities {
-		notificationModels[i] = mapper.ToNotificationModel(notification)
+	for _, notification := range notificationEntities {
+		notificationModels = append(notificationModels, mapper.ToNotificationModel(notification))
 	}
 
 	err := r.db.WithContext(ctx).Create(&notificationModels).Error
@@ -63,9 +63,9 @@ func (r *rNotification) CreateMany(
 		return nil, err
 	}
 
-	notificationEntityList := make([]*entities.Notification, len(notificationModels))
-	for i, notificationEntity := range notificationModels {
-		notificationEntityList[i] = mapper.FromNotificationModel(notificationEntity)
+	var notificationEntityList []*entities.Notification
+	for _, notificationEntity := range notificationModels {
+		notificationEntityList = append(notificationEntityList, mapper.FromNotificationModel(notificationEntity))
 	}
 
 	return notificationEntityList, nil

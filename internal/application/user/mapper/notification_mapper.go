@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 )
 
 func NewNotificationResult(
@@ -12,12 +12,19 @@ func NewNotificationResult(
 		return nil
 	}
 
+	user := &common.UserShortVerResult{
+		ID:         notification.User.ID,
+		FamilyName: notification.User.FamilyName,
+		Name:       notification.User.Name,
+		AvatarUrl:  notification.User.AvatarUrl,
+	}
+	
 	return &common.NotificationResult{
 		ID:               notification.ID,
 		From:             notification.From,
 		FromUrl:          notification.FromUrl,
 		UserId:           notification.UserId,
-		User:             *NewUserShortVerEntity(&notification.User),
+		User:             user,
 		NotificationType: notification.NotificationType,
 		ContentId:        notification.ContentId,
 		Content:          notification.Content,

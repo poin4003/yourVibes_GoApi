@@ -9,6 +9,7 @@ import (
 	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	notification_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -138,7 +139,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 	}
 
 	// 7. Push notification to user
-	notificationEntity, err := user_entity.NewNotification(
+	notificationEntity, err := notification_entity.NewNotification(
 		userFound.FamilyName+" "+userFound.Name,
 		userFound.AvatarUrl,
 		friendFound.ID,
@@ -304,7 +305,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 	}
 
 	// 6. Push notification to user
-	notificationModel := &user_entity.Notification{
+	notificationModel := &notification_entity.Notification{
 		From:             friendFound.FamilyName + " " + friendFound.Name,
 		FromUrl:          friendFound.AvatarUrl,
 		UserId:           userFound.ID,

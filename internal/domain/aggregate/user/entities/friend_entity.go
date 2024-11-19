@@ -8,8 +8,6 @@ import (
 type Friend struct {
 	UserId   uuid.UUID `validate:"required,uuid4"`
 	FriendId uuid.UUID `validate:"required,uuid4"`
-	User     User      `validate:"required"`
-	Friend   User      `validate:"required"`
 }
 
 func (f *Friend) Validate() error {

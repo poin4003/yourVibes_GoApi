@@ -5,7 +5,7 @@ import (
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"

@@ -3,8 +3,10 @@ package repo_impl
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"time"
@@ -18,84 +20,134 @@ func NewPostRepositoryImplement(db *gorm.DB) *rPost {
 	return &rPost{db: db}
 }
 
-func (r *rPost) CreatePost(
+func (r *rPost) GetById(
 	ctx context.Context,
-	post *models.Post,
-) (*models.Post, error) {
-	res := r.db.WithContext(ctx).Create(post)
-
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	return post, nil
-}
-
-func (r *rPost) UpdatePost(
-	ctx context.Context,
-	postId uuid.UUID,
-	updateData map[string]interface{},
-) (*models.Post, error) {
-	var post models.Post
-
-	if err := r.db.WithContext(ctx).Preload("Media").Preload("User").First(&post, postId).Error; err != nil {
-		return nil, err
-	}
-
-	if err := r.db.WithContext(ctx).Model(&post).Updates(updateData).Error; err != nil {
-		return nil, err
-	}
-
-	return &post, nil
-}
-
-func (r *rPost) DeletePost(
-	ctx context.Context,
-	postId uuid.UUID,
-) (*models.Post, error) {
-	post := &models.Post{}
-	res := r.db.WithContext(ctx).First(post, postId)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	res = r.db.WithContext(ctx).Delete(post)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	return post, nil
-}
-
-func (r *rPost) GetPost(
-	ctx context.Context,
-	query interface{},
-	args ...interface{},
-) (*models.Post, error) {
-	post := &models.Post{}
-
-	if res := r.db.WithContext(ctx).Model(post).
+	id uuid.UUID,
+) (*entities.Post, error) {
+	var postModel models.Post
+	if err := r.db.WithContext(ctx).
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
-		Where(query, args...).First(post); res.Error != nil {
+		First(&postModel, id).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return mapper.FromPostModel(&postModel), nil
+}
+
+func (r *rPost) CreateOne(
+	ctx context.Context,
+	entity *entities.Post,
+) (*entities.Post, error) {
+	postModel := mapper.ToPostModel(entity)
+
+	if err := r.db.WithContext(ctx).
+		Create(postModel).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, postModel.ID)
+}
+
+func (r *rPost) UpdateOne(
+	ctx context.Context,
+	id uuid.UUID,
+	updateData *entities.PostUpdate,
+) (*entities.Post, error) {
+	updates := map[string]interface{}{}
+
+	if updateData.Content != nil {
+		updates["content"] = *updateData.Content
+	}
+
+	if updateData.LikeCount != nil {
+		updates["like_count"] = *updateData.LikeCount
+	}
+
+	if updateData.CommentCount != nil {
+		updates["comment_count"] = *updateData.CommentCount
+	}
+
+	if updateData.Privacy != nil {
+		updates["privacy"] = *updateData.Privacy
+	}
+
+	if updateData.Location != nil {
+		updates["location"] = *updateData.Location
+	}
+
+	if updateData.IsAdvertisement != nil {
+		updates["is_advertisement"] = *updateData.IsAdvertisement
+	}
+
+	if updateData.Status != nil {
+		updates["status"] = *updateData.Status
+	}
+
+	if updateData.UpdatedAt != nil {
+		updates["updated_at"] = *updateData.UpdatedAt
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Where("id = ?", id).
+		Updates(updates).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, id)
+}
+
+func (r *rPost) DeleteOne(
+	ctx context.Context,
+	id uuid.UUID,
+) (*entities.Post, error) {
+	post, err := r.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	res := r.db.WithContext(ctx).Delete(mapper.ToPostModel(post))
+	if res.Error != nil {
 		return nil, res.Error
 	}
 
 	return post, nil
 }
 
-func (r *rPost) GetManyPost(
+func (r *rPost) GetOne(
 	ctx context.Context,
-	query *query.PostQueryObject,
-) ([]*models.Post, *response.PagingResponse, error) {
+	query interface{},
+	args ...interface{},
+) (*entities.Post, error) {
+	var postModel models.Post
+
+	if err := r.db.WithContext(ctx).
+		Model(&postModel).
+		Where(query, args...).
+		First(&postModel).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, postModel.ID)
+}
+
+func (r *rPost) GetMany(
+	ctx context.Context,
+	query *query.GetManyPostQuery,
+) ([]*entities.Post, *response.PagingResponse, error) {
 	var posts []*models.Post
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.Post{})
 
-	if query.UserID != "" {
+	if query.UserID != uuid.Nil {
 		db = db.Where("user_id = ?", query.UserID)
 	}
 
@@ -178,5 +230,11 @@ func (r *rPost) GetManyPost(
 		Total: total,
 	}
 
-	return posts, pagingResponse, nil
+	var postEntities []*entities.Post
+	for _, post := range posts {
+		postEntity := mapper.FromPostModel(post)
+		postEntities = append(postEntities, postEntity)
+	}
+
+	return postEntities, pagingResponse, nil
 }

@@ -3,36 +3,38 @@ package repositories
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
 	IPostRepository interface {
-		CreatePost(ctx context.Context, post *models.Post) (*models.Post, error)
-		UpdatePost(ctx context.Context, postId uuid.UUID, updateData map[string]interface{}) (*models.Post, error)
-		DeletePost(ctx context.Context, postId uuid.UUID) (*models.Post, error)
-		GetPost(ctx context.Context, query interface{}, args ...interface{}) (*models.Post, error)
-		GetManyPost(ctx context.Context, query *query.PostQueryObject) ([]*models.Post, *response.PagingResponse, error)
+		GetById(ctx context.Context, id uuid.UUID) (*entities.Post, error)
+		CreateOne(ctx context.Context, entity *entities.Post) (*entities.Post, error)
+		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.PostUpdate) (*entities.Post, error)
+		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Post, error)
+		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Post, error)
+		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.Post, *response.PagingResponse, error)
 	}
 	IMediaRepository interface {
-		CreateMedia(ctx context.Context, media *models.Media) (*models.Media, error)
-		UpdateMedia(ctx context.Context, mediaId uint, updateData map[string]interface{}) (*models.Media, error)
-		DeleteMedia(ctx context.Context, mediaId uint) error
-		GetMedia(ctx context.Context, query interface{}, args ...interface{}) (*models.Media, error)
-		GetManyMedia(ctx context.Context, query interface{}, args ...interface{}) ([]*models.Media, error)
+		GetById(ctx context.Context, id uint) (*entities.Media, error)
+		CreateOne(ctx context.Context, entity *entities.Media) (*entities.Media, error)
+		UpdateOne(ctx context.Context, id uint, updateData *entities.MediaUpdate) (*entities.Media, error)
+		DeleteOne(ctx context.Context, id uint) error
+		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Media, error)
+		GetMany(ctx context.Context, query interface{}, args ...interface{}) ([]*entities.Media, error)
 	}
 	ILikeUserPostRepository interface {
-		CreateLikeUserPost(ctx context.Context, likeUserPost *models.LikeUserPost) error
-		DeleteLikeUserPost(ctx context.Context, likeUserPost *models.LikeUserPost) error
-		GetLikeUserPost(ctx context.Context, postId uuid.UUID, query *query.PostLikeQueryObject) ([]*models.User, *response.PagingResponse, error)
-		CheckUserLikePost(ctx context.Context, likeUserPost *models.LikeUserPost) (bool, error)
+		CreateLikeUserPost(ctx context.Context, entity *entities.LikeUserPost) error
+		DeleteLikeUserPost(ctx context.Context, entity *entities.LikeUserPost) error
+		GetLikeUserPost(ctx context.Context, query *query.GetPostLikeQuery) ([]*entities.User, *response.PagingResponse, error)
+		CheckUserLikePost(ctx context.Context, entity *entities.LikeUserPost) (bool, error)
 	}
 	INewFeedRepository interface {
-		CreateManyNewFeed(ctx context.Context, postId uuid.UUID, friendIds []uuid.UUID) error
-		DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
-		GetManyNewFeed(ctx context.Context, userId uuid.UUID, query *query.NewFeedQueryObject) ([]*models.Post, *response.PagingResponse, error)
+		CreateMany(ctx context.Context, postId uuid.UUID, friendIds []uuid.UUID) error
+		DeleteOne(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
+		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)
 	}
 )
 
