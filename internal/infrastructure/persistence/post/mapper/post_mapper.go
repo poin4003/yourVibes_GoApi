@@ -42,6 +42,17 @@ func ToUserEntity(
 func FromPostModel(postModel *models.Post) *post_entity.Post {
 	var parentPost *post_entity.Post
 	if postModel.ParentPost != nil {
+		var medias []*post_entity.Media
+		for _, media := range postModel.ParentPost.Media {
+			medias = append(medias, &post_entity.Media{
+				ID:        media.ID,
+				MediaUrl:  media.MediaUrl,
+				PostId:    media.PostId,
+				Status:    media.Status,
+				CreatedAt: media.CreatedAt,
+				UpdatedAt: media.UpdatedAt,
+			})
+		}
 		parentPost = &post_entity.Post{
 			ID:              postModel.ParentPost.ID,
 			UserId:          postModel.ParentPost.UserId,
@@ -56,10 +67,11 @@ func FromPostModel(postModel *models.Post) *post_entity.Post {
 			Status:          postModel.ParentPost.Status,
 			CreatedAt:       postModel.ParentPost.CreatedAt,
 			UpdatedAt:       postModel.ParentPost.UpdatedAt,
+			Media:           medias,
 		}
 	}
 
-	var medias = []*post_entity.Media{}
+	var medias []*post_entity.Media
 	for _, media := range postModel.Media {
 		medias = append(medias, &post_entity.Media{
 			ID:        media.ID,

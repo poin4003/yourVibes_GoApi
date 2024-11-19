@@ -29,6 +29,7 @@ func NewPostWithLikedResultFromEntity(
 			IsLiked:         isLiked,
 			CreatedAt:       post.ParentPost.CreatedAt,
 			UpdatedAt:       post.ParentPost.UpdatedAt,
+			Media:           NewMediaResultsFromEntity(post.ParentPost.Media),
 			User:            NewUserResultFromEntity(post.User),
 		}
 	}

@@ -90,3 +90,31 @@ func NewPostUpdate(
 
 	return postUpdate, nil
 }
+
+func NewPostForShare(
+	userId uuid.UUID,
+	content string,
+	privacy consts.PrivacyLevel,
+	location string,
+	parentId *uuid.UUID,
+) (*Post, error) {
+	post := &Post{
+		ID:              uuid.New(),
+		UserId:          userId,
+		Content:         content,
+		LikeCount:       0,
+		CommentCount:    0,
+		ParentId:        parentId,
+		Privacy:         privacy,
+		Location:        location,
+		IsAdvertisement: false,
+		Status:          true,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+	if err := post.Validate(); err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}

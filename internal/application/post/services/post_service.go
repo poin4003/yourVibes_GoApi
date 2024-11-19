@@ -18,9 +18,9 @@ type (
 		LikePost(ctx context.Context, command *command.LikePostCommand) (result *command.LikePostCommandResult, err error)
 		GetUsersOnLikes(ctx context.Context, query *query.GetPostLikeQuery) (result *query.GetPostLikeQueryResult, err error)
 	}
-	//IPostShare interface {
-	//	SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID, shareInput *request.SharePostInput) (post *models.Post, resultCode int, httpStatusCode int, err error)
-	//}
+	IPostShare interface {
+		SharePost(ctx context.Context, command *command.SharePostCommand) (result *command.SharePostCommandResult, err error)
+	}
 	//IPostNewFeed interface {
 	//	DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
 	//	GetNewFeeds(ctx context.Context, userId uuid.UUID, query *query.NewFeedQueryObject) (postDtos []*dto_response.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
@@ -30,7 +30,7 @@ type (
 var (
 	localPostUser     IPostUser
 	localLikeUserPost IPostLike
-	//localPostShare    IPostShare
+	localPostShare    IPostShare
 	//localPostNewFeed  IPostNewFeed
 )
 
@@ -50,14 +50,14 @@ func LikeUserPost() IPostLike {
 	return localLikeUserPost
 }
 
-//func PostShare() IPostShare {
-//	if localPostShare == nil {
-//		panic("repository_implement localPostShare not found for interface IPostShare")
-//	}
-//
-//	return localPostShare
-//}
-//
+func PostShare() IPostShare {
+	if localPostShare == nil {
+		panic("repository_implement localPostShare not found for interface IPostShare")
+	}
+
+	return localPostShare
+}
+
 //func PostNewFeed() IPostNewFeed {
 //	if localPostNewFeed == nil {
 //		panic("repository_implement localPostNewFeed not found for interface IPostNewFeed")
@@ -74,10 +74,10 @@ func InitLikeUserPost(i IPostLike) {
 	localLikeUserPost = i
 }
 
-//func InitPostShare(i IPostShare) {
-//	localPostShare = i
-//}
-//
+func InitPostShare(i IPostShare) {
+	localPostShare = i
+}
+
 //func InitPostNewFeed(i IPostNewFeed) {
 //	localPostNewFeed = i
 //}

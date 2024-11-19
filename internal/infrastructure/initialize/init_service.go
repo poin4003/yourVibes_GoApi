@@ -47,7 +47,7 @@ func InitServiceInterface(db *gorm.DB) {
 	userInfoService := user_service_impl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
 	postUserService := post_service_impl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo)
 	postLikeService := post_service_impl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
-	//postShareService := post_service_impl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
+	postShareService := post_service_impl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	//commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	//likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 
@@ -58,7 +58,7 @@ func InitServiceInterface(db *gorm.DB) {
 	//post_service.InitPostNewFeed(userNewFeedService)
 	post_service.InitLikeUserPost(postLikeService)
 	post_service.InitPostUser(postUserService)
-	//post_service.InitPostShare(postShareService)
+	post_service.InitPostShare(postShareService)
 	//comment_service.InitCommentUser(commentUserService)
 	//comment_service.InitCommentLike(likeCommentService)
 }
