@@ -29,6 +29,7 @@ func NewPostWithLikedResultFromEntity(
 			IsLiked:         isLiked,
 			CreatedAt:       post.ParentPost.CreatedAt,
 			UpdatedAt:       post.ParentPost.UpdatedAt,
+			User:            NewUserResultFromEntity(post.User),
 		}
 	}
 
@@ -48,6 +49,7 @@ func NewPostWithLikedResultFromEntity(
 		CreatedAt:       post.CreatedAt,
 		UpdatedAt:       post.UpdatedAt,
 		Media:           NewMediaResultsFromEntity(post.Media),
+		User:            NewUserResultFromEntity(post.User),
 	}
 }
 
@@ -72,5 +74,6 @@ func NewPostResultFromEntity(
 		CreatedAt:       post.CreatedAt,
 		UpdatedAt:       post.UpdatedAt,
 		Media:           NewMediaResultsFromEntity(post.Media),
+		User:            NewUserResultFromEntity(post.User),
 	}
 }

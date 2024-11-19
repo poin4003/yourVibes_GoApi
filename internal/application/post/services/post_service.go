@@ -14,10 +14,10 @@ type (
 		GetPost(ctx context.Context, query *query.GetOnePostQuery) (result *query.GetOnePostQueryResult, err error)
 		GetManyPosts(ctx context.Context, query *query.GetManyPostQuery) (result *query.GetManyPostQueryResult, err error)
 	}
-	//IPostLike interface {
-	//	LikePost(ctx context.Context, likeUserPost *models.LikeUserPost, userId uuid.UUID) (postDto *dto_response.PostDto, resultCode int, httpStatusCode int, err error)
-	//	GetUsersOnLikes(ctx context.Context, postId uuid.UUID, query *query.PostLikeQueryObject) (users []*models.User, resultCode int, httpStatusCode int, pagingResponse *response.PagingResponse, err error)
-	//}
+	IPostLike interface {
+		LikePost(ctx context.Context, command *command.LikePostCommand) (result *command.LikePostCommandResult, err error)
+		GetUsersOnLikes(ctx context.Context, query *query.GetPostLikeQuery) (result *query.GetPostLikeQueryResult, err error)
+	}
 	//IPostShare interface {
 	//	SharePost(ctx context.Context, postId uuid.UUID, userId uuid.UUID, shareInput *request.SharePostInput) (post *models.Post, resultCode int, httpStatusCode int, err error)
 	//}
@@ -28,8 +28,8 @@ type (
 )
 
 var (
-	localPostUser IPostUser
-	//localLikeUserPost IPostLike
+	localPostUser     IPostUser
+	localLikeUserPost IPostLike
 	//localPostShare    IPostShare
 	//localPostNewFeed  IPostNewFeed
 )
@@ -42,14 +42,14 @@ func PostUser() IPostUser {
 	return localPostUser
 }
 
-//func LikeUserPost() IPostLike {
-//	if localLikeUserPost == nil {
-//		panic("repository_implement localLikeUserPost not found for interface ILikeUserPost")
-//	}
-//
-//	return localLikeUserPost
-//}
-//
+func LikeUserPost() IPostLike {
+	if localLikeUserPost == nil {
+		panic("repository_implement localLikeUserPost not found for interface ILikeUserPost")
+	}
+
+	return localLikeUserPost
+}
+
 //func PostShare() IPostShare {
 //	if localPostShare == nil {
 //		panic("repository_implement localPostShare not found for interface IPostShare")
@@ -70,11 +70,10 @@ func InitPostUser(i IPostUser) {
 	localPostUser = i
 }
 
-//
-//func InitLikeUserPost(i IPostLike) {
-//	localLikeUserPost = i
-//}
-//
+func InitLikeUserPost(i IPostLike) {
+	localLikeUserPost = i
+}
+
 //func InitPostShare(i IPostShare) {
 //	localPostShare = i
 //}
