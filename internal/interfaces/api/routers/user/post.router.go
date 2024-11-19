@@ -14,7 +14,7 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	postUserController := post_user.NewPostUserController(global.Rdb)
 	postShareController := post_user.NewPostShareController()
 	postLikeController := post_user.NewPostLikeController(global.Rdb)
-	//postNewFeedController := post_user.NewPostNewFeedController()
+	postNewFeedController := post_user.NewPostNewFeedController()
 	//userRouterPublic := Router.Group("/posts")
 	//{
 	//}
@@ -37,8 +37,8 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		// post_share
 		postRouterPrivate.POST("/share_post/:post_id", postShareController.SharePost)
 
-		//// user_new_feed
-		//postRouterPrivate.DELETE("/new_feeds/:post_id", postNewFeedController.DeleteNewFeed)
-		//postRouterPrivate.GET("/new_feeds/", postNewFeedController.GetNewFeeds)
+		// user_new_feed
+		postRouterPrivate.DELETE("/new_feeds/:post_id", postNewFeedController.DeleteNewFeed)
+		postRouterPrivate.GET("/new_feeds/", postNewFeedController.GetNewFeeds)
 	}
 }

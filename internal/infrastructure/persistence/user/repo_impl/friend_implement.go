@@ -69,7 +69,7 @@ func (r *rFriend) GetFriends(
 	db := r.db.WithContext(ctx).Model(&models.User{})
 
 	err := db.Joins("JOIN friends ON friends.user_id = users.id").
-		Where("friends.user_id = ?", query.UserId).
+		Where("friends.friend_id = ?", query.UserId).
 		Count(&total).
 		Offset(offset).
 		Limit(limit).

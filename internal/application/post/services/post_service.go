@@ -21,17 +21,17 @@ type (
 	IPostShare interface {
 		SharePost(ctx context.Context, command *command.SharePostCommand) (result *command.SharePostCommandResult, err error)
 	}
-	//IPostNewFeed interface {
-	//	DeleteNewFeed(ctx context.Context, userId uuid.UUID, postId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-	//	GetNewFeeds(ctx context.Context, userId uuid.UUID, query *query.NewFeedQueryObject) (postDtos []*dto_response.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error)
-	//}
+	IPostNewFeed interface {
+		DeleteNewFeed(ctx context.Context, command *command.DeleteNewFeedCommand) (result *command.DeleteNewFeedCommandResult, err error)
+		GetNewFeeds(ctx context.Context, query *query.GetNewFeedQuery) (result *query.GetNewFeedResult, err error)
+	}
 )
 
 var (
 	localPostUser     IPostUser
 	localLikeUserPost IPostLike
 	localPostShare    IPostShare
-	//localPostNewFeed  IPostNewFeed
+	localPostNewFeed  IPostNewFeed
 )
 
 func PostUser() IPostUser {
@@ -58,13 +58,13 @@ func PostShare() IPostShare {
 	return localPostShare
 }
 
-//func PostNewFeed() IPostNewFeed {
-//	if localPostNewFeed == nil {
-//		panic("repository_implement localPostNewFeed not found for interface IPostNewFeed")
-//	}
-//
-//	return localPostNewFeed
-//}
+func PostNewFeed() IPostNewFeed {
+	if localPostNewFeed == nil {
+		panic("repository_implement localPostNewFeed not found for interface IPostNewFeed")
+	}
+
+	return localPostNewFeed
+}
 
 func InitPostUser(i IPostUser) {
 	localPostUser = i
@@ -78,6 +78,6 @@ func InitPostShare(i IPostShare) {
 	localPostShare = i
 }
 
-//func InitPostNewFeed(i IPostNewFeed) {
-//	localPostNewFeed = i
-//}
+func InitPostNewFeed(i IPostNewFeed) {
+	localPostNewFeed = i
+}

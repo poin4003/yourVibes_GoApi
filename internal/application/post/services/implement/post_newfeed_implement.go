@@ -1,10 +1,18 @@
 package implement
 
 import (
+	"context"
+	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
+	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"net/http"
 )
 
-type sUserNewFeed struct {
+type sPostNewFeed struct {
 	userRepo         post_repo.IUserRepository
 	postRepo         post_repo.IPostRepository
 	likeUserPostRepo post_repo.ILikeUserPostRepository
@@ -16,8 +24,8 @@ func NewPostNewFeedImplement(
 	postRepo post_repo.IPostRepository,
 	likeUserPostRepo post_repo.ILikeUserPostRepository,
 	newFeedRepo post_repo.INewFeedRepository,
-) *sUserNewFeed {
-	return &sUserNewFeed{
+) *sPostNewFeed {
+	return &sPostNewFeed{
 		userRepo:         userRepo,
 		postRepo:         postRepo,
 		likeUserPostRepo: likeUserPostRepo,
@@ -25,38 +33,57 @@ func NewPostNewFeedImplement(
 	}
 }
 
-//func (s *sUserNewFeed) DeleteNewFeed(
-//	ctx context.Context,
-//	userId uuid.UUID,
-//	postId uuid.UUID,
-//) (resultCode int, httpStatusCode int, err error) {
-//	err = s.newFeedRepo.DeleteNewFeed(ctx, userId, postId)
-//	if err != nil {
-//		return response.ErrServerFailed, http.StatusInternalServerError, err
-//	}
-//
-//	return response.ErrCodeSuccess, http.StatusOK, nil
-//}
-//
-//func (s *sUserNewFeed) GetNewFeeds(
-//	ctx context.Context,
-//	userId uuid.UUID,
-//	query *query.NewFeedQueryObject,
-//) (postDtos []*response2.PostDto, pagingResponse *response.PagingResponse, resultCode int, httpStatusCode int, err error) {
-//	postModels, paging, err := s.newFeedRepo.GetManyNewFeed(ctx, userId, query)
-//	if err != nil {
-//		return nil, nil, response.ErrServerFailed, http.StatusInternalServerError, err
-//	}
-//
-//	for _, post := range postModels {
-//		isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, &models.LikeUserPost{
-//			PostId: post.ID,
-//			UserId: userId,
-//		})
-//
-//		postDto := mapper.MapPostToPostDto(post, isLiked)
-//		postDtos = append(postDtos, postDto)
-//	}
-//
-//	return postDtos, paging, response.ErrCodeSuccess, http.StatusOK, nil
-//}
+func (s *sPostNewFeed) DeleteNewFeed(
+	ctx context.Context,
+	command *post_command.DeleteNewFeedCommand,
+) (result *post_command.DeleteNewFeedCommandResult, err error) {
+	result = &post_command.DeleteNewFeedCommandResult{}
+
+	err = s.newFeedRepo.DeleteOne(ctx, command.UserId, command.PostId)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
+func (s *sPostNewFeed) GetNewFeeds(
+	ctx context.Context,
+	query *post_query.GetNewFeedQuery,
+) (result *post_query.GetNewFeedResult, err error) {
+	result = &post_query.GetNewFeedResult{}
+
+	postEntities, paging, err := s.newFeedRepo.GetMany(ctx, query)
+	if err != nil {
+		result.Posts = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		result.PagingResponse = nil
+		return result, err
+	}
+
+	var postResults []*common.PostResultWithLiked
+	for _, postEntity := range postEntities {
+		likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(query.UserId, postEntity.ID)
+		if err != nil {
+			result.Posts = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			result.PagingResponse = nil
+			return result, err
+		}
+
+		isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, likeUserPostEntity)
+		postResults = append(postResults, mapper.NewPostWithLikedResultFromEntity(postEntity, isLiked))
+	}
+
+	result.Posts = postResults
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	result.PagingResponse = paging
+	return result, nil
+}

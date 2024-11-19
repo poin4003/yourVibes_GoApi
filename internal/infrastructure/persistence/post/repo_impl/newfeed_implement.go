@@ -89,9 +89,12 @@ func (r *rNewFeed) GetMany(
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("new_feeds.user_id = ?", query.UserId).
 		Preload("User").
+		Preload("Media").
 		Offset(offset).
 		Limit(limit).
-		Find(&posts).Error
+		Find(&posts).
+		Order("created_at desc").
+		Error
 
 	if err != nil {
 		return nil, nil, err
