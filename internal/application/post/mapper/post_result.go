@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	post_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 )
 
 func NewPostWithLikedResultFromEntity(
@@ -52,6 +53,12 @@ func NewPostWithLikedResultFromEntity(
 		Media:           NewMediaResultsFromEntity(post.Media),
 		User:            NewUserResultFromEntity(post.User),
 	}
+}
+
+func NewPostResultFromValidateEntity(
+	post *post_validator.ValidatedPost,
+) *common.PostResult {
+	return NewPostResultFromEntity(&post.Post)
 }
 
 func NewPostResultFromEntity(

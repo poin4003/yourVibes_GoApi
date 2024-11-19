@@ -12,6 +12,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notification_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	post_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -230,7 +231,16 @@ func (s *sPostUser) CreatePost(
 		}
 	}
 
-	result.Post = mapper.NewPostResultFromEntity(postEntity)
+	// 6. Validate post
+	validatePost, err := post_validator.NewValidatedPost(postEntity)
+	if err != nil {
+		result.Post = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to validate post: %w", err)
+	}
+
+	result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

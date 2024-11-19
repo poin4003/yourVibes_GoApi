@@ -6,6 +6,7 @@ import (
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	post_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
@@ -76,7 +77,15 @@ func (s *sPostShare) SharePost(
 			return result, err
 		}
 
-		result.Post = mapper.NewPostResultFromEntity(newSharePost)
+		validatePost, err := post_validator.NewValidatedPost(newSharePost)
+		if err != nil {
+			result.Post = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, err
+		}
+
+		result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
@@ -116,7 +125,15 @@ func (s *sPostShare) SharePost(
 			return result, err
 		}
 
-		result.Post = mapper.NewPostResultFromEntity(newSharePost)
+		validatePost, err := post_validator.NewValidatedPost(newSharePost)
+		if err != nil {
+			result.Post = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, err
+		}
+
+		result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
