@@ -41,26 +41,27 @@ func NewPostUserController(
 // @Param privacy formData string false "Privacy level"
 // @Param location formData string false "Location of the post"
 // @Param media formData file false "Media files for the post" multiple
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/ [post]
 func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	var postInput request.CreatePostInput
 
+	// 1. Get body from form
 	if err := ctx.ShouldBind(&postInput); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// 2. Check one of content or media
 	if postInput.Content == "" && postInput.Media == nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, "You must provide at least one of Content or Media")
 		return
 	}
 
+	// 3. Get file from body
 	files := postInput.Media
 
-	// Convert multipart.FileHeader to multipart.File
+	// 3.1. Convert multipart.FileHeader to multipart.File
 	var uploadedFiles []multipart.File
 	for _, file := range files {
 		openFile, err := file.Open()
@@ -71,14 +72,14 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		uploadedFiles = append(uploadedFiles, openFile)
 	}
 
-	fmt.Println("Files retrieved:", len(files))
-
+	// 4. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	// 5. Call service to handle create post
 	createPostCommand, err := postInput.ToCreatePostCommand(userIdClaim, uploadedFiles)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -91,7 +92,8 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	//postDto := mapper.MapPostToNewPostDto(post)
+	// 6. Map result to dto
+	postDto := response.ToPostDto(*result.Post)
 
 	cacheKey := fmt.Sprintf("posts:user:%s:*", userIdClaim)
 	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
@@ -107,7 +109,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		}
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
 
 // UpdatePost documentation
@@ -122,15 +124,13 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 // @Param location formData string false "Post location"
 // @Param media_ids formData int false "Array of mediaIds you want to delete"
 // @Param media formData file false "Array of media you want to upload"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [patch]
 func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	var updateInput request.UpdatePostInput
 	var postRequest query.PostQueryObject
 
-	// 1. Validate form input
+	// 1. Get body from form
 	if err := ctx.ShouldBind(&updateInput); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
@@ -158,18 +158,20 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
+	// 5. Get post to check owner
 	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
 		return
 	}
 
+	// 6. Get user id from token
 	if userIdClaim != query_result.Post.UserId {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
 		return
 	}
 
-	// 5. Get upload image from form
+	// 7. Get file from body
 	var uploadedFiles []multipart.File
 	for _, fileHeader := range updateInput.Media {
 		openFile, err := fileHeader.Open()
@@ -180,6 +182,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		uploadedFiles = append(uploadedFiles, openFile)
 	}
 
+	// 8. Call service to handle update post
 	updatePostCommand, err := updateInput.ToUpdatePostCommand(&postId, uploadedFiles)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -191,6 +194,9 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
+
+	// 9. Map to dto
+	postDto := response.ToPostDto(*result.Post)
 
 	// Delete cache
 	cacheKey := fmt.Sprintf("posts:user:%s:*", result.Post.UserId)
@@ -207,7 +213,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		}
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
 
 // GetManyPost documentation
@@ -225,18 +231,18 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 // @Param isDescending query boolean false "Order by descending if true"
 // @Param limit query int false "Limit of posts per page"
 // @Param page query int false "Page number for pagination"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse "Internal server error"
 // @Security ApiKeyAuth
 // @Router /posts/ [get]
 func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	var query query.PostQueryObject
 
+	// 1. Get query
 	if err := ctx.ShouldBindQuery(&query); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// 2. Check redis
 	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", query.UserID, query.Page, query.Limit)
 	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
 	if err == nil {
@@ -257,12 +263,14 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		}
 	}
 
+	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	// 4. Call service to handle get many
 	getManyPostQuery, err := query.ToGetManyPostQuery(userIdClaim)
 
 	result, err := services.PostUser().GetManyPosts(ctx, getManyPostQuery)
@@ -271,13 +279,19 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		return
 	}
 
-	postsJson, _ := json.Marshal(result.Posts)
+	// 5. Map to dto
+	var postDtos []*response.PostWithLikedDto
+	for _, postResult := range result.Posts {
+		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
+	}
+
+	postsJson, _ := json.Marshal(postDtos)
 	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
 
 	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
 	p.redisClient.Set(context.Background(), cacheTotalKey, result.PagingResponse.Total, time.Minute*1)
 
-	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, result.Posts, *result.PagingResponse)
+	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, postDtos, *result.PagingResponse)
 }
 
 // GetPostById documentation
@@ -287,27 +301,27 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [get]
 func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	var postRequest query.PostQueryObject
 
+	// 1. Get post id from param
 	postIdStr := ctx.Param("post_id")
-
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	// 3. Check redis
 	cachedPost, err := p.redisClient.Get(context.Background(), postId.String()).Result()
 	if err == nil {
 		var postDto response.PostDto
@@ -320,6 +334,7 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
+	// 4. Call service to handle get one
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -332,10 +347,13 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	postJson, _ := json.Marshal(result.Post)
+	// 5. Map to Dto
+	postDto := response.ToPostWithLikedDto(*result.Post)
+
+	postJson, _ := json.Marshal(postDto)
 	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, result.Post)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
 
 // DeletePost documentation
@@ -345,8 +363,6 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param post_id path string true "Post ID"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [delete]
 func (p *cPostUser) DeletePost(ctx *gin.Context) {
@@ -367,7 +383,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Check post owner
+	// 3. Get post to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -380,6 +396,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
+	// 4. Check owner
 	if userIdClaim != query_result.Post.UserId {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not delete this post"))
 		return

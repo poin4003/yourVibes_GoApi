@@ -1,17 +1,5 @@
 basePath: /v1/2024
 definitions:
-  request.CreateCommentInput:
-    properties:
-      content:
-        type: string
-      parent_id:
-        type: string
-      post_id:
-        type: string
-    required:
-    - content
-    - post_id
-    type: object
   request.LoginRequest:
     properties:
       email:
@@ -47,11 +35,6 @@ definitions:
     - otp
     - password
     - phone_number
-    type: object
-  request.UpdateCommentInput:
-    properties:
-      content:
-        type: string
     type: object
   request.VerifyEmailRequest:
     properties:
@@ -109,176 +92,6 @@ info:
   title: API Documentation YourVibes backend
   version: 1.0.0
 paths:
-  /comments/:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve multiple comment filtered by various criteria.
-      parameters:
-      - description: Post ID to filter comment, get the first layer
-        in: query
-        name: post_id
-        required: true
-        type: string
-      - description: Filter by parent id, get the next layer
-        in: query
-        name: parent_id
-        type: string
-      - description: Limit of posts per page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number for pagination
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get many comment
-      tags:
-      - comment_user
-    post:
-      consumes:
-      - application/json
-      description: When user create comment or rep comment
-      parameters:
-      - description: input
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/request.CreateCommentInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Comment create comment
-      tags:
-      - comment_user
-  /comments/{comment_id}:
-    delete:
-      consumes:
-      - application/json
-      description: when user want to delete comment
-      parameters:
-      - description: comment ID
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: delete comment by ID
-      tags:
-      - comment_user
-    patch:
-      consumes:
-      - multipart/form-data
-      description: When user need to update information of comment
-      parameters:
-      - description: commentId
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      - description: input
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/request.UpdateCommentInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: update comment
-      tags:
-      - comment_user
-  /comments/like_comment/{comment_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve multiple user is like comment
-      parameters:
-      - description: comment ID to get user like comment
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      - description: Limit of users per page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number for pagination
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get User like comments
-      tags:
-      - like_comment
-    post:
-      consumes:
-      - application/json
-      description: When user like comment
-      parameters:
-      - description: comment ID to create like comment
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Like comment
-      tags:
-      - like_comment
   /posts/:
     get:
       consumes:
@@ -323,15 +136,7 @@ paths:
         type: integer
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get many posts
@@ -360,15 +165,7 @@ paths:
         type: file
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Post create post
@@ -387,15 +184,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: delete post by ID
@@ -413,15 +202,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get post by ID
@@ -459,15 +240,7 @@ paths:
         type: file
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: update post
@@ -530,15 +303,7 @@ paths:
         in: query
         name: page
         type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get a list of new feed
@@ -553,15 +318,7 @@ paths:
         name: post_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: DeleteNewFeeds
@@ -592,15 +349,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: share post

@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
@@ -27,13 +28,11 @@ func NewPostShareController() *cPostShare {
 // @Param content formData string false "Content of the post"
 // @Param privacy formData string false "Privacy level"
 // @Param location formData string false "Location of the post"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/share_post/{post_id} [post]
 func (p *cPostShare) SharePost(ctx *gin.Context) {
 	var sharePostInput request.SharePostInput
-	// 1. Get input from form
+	// 1. Get body from form
 	if err := ctx.ShouldBind(&sharePostInput); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
@@ -67,7 +66,8 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 		return
 	}
 
-	//postDto := mapper.MapPostToNewPostDto(postModel)
+	// 5. Map to dto
+	postDto := response.ToPostDto(*result.Post)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, result.Post)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, postDto)
 }

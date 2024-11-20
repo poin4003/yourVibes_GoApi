@@ -6,6 +6,7 @@ import (
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
@@ -22,8 +23,6 @@ func NewPostNewFeedController() *cPostNewFeed {
 // @Description delete new feeds
 // @Tags post_new_feed
 // @Param post_id path string true "post_id you want to delete over your newfeed"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/new_feeds/{post_id}/ [delete]
 func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
@@ -60,8 +59,6 @@ func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 // @Tags post_new_feed
 // @Param limit query int false "limit on page"
 // @Param page query int false "current page"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /posts/new_feeds/ [get]
 func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
@@ -93,5 +90,11 @@ func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
 		return
 	}
 
-	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, result.Posts, *result.PagingResponse)
+	// 4. Map to dto
+	var postDtos []*response.PostWithLikedDto
+	for _, postResult := range result.Posts {
+		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
+	}
+
+	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, postDtos, *result.PagingResponse)
 }

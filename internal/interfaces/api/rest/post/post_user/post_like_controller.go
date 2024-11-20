@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/redis/go-redis/v9"
@@ -58,7 +59,10 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, result.Post)
+	// 4. Map to dto
+	postDto := response.ToPostWithLikedDto(*result.Post)
+
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, postDto)
 }
 
 // GetUserLikePost documentation
@@ -101,11 +105,11 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 		return
 	}
 
-	//var userDtos []response.UserDtoShortVer
-	//for _, user := range likeUserPost {
-	//	userDto := mapper.MapUserToUserDtoShortVer(user)
-	//	userDtos = append(userDtos, userDto)
-	//}
+	// 4. Map to dto
+	var userDtos []*response.UserDto
+	for _, userResult := range result.Users {
+		userDtos = append(userDtos, response.ToUserDto(userResult))
+	}
 
-	pkg_response.SuccessPagingResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, result.Users, *result.PagingResponse)
+	pkg_response.SuccessPagingResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, userDtos, *result.PagingResponse)
 }
