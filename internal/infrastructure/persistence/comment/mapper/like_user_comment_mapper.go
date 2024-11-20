@@ -1,19 +1,19 @@
 package mapper
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToLikeUserPostModel(
-	likeUserPost *entities.LikeUserPost,
-) *models.LikeUserPost {
-	lup := &models.LikeUserPost{
-		UserId: likeUserPost.UserId,
-		PostId: likeUserPost.PostId,
+func ToLikeUserCommentModel(
+	likeUserComment *entities.LikeUserComment,
+) *models.LikeUserComment {
+	luc := &models.LikeUserComment{
+		UserId:    likeUserComment.UserId,
+		CommentId: likeUserComment.CommentId,
 	}
 
-	return lup
+	return luc
 }
 
 func FromUserModel(userModel *models.User) *entities.User {

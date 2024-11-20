@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"strings"
@@ -19,38 +21,75 @@ func NewCommentRepositoryImplement(db *gorm.DB) *rComment {
 	return &rComment{db: db}
 }
 
-func (r *rComment) CreateComment(
+func (r *rComment) GetById(
 	ctx context.Context,
-	comment *models.Comment,
-) (*models.Comment, error) {
-	res := r.db.WithContext(ctx).Create(comment)
-
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	return comment, nil
-}
-
-func (r *rComment) UpdateOneComment(
-	ctx context.Context,
-	commentId uuid.UUID,
-	updateData map[string]interface{},
-) (*models.Comment, error) {
-	var comment models.Comment
-
-	if err := r.db.WithContext(ctx).First(&comment, commentId).Error; err != nil {
+	id uuid.UUID,
+) (*entities.Comment, error) {
+	var commentModel models.Comment
+	if err := r.db.WithContext(ctx).
+		Preload("User").
+		First(&commentModel, id).
+		Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.db.WithContext(ctx).Model(&comment).Updates(updateData).Error; err != nil {
+	return mapper.FromCommentModel(&commentModel), nil
+}
+
+func (r *rComment) CreateOne(
+	ctx context.Context,
+	entity *entities.Comment,
+) (*entities.Comment, error) {
+	commentModel := mapper.ToCommentModel(entity)
+
+	if err := r.db.WithContext(ctx).
+		Create(commentModel).
+		Error; err != nil {
 		return nil, err
 	}
 
-	return &comment, nil
+	return r.GetById(ctx, entity.ID)
 }
 
-func (r *rComment) UpdateManyComment(
+func (r *rComment) UpdateOne(
+	ctx context.Context,
+	id uuid.UUID,
+	updateData *entities.CommentUpdate,
+) (*entities.Comment, error) {
+	updates := map[string]interface{}{}
+
+	if updateData.Content != nil {
+		updates["content"] = *updateData.Content
+	}
+
+	if updateData.LikeCount != nil {
+		updates["like_count"] = *updateData.LikeCount
+	}
+
+	if updateData.RepCommentCount != nil {
+		updates["rep_comment_count"] = *updateData.RepCommentCount
+	}
+
+	if updateData.Status != nil {
+		updates["status"] = *updateData.Status
+	}
+
+	if updateData.UpdatedAt != nil {
+		updates["updated_at"] = *updateData.UpdatedAt
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Comment{}).
+		Where("id = ?", id).
+		Updates(updates).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, id)
+}
+
+func (r *rComment) UpdateMany(
 	ctx context.Context,
 	condition map[string]interface{},
 	updateData map[string]interface{},
@@ -74,17 +113,16 @@ func (r *rComment) UpdateManyComment(
 	return nil
 }
 
-func (r *rComment) DeleteOneComment(
+func (r *rComment) DeleteOne(
 	ctx context.Context,
-	commentId uuid.UUID,
-) (*models.Comment, error) {
-	comment := &models.Comment{}
-	res := r.db.WithContext(ctx).First(comment, commentId)
-	if res.Error != nil {
-		return nil, res.Error
+	id uuid.UUID,
+) (*entities.Comment, error) {
+	comment, err := r.GetById(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 
-	res = r.db.WithContext(ctx).Delete(comment)
+	res := r.db.WithContext(ctx).Delete(comment)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -92,7 +130,7 @@ func (r *rComment) DeleteOneComment(
 	return comment, nil
 }
 
-func (r *rComment) DeleteManyComment(
+func (r *rComment) DeleteMany(
 	ctx context.Context,
 	condition map[string]interface{},
 ) error {
@@ -119,42 +157,47 @@ func (r *rComment) DeleteManyComment(
 	return nil
 }
 
-func (r *rComment) GetOneComment(
+func (r *rComment) GetOne(
 	ctx context.Context,
 	query interface{},
 	args ...interface{},
-) (*models.Comment, error) {
+) (*entities.Comment, error) {
 	comment := &models.Comment{}
 
-	if res := r.db.WithContext(ctx).Model(comment).Where(query, args...).First(comment); res.Error != nil {
-		return nil, res.Error
+	if err := r.db.WithContext(ctx).
+		Model(comment).
+		Where(query, args...).
+		First(comment).
+		Error; err != nil {
+		return nil, err
 	}
 
-	return comment, nil
+	return r.GetById(ctx, comment.ID)
 }
 
-func (r *rComment) GetManyComment(
+func (r *rComment) GetMany(
 	ctx context.Context,
-	query *query.CommentQueryObject,
-) ([]*models.Comment, *response.PagingResponse, error) {
+	query *query.GetManyCommentQuery,
+) ([]*entities.Comment, *response.PagingResponse, error) {
 	var comments []*models.Comment
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.Comment{})
 
 	// 1. If query have ParentId
-	if query.ParentId != "" {
+	if query.ParentId != uuid.Nil {
 		// 1.1. Find parent comment
 		var parentComment models.Comment
-		err := r.db.WithContext(ctx).Where("id = ?", query.ParentId).Find(&parentComment).Error
-		if err != nil {
+		if err := r.db.Where("id = ?", query.ParentId).
+			Find(&parentComment).
+			Error; err != nil {
 			return nil, nil, err
 		}
 
 		// 2.2. Find child comment by comment_left and comment_right of commentParent
 		//db = db.Where("comment_left > ? AND comment_right <= ? ", parentComment.CommentLeft, parentComment.CommentRight)
 		db = db.Where("parent_id = ?", parentComment.ID)
-	} else if query.PostId != "" {
+	} else if query.PostId != uuid.Nil {
 		db = db.Where("post_id = ? AND parent_id IS NULL", query.PostId)
 	}
 
@@ -184,7 +227,12 @@ func (r *rComment) GetManyComment(
 		Total: total,
 	}
 
-	return comments, pagingResponse, nil
+	var commentEntities []*entities.Comment
+	for _, commentModel := range comments {
+		commentEntities = append(commentEntities, mapper.FromCommentModel(commentModel))
+	}
+
+	return commentEntities, pagingResponse, nil
 }
 
 func (r *rComment) GetMaxCommentRightByPostId(

@@ -3,27 +3,28 @@ package repositories
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
 	ICommentRepository interface {
-		CreateComment(ctx context.Context, comment *models.Comment) (*models.Comment, error)
-		UpdateOneComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (*models.Comment, error)
-		UpdateManyComment(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
-		DeleteOneComment(ctx context.Context, commentId uuid.UUID) (*models.Comment, error)
-		DeleteManyComment(ctx context.Context, condition map[string]interface{}) error
-		GetOneComment(ctx context.Context, query interface{}, args ...interface{}) (*models.Comment, error)
-		GetManyComment(ctx context.Context, query *query.CommentQueryObject) ([]*models.Comment, *response.PagingResponse, error)
+		GetById(ctx context.Context, id uuid.UUID) (*entities.Comment, error)
+		CreateOne(ctx context.Context, entity *entities.Comment) (*entities.Comment, error)
+		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.CommentUpdate) (*entities.Comment, error)
+		UpdateMany(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
+		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Comment, error)
+		DeleteMany(ctx context.Context, condition map[string]interface{}) error
+		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Comment, error)
+		GetMany(ctx context.Context, query *query.GetManyCommentQuery) ([]*entities.Comment, *response.PagingResponse, error)
 		GetMaxCommentRightByPostId(ctx context.Context, postId uuid.UUID) (int, error)
 	}
 	ILikeUserCommentRepository interface {
-		CreateLikeUserComment(ctx context.Context, likeUserComment *models.LikeUserComment) error
-		DeleteLikeUserComment(ctx context.Context, likeUserComment *models.LikeUserComment) error
-		GetLikeUserComment(ctx context.Context, commentId uuid.UUID, query *query.CommentLikeQueryObject) ([]*models.User, *response.PagingResponse, error)
-		CheckUserLikeComment(ctx context.Context, likeUserComment *models.LikeUserComment) (bool, error)
+		CreateLikeUserComment(ctx context.Context, entity *entities.LikeUserComment) error
+		DeleteLikeUserComment(ctx context.Context, entity *entities.LikeUserComment) error
+		GetLikeUserComment(ctx context.Context, query *query.GetCommentLikeQuery) ([]*entities.User, *response.PagingResponse, error)
+		CheckUserLikeComment(ctx context.Context, entity *entities.LikeUserComment) (bool, error)
 	}
 )
 

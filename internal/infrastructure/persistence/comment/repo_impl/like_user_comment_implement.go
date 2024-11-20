@@ -2,9 +2,10 @@ package repo_impl
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
@@ -19,12 +20,12 @@ func NewLikeUserCommentRepositoryImplement(db *gorm.DB) *rLikeUserComment {
 
 func (r *rLikeUserComment) CreateLikeUserComment(
 	ctx context.Context,
-	likeUserComment *models.LikeUserComment,
+	entity *entities.LikeUserComment,
 ) error {
-	res := r.db.WithContext(ctx).Create(likeUserComment)
-
-	if res.Error != nil {
-		return res.Error
+	if err := r.db.WithContext(ctx).
+		Create(mapper.ToLikeUserCommentModel(entity)).
+		Error; err != nil {
+		return err
 	}
 
 	return nil
@@ -32,12 +33,12 @@ func (r *rLikeUserComment) CreateLikeUserComment(
 
 func (r *rLikeUserComment) DeleteLikeUserComment(
 	ctx context.Context,
-	likeUserComment *models.LikeUserComment,
+	entity *entities.LikeUserComment,
 ) error {
-	res := r.db.WithContext(ctx).Delete(likeUserComment)
-
-	if res.Error != nil {
-		return res.Error
+	if err := r.db.WithContext(ctx).
+		Delete(mapper.ToLikeUserCommentModel(entity)).
+		Error; err != nil {
+		return err
 	}
 
 	return nil
@@ -45,9 +46,8 @@ func (r *rLikeUserComment) DeleteLikeUserComment(
 
 func (r *rLikeUserComment) GetLikeUserComment(
 	ctx context.Context,
-	commentId uuid.UUID,
-	query *query.CommentLikeQueryObject,
-) ([]*models.User, *response.PagingResponse, error) {
+	query *query.GetCommentLikeQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
 
@@ -65,7 +65,7 @@ func (r *rLikeUserComment) GetLikeUserComment(
 	db := r.db.WithContext(ctx).Model(&models.User{})
 
 	err := db.Joins("JOIN like_user_comments ON like_user_comments.user_id = users.id").
-		Where("like_user_comments.comment_id = ?", commentId).
+		Where("like_user_comments.comment_id = ?", query.CommentId).
 		Count(&total).
 		Offset(offset).
 		Limit(limit).
@@ -81,18 +81,23 @@ func (r *rLikeUserComment) GetLikeUserComment(
 		Total: total,
 	}
 
-	return users, pagingResponse, nil
+	var userEntities []*entities.User
+	for _, user := range users {
+		userEntities = append(userEntities, mapper.ToUserEntity(user))
+	}
+
+	return userEntities, pagingResponse, nil
 }
 
 func (r *rLikeUserComment) CheckUserLikeComment(
 	ctx context.Context,
-	likeUserComment *models.LikeUserComment,
+	entity *entities.LikeUserComment,
 ) (bool, error) {
 	var count int64
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.LikeUserComment{}).
-		Where("user_id=? AND comment_id=?", likeUserComment.UserId, likeUserComment.CommentId).
+		Where("user_id=? AND comment_id=?", entity.UserId, entity.CommentId).
 		Count(&count).Error; err != nil {
 	}
 

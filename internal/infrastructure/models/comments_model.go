@@ -21,4 +21,5 @@ type Comment struct {
 	CreatedAt       time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt       gorm.DeletedAt `gorm:"index"`
+	Status          bool           `gorm:"default:true"`
 }

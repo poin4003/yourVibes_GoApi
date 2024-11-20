@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
+	comment_command "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
+	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -35,75 +36,134 @@ func NewCommentLikeImplement(
 
 func (s *sCommentLike) LikeComment(
 	ctx context.Context,
-	likeUserComment *models.LikeUserComment,
-	userId uuid.UUID,
-) (commentDto *response.CommentDto, resultCode int, httpStatusCode int, err error) {
-	commentFound, err := s.commentRepo.GetOneComment(ctx, "id=?", likeUserComment.CommentId)
+	command *comment_command.LikeCommentCommand,
+) (result *comment_command.LikeCommentResult, err error) {
+	result = &comment_command.LikeCommentResult{}
+	// 1. Get comment by id
+	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, pkg_response.ErrDataNotFound, http.StatusBadRequest, err
+			result.Comment = nil
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
 		}
-		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("Error when find comment %w", err.Error())
+		result.Comment = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("Error when find comment %w", err.Error())
 	}
 
-	checkLikeComment, err := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserComment)
+	// 2. Check status of like
+	likeUserCommentEntity, err := comment_entity.NewLikeUserCommentEntity(command.UserId, command.CommentId)
 	if err != nil {
-		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to check like: %w", err)
+		result.Comment = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
+	}
+
+	checkLikeComment, err := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
+	if err != nil {
+		result.Comment = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to check like: %w", err)
 	}
 
 	if !checkLikeComment {
-		if err := s.likeUserCommentRepo.CreateLikeUserComment(ctx, likeUserComment); err != nil {
-			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to create like: %w", err)
+		// 2.1. Create like if not exits
+		if err := s.likeUserCommentRepo.CreateLikeUserComment(ctx, likeUserCommentEntity); err != nil {
+			result.Comment = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, fmt.Errorf("failed to create like: %w", err)
 		}
 
-		commentFound.LikeCount++
+		// 2.2. Plus 1 to like count of comment
+		updateCommentData := comment_entity.CommentUpdate{
+			LikeCount: pointer.Ptr(commentFound.LikeCount + 1),
+		}
 
-		_, err = s.commentRepo.UpdateOneComment(ctx, commentFound.ID, map[string]interface{}{
-			"like_count": commentFound.LikeCount,
-		})
+		err = updateCommentData.ValidateCommentUpdate()
+		if err != nil {
+			result.Comment = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, fmt.Errorf("failed to update comment: %w", err)
+		}
 
-		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &models.LikeUserComment{
-			CommentId: commentFound.ID,
-			UserId:    userId,
-		})
+		_, err = s.commentRepo.UpdateOne(ctx, commentFound.ID, &updateCommentData)
 
-		commentDto = mapper.MapCommentToCommentDto(commentFound, isLiked)
+		// 2. Check like status of authenticated user
+		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		return commentDto, pkg_response.ErrCodeSuccess, http.StatusOK, nil
+		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
+		result.ResultCode = response.ErrCodeSuccess
+		result.HttpStatusCode = http.StatusOK
+		return result, nil
 	} else {
-		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserComment); err != nil {
+		// 3.1. Delete like if it exits
+		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserCommentEntity); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, pkg_response.ErrDataNotFound, http.StatusBadRequest, fmt.Errorf("failed to find delete like: %w", err)
+				result.Comment = nil
+				result.ResultCode = response.ErrDataNotFound
+				result.HttpStatusCode = http.StatusBadRequest
+				return result, fmt.Errorf("failed to find delete like: %w", err)
 			}
-			return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, fmt.Errorf("failed to delete like: %w", err)
+			result.Comment = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, fmt.Errorf("failed to delete like: %w", err)
 		}
 
-		commentFound.LikeCount--
+		// 3.2. Minus 1 of comment like count
+		updateCommentData := comment_entity.CommentUpdate{
+			LikeCount: pointer.Ptr(commentFound.LikeCount - 1),
+		}
 
-		_, err = s.commentRepo.UpdateOneComment(ctx, commentFound.ID, map[string]interface{}{
-			"like_count": commentFound.LikeCount,
-		})
+		err = updateCommentData.ValidateCommentUpdate()
+		if err != nil {
+			result.Comment = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, fmt.Errorf("failed to update comment: %w", err)
+		}
 
-		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, &models.LikeUserComment{
-			CommentId: commentFound.ID,
-			UserId:    userId,
-		})
+		_, err = s.commentRepo.UpdateOne(ctx, commentFound.ID, &updateCommentData)
 
-		commentDto = mapper.MapCommentToCommentDto(commentFound, isLiked)
+		// 3.3. Check like status of authenticated user
+		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		return commentDto, pkg_response.ErrCodeSuccess, http.StatusNoContent, nil
+		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
+		result.ResultCode = response.ErrCodeSuccess
+		result.HttpStatusCode = http.StatusOK
+		return result, nil
 	}
 }
 
 func (s *sCommentLike) GetUsersOnLikeComment(
 	ctx context.Context,
-	commentId uuid.UUID,
-	query *query.CommentLikeQueryObject,
-) (users []*models.User, resultCode int, httpStatusCode int, pkg_responsePaging *pkg_response.PagingResponse, err error) {
-	likeUserComment, paging, err := s.likeUserCommentRepo.GetLikeUserComment(ctx, commentId, query)
+	query *comment_query.GetCommentLikeQuery,
+) (result *comment_query.GetCommentLikeResult, err error) {
+	result = &comment_query.GetCommentLikeResult{}
+	likeUserCommentEntites, paging, err := s.likeUserCommentRepo.GetLikeUserComment(ctx, query)
 	if err != nil {
-		return nil, pkg_response.ErrServerFailed, http.StatusInternalServerError, nil, err
+		result.Users = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		result.PagingResponse = nil
+		return result, err
 	}
 
-	return likeUserComment, pkg_response.ErrCodeSuccess, http.StatusOK, paging, nil
+	var likeUserCommentResults []*common.UserResult
+	for _, likeUserCommentEntity := range likeUserCommentEntites {
+		likeUserCommentResults = append(likeUserCommentResults, mapper.NewUserResultFromEntity(likeUserCommentEntity))
+	}
+
+	result.Users = likeUserCommentResults
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	result.PagingResponse = paging
+	return result, nil
 }

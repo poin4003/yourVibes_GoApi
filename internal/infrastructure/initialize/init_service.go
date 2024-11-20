@@ -1,31 +1,33 @@
 package initialize
 
 import (
+	comment_service "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
+	comment_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
 	post_service "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	post_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
 	user_service "github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	user_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/user/services/implement"
 	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	repo_impl2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
-	repo_impl3 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
-	repo_impl4 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
+	comment_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
+	notification_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
+	post_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
+	user_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
 	"gorm.io/gorm"
 )
 
 func InitServiceInterface(db *gorm.DB) {
 	// 1. Initialize Repository
-	userRepo := repo_impl4.NewUserRepositoryImplement(db)
-	postRepo := repo_impl3.NewPostRepositoryImplement(db)
-	postLikeRepo := repo_impl3.NewLikeUserPostRepositoryImplement(db)
-	mediaRepo := repo_impl3.NewMediaRepositoryImplement(db)
-	settingRepo := repo_impl4.NewSettingRepositoryImplement(db)
-	commentRepo := repo_impl2.NewCommentRepositoryImplement(db)
-	likeUserCommentRepo := repo_impl2.NewLikeUserCommentRepositoryImplement(db)
-	notificationRepo := repo_impl.NewNotificationRepositoryImplement(db)
-	friendRepo := repo_impl4.NewFriendImplement(db)
-	friendRequestRepo := repo_impl4.NewFriendRequestImplement(db)
-	newFeedRepo := repo_impl3.NewNewFeedRepositoryImplement(db)
+	userRepo := user_repo_impl.NewUserRepositoryImplement(db)
+	postRepo := post_repo_impl.NewPostRepositoryImplement(db)
+	postLikeRepo := post_repo_impl.NewLikeUserPostRepositoryImplement(db)
+	mediaRepo := post_repo_impl.NewMediaRepositoryImplement(db)
+	settingRepo := user_repo_impl.NewSettingRepositoryImplement(db)
+	commentRepo := comment_repo_impl.NewCommentRepositoryImplement(db)
+	likeUserCommentRepo := comment_repo_impl.NewLikeUserCommentRepositoryImplement(db)
+	notificationRepo := notification_repo_impl.NewNotificationRepositoryImplement(db)
+	friendRepo := user_repo_impl.NewFriendImplement(db)
+	friendRequestRepo := user_repo_impl.NewFriendRequestImplement(db)
+	newFeedRepo := post_repo_impl.NewNewFeedRepositoryImplement(db)
 
 	comment_repo.InitUserRepository(userRepo)
 	comment_repo.InitPostRepository(postRepo)
@@ -48,8 +50,8 @@ func InitServiceInterface(db *gorm.DB) {
 	postUserService := post_service_impl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo)
 	postLikeService := post_service_impl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
 	postShareService := post_service_impl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
-	//commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
-	//likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
+	commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
+	likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -59,6 +61,6 @@ func InitServiceInterface(db *gorm.DB) {
 	post_service.InitLikeUserPost(postLikeService)
 	post_service.InitPostUser(postUserService)
 	post_service.InitPostShare(postShareService)
-	//comment_service.InitCommentUser(commentUserService)
-	//comment_service.InitCommentLike(likeCommentService)
+	comment_service.InitCommentUser(commentUserService)
+	comment_service.InitCommentLike(likeCommentService)
 }

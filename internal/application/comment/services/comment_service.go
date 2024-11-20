@@ -1,44 +1,49 @@
 package services
 
+import (
+	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+)
+
 type (
-//	ICommentUser interface {
-//		CreateComment(ctx context.Context, commentModel *models.Comment) (comment *models.Comment, resultCode int, httpStatusCode int, err error)
-//		UpdateComment(ctx context.Context, commentId uuid.UUID, updateData map[string]interface{}) (comment *models.Comment, resultCode int, httpStatusCode int, err error)
-//		DeleteComment(ctx context.Context, commentId uuid.UUID) (resultCode int, httpStatusCode int, err error)
-//		GetManyComments(ctx context.Context, query *query.CommentQueryObject, userId uuid.UUID) (commentDtos []*response.CommentDto, resultCode int, httpStatusCode int, pagingResponse *pkg_response.PagingResponse, err error)
-//	}
-//
-//	ICommentLike interface {
-//		LikeComment(ctx context.Context, likeUserComment *models.LikeUserComment, userId uuid.UUID) (commentDto *response.CommentDto, resultCode int, httpStatusCode int, err error)
-//		GetUsersOnLikeComment(ctx context.Context, commentId uuid.UUID, query *query.CommentLikeQueryObject) (users []*models.User, resultCode int, httpStatusCode int, pagingResponse *pkg_response.PagingResponse, err error)
-//	}
+	ICommentUser interface {
+		CreateComment(ctx context.Context, command *command.CreateCommentCommand) (result *command.CreateCommentResult, err error)
+		UpdateComment(ctx context.Context, command *command.UpdateCommentCommand) (result *command.UpdateCommentResult, err error)
+		DeleteComment(ctx context.Context, command *command.DeleteCommentCommand) (result *command.DeleteCommentResult, err error)
+		GetManyComments(ctx context.Context, query *query.GetManyCommentQuery) (result *query.GetManyCommentsResult, err error)
+	}
+	ICommentLike interface {
+		LikeComment(ctx context.Context, command *command.LikeCommentCommand) (result *command.LikeCommentResult, err error)
+		GetUsersOnLikeComment(ctx context.Context, query *query.GetCommentLikeQuery) (result *query.GetCommentLikeResult, err error)
+	}
 )
 
 var (
-// localCommentUser ICommentUser
-// localCommentLike ICommentLike
+	localCommentUser ICommentUser
+	localCommentLike ICommentLike
 )
 
-//func CommentUser() ICommentUser {
-//	if localCommentUser == nil {
-//		panic("repository_implement localCommentUser not found for interface ICommentUser")
-//	}
-//
-//	return localCommentUser
-//}
-//
-//func CommentLike() ICommentLike {
-//	if localCommentLike == nil {
-//		panic("repository_implement localCommentLike not found for interface ICommentLike")
-//	}
-//
-//	return localCommentLike
-//}
-//
-//func InitCommentUser(i ICommentUser) {
-//	localCommentUser = i
-//}
-//
-//func InitCommentLike(i ICommentLike) {
-//	localCommentLike = i
-//}
+func CommentUser() ICommentUser {
+	if localCommentUser == nil {
+		panic("repository_implement localCommentUser not found for interface ICommentUser")
+	}
+
+	return localCommentUser
+}
+
+func CommentLike() ICommentLike {
+	if localCommentLike == nil {
+		panic("repository_implement localCommentLike not found for interface ICommentLike")
+	}
+
+	return localCommentLike
+}
+
+func InitCommentUser(i ICommentUser) {
+	localCommentUser = i
+}
+
+func InitCommentLike(i ICommentLike) {
+	localCommentLike = i
+}
