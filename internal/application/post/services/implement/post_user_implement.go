@@ -258,7 +258,7 @@ func (s *sPostUser) UpdatePost(
 		Location: command.Location,
 	}
 
-	updatePost, err := post_entity.NewPostUpdate(updateData)
+	err = updateData.ValidatePostUpdate()
 	if err != nil {
 		result.Post = nil
 		result.ResultCode = response.ErrServerFailed
@@ -266,7 +266,7 @@ func (s *sPostUser) UpdatePost(
 		return result, err
 	}
 
-	postEntity, err := s.postRepo.UpdateOne(ctx, *command.PostId, updatePost)
+	postEntity, err := s.postRepo.UpdateOne(ctx, *command.PostId, updateData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil

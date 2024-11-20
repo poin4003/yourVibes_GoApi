@@ -72,25 +72,6 @@ func NewPost(
 	return post, nil
 }
 
-func NewPostUpdate(
-	updateData *PostUpdate,
-) (*PostUpdate, error) {
-	postUpdate := &PostUpdate{
-		Content:         updateData.Content,
-		Privacy:         updateData.Privacy,
-		Location:        updateData.Location,
-		LikeCount:       updateData.LikeCount,
-		CommentCount:    updateData.CommentCount,
-		IsAdvertisement: updateData.IsAdvertisement,
-		Status:          updateData.Status,
-	}
-	if err := postUpdate.ValidatePostUpdate(); err != nil {
-		return nil, err
-	}
-
-	return postUpdate, nil
-}
-
 func NewPostForShare(
 	userId uuid.UUID,
 	content string,
