@@ -257,10 +257,11 @@ func (c *cUserFriend) UnFriend(ctx *gin.Context) {
 // @Summary Get a list of friend
 // @Description Get a list of friend
 // @Tags user_friend
+// @Param user_id path string true "User id you want to get a friend list"
 // @Param limit query int false "limit on page"
 // @Param page query int false "current page"
 // @Security ApiKeyAuth
-// @Router /users/friends/ [get]
+// @Router /users/friends/{user_id} [get]
 func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 	// 1. Validate and get query object from query
 	var query query.FriendQueryObject
@@ -270,15 +271,16 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 		return
 	}
 
-	// 2. Get user id claim from jwt
-	userIdClaim, err := extensions.GetUserID(ctx)
+	// 2. Get user id from param
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 3. Call services
-	friendQuery, err := query.ToFriendQuery(userIdClaim)
+	friendQuery, err := query.ToFriendQuery(userId)
 
 	result, err := services.UserFriend().GetFriends(ctx, friendQuery)
 	if err != nil {

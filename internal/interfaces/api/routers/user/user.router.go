@@ -49,6 +49,6 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.POST("/friends/friend_response/:friend_id", UserFriendController.AcceptFriendRequest)
 		userRouterPrivate.DELETE("/friends/friend_response/:friend_id", UserFriendController.RejectFriendRequest)
 		userRouterPrivate.DELETE("/friends/:friend_id", UserFriendController.UnFriend)
-		userRouterPrivate.GET("/friends/", UserFriendController.GetFriends)
+		userRouterPrivate.GET("/friends/:user_id", UserFriendController.GetFriends)
 	}
 }

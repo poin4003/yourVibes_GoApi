@@ -555,15 +555,7 @@ paths:
         type: integer
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get a list of users
@@ -617,15 +609,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Update user information
@@ -644,38 +628,12 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get user by ID
       tags:
       - user_info
-  /users/friends/:
-    get:
-      description: Get a list of friend
-      parameters:
-      - description: limit on page
-        in: query
-        name: limit
-        type: integer
-      - description: current page
-        in: query
-        name: page
-        type: integer
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get a list of friend
-      tags:
-      - user_friend
   /users/friends/{friend_id}/:
     delete:
       description: unfriend
@@ -689,6 +647,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: unfriend
+      tags:
+      - user_friend
+  /users/friends/{user_id}:
+    get:
+      description: Get a list of friend
+      parameters:
+      - description: User id you want to get a friend list
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of friend
       tags:
       - user_friend
   /users/friends/friend_request:

@@ -718,20 +718,7 @@ const docTemplate = `{
                         "in": "query"
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             },
             "patch": {
                 "security": [
@@ -810,48 +797,6 @@ const docTemplate = `{
                         "description": "Setting language ",
                         "name": "language_setting",
                         "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/friends/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of friend",
-                "tags": [
-                    "user_friend"
-                ],
-                "summary": "Get a list of friend",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "limit on page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "current page",
-                        "name": "page",
-                        "in": "query"
                     }
                 ],
                 "responses": {}
@@ -997,6 +942,42 @@ const docTemplate = `{
                         "name": "friend_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/users/friends/{user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of friend",
+                "tags": [
+                    "user_friend"
+                ],
+                "summary": "Get a list of friend",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User id you want to get a friend list",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {}
@@ -1330,20 +1311,7 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         }
     },
