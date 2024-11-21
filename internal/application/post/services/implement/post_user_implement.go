@@ -464,7 +464,7 @@ func (s *sPostUser) GetPost(
 	result = &post_query.GetOnePostQueryResult{}
 
 	// 1. Get post
-	postEntity, err := s.postRepo.GetOne(ctx, "id=?", query.PostId)
+	postEntity, err := s.postRepo.GetById(ctx, query.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil
