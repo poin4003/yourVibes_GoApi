@@ -9,8 +9,9 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 	"strconv"
 )
@@ -39,13 +40,13 @@ func NewNotificationController() *cNotification {
 func (c *cNotification) SendNotification(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	userId := ctx.Param("user_id")
 	if _, err := uuid.Parse(userId); err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		conn.Close()
 		return
 	}
@@ -89,28 +90,35 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /users/notifications [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
+	// 1. Get query
 	var query query.NotificationQueryObject
-
 	if err := ctx.ShouldBindQuery(&query); err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// 2. Get user id from param
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	// 3. Call service to handle get many
 	getManyNotificationQuery, err := query.ToGetManyNotificationQuery(userIdClaim)
-
 	result, err := services.UserNotification().GetNotificationByUserId(ctx, getManyNotificationQuery)
 	if err != nil {
-		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, result.Notifications, *result.PagingResponse)
+	// 4. Map to dto
+	var notificationDtos []*response.NotificationDto
+	for _, notificationResult := range result.Notifications {
+		notificationDtos = append(notificationDtos, response.ToNotificationDto(notificationResult))
+	}
+
+	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, notificationDtos, *result.PagingResponse)
 }
 
 // UpdateOneStatusNotifications Update status of notification to false
@@ -124,24 +132,25 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /users/notifications/{notification_id} [patch]
 func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
+	// 1. Get notification id from param
 	notificationIdStr := ctx.Param("notification_id")
 	notificationID, err := strconv.ParseUint(notificationIdStr, 10, 32)
 	if err != nil {
-		response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, "Invalid notification id")
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, "Invalid notification id")
 		return
 	}
 
+	// 2. Call service to handle update status notification
 	updateOneStatusNotificationCommand := &command.UpdateOneStatusNotificationCommand{
 		NotificationId: uint(notificationID),
 	}
-
 	result, err := services.UserNotification().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
 
 // UpdateManyStatusNotifications Update all status of notification to false
@@ -154,21 +163,22 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /users/notifications/ [patch]
 func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
+	// 1. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	updatemanyStatusNotificationCommand := &command.UpdateManyStatusNotificationCommand{
+	// 2. Call service to handle update many status by userid
+	updateManyStatusNotificationCommand := &command.UpdateManyStatusNotificationCommand{
 		UserId: userIdClaim,
 	}
-
-	result, err := services.UserNotification().UpdateManyStatusNotification(ctx, updatemanyStatusNotificationCommand)
+	result, err := services.UserNotification().UpdateManyStatusNotification(ctx, updateManyStatusNotificationCommand)
 	if err != nil {
-		response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

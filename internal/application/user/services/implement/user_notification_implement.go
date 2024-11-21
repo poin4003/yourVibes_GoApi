@@ -3,6 +3,7 @@ package implement
 import (
 	"context"
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
@@ -32,6 +33,7 @@ func (s *sUserNotification) GetNotificationByUserId(
 	query *user_query.GetManyNotificationQuery,
 ) (result *user_query.GetManyNotificationQueryResult, err error) {
 	result = &user_query.GetManyNotificationQueryResult{}
+	// 1. Get notification
 	notificationEntities, paging, err := s.notificationRepo.GetMany(ctx, query)
 	if err != nil {
 		result.Notifications = nil
@@ -40,10 +42,13 @@ func (s *sUserNotification) GetNotificationByUserId(
 		return result, err
 	}
 
-	for i, notificationResult := range notificationEntities {
-		result.Notifications[i] = *mapper.NewNotificationResult(notificationResult)
+	// 2. Map to result
+	var notificationResults []*common.NotificationResult
+	for _, notificationEntity := range notificationEntities {
+		notificationResults = append(notificationResults, mapper.NewNotificationResult(notificationEntity))
 	}
 
+	result.Notifications = notificationResults
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	result.PagingResponse = paging

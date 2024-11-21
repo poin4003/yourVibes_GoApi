@@ -19,7 +19,7 @@ type GetManyNotificationQuery struct {
 }
 
 type GetManyNotificationQueryResult struct {
-	Notifications  []common.NotificationResult
+	Notifications  []*common.NotificationResult
 	ResultCode     int
 	HttpStatusCode int
 	PagingResponse *response.PagingResponse
