@@ -3,8 +3,8 @@ package user_auth
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
-	auth_mapper "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/response"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
@@ -106,10 +106,10 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 		return
 	}
 
-	userResponse := auth_mapper.ToUserWithSettingResponse(result.User)
+	userDto := response.ToUserWithSettingDto(result.User)
 
 	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{
 		"access_token": result.AccessToken,
-		"user":         userResponse,
+		"user":         userDto,
 	})
 }
