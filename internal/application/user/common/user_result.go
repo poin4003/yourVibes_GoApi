@@ -56,8 +56,8 @@ type UserWithoutSettingResult struct {
 }
 
 type UserShortVerResult struct {
-	ID         uuid.UUID `json:"id"`
-	FamilyName string    `json:"family_name"`
-	Name       string    `json:"name"`
-	AvatarUrl  string    `json:"avatar_url"`
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
 }

@@ -670,15 +670,7 @@ paths:
         in: query
         name: page
         type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get a list of friend
@@ -693,15 +685,7 @@ paths:
         name: friend_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: unfriend
@@ -719,15 +703,7 @@ paths:
         in: query
         name: page
         type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get a list of friend request
@@ -742,15 +718,7 @@ paths:
         name: friend_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Undo add friend request
@@ -764,15 +732,7 @@ paths:
         name: friend_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Send add friend request
@@ -787,15 +747,7 @@ paths:
         name: friend_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Reject friend request
@@ -809,15 +761,7 @@ paths:
         name: friend_id
         required: true
         type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Accept friend request

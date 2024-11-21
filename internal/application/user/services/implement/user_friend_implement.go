@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notification_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
@@ -201,11 +202,12 @@ func (s *sUserFriend) GetFriendRequests(
 	}
 
 	// 2. Map userModel to userDtoShortVer
-	for i, userEntity := range userEntities {
-		userResult := user_mapper.NewUserShortVerEntity(userEntity)
-		result.Users[i] = *userResult
+	var userResults []*common.UserShortVerResult
+	for _, userEntity := range userEntities {
+		userResults = append(userResults, mapper.NewUserShortVerEntity(userEntity))
 	}
 
+	result.Users = userResults
 	result.PagingResponse = paging
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
@@ -322,22 +324,22 @@ func (s *sUserFriend) AcceptFriendRequest(
 
 	// 7. Send realtime notification (websocket)
 	userSocketResponse := &consts.UserSocketResponse{
-		ID:         friendFound.ID,
-		FamilyName: friendFound.FamilyName,
-		Name:       friendFound.Name,
-		AvatarUrl:  friendFound.AvatarUrl,
+		ID:         userFound.ID,
+		FamilyName: userFound.FamilyName,
+		Name:       userFound.Name,
+		AvatarUrl:  userFound.AvatarUrl,
 	}
 
 	notificationSocketResponse := &consts.NotificationSocketResponse{
-		From:             userFound.FamilyName + " " + userFound.Name,
-		FromUrl:          userFound.AvatarUrl,
-		UserId:           friendFound.ID,
+		From:             friendFound.FamilyName + " " + friendFound.Name,
+		FromUrl:          friendFound.AvatarUrl,
+		UserId:           userFound.ID,
 		User:             *userSocketResponse,
 		NotificationType: consts.FRIEND_REQUEST,
-		ContentId:        (userFound.ID).String(),
+		ContentId:        (friendFound.ID).String(),
 	}
 
-	err = global.SocketHub.SendNotification(friendFound.ID.String(), notificationSocketResponse)
+	err = global.SocketHub.SendNotification(userFound.ID.String(), notificationSocketResponse)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
@@ -461,11 +463,13 @@ func (s *sUserFriend) GetFriends(
 		return result, fmt.Errorf("Failed to get friends: %w", err)
 	}
 
-	// 2. Map userModel to userDtoShortVer
-	for i, userEntity := range userEntities {
-		result.Users[i] = *user_mapper.NewUserShortVerEntity(userEntity)
+	// 2. Map userModel to userResultShortVer
+	var userResults []*common.UserShortVerResult
+	for _, userEntity := range userEntities {
+		userResults = append(userResults, mapper.NewUserShortVerEntity(userEntity))
 	}
 
+	result.Users = userResults
 	result.PagingResponse = paging
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK

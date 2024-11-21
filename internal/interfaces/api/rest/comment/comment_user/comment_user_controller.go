@@ -1,7 +1,6 @@
 package comment_user
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
@@ -185,6 +184,5 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	// 4. Map to dto
 	commentDto := response.ToCommentDto(result.Comment)
 
-	fmt.Println("cc")
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, commentDto)
 }
