@@ -10,6 +10,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
 	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	comment_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/validator"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -201,7 +202,16 @@ func (s *sCommentUser) CreateComment(
 		return result, fmt.Errorf("Error when update post %w", err.Error())
 	}
 
-	result.Comment = mapper.NewCommentResultFromEntity(newComment)
+	// 6. Validate comment after create
+	validateComment, err := comment_validator.NewValidatedComment(newComment)
+	if err != nil {
+		result.Comment = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to validate comment: %w", err)
+	}
+
+	result.Comment = mapper.NewCommentResultFromValidateEntity(validateComment)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

@@ -176,16 +176,15 @@ func (s *sUserInfo) UpdateUser(
 		Biography:   command.Biography,
 	}
 
-	newUserUpdateEntity, err := user_entity.NewUserUpdate(updateUserEntity)
-
+	err = updateUserEntity.ValidateUserUpdate()
 	if err != nil {
 		result.User = nil
-		result.ResultCode = response.ErrCodeValidate
-		result.HttpStatusCode = http.StatusBadRequest
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
-	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, newUserUpdateEntity)
+	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.User = nil

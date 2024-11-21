@@ -231,7 +231,7 @@ func (s *sPostUser) CreatePost(
 		}
 	}
 
-	// 6. Validate post
+	// 6. Validate post after create
 	validatePost, err := post_validator.NewValidatedPost(postEntity)
 	if err != nil {
 		result.Post = nil
@@ -433,14 +433,14 @@ func (s *sPostUser) DeletePost(
 
 	userUpdateEntity := &user_entity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}
 
-	newUserUpdateEntity, err := user_entity.NewUserUpdate(userUpdateEntity)
+	err = userUpdateEntity.ValidateUserUpdate()
 	if err != nil {
-		result.ResultCode = response.ErrCodeValidate
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("failed to validate: %w", err)
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, newUserUpdateEntity)
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound

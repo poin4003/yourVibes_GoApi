@@ -14,6 +14,7 @@ import (
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -303,11 +304,48 @@ func (s *sUserFriend) AcceptFriendRequest(
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
-		return result, fmt.Errorf("Failed to delete friend request: %w", err)
+		return result, fmt.Errorf("failed to delete friend request: %w", err)
 	}
 
-	// 6. Push notification to user
-	notificationModel := &notification_entity.Notification{
+	// 6. Plus +1 to friend count for user and friend
+	updateUserData := &user_entity.UserUpdate{
+		FriendCount: pointer.Ptr(userFound.FriendCount + 1),
+	}
+
+	updateFriendData := &user_entity.UserUpdate{
+		FriendCount: pointer.Ptr(friendFound.FriendCount + 1),
+	}
+
+	err = updateUserData.ValidateUserUpdate()
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	err = updateFriendData.ValidateUserUpdate()
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update friend: %w", err)
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, friendFound.ID, updateFriendData)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update friend: %w", err)
+	}
+
+	// 7. Push notification to user
+	notificationEntity := &notification_entity.Notification{
 		From:             friendFound.FamilyName + " " + friendFound.Name,
 		FromUrl:          friendFound.AvatarUrl,
 		UserId:           userFound.ID,
@@ -315,14 +353,14 @@ func (s *sUserFriend) AcceptFriendRequest(
 		ContentId:        (friendFound.ID).String(),
 	}
 
-	_, err = s.notificationRepo.CreateOne(ctx, notificationModel)
+	_, err = s.notificationRepo.CreateOne(ctx, notificationEntity)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("Failed to add notification: %w", err)
 	}
 
-	// 7. Send realtime notification (websocket)
+	// 8. Send realtime notification (websocket)
 	userSocketResponse := &consts.UserSocketResponse{
 		ID:         userFound.ID,
 		FamilyName: userFound.FamilyName,
@@ -346,7 +384,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 		return result, fmt.Errorf("Failed to send notification: %w", err)
 	}
 
-	// 8. Response success
+	// 9. Response success
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
@@ -412,13 +450,13 @@ func (s *sUserFriend) UnFriend(
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
-		return result, fmt.Errorf("Failed to check friend: %w", err)
+		return result, fmt.Errorf("failed to check friend: %w", err)
 	}
 
 	if !friendCheck {
 		result.ResultCode = response.ErrFriendNotExist
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("Friend is not exist: %w", err)
+		return result, fmt.Errorf("friend is not exist: %w", err)
 	}
 
 	// 2. Remove friend
@@ -426,7 +464,7 @@ func (s *sUserFriend) UnFriend(
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
-		return result, fmt.Errorf("Failed to delete friend: %w", err)
+		return result, fmt.Errorf("failed to delete friend: %w", err)
 	}
 
 	friendEntityForFriend, err := user_entity.NewFriend(command.FriendId, command.UserId)
@@ -440,7 +478,58 @@ func (s *sUserFriend) UnFriend(
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		result.HttpStatusCode = http.StatusInternalServerError
-		return result, fmt.Errorf("Failed to delete friend: %w", err)
+		return result, fmt.Errorf("failed to delete friend: %w", err)
+	}
+
+	// 3. Minus -1 to friend count of user and friend
+	userFound, err := s.userRepo.GetById(ctx, command.UserId)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	friendFound, err := s.userRepo.GetById(ctx, friendEntityForFriend.UserId)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to get friend: %w", err)
+	}
+
+	updateUserData := &user_entity.UserUpdate{
+		FriendCount: pointer.Ptr(userFound.FriendCount - 1),
+	}
+
+	updateFriendData := &user_entity.UserUpdate{
+		FriendCount: pointer.Ptr(friendFound.FriendCount - 1),
+	}
+
+	err = updateUserData.ValidateUserUpdate()
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	err = updateFriendData.ValidateUserUpdate()
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update friend: %w", err)
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, friendFound.ID, updateFriendData)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to update friend: %w", err)
 	}
 
 	result.ResultCode = response.ErrCodeSuccess

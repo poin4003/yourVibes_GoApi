@@ -3,7 +3,14 @@ package mapper
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	comment_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/validator"
 )
+
+func NewCommentResultFromValidateEntity(
+	comment *comment_validator.ValidatedComment,
+) *common.CommentResult {
+	return NewCommentResultFromEntity(&comment.Comment)
+}
 
 func NewCommentResultFromEntity(
 	comment *entities.Comment,

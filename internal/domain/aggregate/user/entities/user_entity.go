@@ -91,32 +91,3 @@ func NewUser(
 
 	return user, nil
 }
-
-func NewUserUpdate(
-	updateData *UserUpdate,
-) (*UserUpdate, error) {
-	userUpdate := &UserUpdate{
-		FamilyName:   updateData.FamilyName,
-		Name:         updateData.Name,
-		Email:        updateData.Email,
-		Password:     updateData.Password,
-		PhoneNumber:  updateData.PhoneNumber,
-		Birthday:     updateData.Birthday,
-		AvatarUrl:    updateData.AvatarUrl,
-		CapwallUrl:   updateData.CapwallUrl,
-		Privacy:      updateData.Privacy,
-		Biography:    updateData.Biography,
-		AuthType:     updateData.AuthType,
-		AuthGoogleId: updateData.AuthGoogleId,
-		PostCount:    updateData.PostCount,
-		FriendCount:  updateData.FriendCount,
-		Status:       updateData.Status,
-		UpdatedAt:    updateData.UpdatedAt,
-	}
-
-	if err := userUpdate.ValidateUserUpdate(); err != nil {
-		return nil, err
-	}
-
-	return userUpdate, nil
-}
