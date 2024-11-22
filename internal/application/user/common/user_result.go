@@ -16,6 +16,7 @@ type UserWithSettingResult struct {
 	AvatarUrl   string
 	CapwallUrl  string
 	Privacy     consts.PrivacyLevel
+	AuthType    consts.AuthType
 	Biography   string
 	PostCount   int
 	FriendCount int
@@ -45,8 +46,6 @@ type UserWithoutSettingResult struct {
 	CapwallUrl   string
 	Privacy      consts.PrivacyLevel
 	Biography    string
-	AuthType     string
-	AuthGoogleId string
 	PostCount    int
 	FriendCount  int
 	Status       bool

@@ -13,6 +13,7 @@ type Bill struct {
 	Price       float64        `gorm:"type:decimal(10,2);default:0.0"`
 	Vat         float64        `gorm:"type:decimal(10,2);default:0.0"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 	Status      bool           `gorm:"default:true"`
 }

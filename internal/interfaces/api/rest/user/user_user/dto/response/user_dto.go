@@ -18,8 +18,6 @@ type UserWithoutSettingDto struct {
 	CapwallUrl   string              `json:"capwall_url"`
 	Privacy      consts.PrivacyLevel `json:"privacy"`
 	Biography    string              `json:"biography"`
-	AuthType     consts.AuthType     `json:"auth_type"`
-	AuthGoogleId string              `json:"auth_google_id"`
 	PostCount    int                 `json:"post_count"`
 	FriendCount  int                 `json:"friend_count"`
 	Status       bool                `json:"status"`
@@ -45,6 +43,7 @@ type UserWithSettingDto struct {
 	AvatarUrl   string              `json:"avatar_url"`
 	CapwallUrl  string              `json:"capwall_url"`
 	Privacy     consts.PrivacyLevel `json:"privacy"`
+	AuthType    consts.AuthType     `json:"auth_type"`
 	Biography   string              `json:"biography"`
 	PostCount   int                 `json:"post_count"`
 	FriendCount int                 `json:"friend_count"`
@@ -78,21 +77,22 @@ func ToUserWithoutSettingDto(
 	userResult *common.UserWithoutSettingResult,
 ) *UserWithoutSettingDto {
 	return &UserWithoutSettingDto{
-		ID:          userResult.ID,
-		FamilyName:  userResult.FamilyName,
-		Name:        userResult.Name,
-		Email:       userResult.Email,
-		PhoneNumber: userResult.PhoneNumber,
-		Birthday:    userResult.Birthday,
-		AvatarUrl:   userResult.AvatarUrl,
-		CapwallUrl:  userResult.CapwallUrl,
-		Privacy:     userResult.Privacy,
-		Biography:   userResult.Biography,
-		PostCount:   userResult.PostCount,
-		FriendCount: userResult.FriendCount,
-		Status:      userResult.Status,
-		CreatedAt:   userResult.CreatedAt,
-		UpdatedAt:   userResult.UpdatedAt,
+		ID:           userResult.ID,
+		FamilyName:   userResult.FamilyName,
+		Name:         userResult.Name,
+		Email:        userResult.Email,
+		PhoneNumber:  userResult.PhoneNumber,
+		Birthday:     userResult.Birthday,
+		AvatarUrl:    userResult.AvatarUrl,
+		CapwallUrl:   userResult.CapwallUrl,
+		Privacy:      userResult.Privacy,
+		Biography:    userResult.Biography,
+		PostCount:    userResult.PostCount,
+		FriendCount:  userResult.FriendCount,
+		Status:       userResult.Status,
+		FriendStatus: userResult.FriendStatus,
+		CreatedAt:    userResult.CreatedAt,
+		UpdatedAt:    userResult.UpdatedAt,
 	}
 }
 
@@ -109,6 +109,7 @@ func ToUserWithSettingDto(
 		AvatarUrl:   userResult.AvatarUrl,
 		CapwallUrl:  userResult.CapwallUrl,
 		Privacy:     userResult.Privacy,
+		AuthType:    userResult.AuthType,
 		Biography:   userResult.Biography,
 		PostCount:   userResult.PostCount,
 		FriendCount: userResult.FriendCount,

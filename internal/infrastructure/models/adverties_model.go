@@ -10,7 +10,6 @@ type Advertise struct {
 	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
 	PostId    uuid.UUID      `gorm:"type:uuid;not null"`
 	Post      Post           `gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	TotalView int            `gorm:"type:int;default:0"`
 	StartDate time.Time      `gorm:"not null"`
 	EndDate   time.Time      `gorm:"not null"`
 	CreatedAt time.Time      `gorm:"autoCreateTime"`
