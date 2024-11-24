@@ -1,74 +1,76 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 )
 
 type Notification struct {
-	ID               uint                    `validated:"omitempty"`
-	From             string                  `validated:"required,min=2"`
-	FromUrl          string                  `validated:"required,url"`
-	UserId           uuid.UUID               `validated:"required,uuid4"`
-	User             *User                   `validated:"required"`
-	NotificationType consts.NotificationType `validated:"required,notification_type"`
-	ContentId        string                  `validated:"required,min=2"`
-	Content          string                  `validated:"required,min=2"`
-	Status           bool                    `validated:"required"`
-	CreatedAt        time.Time               `validated:"required"`
-	UpdatedAt        time.Time               `validated:"required,gtefield=CreatedAt"`
+	ID               uint
+	From             string
+	FromUrl          string
+	UserId           uuid.UUID
+	User             *User
+	NotificationType consts.NotificationType
+	ContentId        string
+	Content          string
+	Status           bool
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type NotificationUpdate struct {
-	From             *string                  `validated:"omitempty,min=2"`
-	FromUrl          *string                  `validated:"omitempty,url"`
-	NotificationType *consts.NotificationType `validated:"omitempty,notification_type"`
-	ContentId        *string                  `validated:"omitempty,min=2"`
-	Content          *string                  `validated:"omitempty,min=2"`
-	Status           *bool                    `validated:"omitempty"`
-	UpdatedAt        *time.Time               `validated:"omitempty,gtefield=CreatedAt"`
+	From             *string
+	FromUrl          *string
+	NotificationType *consts.NotificationType
+	ContentId        *string
+	Content          *string
+	Status           *bool
+	UpdatedAt        *time.Time
 }
 
-func (n *Notification) Validate() error {
-	validate := validator.New()
-	validate.RegisterValidation("notification_type", func(fl validator.FieldLevel) bool {
-		notificationType := consts.NotificationType(fl.Field().String())
-		switch notificationType {
-		case consts.NEW_POST,
-			consts.NEW_COMMENT,
-			consts.LIKE_POST,
-			consts.LIKE_COMMENT,
-			consts.NEW_SHARE,
-			consts.FRIEND_REQUEST,
-			consts.ACCEPT_FRIEND_REQUEST:
-			return true
-		default:
-			return false
-		}
-	})
-	return validate.Struct(n)
+func (n *Notification) ValidateNotification() error {
+	return validation.ValidateStruct(n,
+		validation.Field(&n.From, validation.Required, validation.Length(2, 255)),
+		validation.Field(&n.FromUrl, validation.Required, is.URL),
+		validation.Field(&n.UserId, validation.Required),
+		validation.Field(&n.User, validation.Required),
+		validation.Field(&n.NotificationType, validation.Required, validation.By(validateNotificationType)),
+		validation.Field(&n.ContentId, validation.Required, validation.Length(2, 255)),
+		validation.Field(&n.Content, validation.Required, validation.Length(2, 255)),
+		validation.Field(&n.Status, validation.Required),
+		validation.Field(&n.CreatedAt, validation.Required),
+		validation.Field(&n.UpdatedAt, validation.Required, validation.Min(n.CreatedAt)),
+	)
 }
 
 func (n *NotificationUpdate) ValidateNotificationUpdate() error {
-	validate := validator.New()
-	validate.RegisterValidation("notification_type", func(fl validator.FieldLevel) bool {
-		notificationType := consts.NotificationType(fl.Field().String())
-		switch notificationType {
-		case consts.NEW_POST,
-			consts.NEW_COMMENT,
-			consts.LIKE_POST,
-			consts.LIKE_COMMENT,
-			consts.NEW_SHARE,
-			consts.FRIEND_REQUEST,
-			consts.ACCEPT_FRIEND_REQUEST:
-			return true
-		default:
-			return false
-		}
-	})
-	return validate.Struct(n)
+	return validation.ValidateStruct(n,
+		validation.Field(&n.From, validation.Length(2, 0)),
+		validation.Field(&n.FromUrl, is.URL),
+		validation.Field(&n.NotificationType, validation.By(validateNotificationType)),
+		validation.Field(&n.ContentId, validation.Length(2, 0)),
+		validation.Field(&n.Content, validation.Length(2, 0)),
+	)
+}
+
+func validateNotificationType(value interface{}) error {
+	notificationType, ok := value.(consts.NotificationType)
+	if !ok {
+		return fmt.Errorf("invalid notification type")
+	}
+
+	switch notificationType {
+	case consts.NEW_POST, consts.NEW_COMMENT, consts.LIKE_POST, consts.LIKE_COMMENT,
+		consts.NEW_SHARE, consts.FRIEND_REQUEST, consts.ACCEPT_FRIEND_REQUEST:
+		return nil
+	default:
+		return fmt.Errorf("invalid notification type: %v", notificationType)
+	}
 }
 
 func NewNotification(
@@ -90,7 +92,7 @@ func NewNotification(
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
-	if err := notification.Validate(); err != nil {
+	if err := notification.ValidateNotification(); err != nil {
 		return nil, err
 	}
 

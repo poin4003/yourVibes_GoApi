@@ -50,7 +50,7 @@ type UserUpdate struct {
 	UpdatedAt    *time.Time
 }
 
-func (u *User) Validate() error {
+func (u *User) ValidateUser() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
 		validation.Field(&u.Name, validation.Required, validation.Length(2, 255)),
@@ -73,6 +73,7 @@ func (u *User) Validate() error {
 
 func (u *UserUpdate) ValidateUserUpdate() error {
 	return validation.ValidateStruct(u,
+		validation.Field(&u.FamilyName, validation.Length(2, 255)),
 		validation.Field(&u.Name, validation.Length(2, 255)),
 		validation.Field(&u.Email, is.Email),
 		validation.Field(&u.Password, validation.Length(8, 255)),
@@ -115,7 +116,7 @@ func NewUser(
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if err := user.Validate(); err != nil {
+	if err := user.ValidateUser(); err != nil {
 		return nil, err
 	}
 

@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 )
 
@@ -10,9 +10,11 @@ type Friend struct {
 	FriendId uuid.UUID `validate:"required,uuid4"`
 }
 
-func (f *Friend) Validate() error {
-	validate := validator.New()
-	return validate.Struct(f)
+func (f *Friend) ValidateFriend() error {
+	return validation.ValidateStruct(f,
+		validation.Field(&f.UserId, validation.Required),
+		validation.Field(&f.FriendId, validation.Required),
+	)
 }
 
 func NewFriend(
@@ -23,7 +25,7 @@ func NewFriend(
 		UserId:   userId,
 		FriendId: friendId,
 	}
-	if err := newFriend.Validate(); err != nil {
+	if err := newFriend.ValidateFriend(); err != nil {
 		return nil, err
 	}
 

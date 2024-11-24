@@ -80,21 +80,28 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 // @Router       /users/ [get]
 func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 	// 1. Get query
-	var query query.UserQueryObject
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
-	// 2. Call service to handle get many
-	getManyUserQuery, err := query.ToGetManyUserQuery()
+	// 2. Convert to userQueryObject
+	userQueryObject, ok := queryInput.(*query.UserQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle get many
+	getManyUserQuery, err := userQueryObject.ToGetManyUserQuery()
 	result, err := services.UserInfo().GetManyUsers(ctx, getManyUserQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 3. Map to dto
+	// 4. Map to dto
 	var userDtos []*response.UserShortVerDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
@@ -123,47 +130,54 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 // @Router       /users/ [patch]
 func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	// 1. Get body from form
-	var updateInput request.UpdateUserRequest
-	if err := ctx.ShouldBind(&updateInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
-	// 2. Get user id from token
+	// 2. Convert to updateUserRequest
+	updateUserRequest, ok := body.(*request.UpdateUserRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// 3. Get avatar and capwall from body
+	// 4. Get avatar and capwall from body
 	var openFileAvatar multipart.File
 	var openFileCapwall multipart.File
 
-	if updateInput.Avatar.Size != 0 {
-		openFileAvatar, err = updateInput.Avatar.Open()
+	if updateUserRequest.Avatar.Size != 0 {
+		openFileAvatar, err = updateUserRequest.Avatar.Open()
 		if err != nil {
 			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	if updateInput.Capwall.Size != 0 {
-		openFileCapwall, err = updateInput.Capwall.Open()
+	if updateUserRequest.Capwall.Size != 0 {
+		openFileCapwall, err = updateUserRequest.Capwall.Open()
 		if err != nil {
 			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	// 4. Call service to handle update user
-	updateUserCommand, err := updateInput.ToUpdateUserCommand(userIdClaim, openFileAvatar, openFileCapwall)
+	// 5. Call service to handle update user
+	updateUserCommand, err := updateUserRequest.ToUpdateUserCommand(userIdClaim, openFileAvatar, openFileCapwall)
 	result, err := services.UserInfo().UpdateUser(ctx, updateUserCommand)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 	}
 
-	// 5. Map to dto
+	// 6. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)

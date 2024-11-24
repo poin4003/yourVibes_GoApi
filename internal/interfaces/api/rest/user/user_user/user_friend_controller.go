@@ -109,30 +109,36 @@ func (c *cUserFriend) UndoFriendRequest(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /users/friends/friend_request [get]
 func (c *cUserFriend) GetFriendRequests(ctx *gin.Context) {
-	// 1. Validate and get query object from query
-	var query query.FriendRequestQueryObject
-
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
-	// 2. Get user id claim from jwt
+	// 2. Convert to userQueryObject
+	friendRequestQueryObject, ok := queryInput.(*query.FriendRequestQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// 3. Call services
-	friendRequestQuery, err := query.ToFriendRequestQuery(userIdClaim)
+	// 4. Call services
+	friendRequestQuery, err := friendRequestQueryObject.ToFriendRequestQuery(userIdClaim)
 	result, err := services.UserFriend().GetFriendRequests(ctx, friendRequestQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 4. Map to dto
+	// 5. Map to dto
 	var userDtos []*response.UserShortVerDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
@@ -263,15 +269,21 @@ func (c *cUserFriend) UnFriend(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /users/friends/{user_id} [get]
 func (c *cUserFriend) GetFriends(ctx *gin.Context) {
-	// 1. Validate and get query object from query
-	var query query.FriendQueryObject
-
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
-	// 2. Get user id from param
+	// 2. Convert to userQueryObject
+	friendQueryObject, ok := queryInput.(*query.FriendQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get user id from param
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
@@ -279,8 +291,8 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Call services
-	friendQuery, err := query.ToFriendQuery(userId)
+	// 4. Call services
+	friendQuery, err := friendQueryObject.ToFriendQuery(userId)
 
 	result, err := services.UserFriend().GetFriends(ctx, friendQuery)
 	if err != nil {
@@ -288,7 +300,7 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 		return
 	}
 
-	// 4. Map to dto
+	// 5. Map to dto
 	var userDtos []*response.UserShortVerDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))

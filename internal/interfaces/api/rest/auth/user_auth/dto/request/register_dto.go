@@ -19,8 +19,8 @@ type RegisterRequest struct {
 	Otp         string    `json:"otp" binding:"required"`
 }
 
-func ValidateRegisterRequest(input interface{}) error {
-	dto, ok := input.(*RegisterRequest)
+func ValidateRegisterRequest(req interface{}) error {
+	dto, ok := req.(*RegisterRequest)
 	if !ok {
 		return fmt.Errorf("input is not RegisterRequest")
 	}

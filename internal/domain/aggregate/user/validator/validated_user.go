@@ -19,7 +19,7 @@ func NewValidatedUser(user *user_entity.User) (*ValidatedUser, error) {
 		return nil, fmt.Errorf("NewValidatedUser: user is nil")
 	}
 
-	if err := user.Validate(); err != nil {
+	if err := user.ValidateUser(); err != nil {
 		return nil, err
 	}
 

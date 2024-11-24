@@ -1,6 +1,8 @@
 package query
 
 import (
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"time"
@@ -14,6 +16,18 @@ type NotificationQueryObject struct {
 	IsDescending     bool      `form:"isDescending,omitempty"`
 	Limit            int       `form:"limit,omitempty"`
 	Page             int       `form:"page,omitempty"`
+}
+
+func ValidateNotificationQueryObject(input interface{}) error {
+	query, ok := input.(*NotificationQueryObject)
+	if !ok {
+		return fmt.Errorf("validateNotificationQueryObject failed")
+	}
+
+	return validation.ValidateStruct(query,
+		validation.Field(&query.Limit, validation.Min(0)),
+		validation.Field(&query.Page, validation.Min(0)),
+	)
 }
 
 func (req *NotificationQueryObject) ToGetManyNotificationQuery(

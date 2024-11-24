@@ -1,18 +1,20 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 )
 
 type FriendRequest struct {
-	UserId   uuid.UUID `validate:"required,uuid4"`
-	FriendId uuid.UUID `validate:"required,uuid4"`
+	UserId   uuid.UUID
+	FriendId uuid.UUID
 }
 
-func (fr *FriendRequest) Validate() error {
-	validate := validator.New()
-	return validate.Struct(fr)
+func (fr *FriendRequest) ValidateFriend() error {
+	return validation.ValidateStruct(fr,
+		validation.Field(&fr.FriendId, validation.Required),
+		validation.Field(&fr.UserId, validation.Required),
+	)
 }
 
 func NewFriendRequest(
@@ -23,7 +25,7 @@ func NewFriendRequest(
 		UserId:   userId,
 		FriendId: friendId,
 	}
-	if err := newFriendRequest.Validate(); err != nil {
+	if err := newFriendRequest.ValidateFriend(); err != nil {
 		return nil, err
 	}
 

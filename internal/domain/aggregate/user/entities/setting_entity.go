@@ -1,35 +1,41 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 )
 
 type Setting struct {
-	ID        uint            `validate:"omitempty"`
-	UserId    uuid.UUID       `validate:"required,uuid4"`
-	Language  consts.Language `validate:"required,oneof=vi en"`
-	Status    bool            `validate:"required"`
-	CreatedAt time.Time       `validate:"required"`
-	UpdatedAt time.Time       `validate:"required,gtefield=CreatedAt"`
+	ID        uint
+	UserId    uuid.UUID
+	Language  consts.Language
+	Status    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type SettingUpdate struct {
-	Language  *consts.Language `validate:"omitempty,oneof=vi en"`
-	Status    *bool            `validate:"omitempty"`
-	UpdatedAt *time.Time       `validate:"omitempty,gtefield=CreatedAt"`
+	Language  *consts.Language
+	Status    *bool
+	UpdatedAt *time.Time
 }
 
-func (s *Setting) Validate() error {
-	validate := validator.New()
-	return validate.Struct(s)
+func (s *Setting) ValidateSetting() error {
+	return validation.ValidateStruct(s,
+		validation.Field(&s.UserId, validation.Required),
+		validation.Field(&s.Language, validation.Required, validation.In(consts.VI, consts.EN)),
+		validation.Field(&s.Status, validation.Required),
+		validation.Field(&s.CreatedAt, validation.Required),
+		validation.Field(&s.UpdatedAt, validation.Required, validation.Min(s.CreatedAt)),
+	)
 }
 
 func (s *SettingUpdate) ValidateSettingUpdate() error {
-	validate := validator.New()
-	return validate.Struct(s)
+	return validation.ValidateStruct(s,
+		validation.Field(&s.Language, validation.In(consts.VI, consts.EN)),
+	)
 }
 
 func NewSetting(
@@ -43,7 +49,7 @@ func NewSetting(
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := setting.Validate(); err != nil {
+	if err := setting.ValidateSetting(); err != nil {
 		return nil, err
 	}
 

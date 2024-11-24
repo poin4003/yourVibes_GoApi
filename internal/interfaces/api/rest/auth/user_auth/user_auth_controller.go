@@ -23,8 +23,6 @@ func NewUserAuthController() *cUserAuth {
 // @Accept json
 // @Produce json
 // @Param input body request.VerifyEmailRequest true "input"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Router /users/verifyemail/ [post]
 func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 	var input request.VerifyEmailRequest
@@ -50,25 +48,23 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param input body request.RegisterRequest true "input"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Router /users/register/ [post]
 func (c *cUserAuth) Register(ctx *gin.Context) {
-	// 1. Lấy giá trị từ context
+	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
-	// 2. Ép kiểu đúng con trỏ *request.RegisterRequest
+	// 2. Convert to registerRequest
 	registerRequest, ok := body.(*request.RegisterRequest)
 	if !ok {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
-	// 3. Tiến hành xử lý đăng ký
+	// 3. Call service to handle register
 	registerCommand, err := registerRequest.ToRegisterCommand()
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -91,17 +87,23 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param input body request.LoginRequest true "input"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Router /users/login/ [post]
 func (c *cUserAuth) Login(ctx *gin.Context) {
-	var loginRequest request.LoginRequest
-
-	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidateParamLogin, http.StatusBadRequest, err.Error())
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
+	// 2. Convert to loginRequest
+	loginRequest, ok := body.(*request.LoginRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid login request type")
+		return
+	}
+
+	// 3. Call service to handle login
 	loginCommand, err := loginRequest.ToLoginCommand()
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -114,6 +116,7 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 		return
 	}
 
+	// 4. Convert to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
 	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{

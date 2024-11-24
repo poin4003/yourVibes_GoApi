@@ -91,28 +91,35 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Router /users/notifications [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
 	// 1. Get query
-	var query query.NotificationQueryObject
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
-	// 2. Get user id from param
+	// 2. Convert to userQueryObject
+	notificationQueryObject, ok := queryInput.(*query.NotificationQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get user id from param
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// 3. Call service to handle get many
-	getManyNotificationQuery, err := query.ToGetManyNotificationQuery(userIdClaim)
+	// 4. Call service to handle get many
+	getManyNotificationQuery, err := notificationQueryObject.ToGetManyNotificationQuery(userIdClaim)
 	result, err := services.UserNotification().GetNotificationByUserId(ctx, getManyNotificationQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 4. Map to dto
+	// 5. Map to dto
 	var notificationDtos []*response.NotificationDto
 	for _, notificationResult := range result.Notifications {
 		notificationDtos = append(notificationDtos, response.ToNotificationDto(notificationResult))
