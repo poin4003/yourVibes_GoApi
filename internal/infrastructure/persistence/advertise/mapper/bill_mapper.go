@@ -9,7 +9,6 @@ func ToBillModel(bill *entities.Bill) *models.Bill {
 	b := &models.Bill{
 		AdvertiseId: bill.AdvertiseId,
 		Price:       bill.Price,
-		Vat:         bill.Vat,
 		CreatedAt:   bill.CreatedAt,
 		UpdatedAt:   bill.UpdateAt,
 		Status:      bill.Status,
@@ -33,7 +32,6 @@ func FromBillModel(b *models.Bill) *entities.Bill {
 		AdvertiseId: b.AdvertiseId,
 		Advertise:   advertise,
 		Price:       b.Price,
-		Vat:         b.Vat,
 		CreatedAt:   b.CreatedAt,
 		UpdateAt:    b.UpdatedAt,
 		Status:      b.Status,

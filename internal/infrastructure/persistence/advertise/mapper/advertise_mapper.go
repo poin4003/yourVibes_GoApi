@@ -19,12 +19,22 @@ func ToAdvertiseModel(advertise *entities.Advertise) *models.Advertise {
 }
 
 func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
+	var bill = &entities.Bill{
+		ID:          a.Bill.ID,
+		AdvertiseId: a.Bill.AdvertiseId,
+		Price:       a.Bill.Price,
+		CreatedAt:   a.Bill.CreatedAt,
+		UpdateAt:    a.Bill.UpdatedAt,
+		Status:      a.Bill.Status,
+	}
+
 	var advertise = &entities.Advertise{
 		PostId:    a.PostId,
 		StartDate: a.StartDate,
 		EndDate:   a.EndDate,
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
+		Bill:      bill,
 	}
 	advertise.ID = a.ID
 

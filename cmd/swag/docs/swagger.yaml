@@ -1,5 +1,21 @@
 basePath: /v1/2024
 definitions:
+  request.CreateAdvertiseRequest:
+    properties:
+      end_date:
+        type: string
+      post_id:
+        type: string
+      redirect_url:
+        type: string
+      start_date:
+        type: string
+    required:
+    - end_date
+    - post_id
+    - redirect_url
+    - start_date
+    type: object
   request.CreateCommentInput:
     properties:
       content:
@@ -109,6 +125,26 @@ info:
   title: API Documentation YourVibes backend
   version: 1.0.0
 paths:
+  /advertise/:
+    post:
+      consumes:
+      - application/json
+      description: When user want to create advertise by post
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateAdvertiseRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Comment create advertise
+      tags:
+      - advertise_user
   /comments/:
     get:
       consumes:

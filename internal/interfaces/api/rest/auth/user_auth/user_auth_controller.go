@@ -54,13 +54,21 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 // @Failure 500 {object} response.ErrResponse
 // @Router /users/register/ [post]
 func (c *cUserAuth) Register(ctx *gin.Context) {
-	var registerRequest request.RegisterRequest
-
-	if err := ctx.ShouldBindJSON(&registerRequest); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidateParamRegister, http.StatusBadRequest, err.Error())
+	// 1. Lấy giá trị từ context
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
+	// 2. Ép kiểu đúng con trỏ *request.RegisterRequest
+	registerRequest, ok := body.(*request.RegisterRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Tiến hành xử lý đăng ký
 	registerCommand, err := registerRequest.ToRegisterCommand()
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())

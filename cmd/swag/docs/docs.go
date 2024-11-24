@@ -20,6 +20,38 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/advertise/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user want to create advertise by post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "advertise_user"
+                ],
+                "summary": "Comment create advertise",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateAdvertiseRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/comments/": {
             "get": {
                 "security": [
@@ -1316,6 +1348,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "request.CreateAdvertiseRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "post_id",
+                "redirect_url",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "string"
+                },
+                "redirect_url": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "request.CreateCommentInput": {
             "type": "object",
             "required": [

@@ -1,4 +1,4 @@
-package main
+package payment
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/poin4003/yourVibes_GoApi/global"
 	"io"
 	"net/http"
 	"time"
@@ -17,7 +18,6 @@ type MomoConfig struct {
 	PartnerCode  string
 	AccessKey    string
 	SecretKey    string
-	RedirectURL  string
 	IpnURL       string
 	EndpointHost string
 	EndpointPath string
@@ -38,76 +38,62 @@ type RequestBody struct {
 	Lang        string `json:"lang"`
 }
 
-func NewMomoConfig() MomoConfig {
-	return MomoConfig{
-		PartnerCode:  "MOMO",
-		AccessKey:    "F8BBA842ECF85",
-		SecretKey:    "K951B6PE1waDMi640xX08PD3vg6EkVlz",
-		RedirectURL:  "http://localhost:8080/bills/paidBill",
-		IpnURL:       "http://localhost:8080/bills/paidBill",
-		EndpointHost: "test-payment.momo.vn",
-		EndpointPath: "/v2/gateway/api/create",
-	}
-}
-
-func (config *MomoConfig) createSignature(
+func SendRequestToMomo(
 	billId string,
 	orderInfo string,
 	amount int,
 	subject string,
 	text string,
-) (string, string) {
-	requestId := fmt.Sprintf("%s%d.%s", config.PartnerCode, time.Now().UnixNano(), billId)
+	redirectUrl string,
+) (string, error) {
+	// 1. Init momo config
+	config := global.Config.MomoSetting
+	momoConfig := &MomoConfig{
+		PartnerCode:  config.PartnerCode,
+		AccessKey:    config.AccessKey,
+		SecretKey:    config.SecretKey,
+		IpnURL:       config.IpnURL,
+		EndpointHost: config.EndpointHost,
+		EndpointPath: config.EndpointPath,
+	}
+
+	// 2. Create requestId and orderId
+	requestId := fmt.Sprintf("%s%d.%s", momoConfig.PartnerCode, time.Now().UnixNano(), billId)
 	orderId := requestId
 	extraData := fmt.Sprintf("%s<splitText>%s", subject, text)
 
+	// 3. Create raw signature
 	rawSignature := fmt.Sprintf("accessKey=%s&amount=%d&extraData=%s&ipnUrl=%s&orderId=%s&orderInfo=%s&partnerCode=%s&redirectUrl=%s&requestId=%s&requestType=captureWallet",
-		config.AccessKey, amount, extraData, config.IpnURL, orderId, orderInfo, config.PartnerCode, config.RedirectURL, requestId)
+		momoConfig.AccessKey, amount, extraData, momoConfig.IpnURL, orderId, orderInfo, momoConfig.PartnerCode, redirectUrl, requestId)
 
-	fmt.Println("Raw signature:", rawSignature)
-
-	h := hmac.New(sha256.New, []byte(config.SecretKey))
+	// 4. Create HMAC-SHA256 signature
+	h := hmac.New(sha256.New, []byte(momoConfig.SecretKey))
 	h.Write([]byte(rawSignature))
 	signature := hex.EncodeToString(h.Sum(nil))
 
-	fmt.Println("Signature:", signature)
-
-	return signature, requestId
-}
-
-func (config *MomoConfig) CreateRequestBody(
-	billId string,
-	orderInfo string,
-	amount int,
-	subject string,
-	text string,
-) (*RequestBody, error) {
-	signature, requestId := config.createSignature(billId, orderInfo, amount, subject, text)
-	return &RequestBody{
-		PartnerCode: config.PartnerCode,
-		AccessKey:   config.AccessKey,
+	// 5. Create Request body
+	body := &RequestBody{
+		PartnerCode: momoConfig.PartnerCode,
+		AccessKey:   momoConfig.AccessKey,
 		RequestId:   requestId,
 		Amount:      amount,
 		OrderId:     requestId,
 		OrderInfo:   orderInfo,
-		RedirectURL: config.RedirectURL,
-		IpnURL:      config.IpnURL,
-		ExtraData:   fmt.Sprintf("%s<splitText>%s", subject, text),
+		RedirectURL: redirectUrl,
+		IpnURL:      momoConfig.IpnURL,
+		ExtraData:   extraData,
 		RequestType: "captureWallet",
 		Signature:   signature,
 		Lang:        "en",
-	}, nil
-}
+	}
 
-func (config *MomoConfig) SendRequest(body *RequestBody) (string, error) {
+	// 6. Send http request to momo api
 	requestBody, err := json.Marshal(body)
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Printf("Request body: %s\n", requestBody)
-
-	req, err := http.NewRequest("POST", "https://"+config.EndpointHost+config.EndpointPath, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", "https://"+momoConfig.EndpointHost+momoConfig.EndpointPath, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return "", err
 	}
@@ -125,14 +111,13 @@ func (config *MomoConfig) SendRequest(body *RequestBody) (string, error) {
 		return "", err
 	}
 
-	fmt.Printf("Response data: %s\n", responseData)
-
 	var result map[string]interface{}
 	err = json.Unmarshal(responseData, &result)
 	if err != nil {
 		return "", err
 	}
 
+	// 6. Check payment url
 	payUrl, ok := result["payUrl"].(string)
 	if !ok || payUrl == "" {
 		errorCode, _ := result["errorCode"].(string)
@@ -179,41 +164,4 @@ func momoCallbackHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "Callback received successfully"})
-}
-
-func payByMomoHandler(c *gin.Context) {
-	var req struct {
-		BillId    string `json:"billId"`
-		OrderInfo string `json:"orderInfo"`
-		Amount    int    `json:"amount"`
-		Subject   string `json:"subject"`
-		Text      string `json:"text"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	momoConfig := NewMomoConfig()
-	requestBody, err := momoConfig.CreateRequestBody(req.BillId, req.OrderInfo, req.Amount, req.Subject, req.Text)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	payUrl, err := momoConfig.SendRequest(requestBody)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"payUrl": payUrl})
-}
-
-func main() {
-	r := gin.Default()
-	r.POST("/momo/pay", payByMomoHandler)
-	r.GET("/bills/paidBill", momoCallbackHandler)
-	r.Run(":8080")
 }

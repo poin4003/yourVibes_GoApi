@@ -48,6 +48,6 @@ func InitAdvertiseRepository(i IAdvertiseRepository) {
 	localAdvertise = i
 }
 
-func InitBill(i IBillRepository) {
+func InitBillRepository(i IBillRepository) {
 	localBill = i
 }

@@ -13,4 +13,7 @@ type CreateAdvertiseCommand struct {
 }
 
 type CreateAdvertiseResult struct {
+	PayUrl         string
+	ResultCode     int
+	HttpStatusCode int
 }

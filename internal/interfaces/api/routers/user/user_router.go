@@ -2,8 +2,10 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user"
 )
 
@@ -20,7 +22,9 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	userRouterPublic := Router.Group("/users")
 	{
 		// user_auth
-		userRouterPublic.POST("/register", UserAuthController.Register)
+		userRouterPublic.POST("/register",
+			helpers.ValidateBody(&request.RegisterRequest{}, request.ValidateRegisterRequest),
+			UserAuthController.Register)
 		userRouterPublic.POST("/verifyemail", UserAuthController.VerifyEmail)
 		userRouterPublic.POST("/login", UserAuthController.Login)
 

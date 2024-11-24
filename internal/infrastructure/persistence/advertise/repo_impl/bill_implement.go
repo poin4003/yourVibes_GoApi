@@ -23,6 +23,7 @@ func (r *rBill) GetById(
 ) (*entities.Bill, error) {
 	var billModel models.Bill
 	if err := r.db.WithContext(ctx).
+		Preload("Advertise").
 		First(&billModel, id).
 		Error; err != nil {
 		return nil, err

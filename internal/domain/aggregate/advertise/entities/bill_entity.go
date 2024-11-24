@@ -7,14 +7,13 @@ import (
 )
 
 type Bill struct {
-	ID          uuid.UUID
-	AdvertiseId uuid.UUID
-	Advertise   *Advertise
-	Price       float64
-	Vat         float64
-	CreatedAt   time.Time
-	UpdateAt    time.Time
-	Status      bool
+	ID          uuid.UUID  `validate:"omitempty,uuid4"`
+	AdvertiseId uuid.UUID  `validate:"required,uuid4"`
+	Advertise   *Advertise `validate:"omitempty"`
+	Price       int        `validate:"required"`
+	CreatedAt   time.Time  `validate:"omitempty"`
+	UpdateAt    time.Time  `validate:"omitempty,gtefield=CreatedAt"`
+	Status      bool       `validate:"omitempty"`
 }
 
 type BillUpdate struct {
@@ -28,20 +27,19 @@ func (b *Bill) Validate() error {
 	return validate.Struct(b)
 }
 
-func (b *Bill) ValidateUpdateBill() error {
+func (b *BillUpdate) ValidateUpdateBill() error {
 	validate := validator.New()
 	return validate.Struct(b)
 }
 
 func NewBill(
 	AdvertiseId uuid.UUID,
-	Price float64,
+	Price int,
 ) (*Bill, error) {
 	bill := &Bill{
 		ID:          uuid.New(),
 		AdvertiseId: AdvertiseId,
 		Price:       Price,
-		Vat:         0.1,
 		CreatedAt:   time.Now(),
 		UpdateAt:    time.Now(),
 		Status:      false,

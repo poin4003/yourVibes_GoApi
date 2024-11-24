@@ -8,6 +8,7 @@ type Config struct {
 	Authentication    AuthenticationSetting `mapstructure:"authentication"`
 	CloudinarySetting CloudinarySetting     `mapstructure:"cloudinary"`
 	MailService       MailServiceSetting    `mapstructure:"mail_service"`
+	MomoSetting       MomoSetting           `mapstructure:"momo"`
 }
 
 type ServerSetting struct {
@@ -59,4 +60,13 @@ type MailServiceSetting struct {
 	SMTPPort     string `mapstructure:"smtp_port"`
 	SMTPUsername string `mapstructure:"smtp_username"`
 	SMTPPassword string `mapstructure:"smtp_password"`
+}
+
+type MomoSetting struct {
+	PartnerCode  string `mapstructure:"partner_code"`
+	AccessKey    string `mapstructure:"access_key"`
+	SecretKey    string `mapstructure:"secret_key"`
+	IpnURL       string `mapstructure:"ipn_url"`
+	EndpointHost string `mapstructure:"endpoint_host"`
+	EndpointPath string `mapstructure:"endpoint_path"`
 }

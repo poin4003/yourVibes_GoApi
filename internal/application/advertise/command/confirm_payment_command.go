@@ -1,7 +1,14 @@
 package command
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type ConfirmPaymentCommand struct {
-	BillId *uuid.UUID
+	BillId     *uuid.UUID
+}
+
+type ConfirmPaymentResult struct {
+	ResultCode     int
+	HttpStatusCode int
 }

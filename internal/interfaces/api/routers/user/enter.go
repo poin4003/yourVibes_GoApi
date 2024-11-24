@@ -4,4 +4,5 @@ type UserRouterGroup struct {
 	UserRouter
 	PostRouter
 	CommentRouter
+	AdvertiseRouter
 }

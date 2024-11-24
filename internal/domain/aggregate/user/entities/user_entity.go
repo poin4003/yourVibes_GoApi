@@ -1,61 +1,91 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"regexp"
 	"time"
 )
 
 type User struct {
-	ID           uuid.UUID           `validate:"omitempty,uuid4"`
-	FamilyName   string              `validate:"required,min=2"`
-	Name         string              `validate:"required,min=2"`
-	Email        string              `validate:"required,email"`
-	Password     string              `validate:"required,min=8"`
-	PhoneNumber  string              `validate:"required,min=10,max=14,numeric"`
-	Birthday     time.Time           `validate:"required"`
-	AvatarUrl    string              `validate:"omitempty,url"`
-	CapwallUrl   string              `validate:"omitempty,url"`
-	Privacy      consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
-	Biography    string              `validate:"omitempty,max=500"`
-	AuthType     consts.AuthType     `validate:"omitempty,oneof=local google"`
-	AuthGoogleId string              `validate:"omitempty"`
-	PostCount    int                 `validate:"gte=0"`
-	FriendCount  int                 `validate:"gte=0"`
-	Status       bool                `validate:"required"`
-	CreatedAt    time.Time           `validate:"required"`
-	UpdatedAt    time.Time           `validate:"required,gtefield=CreatedAt"`
-	Setting      *Setting            `validate:"omitempty"`
+	ID           uuid.UUID
+	FamilyName   string
+	Name         string
+	Email        string
+	Password     string
+	PhoneNumber  string
+	Birthday     time.Time
+	AvatarUrl    string
+	CapwallUrl   string
+	Privacy      consts.PrivacyLevel
+	Biography    string
+	AuthType     consts.AuthType
+	AuthGoogleId string
+	PostCount    int
+	FriendCount  int
+	Status       bool
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Setting      *Setting
 }
 
 type UserUpdate struct {
-	FamilyName   *string              `validate:"omitempty,min=2"`
-	Name         *string              `validate:"omitempty,min=2"`
-	Email        *string              `validate:"omitempty,email"`
-	Password     *string              `validate:"omitempty,min=8"`
-	PhoneNumber  *string              `validate:"omitempty,min=10,max=14,numeric"`
-	Birthday     *time.Time           `validate:"omitempty"`
-	AvatarUrl    *string              `validate:"omitempty,url"`
-	CapwallUrl   *string              `validate:"omitempty,url"`
-	Privacy      *consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
-	Biography    *string              `validate:"omitempty,max=500"`
-	AuthType     *consts.AuthType     `validate:"omitempty,oneof=local google"`
-	AuthGoogleId *string              `validate:"omitempty"`
-	PostCount    *int                 `validate:"omitempty,gte=0"`
-	FriendCount  *int                 `validate:"omitempty,gte=0"`
-	Status       *bool                `validate:"omitempty"`
-	UpdatedAt    *time.Time           `validate:"omitempty,gtefield=CreatedAt"`
+	FamilyName   *string
+	Name         *string
+	Email        *string
+	Password     *string
+	PhoneNumber  *string
+	Birthday     *time.Time
+	AvatarUrl    *string
+	CapwallUrl   *string
+	Privacy      *consts.PrivacyLevel
+	Biography    *string
+	AuthType     *consts.AuthType
+	AuthGoogleId *string
+	PostCount    *int
+	FriendCount  *int
+	Status       *bool
+	UpdatedAt    *time.Time
 }
 
 func (u *User) Validate() error {
-	validate := validator.New()
-	return validate.Struct(u)
+	return validation.ValidateStruct(u,
+		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Password, validation.Required, validation.Length(8, 255)),
+		validation.Field(&u.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&u.Birthday, validation.Required),
+		validation.Field(&u.AvatarUrl, is.URL),
+		validation.Field(&u.CapwallUrl, is.URL),
+		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&u.Biography, validation.Length(0, 500)),
+		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),
+		validation.Field(&u.PostCount, validation.Min(0)),
+		validation.Field(&u.FriendCount, validation.Min(0)),
+		validation.Field(&u.Status, validation.Required),
+		validation.Field(&u.CreatedAt, validation.Required),
+		validation.Field(&u.UpdatedAt, validation.Required, validation.Min(u.CreatedAt)),
+	)
 }
 
 func (u *UserUpdate) ValidateUserUpdate() error {
-	validate := validator.New()
-	return validate.Struct(u)
+	return validation.ValidateStruct(u,
+		validation.Field(&u.Name, validation.Length(2, 255)),
+		validation.Field(&u.Email, is.Email),
+		validation.Field(&u.Password, validation.Length(8, 255)),
+		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&u.Birthday, validation.Required),
+		validation.Field(&u.AvatarUrl, is.URL),
+		validation.Field(&u.CapwallUrl, is.URL),
+		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&u.Biography, validation.Length(0, 500)),
+		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),
+		validation.Field(&u.PostCount, validation.Min(0)),
+		validation.Field(&u.FriendCount, validation.Min(0)),
+	)
 }
 
 func NewUser(

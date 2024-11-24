@@ -13,6 +13,7 @@ type Advertise struct {
 	EndDate   time.Time `validate:"required"`
 	CreatedAt time.Time `validate:"omitempty"`
 	UpdatedAt time.Time `validate:"omitempty,gtefield=CreatedAt"`
+	Bill      *Bill     `validate:"omitempty"`
 }
 
 type AdvertiseUpdate struct {
