@@ -31,7 +31,7 @@ func NewPostShareController() *cPostShare {
 // @Security ApiKeyAuth
 // @Router /posts/share_post/{post_id} [post]
 func (p *cPostShare) SharePost(ctx *gin.Context) {
-	var sharePostInput request.SharePostInput
+	var sharePostInput request.SharePostRequest
 	// 1. Get body from form
 	if err := ctx.ShouldBind(&sharePostInput); err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())

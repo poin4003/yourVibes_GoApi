@@ -66,6 +66,7 @@ type MomoSetting struct {
 	PartnerCode  string `mapstructure:"partner_code"`
 	AccessKey    string `mapstructure:"access_key"`
 	SecretKey    string `mapstructure:"secret_key"`
+	RedirectUrl  string `mapstructure:"redirect_url"`
 	IpnURL       string `mapstructure:"ipn_url"`
 	EndpointHost string `mapstructure:"endpoint_host"`
 	EndpointPath string `mapstructure:"endpoint_path"`

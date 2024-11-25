@@ -1,18 +1,20 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 )
 
 type LikeUserPost struct {
-	UserId uuid.UUID `validate:"required,uuid4"`
-	PostId uuid.UUID `validate:"required,uuid4"`
+	UserId uuid.UUID
+	PostId uuid.UUID
 }
 
-func (lup *LikeUserPost) Validate() error {
-	validate := validator.New()
-	return validate.Struct(lup)
+func (lup *LikeUserPost) ValidateLikeUserPost() error {
+	return validation.ValidateStruct(lup,
+		validation.Field(&lup.UserId, validation.Required),
+		validation.Field(&lup.PostId, validation.Required),
+	)
 }
 
 func NewLikeUserPostEntity(
@@ -23,7 +25,7 @@ func NewLikeUserPostEntity(
 		UserId: userId,
 		PostId: postId,
 	}
-	if err := newLikeUserPost.Validate(); err != nil {
+	if err := newLikeUserPost.ValidateLikeUserPost(); err != nil {
 		return nil, err
 	}
 

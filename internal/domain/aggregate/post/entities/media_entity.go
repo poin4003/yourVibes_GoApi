@@ -1,34 +1,38 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"time"
 )
 
 type Media struct {
-	ID        uint      `validate:"omitempty,uuid4"`
-	PostId    uuid.UUID `validate:"required,uuid4"`
-	MediaUrl  string    `validate:"required,url"`
-	Status    bool      `validate:"omitempty"`
-	CreatedAt time.Time `validate:"omitempty"`
-	UpdatedAt time.Time `validate:"omitempty,gtefield=CreatedAt"`
+	ID        uint
+	PostId    uuid.UUID
+	MediaUrl  string
+	Status    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type MediaUpdate struct {
-	MediaUrl  *string    `validate:"omitempty,url"`
-	Status    *bool      `validate:"omitempty,required"`
-	UpdatedAt *time.Time `validate:"omitempty,gtefield=CreatedAt"`
+	MediaUrl  *string
+	Status    *bool
+	UpdatedAt *time.Time
 }
 
-func (m *Media) Validate() error {
-	validate := validator.New()
-	return validate.Struct(m)
+func (m *Media) ValidateMedia() error {
+	return validation.ValidateStruct(m,
+		validation.Field(&m.PostId, validation.Required),
+		validation.Field(&m.MediaUrl, validation.Required, is.URL),
+	)
 }
 
 func (m *MediaUpdate) ValidateMediaUpdate() error {
-	validate := validator.New()
-	return validate.Struct(m)
+	return validation.ValidateStruct(m,
+		validation.Field(&m.MediaUrl, is.URL),
+	)
 }
 
 func NewMedia(
@@ -43,7 +47,7 @@ func NewMedia(
 		UpdatedAt: time.Now(),
 	}
 
-	if err := media.Validate(); err != nil {
+	if err := media.ValidateMedia(); err != nil {
 		return nil, err
 	}
 

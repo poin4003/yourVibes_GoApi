@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"io"
 	"net/http"
@@ -18,6 +17,7 @@ type MomoConfig struct {
 	PartnerCode  string
 	AccessKey    string
 	SecretKey    string
+	RedirectUrl  string
 	IpnURL       string
 	EndpointHost string
 	EndpointPath string
@@ -52,6 +52,7 @@ func SendRequestToMomo(
 		PartnerCode:  config.PartnerCode,
 		AccessKey:    config.AccessKey,
 		SecretKey:    config.SecretKey,
+		RedirectUrl:  config.RedirectUrl,
 		IpnURL:       config.IpnURL,
 		EndpointHost: config.EndpointHost,
 		EndpointPath: config.EndpointPath,
@@ -60,11 +61,11 @@ func SendRequestToMomo(
 	// 2. Create requestId and orderId
 	requestId := fmt.Sprintf("%s%d.%s", momoConfig.PartnerCode, time.Now().UnixNano(), billId)
 	orderId := requestId
-	extraData := fmt.Sprintf("%s<splitText>%s", subject, text)
+	extraData := fmt.Sprintf("%s<splitText>%s<splitText>%s", subject, text, redirectUrl)
 
 	// 3. Create raw signature
 	rawSignature := fmt.Sprintf("accessKey=%s&amount=%d&extraData=%s&ipnUrl=%s&orderId=%s&orderInfo=%s&partnerCode=%s&redirectUrl=%s&requestId=%s&requestType=captureWallet",
-		momoConfig.AccessKey, amount, extraData, momoConfig.IpnURL, orderId, orderInfo, momoConfig.PartnerCode, redirectUrl, requestId)
+		momoConfig.AccessKey, amount, extraData, momoConfig.IpnURL, orderId, orderInfo, momoConfig.PartnerCode, momoConfig.RedirectUrl, requestId)
 
 	// 4. Create HMAC-SHA256 signature
 	h := hmac.New(sha256.New, []byte(momoConfig.SecretKey))
@@ -79,13 +80,15 @@ func SendRequestToMomo(
 		Amount:      amount,
 		OrderId:     requestId,
 		OrderInfo:   orderInfo,
-		RedirectURL: redirectUrl,
+		RedirectURL: momoConfig.RedirectUrl,
 		IpnURL:      momoConfig.IpnURL,
 		ExtraData:   extraData,
 		RequestType: "captureWallet",
 		Signature:   signature,
 		Lang:        "en",
 	}
+
+	fmt.Println(body)
 
 	// 6. Send http request to momo api
 	requestBody, err := json.Marshal(body)
@@ -126,42 +129,4 @@ func SendRequestToMomo(
 	}
 
 	return payUrl, nil
-}
-
-func momoCallbackHandler(c *gin.Context) {
-	partnerCode := c.DefaultQuery("partnerCode", "")
-	orderId := c.DefaultQuery("orderId", "")
-	requestId := c.DefaultQuery("requestId", "")
-	amount := c.DefaultQuery("amount", "")
-	orderInfo := c.DefaultQuery("orderInfo", "")
-	orderType := c.DefaultQuery("orderType", "")
-	transId := c.DefaultQuery("transId", "")
-	resultCode := c.DefaultQuery("resultCode", "")
-	message := c.DefaultQuery("message", "")
-	payType := c.DefaultQuery("payType", "")
-	responseTime := c.DefaultQuery("responseTime", "")
-	extraData := c.DefaultQuery("extraData", "")
-	signature := c.DefaultQuery("signature", "")
-
-	fmt.Printf("Callback data from Momo:\n")
-	fmt.Printf("partnerCode: %s\n", partnerCode)
-	fmt.Printf("orderId: %s\n", orderId)
-	fmt.Printf("requestId: %s\n", requestId)
-	fmt.Printf("amount: %s\n", amount)
-	fmt.Printf("orderInfo: %s\n", orderInfo)
-	fmt.Printf("orderType: %s\n", orderType)
-	fmt.Printf("transId: %s\n", transId)
-	fmt.Printf("resultCode: %s\n", resultCode)
-	fmt.Printf("message: %s\n", message)
-	fmt.Printf("payType: %s\n", payType)
-	fmt.Printf("responseTime: %s\n", responseTime)
-	fmt.Printf("extraData: %s\n", extraData)
-	fmt.Printf("signature: %s\n", signature)
-
-	if resultCode != "0" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid result code"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"status": "Callback received successfully"})
 }

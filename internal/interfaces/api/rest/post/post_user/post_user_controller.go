@@ -44,22 +44,22 @@ func NewPostUserController(
 // @Security ApiKeyAuth
 // @Router /posts/ [post]
 func (p *cPostUser) CreatePost(ctx *gin.Context) {
-	var postInput request.CreatePostInput
-
 	// 1. Get body from form
-	if err := ctx.ShouldBind(&postInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
-	// 2. Check one of content or media
-	if postInput.Content == "" && postInput.Media == nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, "You must provide at least one of Content or Media")
+	// 2. Convert to updateUserRequest
+	createPostRequest, ok := body.(*request.CreatePostRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Get file from body
-	files := postInput.Media
+	files := createPostRequest.Media
 
 	// 3.1. Convert multipart.FileHeader to multipart.File
 	var uploadedFiles []multipart.File
@@ -80,7 +80,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	}
 
 	// 5. Call service to handle create post
-	createPostCommand, err := postInput.ToCreatePostCommand(userIdClaim, uploadedFiles)
+	createPostCommand, err := createPostRequest.ToCreatePostCommand(userIdClaim, uploadedFiles)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -127,7 +127,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [patch]
 func (p *cPostUser) UpdatePost(ctx *gin.Context) {
-	var updateInput request.UpdatePostInput
+	var updateInput request.UpdatePostRequest
 	var postRequest query.PostQueryObject
 
 	// 1. Get body from form

@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
@@ -36,14 +36,23 @@ type PostUpdate struct {
 	UpdatedAt       *time.Time           `validate:"omitempty,gtefield=CreatedAt"`
 }
 
-func (p *Post) Validate() error {
-	validate := validator.New()
-	return validate.Struct(p)
+func (p *Post) ValidatePost() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.Content, validation.Min(2)),
+		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+		validation.Field(&p.LikeCount, validation.Min(0)),
+		validation.Field(&p.CommentCount, validation.Min(0)),
+		validation.Field(&p.UpdatedAt, validation.Min(p.CreatedAt)),
+	)
 }
 
 func (p *PostUpdate) ValidatePostUpdate() error {
-	validate := validator.New()
-	return validate.Struct(p)
+	return validation.ValidateStruct(p,
+		validation.Field(&p.Content, validation.Min(2)),
+		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+		validation.Field(&p.LikeCount, validation.Min(0)),
+		validation.Field(&p.CommentCount, validation.Min(0)),
+	)
 }
 
 func NewPost(
@@ -65,7 +74,7 @@ func NewPost(
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
-	if err := post.Validate(); err != nil {
+	if err := post.ValidatePost(); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +102,7 @@ func NewPostForShare(
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
-	if err := post.Validate(); err != nil {
+	if err := post.ValidatePost(); err != nil {
 		return nil, err
 	}
 

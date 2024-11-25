@@ -19,7 +19,7 @@ func NewValidatedPost(post *post_entity.Post) (*ValidatedPost, error) {
 		return nil, fmt.Errorf("post is nil")
 	}
 
-	if err := post.Validate(); err != nil {
+	if err := post.ValidatePost(); err != nil {
 		return nil, err
 	}
 

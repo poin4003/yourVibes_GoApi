@@ -1,6 +1,8 @@
 package query
 
 import (
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"time"
@@ -16,6 +18,19 @@ type PostQueryObject struct {
 	IsDescending    bool      `form:"isDescending,omitempty"`
 	Limit           int       `form:"limit,omitempty"`
 	Page            int       `form:"page,omitempty"`
+}
+
+func ValidatePostQueryObject(input interface{}) error {
+	query, ok := input.(*PostQueryObject)
+	if !ok {
+		return fmt.Errorf("validate PostQueryObject failed")
+	}
+
+	return validation.ValidateStruct(query,
+		validation.Field(&query.Content, validation.Min(1)),
+		validation.Field(&query.Limit, validation.Min(0)),
+		validation.Field(&query.Page, validation.Min(0)),
+	)
 }
 
 func (req *PostQueryObject) ToGetOnePostQuery(

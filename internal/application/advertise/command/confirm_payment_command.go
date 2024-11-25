@@ -5,7 +5,7 @@ import (
 )
 
 type ConfirmPaymentCommand struct {
-	BillId     *uuid.UUID
+	BillId *uuid.UUID
 }
 
 type ConfirmPaymentResult struct {

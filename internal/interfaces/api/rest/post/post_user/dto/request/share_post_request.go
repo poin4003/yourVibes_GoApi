@@ -1,18 +1,32 @@
 package request
 
 import (
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 )
 
-type SharePostInput struct {
+type SharePostRequest struct {
 	Content  string              `form:"content,omitempty" binding:"omitempty"`
 	Privacy  consts.PrivacyLevel `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
 	Location string              `form:"location,omitempty"`
 }
 
-func (req *SharePostInput) ToSharePostCommand(
+func ValidateSharePostRequest(req interface{}) error {
+	dto, ok := req.(*UpdatePostRequest)
+	if !ok {
+		return fmt.Errorf("validate UpdatePostRequest failed")
+	}
+
+	return validation.ValidateStruct(dto,
+		validation.Field(&dto.Content, validation.Min(2)),
+		validation.Field(&dto.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+	)
+}
+
+func (req *SharePostRequest) ToSharePostCommand(
 	postId uuid.UUID,
 	userId uuid.UUID,
 ) (*post_command.SharePostCommand, error) {
