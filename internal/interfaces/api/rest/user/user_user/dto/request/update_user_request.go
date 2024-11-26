@@ -47,12 +47,16 @@ func ValidateUpdateUserRequest(req interface{}) error {
 
 func validateImage(value interface{}) error {
 	if value == nil {
-		return fmt.Errorf("file is required")
+		return nil
 	}
 
 	fileHeader, ok := value.(multipart.FileHeader)
 	if !ok {
-		return fmt.Errorf("invalid file format")
+		return nil
+	}
+
+	if fileHeader.Size == 0 {
+		return nil
 	}
 
 	contentType := fileHeader.Header.Get("Content-Type")
