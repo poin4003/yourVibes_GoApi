@@ -58,9 +58,13 @@ func (n *NotificationUpdate) ValidateNotificationUpdate() error {
 }
 
 func validateNotificationType(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
 	notificationType, ok := value.(consts.NotificationType)
 	if !ok {
-		return fmt.Errorf("invalid notification type")
+		return nil
 	}
 
 	switch notificationType {

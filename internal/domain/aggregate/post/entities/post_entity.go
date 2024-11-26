@@ -8,37 +8,37 @@ import (
 )
 
 type Post struct {
-	ID              uuid.UUID           `validate:"omitempty,uuid4"`
-	UserId          uuid.UUID           `validate:"omitempty,uuid4"`
-	User            *User               `validate:"omitempty"`
-	ParentId        *uuid.UUID          `validate:"omitempty,uuid4"`
-	ParentPost      *Post               `validate:"omitempty"`
-	Content         string              `validate:"required"`
-	LikeCount       int                 `validate:"omitempty"`
-	CommentCount    int                 `validate:"omitempty"`
-	Privacy         consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
-	Location        string              `validate:"omitempty"`
-	IsAdvertisement bool                `validate:"omitempty"`
-	Status          bool                `validate:"omitempty"`
-	CreatedAt       time.Time           `validate:"omitempty"`
-	UpdatedAt       time.Time           `validate:"omitempty,gtefield=CreatedAt"`
-	Media           []*Media            `validate:"omitempty"`
+	ID              uuid.UUID
+	UserId          uuid.UUID
+	User            *User
+	ParentId        *uuid.UUID
+	ParentPost      *Post
+	Content         string
+	LikeCount       int
+	CommentCount    int
+	Privacy         consts.PrivacyLevel
+	Location        string
+	IsAdvertisement bool
+	Status          bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Media           []*Media
 }
 
 type PostUpdate struct {
-	Content         *string              `validate:"omitempty"`
-	LikeCount       *int                 `validate:"omitempty"`
-	CommentCount    *int                 `validate:"omitempty"`
-	Privacy         *consts.PrivacyLevel `validate:"omitempty,oneof=public private friend_only"`
-	Location        *string              `validate:"omitempty"`
-	IsAdvertisement *bool                `validate:"omitempty"`
-	Status          *bool                `validate:"omitempty"`
-	UpdatedAt       *time.Time           `validate:"omitempty,gtefield=CreatedAt"`
+	Content         *string
+	LikeCount       *int
+	CommentCount    *int
+	Privacy         *consts.PrivacyLevel
+	Location        *string
+	IsAdvertisement *bool
+	Status          *bool
+	UpdatedAt       *time.Time
 }
 
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Content, validation.Min(2)),
+		validation.Field(&p.Content, validation.Length(2, 1000)),
 		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
@@ -48,7 +48,7 @@ func (p *Post) ValidatePost() error {
 
 func (p *PostUpdate) ValidatePostUpdate() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Content, validation.Min(2)),
+		validation.Field(&p.Content, validation.Length(2, 1000)),
 		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),

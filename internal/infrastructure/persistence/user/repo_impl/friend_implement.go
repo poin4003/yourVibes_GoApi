@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
@@ -55,6 +56,8 @@ func (r *rFriend) GetFriends(
 ) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
+
+	fmt.Println(query.UserId)
 
 	limit := query.Limit
 	page := query.Page

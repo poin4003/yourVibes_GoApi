@@ -15,13 +15,13 @@ type SharePostRequest struct {
 }
 
 func ValidateSharePostRequest(req interface{}) error {
-	dto, ok := req.(*UpdatePostRequest)
+	dto, ok := req.(*SharePostRequest)
 	if !ok {
-		return fmt.Errorf("validate UpdatePostRequest failed")
+		return fmt.Errorf("validate SharePostRequest failed")
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Content, validation.Min(2)),
+		validation.Field(&dto.Content, validation.Length(2, 1000)),
 		validation.Field(&dto.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
 	)
 }

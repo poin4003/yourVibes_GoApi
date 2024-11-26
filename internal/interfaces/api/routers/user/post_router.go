@@ -52,7 +52,10 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		)
 
 		// post_share
-		postRouterPrivate.POST("/share_post/:post_id", postShareController.SharePost)
+		postRouterPrivate.POST("/share_post/:post_id",
+			helpers.ValidateFormBody(&post_request.SharePostRequest{}, post_request.ValidateSharePostRequest),
+			postShareController.SharePost,
+		)
 
 		// user_new_feed
 		postRouterPrivate.DELETE("/new_feeds/:post_id", postNewFeedController.DeleteNewFeed)

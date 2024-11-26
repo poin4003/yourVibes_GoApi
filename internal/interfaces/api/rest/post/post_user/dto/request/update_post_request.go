@@ -33,19 +33,27 @@ func ValidateUpdatePostRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Content, validation.Min(2)),
+		validation.Field(&dto.Content, validation.Length(2, 1000)),
 		validation.Field(&dto.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
 	)
 }
 
 func validateMediaForUpdate(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
 	fileHeader, ok := value.(*multipart.FileHeader)
 	if !ok {
-		return fmt.Errorf("invalid file format")
+		return nil
+	}
+
+	if fileHeader.Size == 0 {
+		return nil
 	}
 
 	contentType := fileHeader.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") || !strings.HasPrefix(contentType, "video/") {
+	if !(strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")) {
 		return fmt.Errorf("file must be an image or video")
 	}
 
