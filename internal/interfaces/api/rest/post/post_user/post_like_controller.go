@@ -77,7 +77,21 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/like_post/{post_id} [get]
 func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
-	// 1. Get post id from param
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
+
+	// 2. Convert to userQueryObject
+	postLikeQueryObject, ok := queryInput.(*query.PostLikeQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get post id from param
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -85,15 +99,8 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 		return
 	}
 
-	// 2. Get query
-	var query query.PostLikeQueryObject
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, "Invalid query parameters")
-		return
-	}
-
-	// 3. Call service to get list user
-	getPostLikeQuery, err := query.ToGetPostLikeQuery(postId)
+	// 4. Call service to get list user
+	getPostLikeQuery, err := postLikeQueryObject.ToGetPostLikeQuery(postId)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -105,7 +112,7 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 		return
 	}
 
-	// 4. Map to dto
+	// 5. Map to dto
 	var userDtos []*response.UserDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserDto(userResult))

@@ -62,11 +62,17 @@ func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/new_feeds/ [get]
 func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
-	// 1. Validate and get query object from query
-	var query query.NewFeedQueryObject
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
 
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	// 2. Convert to userQueryObject
+	newFeedQueryObject, ok := queryInput.(*query.NewFeedQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -78,7 +84,7 @@ func (c *cPostNewFeed) GetNewFeeds(ctx *gin.Context) {
 	}
 
 	// 3. Call services
-	getNewFeedQuery, err := query.ToGetNewFeedQuery(userIdClaim)
+	getNewFeedQuery, err := newFeedQueryObject.ToGetNewFeedQuery(userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return

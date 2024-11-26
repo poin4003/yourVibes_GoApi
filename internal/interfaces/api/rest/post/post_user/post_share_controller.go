@@ -31,10 +31,17 @@ func NewPostShareController() *cPostShare {
 // @Security ApiKeyAuth
 // @Router /posts/share_post/{post_id} [post]
 func (p *cPostShare) SharePost(ctx *gin.Context) {
-	var sharePostInput request.SharePostRequest
 	// 1. Get body from form
-	if err := ctx.ShouldBind(&sharePostInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to updateUserRequest
+	sharePostRequest, ok := body.(*request.SharePostRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -54,7 +61,7 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 	}
 
 	// 4. Call service to handle sharing
-	sharePostCommand, err := sharePostInput.ToSharePostCommand(postId, userIdClaim)
+	sharePostCommand, err := sharePostRequest.ToSharePostCommand(postId, userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return

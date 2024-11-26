@@ -127,16 +127,22 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/{post_id} [patch]
 func (p *cPostUser) UpdatePost(ctx *gin.Context) {
-	var updateInput request.UpdatePostRequest
 	var postRequest query.PostQueryObject
-
 	// 1. Get body from form
-	if err := ctx.ShouldBind(&updateInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
-	// 2. Get post_id from params
+	// 2. Convert to updateUserRequest
+	updatePostRequest, ok := body.(*request.UpdatePostRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get post_id from params
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
@@ -144,36 +150,36 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Get userId from token
+	// 4. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// 4. Call service to check owner
+	// 5. Call service to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// 5. Get post to check owner
+	// 6. Get post to check owner
 	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 6. Get user id from token
+	// 7. Get user id from token
 	if userIdClaim != query_result.Post.UserId {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
 		return
 	}
 
-	// 7. Get file from body
+	// 8. Get file from body
 	var uploadedFiles []multipart.File
-	for _, fileHeader := range updateInput.Media {
+	for _, fileHeader := range updatePostRequest.Media {
 		openFile, err := fileHeader.Open()
 		if err != nil {
 			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
@@ -182,8 +188,8 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		uploadedFiles = append(uploadedFiles, openFile)
 	}
 
-	// 8. Call service to handle update post
-	updatePostCommand, err := updateInput.ToUpdatePostCommand(&postId, uploadedFiles)
+	// 9. Call service to handle update post
+	updatePostCommand, err := updatePostRequest.ToUpdatePostCommand(&postId, uploadedFiles)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -195,7 +201,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 9. Map to dto
+	// 10. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
 	// Delete cache
@@ -234,27 +240,33 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /posts/ [get]
 func (p *cPostUser) GetManyPost(ctx *gin.Context) {
-	var query query.PostQueryObject
-
 	// 1. Get query
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
+
+	// 2. Convert to userQueryObject
+	postQueryObject, ok := queryInput.(*query.PostQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 2. Check redis
-	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", query.UserID, query.Page, query.Limit)
+	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", postQueryObject.UserID, postQueryObject.Page, postQueryObject.Limit)
 	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
 	if err == nil {
 		var postDto []response.PostDto
 		err = json.Unmarshal([]byte(cachePosts), &postDto)
 		if err == nil {
-			cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
+			cacheTotalKey := fmt.Sprintf("posts:user:%s:total", postQueryObject.UserID)
 			cacheTatal, _ := p.redisClient.Get(context.Background(), cacheTotalKey).Int64()
 
 			paging := pkg_response.PagingResponse{
-				Limit: query.Limit,
-				Page:  query.Page,
+				Limit: postQueryObject.Limit,
+				Page:  postQueryObject.Page,
 				Total: cacheTatal,
 			}
 
@@ -271,7 +283,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	}
 
 	// 4. Call service to handle get many
-	getManyPostQuery, err := query.ToGetManyPostQuery(userIdClaim)
+	getManyPostQuery, err := postQueryObject.ToGetManyPostQuery(userIdClaim)
 
 	result, err := services.PostUser().GetManyPosts(ctx, getManyPostQuery)
 	if err != nil {
@@ -288,7 +300,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	postsJson, _ := json.Marshal(postDtos)
 	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
 
-	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", query.UserID)
+	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", postQueryObject.UserID)
 	p.redisClient.Set(context.Background(), cacheTotalKey, result.PagingResponse.Total, time.Minute*1)
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, postDtos, *result.PagingResponse)

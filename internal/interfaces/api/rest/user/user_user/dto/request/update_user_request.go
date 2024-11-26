@@ -37,7 +37,6 @@ func ValidateUpdateUserRequest(req interface{}) error {
 		validation.Field(&dto.Name, validation.Length(2, 255)),
 		validation.Field(&dto.Email, is.Email),
 		validation.Field(&dto.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
-		validation.Field(&dto.Birthday, validation.Required),
 		validation.Field(&dto.Avatar, validation.By(validateImage)),
 		validation.Field(&dto.Capwall, validation.By(validateImage)),
 		validation.Field(&dto.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
@@ -47,7 +46,11 @@ func ValidateUpdateUserRequest(req interface{}) error {
 }
 
 func validateImage(value interface{}) error {
-	fileHeader, ok := value.(*multipart.FileHeader)
+	if value == nil {
+		return fmt.Errorf("file is required")
+	}
+
+	fileHeader, ok := value.(multipart.FileHeader)
 	if !ok {
 		return fmt.Errorf("invalid file format")
 	}

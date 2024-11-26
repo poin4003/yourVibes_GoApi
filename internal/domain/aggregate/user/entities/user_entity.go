@@ -78,7 +78,6 @@ func (u *UserUpdate) ValidateUserUpdate() error {
 		validation.Field(&u.Email, is.Email),
 		validation.Field(&u.Password, validation.Length(8, 255)),
 		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
-		validation.Field(&u.Birthday, validation.Required),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
 		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),

@@ -25,14 +25,22 @@ func NewUserAuthController() *cUserAuth {
 // @Param input body request.VerifyEmailRequest true "input"
 // @Router /users/verifyemail/ [post]
 func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
-	var input request.VerifyEmailRequest
-
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidateParamEmail, http.StatusBadRequest, err.Error())
+	// 1. Get body from form
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
-	code, err := services.UserAuth().VerifyEmail(ctx, input.Email)
+	// 2. Convert to verify email request
+	verifyEmailRequest, ok := body.(*request.VerifyEmailRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle verify email
+	code, err := services.UserAuth().VerifyEmail(ctx, verifyEmailRequest.Email)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, code, http.StatusBadRequest, err.Error())
 		return

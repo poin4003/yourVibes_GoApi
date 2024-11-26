@@ -120,7 +120,7 @@ func SendRequestToMomo(
 		return "", err
 	}
 
-	// 6. Check payment url
+	// 7. Check payment url
 	payUrl, ok := result["payUrl"].(string)
 	if !ok || payUrl == "" {
 		errorCode, _ := result["errorCode"].(string)
