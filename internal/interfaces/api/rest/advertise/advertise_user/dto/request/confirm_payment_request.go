@@ -33,6 +33,10 @@ func ValidateConfirmPaymentRequest(input interface{}) error {
 }
 
 func (req *ConfirmPaymentRequest) ToConfirmPaymentCommand() (*command.ConfirmPaymentCommand, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request in confirm payment request is nil")
+	}
+
 	var billId uuid.UUID
 	if req.OrderInfo != "" {
 		parseBillId, err := uuid.Parse(req.OrderInfo)

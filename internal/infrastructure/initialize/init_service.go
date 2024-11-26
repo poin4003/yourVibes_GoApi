@@ -61,6 +61,7 @@ func InitServiceInterface(db *gorm.DB) {
 	commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 	advertiseService := advertise_service_impl.NewAdvertiseImplement(advertiseRepo, billRepo, postRepo, newFeedRepo, notificationRepo)
+	billSerivce := advertise_service_impl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -73,4 +74,5 @@ func InitServiceInterface(db *gorm.DB) {
 	comment_service.InitCommentUser(commentUserService)
 	comment_service.InitCommentLike(likeCommentService)
 	advertise_service.InitAdvertise(advertiseService)
+	advertise_service.InitBill(billSerivce)
 }

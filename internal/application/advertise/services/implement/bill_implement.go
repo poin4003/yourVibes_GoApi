@@ -3,6 +3,7 @@ package implement
 import (
 	"context"
 	"errors"
+	"fmt"
 	bill_command "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	bill_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
@@ -39,6 +40,12 @@ func (s *sBill) ConfirmPayment(
 	command *bill_command.ConfirmPaymentCommand,
 ) (result *bill_command.ConfirmPaymentResult, err error) {
 	result = &bill_command.ConfirmPaymentResult{}
+	if command == nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("command confirm payment is nil")
+	}
+
 	// 1. Find bill
 	billFound, err := s.billRepo.GetById(ctx, *command.BillId)
 	if err != nil {
