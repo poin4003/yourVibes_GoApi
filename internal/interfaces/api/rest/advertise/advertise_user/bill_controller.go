@@ -39,6 +39,27 @@ func (c *cBill) ConfirmPayment(ctx *gin.Context) {
 		}
 	}
 
+	if strings.HasPrefix(redirectUrl, "exp://") || strings.HasPrefix(redirectUrl, "myapp://") {
+		htmlContent := fmt.Sprintf(`
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<title>Redirecting...</title>
+				<script type="text/javascript">
+					window.location = "%s"; // Custom scheme redirect
+				</script>
+			</head>
+			<body>
+				<p>If you are not redirected, <a href="%s">click here</a>.</p>
+			</body>
+			</html>
+		`, redirectUrl, redirectUrl)
+
+		ctx.Data(http.StatusOK, "text/html", []byte(htmlContent))
+		return
+	}
+
 	// 4. Check resultCode to response for user if it failed
 	fmt.Println(confirmPaymentRequest.ResultCode)
 	if confirmPaymentRequest.ResultCode != "0" {
