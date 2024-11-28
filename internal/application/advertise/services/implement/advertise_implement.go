@@ -10,6 +10,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/payment"
 	"net/http"
+	"time"
 )
 
 type sAdvertise struct {
@@ -41,7 +42,41 @@ func (s *sAdvertise) CreateAdvertise(
 	command *advertise_command.CreateAdvertiseCommand,
 ) (result *advertise_command.CreateAdvertiseResult, err error) {
 	result = &advertise_command.CreateAdvertiseResult{}
-	// 1. Create advertise
+	// 1. Check previous ad status
+	// 1.1. Check if the post has had any ads before by bill
+	billStatus, err := s.billRepo.CheckExists(ctx, command.PostId)
+	if err != nil {
+		result.PayUrl = ""
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
+	}
+
+	// 1.2. If bill has exists
+	if billStatus {
+		// 1.2.1. Get latest ad
+		latestAds, err := s.advertiseRepo.GetLatestAdsByPostId(ctx, command.PostId)
+		if err != nil {
+			result.PayUrl = ""
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, err
+		}
+
+		// 1.2.2. Check payment status
+		if latestAds.Bill.Status == true {
+			// 1.2.2.1. Check ads expiration date
+			today := time.Now().Truncate(24 * time.Hour)
+			if !today.After(latestAds.EndDate.Truncate(24 * time.Hour)) {
+				result.PayUrl = ""
+				result.ResultCode = response.ErrAdsExpired
+				result.HttpStatusCode = http.StatusBadRequest
+				return result, err
+			}
+		}
+	}
+
+	// 2. Create advertise
 	advertiseEntity, err := advertise_entity.NewAdvertise(
 		command.PostId,
 		command.StartDate,
@@ -62,10 +97,10 @@ func (s *sAdvertise) CreateAdvertise(
 		return result, err
 	}
 
-	// 2. Create bill
+	// 3. Create bill
 	duration := command.EndDate.Sub(command.StartDate)
 	durationDate := int(duration.Seconds() / 86400)
-	price := durationDate*30000 + int(float64(durationDate) * 30000 * 0.1)
+	price := durationDate*30000 + int(float64(durationDate)*30000*0.1)
 
 	fmt.Println(price)
 
@@ -88,10 +123,10 @@ func (s *sAdvertise) CreateAdvertise(
 		return result, err
 	}
 
-	// 3. Call momo api to handle payment
+	// 4. Call momo api to handle payment
 	payUrl, err := payment.SendRequestToMomo(
 		newBill.ID.String(),
-		fmt.Sprintf("Pay for bill %s", newBill.ID),
+		newBill.ID.String(),
 		price,
 		"Payment by momo",
 		"This is momo payment",

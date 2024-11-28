@@ -13,6 +13,8 @@ type (
 		CreateOne(ctx context.Context, entity *entities.Advertise) (*entities.Advertise, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.AdvertiseUpdate) (*entities.Advertise, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) error
+		GetLatestAdsByPostId(ctx context.Context, postId uuid.UUID) (*entities.Advertise, error)
+		CheckExists(ctx context.Context, postId uuid.UUID) (bool, error)
 	}
 	IBillRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Bill, error)
@@ -20,6 +22,7 @@ type (
 		CreateOne(ctx context.Context, entity *entities.Bill) (*entities.Bill, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.BillUpdate) (*entities.Bill, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) error
+		CheckExists(ctx context.Context, postId uuid.UUID) (bool, error)
 	}
 )
 

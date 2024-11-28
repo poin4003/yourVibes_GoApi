@@ -106,3 +106,36 @@ func (r *rAdvertise) DeleteOne(
 	}
 	return nil
 }
+
+func (r *rAdvertise) GetLatestAdsByPostId(
+	ctx context.Context,
+	postId uuid.UUID,
+) (*entities.Advertise, error) {
+	var advertise models.Advertise
+
+	if err := r.db.WithContext(ctx).
+		Where("post_id = ?", postId).
+		Order("created_at desc").
+		First(&advertise).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, advertise.ID)
+}
+
+func (r *rAdvertise) CheckExists(
+	ctx context.Context,
+	postId uuid.UUID,
+) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Advertise{}).
+		Where("post_id = ?", postId).
+		Count(&count).
+		Error; err != nil {
+	}
+
+	return count > 0, nil
+}

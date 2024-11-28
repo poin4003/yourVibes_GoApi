@@ -165,14 +165,14 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	}
 
 	// 6. Get post to check owner
-	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
+	queryResult, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
+		pkg_response.ErrorResponse(ctx, queryResult.ResultCode, queryResult.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 7. Get user id from token
-	if userIdClaim != query_result.Post.UserId {
+	if userIdClaim != queryResult.Post.UserId {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
 		return
 	}

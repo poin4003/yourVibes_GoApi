@@ -107,3 +107,20 @@ func (r *rBill) DeleteOne(
 
 	return nil
 }
+
+func (r *rBill) CheckExists(
+	ctx context.Context,
+	postId uuid.UUID,
+) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).Model(&models.Bill{}).
+		Joins("JOIN advertises ON advertises.id = bills.advertise_id").
+		Where("advertises.post_id = ?", postId).
+		Count(&count).
+		Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
