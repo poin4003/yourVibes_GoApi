@@ -14,10 +14,10 @@ func NewPostWithLikedResultFromEntity(
 		return nil
 	}
 
-	var parentPost *common.PostResultWithLiked
+	var parentPost *common.PostResult
 
 	if post.ParentPost != nil {
-		parentPost = &common.PostResultWithLiked{
+		parentPost = &common.PostResult{
 			ID:              post.ParentPost.ID,
 			UserId:          post.ParentPost.UserId,
 			Content:         post.ParentPost.Content,
@@ -27,7 +27,6 @@ func NewPostWithLikedResultFromEntity(
 			Location:        post.ParentPost.Location,
 			IsAdvertisement: post.ParentPost.IsAdvertisement,
 			Status:          post.ParentPost.Status,
-			IsLiked:         isLiked,
 			CreatedAt:       post.ParentPost.CreatedAt,
 			UpdatedAt:       post.ParentPost.UpdatedAt,
 			Media:           NewMediaResultsFromEntity(post.ParentPost.Media),

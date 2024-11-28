@@ -11,7 +11,7 @@ type PostResultWithLiked struct {
 	UserId          uuid.UUID
 	User            *UserResult
 	ParentId        *uuid.UUID
-	ParentPost      *PostResultWithLiked
+	ParentPost      *PostResult
 	Content         string
 	LikeCount       int
 	CommentCount    int

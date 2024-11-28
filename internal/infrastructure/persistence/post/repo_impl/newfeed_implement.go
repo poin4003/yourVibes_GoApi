@@ -90,10 +90,10 @@ func (r *rNewFeed) GetMany(
 		Where("new_feeds.user_id = ?", query.UserId).
 		Preload("User").
 		Preload("Media").
+		Order("posts.created_at desc").
 		Offset(offset).
 		Limit(limit).
 		Find(&posts).
-		Order("created_at desc").
 		Error
 
 	if err != nil {

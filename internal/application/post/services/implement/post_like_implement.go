@@ -115,7 +115,7 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
-		_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
+		postFound, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.1.3. Check like to response
 		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
@@ -192,7 +192,7 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
-		_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
+		postFound, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.2.3. Check like to response
 		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
