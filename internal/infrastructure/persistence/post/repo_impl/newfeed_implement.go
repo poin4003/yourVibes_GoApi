@@ -150,3 +150,30 @@ func (r *rNewFeed) CreateManyWithRandomUser(
 
 	return nil
 }
+
+func (r *rNewFeed) DeleteExpiredAdvertiseFromNewFeeds(
+	ctx context.Context,
+) error {
+	query := `
+       	DELETE FROM new_feeds
+		WHERE post_id IN (
+			SELECT id 
+			FROM posts
+			WHERE is_advertisement = true 
+			  AND EXISTS (
+				  SELECT 1
+				  FROM advertises
+				  WHERE advertises.post_id = posts.id
+					AND advertises.end_date < ?
+			  )
+		) 
+    `
+
+	if err := r.db.WithContext(ctx).
+		Exec(query, time.Now()).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -16,6 +16,7 @@ type (
 		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Post, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Post, error)
 		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.Post, *response.PagingResponse, error)
+		UpdateExpiredAdvertisements(ctx context.Context) error
 	}
 	IMediaRepository interface {
 		GetById(ctx context.Context, id uint) (*entities.Media, error)
@@ -36,6 +37,7 @@ type (
 		DeleteOne(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
+		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 	}
 )
 

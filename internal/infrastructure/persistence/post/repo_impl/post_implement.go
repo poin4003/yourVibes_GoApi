@@ -238,3 +238,35 @@ func (r *rPost) GetMany(
 
 	return postEntities, pagingResponse, nil
 }
+
+func (r *rPost) UpdateExpiredAdvertisements(
+	ctx context.Context,
+) error {
+	query := `
+      	UPDATE posts
+		SET is_advertisement = false
+		WHERE is_advertisement = true 
+		  AND NOT EXISTS (
+			  SELECT 1
+			  FROM advertises 
+			  WHERE advertises.post_id = posts.id
+				AND advertises.end_date >= ?
+		  )
+		  AND EXISTS (
+			  SELECT 1
+			  FROM advertises 
+			  WHERE advertises.post_id = posts.id
+				AND advertises.end_date < ?
+		  ) 
+    `
+
+	now := time.Now()
+
+	if err := r.db.WithContext(ctx).
+		Exec(query, now, now).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
