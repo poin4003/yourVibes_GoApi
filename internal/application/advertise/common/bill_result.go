@@ -9,19 +9,17 @@ type BillWithAdvertiseResult struct {
 	ID          uuid.UUID
 	AdvertiseId uuid.UUID
 	Advertise   *AdvertiseWithoutBillResult
-	Price       float64
-	Vat         float64
+	Price       int
 	CreatedAt   time.Time
-	UpdateAt    time.Time
+	UpdatedAt   time.Time
 	Status      bool
 }
 
 type BillWithoutAdvertiseResult struct {
 	ID          uuid.UUID
 	AdvertiseId uuid.UUID
-	Price       float64
-	Vat         float64
+	Price       int
 	CreatedAt   time.Time
-	UpdateAt    time.Time
+	UpdatedAt   time.Time
 	Status      bool
 }

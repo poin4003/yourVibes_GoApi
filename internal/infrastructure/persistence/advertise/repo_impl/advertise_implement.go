@@ -3,9 +3,11 @@ package repo_impl
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/advertise/mapper"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +50,53 @@ func (r *rAdvertise) GetOne(
 	}
 
 	return r.GetById(ctx, advertiseModel.ID)
+}
+
+func (r *rAdvertise) GetMany(
+	ctx context.Context,
+	query *query.GetManyAdvertiseQuery,
+) ([]*entities.Advertise, *response.PagingResponse, error) {
+	var advertises []*models.Advertise
+	var total int64
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	db := r.db.WithContext(ctx).Model(&models.Advertise{})
+
+	if query.PostId != uuid.Nil {
+		db = db.Where("advertises.post_id = ?", query.PostId)
+	}
+
+	if err := db.Count(&total).
+		Offset(offset).
+		Limit(limit).
+		Preload("Bill").
+		Order("advertises.created_at desc").
+		Find(&advertises).
+		Error; err != nil {
+		return nil, nil, err
+	}
+
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	var advertiseEntities []*entities.Advertise
+	for _, advertise := range advertises {
+		advertiseEntities = append(advertiseEntities, mapper.FromAdvertiseModel(advertise))
+	}
+
+	return advertiseEntities, pagingResponse, nil
 }
 
 func (r *rAdvertise) CreateOne(

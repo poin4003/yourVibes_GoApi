@@ -3,13 +3,16 @@ package repositories
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
 	IAdvertiseRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Advertise, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Advertise, error)
+		GetMany(ctx context.Context, query *query.GetManyAdvertiseQuery) ([]*entities.Advertise, *response.PagingResponse, error)
 		CreateOne(ctx context.Context, entity *entities.Advertise) (*entities.Advertise, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.AdvertiseUpdate) (*entities.Advertise, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) error

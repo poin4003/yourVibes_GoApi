@@ -3,10 +3,12 @@ package advertise_user
 import (
 	"github.com/gin-gonic/gin"
 	advertise_services "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	post_services "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/response"
+	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
@@ -19,7 +21,7 @@ func NewAdvertiseController() *cAdvertise {
 }
 
 // CreateAdvertise godoc
-// @Summary Comment create advertise
+// @Summary Create advertise
 // @Description When user want to create advertise by post
 // @Tags advertise_user
 // @Accept json
@@ -50,7 +52,7 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 	}
 
 	// 4. Call service to check owner
-	getOnePostQuery := &query.GetOnePostQuery{
+	getOnePostQuery := &post_query.GetOnePostQuery{
 		PostId:              createAdvertiseRequest.PostId,
 		AuthenticatedUserId: userIdClaim,
 	}
@@ -81,4 +83,52 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 	}
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, result.PayUrl)
+}
+
+// GetManyAdvertise godoc
+// @Summary Get many advertise
+// @Description Get many advertise
+// @Tags advertise_user
+// @Accept json
+// @Produce json
+// @Param post_id query string false "post_id to filter ads"
+// @Param limit query int false "Limit of ads per page"
+// @Param page query int false "Page number for pagination"
+// @Security ApiKeyAuth
+// @Router /advertise/ [get]
+func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
+
+	// 2. Convert to AdvertiseQueryObject
+	advertiseQueryObject, ok := queryInput.(*advertise_query.AdvertiseQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle get many
+	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := advertise_services.Advertise().GetAdvertise(ctx, getManyAdvertiseQuery)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 4. Convert to dto
+	var advertiseDtos []*response.AdvertiseWithBillDto
+	for _, advertiseResult := range result.Advertises {
+		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(*advertiseResult))
+	}
+
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDtos)
 }

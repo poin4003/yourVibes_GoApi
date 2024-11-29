@@ -16,9 +16,8 @@ func NewBillWithoutAdvertiseResultFromEntity(
 		ID:          bill.ID,
 		AdvertiseId: bill.AdvertiseId,
 		Price:       bill.Price,
-		Vat:         bill.Vat,
 		CreatedAt:   bill.CreatedAt,
-		UpdateAt:    bill.UpdateAt,
+		UpdatedAt:   bill.UpdateAt,
 		Status:      bill.Status,
 	}
 }
@@ -35,9 +34,8 @@ func NewBillWithAdvertiseResultFromEntity(
 		AdvertiseId: bill.AdvertiseId,
 		Advertise:   NewAdvertiseWithoutBillResultFromEntity(bill.Advertise),
 		Price:       bill.Price,
-		Vat:         bill.Vat,
 		CreatedAt:   bill.CreatedAt,
-		UpdateAt:    bill.UpdateAt,
+		UpdatedAt:   bill.UpdateAt,
 		Status:      bill.Status,
 	}
 }

@@ -76,10 +76,6 @@ func (r *rBill) UpdateOne(
 		updates["price"] = *updateData.Price
 	}
 
-	if updateData.Vat != nil {
-		updates["vat"] = *updateData.Vat
-	}
-
 	if updateData.Status != nil {
 		updates["status"] = *updateData.Status
 	}

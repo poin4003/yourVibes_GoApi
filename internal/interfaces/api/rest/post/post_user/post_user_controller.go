@@ -247,7 +247,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		return
 	}
 
-	// 2. Convert to userQueryObject
+	// 2. Convert to PostQueryObject
 	postQueryObject, ok := queryInput.(*query.PostQueryObject)
 	if !ok {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")

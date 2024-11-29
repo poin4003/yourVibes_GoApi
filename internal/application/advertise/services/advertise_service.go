@@ -3,13 +3,13 @@ package services
 import (
 	"context"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
+	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 )
 
 type (
 	IAdvertise interface {
 		CreateAdvertise(ctx context.Context, command *command.CreateAdvertiseCommand) (result *command.CreateAdvertiseResult, err error)
-		GetAdvertise(ctx context.Context, query *query.GetOneAdvertiseQuery) (result *query.GetOneAdvertiseResult, err error)
+		GetAdvertise(ctx context.Context, query *advertise_query.GetManyAdvertiseQuery) (result *advertise_query.GetManyAdvertiseResults, err error)
 	}
 	IBill interface {
 		ConfirmPayment(ctx context.Context, command *command.ConfirmPaymentCommand) (result *command.ConfirmPaymentResult, err error)

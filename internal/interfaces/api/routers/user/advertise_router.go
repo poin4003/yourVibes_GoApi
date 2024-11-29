@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user"
 	advertise_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
+	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
 )
 
 type AdvertiseRouter struct{}
@@ -30,6 +31,11 @@ func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 		advertiseRouterPrivate.POST("/",
 			helpers.ValidateJsonBody(&advertise_request.CreateAdvertiseRequest{}, advertise_request.ValidateCreateAdvertiseRequest),
 			advertiseController.CreateAdvertise,
+		)
+
+		advertiseRouterPrivate.GET("/",
+			helpers.ValidateQuery(&advertise_query.AdvertiseQueryObject{}, advertise_query.ValidateAdvertiseQueryObject),
+			advertiseController.GetManyAdvertise,
 		)
 	}
 }

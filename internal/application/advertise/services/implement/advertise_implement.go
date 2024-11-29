@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	advertise_command "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/mapper"
 	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	advertise_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
@@ -142,8 +144,27 @@ func (s *sAdvertise) CreateAdvertise(
 
 func (s *sAdvertise) GetAdvertise(
 	ctx context.Context,
-	query *advertise_query.GetOneAdvertiseQuery,
-) (result *advertise_query.GetOneAdvertiseResult, err error) {
-	result = &advertise_query.GetOneAdvertiseResult{}
-	return
+	query *advertise_query.GetManyAdvertiseQuery,
+) (result *advertise_query.GetManyAdvertiseResults, err error) {
+	result = &advertise_query.GetManyAdvertiseResults{}
+
+	advertiseEntities, paging, err := s.advertiseRepo.GetMany(ctx, query)
+	if err != nil {
+		result.Advertises = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		result.PagingResponse = nil
+		return result, err
+	}
+
+	var advertiseResults []*common.AdvertiseWithBillResult
+	for _, advertiseEntity := range advertiseEntities {
+		advertiseResults = append(advertiseResults, mapper.NewAdvertiseWithBillResultFromEntity(advertiseEntity))
+	}
+
+	result.Advertises = advertiseResults
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	result.PagingResponse = paging
+	return result, nil
 }

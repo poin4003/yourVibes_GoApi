@@ -21,6 +21,45 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/advertise/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get many advertise",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "advertise_user"
+                ],
+                "summary": "Get many advertise",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post_id to filter ads",
+                        "name": "post_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit of ads per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
             "post": {
                 "security": [
                     {
@@ -37,7 +76,7 @@ const docTemplate = `{
                 "tags": [
                     "advertise_user"
                 ],
-                "summary": "Comment create advertise",
+                "summary": "Create advertise",
                 "parameters": [
                     {
                         "description": "input",
@@ -1039,20 +1078,7 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/notifications": {
@@ -1260,20 +1286,7 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/verifyemail/": {
@@ -1300,20 +1313,7 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/{userId}": {
@@ -1432,8 +1432,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string",
-                    "minLength": 8
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"

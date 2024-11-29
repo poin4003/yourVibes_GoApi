@@ -1,35 +1,36 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"time"
 )
 
 type Bill struct {
-	ID          uuid.UUID  `validate:"omitempty,uuid4"`
-	AdvertiseId uuid.UUID  `validate:"required,uuid4"`
-	Advertise   *Advertise `validate:"omitempty"`
-	Price       int        `validate:"required"`
-	CreatedAt   time.Time  `validate:"omitempty"`
-	UpdateAt    time.Time  `validate:"omitempty,gtefield=CreatedAt"`
-	Status      bool       `validate:"omitempty"`
+	ID          uuid.UUID
+	AdvertiseId uuid.UUID
+	Advertise   *Advertise
+	Price       int
+	CreatedAt   time.Time
+	UpdateAt    time.Time
+	Status      bool
 }
 
 type BillUpdate struct {
-	Price  *float64
-	Vat    *float64
+	Price  *int
 	Status *bool
 }
 
 func (b *Bill) Validate() error {
-	validate := validator.New()
-	return validate.Struct(b)
+	return validation.ValidateStruct(b,
+		validation.Field(&b.AdvertiseId, validation.Required),
+		validation.Field(&b.Price, validation.Required),
+		validation.Field(&b.UpdateAt, validation.Min(b.CreatedAt)),
+	)
 }
 
 func (b *BillUpdate) ValidateUpdateBill() error {
-	validate := validator.New()
-	return validate.Struct(b)
+	return validation.ValidateStruct(b)
 }
 
 func NewBill(

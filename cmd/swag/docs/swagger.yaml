@@ -51,7 +51,6 @@ definitions:
       otp:
         type: string
       password:
-        minLength: 8
         type: string
       phone_number:
         type: string
@@ -126,6 +125,31 @@ info:
   version: 1.0.0
 paths:
   /advertise/:
+    get:
+      consumes:
+      - application/json
+      description: Get many advertise
+      parameters:
+      - description: post_id to filter ads
+        in: query
+        name: post_id
+        type: string
+      - description: Limit of ads per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get many advertise
+      tags:
+      - advertise_user
     post:
       consumes:
       - application/json
@@ -142,7 +166,7 @@ paths:
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: Comment create advertise
+      summary: Create advertise
       tags:
       - advertise_user
   /comments/:
@@ -798,15 +822,7 @@ paths:
           $ref: '#/definitions/request.LoginRequest'
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       summary: User login
       tags:
       - user_auth
@@ -938,15 +954,7 @@ paths:
           $ref: '#/definitions/request.RegisterRequest'
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       summary: User Registration
       tags:
       - user_auth
@@ -964,15 +972,7 @@ paths:
           $ref: '#/definitions/request.VerifyEmailRequest'
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       summary: User verify email
       tags:
       - user_auth

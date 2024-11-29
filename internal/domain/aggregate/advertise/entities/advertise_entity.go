@@ -1,35 +1,38 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"time"
 )
 
 type Advertise struct {
-	ID        uuid.UUID `validate:"omitempty,uuid4"`
-	PostId    uuid.UUID `validate:"required,uuid4"`
-	StartDate time.Time `validate:"required"`
-	EndDate   time.Time `validate:"required"`
-	CreatedAt time.Time `validate:"omitempty"`
-	UpdatedAt time.Time `validate:"omitempty,gtefield=CreatedAt"`
-	Bill      *Bill     `validate:"omitempty"`
+	ID        uuid.UUID
+	PostId    uuid.UUID
+	StartDate time.Time
+	EndDate   time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Bill      *Bill
 }
 
 type AdvertiseUpdate struct {
-	StartDate *time.Time `validate:"omitempty"`
-	EndDate   *time.Time `validate:"omitempty"`
-	UpdatedAt *time.Time `validate:"omitempty,gtefield=CreatedAt"`
+	StartDate *time.Time
+	EndDate   *time.Time
+	UpdatedAt *time.Time
 }
 
 func (a *Advertise) Validate() error {
-	validate := validator.New()
-	return validate.Struct(a)
+	return validation.ValidateStruct(a,
+		validation.Field(&a.PostId, validation.Required),
+		validation.Field(&a.StartDate, validation.Required),
+		validation.Field(&a.EndDate, validation.Required),
+		validation.Field(&a.UpdatedAt, validation.Min(a.CreatedAt)),
+	)
 }
 
 func (a *AdvertiseUpdate) ValidateAdvertiseUpdate() error {
-	validate := validator.New()
-	return validate.Struct(a)
+	return validation.ValidateStruct(a)
 }
 
 func NewAdvertise(
