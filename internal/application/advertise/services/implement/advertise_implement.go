@@ -16,23 +16,17 @@ import (
 type sAdvertise struct {
 	advertiseRepo    advertise_repo.IAdvertiseRepository
 	billRepo         advertise_repo.IBillRepository
-	postRepo         advertise_repo.IPostRepository
-	newFeedRepo      advertise_repo.INewFeedRepository
 	notificationRepo advertise_repo.INotificationRepository
 }
 
 func NewAdvertiseImplement(
 	advertiseRepo advertise_repo.IAdvertiseRepository,
 	billRepo advertise_repo.IBillRepository,
-	postRepo advertise_repo.IPostRepository,
-	newFeedRepo advertise_repo.INewFeedRepository,
 	notificationRepo advertise_repo.INotificationRepository,
 ) *sAdvertise {
 	return &sAdvertise{
 		advertiseRepo:    advertiseRepo,
 		billRepo:         billRepo,
-		postRepo:         postRepo,
-		newFeedRepo:      newFeedRepo,
 		notificationRepo: notificationRepo,
 	}
 }

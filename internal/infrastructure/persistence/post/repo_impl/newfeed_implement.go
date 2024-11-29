@@ -9,6 +9,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
+	"time"
 )
 
 type rNewFeed struct {
@@ -113,4 +114,39 @@ func (r *rNewFeed) GetMany(
 	}
 
 	return postEntities, pagingResponse, nil
+}
+
+func (r *rNewFeed) CreateManyWithRandomUser(
+	ctx context.Context,
+	numUsers int,
+) error {
+	query := `
+		INSERT INTO new_feeds (user_id, post_id, view)
+		SELECT u.id, a.post_id, 0
+		FROM users u
+		CROSS JOIN (
+			SELECT advertises.id AS advertise_id, advertises.post_id
+			FROM advertises
+			JOIN bills ON bills.advertise_id = advertises.id
+			WHERE bills.status = true
+			AND advertises.start_date <= ?
+			AND advertises.end_date >= ?
+		) a
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM new_feeds nf
+			WHERE nf.user_id = u.id
+			AND nf.post_id = a.post_id
+		)
+		ORDER BY RANDOM()
+		LIMIT ?;
+	`
+	now := time.Now()
+
+	if err := r.db.WithContext(ctx).
+		Exec(query, now, now, numUsers).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

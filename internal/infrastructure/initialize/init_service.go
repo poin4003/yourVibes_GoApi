@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"github.com/poin4003/yourVibes_GoApi/global"
 	advertise_service "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertise_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
 	comment_service "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
@@ -16,10 +17,11 @@ import (
 	notification_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
 	post_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
 	user_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
-	"gorm.io/gorm"
 )
 
-func InitServiceInterface(db *gorm.DB) {
+func InitServiceInterface() {
+	db := global.Pdb
+
 	// 1. Initialize Repository
 	userRepo := user_repo_impl.NewUserRepositoryImplement(db)
 	postRepo := post_repo_impl.NewPostRepositoryImplement(db)
@@ -60,7 +62,7 @@ func InitServiceInterface(db *gorm.DB) {
 	postShareService := post_service_impl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
-	advertiseService := advertise_service_impl.NewAdvertiseImplement(advertiseRepo, billRepo, postRepo, newFeedRepo, notificationRepo)
+	advertiseService := advertise_service_impl.NewAdvertiseImplement(advertiseRepo, billRepo, notificationRepo)
 	billSerivce := advertise_service_impl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 
 	user_service.InitUserAuth(userAuthService)
