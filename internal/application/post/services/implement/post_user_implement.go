@@ -25,31 +25,34 @@ import (
 
 type sPostUser struct {
 	userRepo         post_repo.IUserRepository
-	FriendRepo       post_repo.IFriendRepository
-	NewFeedRepo      post_repo.INewFeedRepository
+	friendRepo       post_repo.IFriendRepository
+	newFeedRepo      post_repo.INewFeedRepository
 	postRepo         post_repo.IPostRepository
 	mediaRepo        post_repo.IMediaRepository
 	likeUserPostRepo post_repo.ILikeUserPostRepository
 	notificationRepo post_repo.INotificationRepository
+	advertiseRepo    post_repo.IAdvertiseRepository
 }
 
 func NewPostUserImplement(
 	userRepo post_repo.IUserRepository,
-	FriendRepo post_repo.IFriendRepository,
-	NewFeedRepo post_repo.INewFeedRepository,
+	friendRepo post_repo.IFriendRepository,
+	newFeedRepo post_repo.INewFeedRepository,
 	postRepo post_repo.IPostRepository,
 	mediaRepo post_repo.IMediaRepository,
 	likeUserPostRepo post_repo.ILikeUserPostRepository,
 	notificationRepo post_repo.INotificationRepository,
+	advertiseRepo post_repo.IAdvertiseRepository,
 ) *sPostUser {
 	return &sPostUser{
 		userRepo:         userRepo,
-		FriendRepo:       FriendRepo,
-		NewFeedRepo:      NewFeedRepo,
+		friendRepo:       friendRepo,
+		newFeedRepo:      newFeedRepo,
 		postRepo:         postRepo,
 		mediaRepo:        mediaRepo,
 		likeUserPostRepo: likeUserPostRepo,
 		notificationRepo: notificationRepo,
+		advertiseRepo:    advertiseRepo,
 	}
 }
 
@@ -156,7 +159,7 @@ func (s *sPostUser) CreatePost(
 
 	// 5. Create new feed for user friend
 	// 5.1. Get friend id of user friend list
-	friendIds, err := s.FriendRepo.GetFriendIds(ctx, userFound.ID)
+	friendIds, err := s.friendRepo.GetFriendIds(ctx, userFound.ID)
 	if err != nil {
 		result.Post = nil
 		result.ResultCode = response.ErrServerFailed
@@ -173,7 +176,7 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 5.3. Create new feed for friend
-	err = s.NewFeedRepo.CreateMany(ctx, newPost.ID, friendIds)
+	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, friendIds)
 	if err != nil {
 		result.Post = nil
 		result.ResultCode = response.ErrServerFailed
@@ -402,7 +405,28 @@ func (s *sPostUser) DeletePost(
 		}
 	}
 
-	// 3. Delete post
+	deleteCondition := map[string]interface{}{
+		"post_id": command.PostId,
+	}
+
+	// 3. Delete new feed
+
+	err = s.newFeedRepo.DeleteMany(ctx, deleteCondition)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to delete media records: %w", err)
+	}
+
+	// 4. Delete advertise and bill
+	err = s.advertiseRepo.DeleteMany(ctx, deleteCondition)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, fmt.Errorf("failed to delete media records: %w", err)
+	}
+
+	// 5. Delete post
 	postEntity, err := s.postRepo.DeleteOne(ctx, *command.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -415,7 +439,7 @@ func (s *sPostUser) DeletePost(
 		return result, fmt.Errorf("failed to delete media records: %w", err)
 	}
 
-	// 5. Find user
+	// 6. Find user
 	userFound, err := s.userRepo.GetOne(ctx, "id=?", postEntity.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -428,7 +452,7 @@ func (s *sPostUser) DeletePost(
 		return result, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// 6. Update post count of user
+	// 7. Update post count of user
 	userFound.PostCount--
 
 	userUpdateEntity := &user_entity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}

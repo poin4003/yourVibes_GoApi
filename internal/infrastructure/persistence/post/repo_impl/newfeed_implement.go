@@ -58,6 +58,21 @@ func (r *rNewFeed) DeleteOne(
 	return nil
 }
 
+func (r *rNewFeed) DeleteMany(
+	ctx context.Context,
+	condition map[string]interface{},
+) error {
+	if err := r.db.WithContext(ctx).
+		Model(models.NewFeed{}).
+		Where(condition).
+		Delete(&models.NewFeed{}).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rNewFeed) GetMany(
 	ctx context.Context,
 	query *query.GetNewFeedQuery,
@@ -131,6 +146,8 @@ func (r *rNewFeed) CreateManyWithRandomUser(
 			WHERE bills.status = true
 			AND advertises.start_date <= ?
 			AND advertises.end_date >= ?
+			AND advertises.deleted_at IS NULL
+			AND bills.deleted_at IS NULL
 		) a
 		WHERE NOT EXISTS (
 			SELECT 1

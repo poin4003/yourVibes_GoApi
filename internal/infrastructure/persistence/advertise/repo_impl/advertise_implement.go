@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
@@ -187,4 +188,30 @@ func (r *rAdvertise) CheckExists(
 	}
 
 	return count > 0, nil
+}
+
+func (r *rAdvertise) DeleteMany(
+	ctx context.Context,
+	condition map[string]interface{},
+) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Where("advertise_id IN (?)",
+				tx.Model(&models.Advertise{}).
+					Select("id").
+					Where(condition)).
+			Delete(&models.Bill{}).
+			Error; err != nil {
+			return fmt.Errorf("failed to delete bills: %w", err)
+		}
+
+		if err := tx.WithContext(ctx).
+			Where(condition).
+			Delete(&models.Advertise{}).
+			Error; err != nil {
+			return fmt.Errorf("failed to delete advertise: %w", err)
+		}
+
+		return nil
+	})
 }

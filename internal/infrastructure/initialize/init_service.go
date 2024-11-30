@@ -57,13 +57,13 @@ func InitServiceInterface() {
 	userFriendService := user_service_impl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, notificationRepo)
 	userNewFeedService := post_service_impl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo)
 	userInfoService := user_service_impl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
-	postUserService := post_service_impl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo)
+	postUserService := post_service_impl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo, advertiseRepo)
 	postLikeService := post_service_impl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
 	postShareService := post_service_impl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	commentUserService := comment_service_impl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 	advertiseService := advertise_service_impl.NewAdvertiseImplement(advertiseRepo, billRepo, notificationRepo)
-	billSerivce := advertise_service_impl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
+	billService := advertise_service_impl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -76,5 +76,5 @@ func InitServiceInterface() {
 	comment_service.InitCommentUser(commentUserService)
 	comment_service.InitCommentLike(likeCommentService)
 	advertise_service.InitAdvertise(advertiseService)
-	advertise_service.InitBill(billSerivce)
+	advertise_service.InitBill(billService)
 }

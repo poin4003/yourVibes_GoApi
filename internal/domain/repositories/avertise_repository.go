@@ -16,6 +16,7 @@ type (
 		CreateOne(ctx context.Context, entity *entities.Advertise) (*entities.Advertise, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.AdvertiseUpdate) (*entities.Advertise, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) error
+		DeleteMany(ctx context.Context, condition map[string]interface{}) error
 		GetLatestAdsByPostId(ctx context.Context, postId uuid.UUID) (*entities.Advertise, error)
 		CheckExists(ctx context.Context, postId uuid.UUID) (bool, error)
 	}

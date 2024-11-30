@@ -35,6 +35,7 @@ type (
 	INewFeedRepository interface {
 		CreateMany(ctx context.Context, postId uuid.UUID, friendIds []uuid.UUID) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
+		DeleteMany(ctx context.Context, condition map[string]interface{}) error
 		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
