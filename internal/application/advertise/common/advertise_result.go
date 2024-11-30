@@ -6,20 +6,22 @@ import (
 )
 
 type AdvertiseWithBillResult struct {
-	ID        uuid.UUID
-	PostId    uuid.UUID
-	StartDate time.Time
-	EndDate   time.Time
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Bill      *BillWithoutAdvertiseResult
+	ID           uuid.UUID
+	PostId       uuid.UUID
+	StartDate    time.Time
+	EndDate      time.Time
+	DayRemaining int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Bill         *BillWithoutAdvertiseResult
 }
 
 type AdvertiseWithoutBillResult struct {
-	ID        uuid.UUID
-	PostId    uuid.UUID
-	StartDate time.Time
-	EndDate   time.Time
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           uuid.UUID
+	PostId       uuid.UUID
+	StartDate    time.Time
+	EndDate      time.Time
+	DayRemaining int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

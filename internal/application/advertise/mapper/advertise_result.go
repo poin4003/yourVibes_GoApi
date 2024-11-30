@@ -4,6 +4,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	advertise_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/validator"
+	"time"
 )
 
 func NewAdvertiseWithBillResultFromValidateEntity(
@@ -19,14 +20,26 @@ func NewAdvertiseWithBillResultFromEntity(
 		return nil
 	}
 
+	duration := advertise.EndDate.Sub(time.Now())
+	dayRemaining := int(duration.Hours() / 24)
+
+	if dayRemaining == 0 && duration.Hours() > 0 {
+		dayRemaining = 1
+	}
+
+	if dayRemaining < 0 {
+		dayRemaining = 0
+	}
+
 	return &common.AdvertiseWithBillResult{
-		ID:        advertise.ID,
-		PostId:    advertise.PostId,
-		StartDate: advertise.StartDate,
-		EndDate:   advertise.EndDate,
-		CreatedAt: advertise.CreatedAt,
-		UpdatedAt: advertise.UpdatedAt,
-		Bill:      NewBillWithoutAdvertiseResultFromEntity(advertise.Bill),
+		ID:           advertise.ID,
+		PostId:       advertise.PostId,
+		StartDate:    advertise.StartDate,
+		EndDate:      advertise.EndDate,
+		DayRemaining: dayRemaining,
+		CreatedAt:    advertise.CreatedAt,
+		UpdatedAt:    advertise.UpdatedAt,
+		Bill:         NewBillWithoutAdvertiseResultFromEntity(advertise.Bill),
 	}
 }
 
@@ -37,12 +50,24 @@ func NewAdvertiseWithoutBillResultFromEntity(
 		return nil
 	}
 
+	duration := advertise.EndDate.Sub(time.Now())
+	dayRemaining := int(duration.Hours() / 24)
+
+	if dayRemaining == 0 && duration.Hours() > 0 {
+		dayRemaining = 1
+	}
+
+	if dayRemaining < 0 {
+		dayRemaining = 0
+	}
+
 	return &common.AdvertiseWithoutBillResult{
-		ID:        advertise.ID,
-		PostId:    advertise.PostId,
-		StartDate: advertise.StartDate,
-		EndDate:   advertise.EndDate,
-		CreatedAt: advertise.CreatedAt,
-		UpdatedAt: advertise.UpdatedAt,
+		ID:           advertise.ID,
+		PostId:       advertise.PostId,
+		StartDate:    advertise.StartDate,
+		EndDate:      advertise.EndDate,
+		DayRemaining: dayRemaining,
+		CreatedAt:    advertise.CreatedAt,
+		UpdatedAt:    advertise.UpdatedAt,
 	}
 }
