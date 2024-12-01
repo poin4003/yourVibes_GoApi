@@ -172,22 +172,24 @@ func (r *rNewFeed) DeleteExpiredAdvertiseFromNewFeeds(
 	ctx context.Context,
 ) error {
 	query := `
-       	DELETE FROM new_feeds
-		WHERE post_id IN (
-			SELECT id 
-			FROM posts
-			WHERE is_advertisement = true 
-			  AND EXISTS (
-				  SELECT 1
-				  FROM advertises
-				  WHERE advertises.post_id = posts.id
-					AND advertises.end_date < ?
-			  )
-		) 
+        DELETE FROM new_feeds
+        WHERE post_id IN (
+            SELECT posts.id
+            FROM posts
+            WHERE EXISTS (
+                SELECT 1
+                FROM advertises
+                WHERE advertises.post_id = posts.id
+                  AND advertises.end_date < ?
+            )
+        )
     `
 
+	now := time.Now()
+	endOfToday := now.Truncate(24 * time.Hour).Add(24*time.Hour - time.Second)
+
 	if err := r.db.WithContext(ctx).
-		Exec(query, time.Now()).
+		Exec(query, endOfToday).
 		Error; err != nil {
 		return err
 	}

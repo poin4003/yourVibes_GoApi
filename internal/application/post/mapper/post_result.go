@@ -30,7 +30,7 @@ func NewPostWithLikedResultFromEntity(
 			CreatedAt:       post.ParentPost.CreatedAt,
 			UpdatedAt:       post.ParentPost.UpdatedAt,
 			Media:           NewMediaResultsFromEntity(post.ParentPost.Media),
-			User:            NewUserResultFromEntity(post.User),
+			User:            NewUserResultFromEntity(post.ParentPost.User),
 		}
 	}
 

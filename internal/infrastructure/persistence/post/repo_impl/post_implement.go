@@ -261,9 +261,10 @@ func (r *rPost) UpdateExpiredAdvertisements(
     `
 
 	now := time.Now()
+	endOfToday := now.Truncate(24 * time.Hour).Add(24*time.Hour - time.Second)
 
 	if err := r.db.WithContext(ctx).
-		Exec(query, now, now).
+		Exec(query, endOfToday, endOfToday).
 		Error; err != nil {
 		return err
 	}

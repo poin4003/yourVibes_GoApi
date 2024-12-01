@@ -25,14 +25,14 @@ func NewCheckExpiryCronJob(
 func (crj *crjCheckExpiry) Run() {
 	ctx := context.Background()
 
-	err := crj.postRepo.UpdateExpiredAdvertisements(ctx)
-	if err != nil {
-		fmt.Println("Error updating expired advertisements")
-	}
-
-	err = crj.newFeedRepo.DeleteExpiredAdvertiseFromNewFeeds(ctx)
+	err := crj.newFeedRepo.DeleteExpiredAdvertiseFromNewFeeds(ctx)
 	if err != nil {
 		fmt.Println("Error deleting expired advertisements")
+	}
+
+	err = crj.postRepo.UpdateExpiredAdvertisements(ctx)
+	if err != nil {
+		fmt.Println("Error updating expired advertisements")
 	}
 }
 
