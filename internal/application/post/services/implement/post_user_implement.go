@@ -486,7 +486,6 @@ func (s *sPostUser) GetPost(
 	query *post_query.GetOnePostQuery,
 ) (result *post_query.GetOnePostQueryResult, err error) {
 	result = &post_query.GetOnePostQueryResult{}
-
 	// 1. Get post
 	postEntity, err := s.postRepo.GetById(ctx, query.PostId)
 	if err != nil {
@@ -502,9 +501,43 @@ func (s *sPostUser) GetPost(
 		return result, err
 	}
 
-	// 2. Check isLiked by authenticated user
-	likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(query.AuthenticatedUserId, query.PostId)
+	// 2. Check privacy
+	isOwner := postEntity.UserId == query.AuthenticatedUserId
+	if !isOwner {
+		switch postEntity.Privacy {
+		case consts.PUBLIC:
+		case consts.FRIEND_ONLY:
+			isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
+				UserId:   postEntity.UserId,
+				FriendId: query.AuthenticatedUserId,
+			})
+			if err != nil {
+				result.Post = nil
+				result.ResultCode = response.ErrServerFailed
+				result.HttpStatusCode = http.StatusInternalServerError
+				return result, err
+			}
+			if !isFriend {
+				result.Post = nil
+				result.ResultCode = response.ErrPostFriendAccess
+				result.HttpStatusCode = http.StatusBadRequest
+				return result, fmt.Errorf("authenticated user is not a friend")
+			}
+		case consts.PRIVATE:
+			result.Post = nil
+			result.ResultCode = response.ErrPostPrivateAccess
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("only owner can access this post")
+		default:
+			result.Post = nil
+			result.ResultCode = response.ErrPostPrivateAccess
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("only owner can access this post")
+		}
+	}
 
+	// 3. Check isLiked by authenticated user
+	likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(query.AuthenticatedUserId, query.PostId)
 	if err != nil {
 		result.Post = nil
 		result.ResultCode = response.ErrServerFailed
@@ -514,7 +547,7 @@ func (s *sPostUser) GetPost(
 
 	isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, likeUserPostEntity)
 
-	// 3. Return
+	// 4. Return
 	result.Post = mapper.NewPostWithLikedResultFromEntity(postEntity, isLiked)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
@@ -145,7 +146,17 @@ func (r *rPost) GetMany(
 	var posts []*models.Post
 	var total int64
 
+	authenticatedUserId := query.AuthenticatedUserId
+	friendSubQuery := r.db.Model(&models.Friend{}).
+		Select("friend_id").
+		Where("user_id = ?", authenticatedUserId)
+
 	db := r.db.WithContext(ctx).Model(&models.Post{})
+
+	db = db.Where(
+		"(privacy = ? OR (privacy = ? AND (user_id IN (?) OR user_id = ?)) OR (privacy = ? AND user_id = ?))",
+		consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
+	)
 
 	if query.UserID != uuid.Nil {
 		db = db.Where("user_id = ?", query.UserID)

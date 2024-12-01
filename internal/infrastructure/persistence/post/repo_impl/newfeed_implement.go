@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
@@ -90,11 +91,23 @@ func (r *rNewFeed) GetMany(
 	}
 	offset := (page - 1) * limit
 
+	authenticatedUserId := query.UserId
+
+	friendSubQuery := r.db.Model(&models.Friend{}).
+		Select("friend_id").
+		Where("user_id = ?", authenticatedUserId)
+
 	db := r.db.WithContext(ctx)
 
 	err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
-		Where("new_feeds.user_id = ?", query.UserId).
+		Where("new_feeds.user_id = ?", authenticatedUserId).
+		Where(`
+			(posts.privacy = ? OR 
+			(posts.privacy = ? AND (posts.user_id IN (?) OR posts.user_id = ?)) OR
+			(posts.privacy = ? AND posts.user_id = ?))
+		`, consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
+		).
 		Count(&total).Error
 
 	if err != nil {
@@ -104,6 +117,12 @@ func (r *rNewFeed) GetMany(
 	err = db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("new_feeds.user_id = ?", query.UserId).
+		Where(`
+			(posts.privacy = ? OR 
+			(posts.privacy = ? AND (posts.user_id IN (?) OR posts.user_id = ?)) OR
+			(posts.privacy = ? AND posts.user_id = ?))
+		`, consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
+		).
 		Preload("User").
 		Preload("Media").
 		Order("posts.created_at desc").

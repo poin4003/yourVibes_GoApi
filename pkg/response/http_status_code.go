@@ -19,6 +19,8 @@ const (
 	ErrFriendNotExist                = 50009
 	ErrMakeFriendWithYourSelf        = 50010
 	ErrAdsExpired                    = 50011
+	ErrPostFriendAccess              = 50012
+	ErrPostPrivateAccess             = 50013
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -55,6 +57,8 @@ var msg = map[int]string{
 	ErrFriendNotExist:                "Friend has not exist",
 	ErrMakeFriendWithYourSelf:        "You can't make friend with yourself",
 	ErrAdsExpired:                    "Previous ads have not expired yet, you can't promote 2 advertise at a same time",
+	ErrPostFriendAccess:              "You must be friend to get this post",
+	ErrPostPrivateAccess:             "You can't get this post because it's private",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",
