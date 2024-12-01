@@ -58,7 +58,8 @@ func (s *sUserInfo) GetInfoByUserId(
 		return result, err
 	}
 
-	// 2. Check if user is friend
+	// 2. Check friend status
+	var friendStatus consts.FriendStatus
 	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
 		UserId:   query.AuthenticatedUserId,
 		FriendId: query.UserId,
@@ -70,45 +71,61 @@ func (s *sUserInfo) GetInfoByUserId(
 		return result, err
 	}
 
+	// 2.1. Check friend
 	if isFriend {
-		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.IS_FRIEND)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
-		return result, nil
+		friendStatus = consts.IS_FRIEND
+	} else {
+		// 2.2. Check if user are send add friend request
+		isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
+			UserId:   query.AuthenticatedUserId,
+			FriendId: query.UserId,
+		})
+		if err != nil {
+			result.User = nil
+			result.ResultCode = response.ErrServerFailed
+			result.HttpStatusCode = http.StatusInternalServerError
+			return result, err
+		}
+		if isSendFriendRequest {
+			friendStatus = consts.SEND_FRIEND_REQUEST
+		} else {
+			// 2.3. Check if user are receive add friend request
+			isReceiveFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
+				UserId:   query.UserId,
+				FriendId: query.AuthenticatedUserId,
+			})
+			if err != nil {
+				result.User = nil
+				result.ResultCode = response.ErrServerFailed
+				result.HttpStatusCode = http.StatusInternalServerError
+				return result, err
+			}
+			if isReceiveFriendRequest {
+				friendStatus = consts.RECEIVE_FRIEND_REQUEST
+			} else {
+				friendStatus = consts.NOT_FRIEND
+			}
+		}
 	}
 
-	// 3. Check if user are send add friend request
-	isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
-		UserId:   query.AuthenticatedUserId,
-		FriendId: query.UserId,
-	})
-	if err != nil {
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		return result, err
+	// 3. Check privacy
+	var userResult *common.UserWithoutSettingResult
+	switch userFound.Privacy {
+	case consts.PUBLIC:
+		userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+	case consts.FRIEND_ONLY:
+		if friendStatus == consts.IS_FRIEND {
+			userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+		} else {
+			userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+		}
+	case consts.PRIVATE:
+		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+	default:
+		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
 	}
 
-	if isSendFriendRequest {
-		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.SEND_FRIEND_REQUEST)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
-		return result, nil
-	}
-
-	// 4. Check if user are receive add friend request
-	isReceiveFriendRequest, _ := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
-		UserId:   query.UserId,
-		FriendId: query.AuthenticatedUserId,
-	})
-	if isReceiveFriendRequest {
-		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.RECEIVE_FRIEND_REQUEST)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
-		return result, nil
-	}
-
-	result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
+	result.User = userResult
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

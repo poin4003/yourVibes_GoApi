@@ -5,6 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
+	"time"
 )
 
 func NewUserShortVerValidateEntity(
@@ -53,6 +54,34 @@ func NewUserResultWithoutSettingEntity(
 		FriendStatus: friendStatus,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
+	}
+}
+
+func NewUserResultWithoutPrivateInfo(
+	user *user_entity.User,
+	friendStatus consts.FriendStatus,
+) *common.UserWithoutSettingResult {
+	if user == nil || friendStatus == "" {
+		return nil
+	}
+
+	return &common.UserWithoutSettingResult{
+		ID:           user.ID,
+		FamilyName:   user.FamilyName,
+		Name:         user.Name,
+		Email:        "",
+		PhoneNumber:  "",
+		Birthday:     time.Time{},
+		AvatarUrl:    user.AvatarUrl,
+		CapwallUrl:   user.CapwallUrl,
+		Privacy:      user.Privacy,
+		Biography:    "",
+		PostCount:    0,
+		FriendCount:  0,
+		Status:       user.Status,
+		FriendStatus: friendStatus,
+		CreatedAt:    time.Time{},
+		UpdatedAt:    time.Time{},
 	}
 }
 
