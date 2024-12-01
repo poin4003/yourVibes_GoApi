@@ -117,24 +117,30 @@ func (s *sUserInfo) GetInfoByUserId(
 	}
 
 	// 4. Check privacy
+	var resultCode int
 	var userResult *common.UserWithoutSettingResult
 	switch userFound.Privacy {
 	case consts.PUBLIC:
 		userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+		resultCode = response.ErrCodeSuccess
 	case consts.FRIEND_ONLY:
 		if friendStatus == consts.IS_FRIEND {
 			userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+			resultCode = response.ErrCodeSuccess
 		} else {
 			userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+			resultCode = response.ErrUserFriendAccess
 		}
 	case consts.PRIVATE:
 		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+		resultCode = response.ErrUserPrivateAccess
 	default:
 		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+		resultCode = response.ErrUserPrivateAccess
 	}
 
 	result.User = userResult
-	result.ResultCode = response.ErrCodeSuccess
+	result.ResultCode = resultCode
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }
