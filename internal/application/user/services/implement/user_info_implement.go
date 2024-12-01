@@ -58,7 +58,15 @@ func (s *sUserInfo) GetInfoByUserId(
 		return result, err
 	}
 
-	// 2. Check friend status
+	// 2. Return if user fetches his own information
+	if query.AuthenticatedUserId == query.UserId {
+		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
+		result.ResultCode = response.ErrCodeSuccess
+		result.HttpStatusCode = http.StatusOK
+		return result, nil
+	}
+
+	// 3. Check friend status
 	var friendStatus consts.FriendStatus
 	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
 		UserId:   query.AuthenticatedUserId,
@@ -71,11 +79,11 @@ func (s *sUserInfo) GetInfoByUserId(
 		return result, err
 	}
 
-	// 2.1. Check friend
+	// 3.1. Check friend
 	if isFriend {
 		friendStatus = consts.IS_FRIEND
 	} else {
-		// 2.2. Check if user are send add friend request
+		// 3.2. Check if user are send add friend request
 		isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
 			UserId:   query.AuthenticatedUserId,
 			FriendId: query.UserId,
@@ -89,7 +97,7 @@ func (s *sUserInfo) GetInfoByUserId(
 		if isSendFriendRequest {
 			friendStatus = consts.SEND_FRIEND_REQUEST
 		} else {
-			// 2.3. Check if user are receive add friend request
+			// 3.3. Check if user are receive add friend request
 			isReceiveFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
 				UserId:   query.UserId,
 				FriendId: query.AuthenticatedUserId,
@@ -108,7 +116,7 @@ func (s *sUserInfo) GetInfoByUserId(
 		}
 	}
 
-	// 3. Check privacy
+	// 4. Check privacy
 	var userResult *common.UserWithoutSettingResult
 	switch userFound.Privacy {
 	case consts.PUBLIC:
