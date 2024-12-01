@@ -33,7 +33,7 @@ type (
 		CheckUserLikePost(ctx context.Context, entity *entities.LikeUserPost) (bool, error)
 	}
 	INewFeedRepository interface {
-		CreateMany(ctx context.Context, postId uuid.UUID, friendIds []uuid.UUID) error
+		CreateMany(ctx context.Context, postId uuid.UUID, userId uuid.UUID) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
 		DeleteMany(ctx context.Context, condition map[string]interface{}) error
 		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)

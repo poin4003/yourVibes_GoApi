@@ -62,8 +62,8 @@ func (s *sAdvertise) CreateAdvertise(
 		// 1.2.2. Check payment status
 		if latestAds.Bill.Status == true {
 			// 1.2.2.1. Check ads expiration date
-			today := time.Now().Truncate(24 * time.Hour)
-			if !today.After(latestAds.EndDate.Truncate(24 * time.Hour)) {
+			today := time.Now()
+			if !today.After(latestAds.EndDate) {
 				result.PayUrl = ""
 				result.ResultCode = response.ErrAdsExpired
 				result.HttpStatusCode = http.StatusBadRequest

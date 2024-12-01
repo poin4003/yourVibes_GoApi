@@ -5,6 +5,7 @@ import (
 	advertise_services "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	post_services "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/response"
@@ -69,7 +70,13 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 		return
 	}
 
-	// 6. Call service to handle create advertise
+	// 6. Check privacy
+	if queryResult.Post.Privacy != consts.PUBLIC {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrAdMustBePublic, http.StatusBadRequest, "post privacy is not public")
+		return
+	}
+
+	// 7. Call service to handle create advertise
 	createAdvertiseCommand, err := createAdvertiseRequest.ToCreateAdvertiseCommand()
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())

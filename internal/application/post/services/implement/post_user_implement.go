@@ -157,8 +157,16 @@ func (s *sPostUser) CreatePost(
 		return result, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	// 5. Create new feed for user friend
-	// 5.1. Get friend id of user friend list
+	// 5. Check privacy of post
+	if postEntity.Privacy == consts.PRIVATE {
+		result.Post = mapper.NewPostResultFromEntity(postEntity)
+		result.ResultCode = response.ErrCodeSuccess
+		result.HttpStatusCode = http.StatusOK
+		return result, nil
+	}
+
+	// 6. Create new feed for user friend
+	// 6.1. Get friend id of user friend list
 	friendIds, err := s.friendRepo.GetFriendIds(ctx, userFound.ID)
 	if err != nil {
 		result.Post = nil
@@ -167,7 +175,7 @@ func (s *sPostUser) CreatePost(
 		return result, fmt.Errorf("failed to get friends: %w", err)
 	}
 
-	// 5.2. If user don't have friend, return
+	// 6.2. If user don't have friend, return
 	if len(friendIds) == 0 {
 		result.Post = mapper.NewPostResultFromEntity(postEntity)
 		result.ResultCode = response.ErrCodeSuccess
@@ -175,8 +183,8 @@ func (s *sPostUser) CreatePost(
 		return result, nil
 	}
 
-	// 5.3. Create new feed for friend
-	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, friendIds)
+	// 6.3. Create new feed for friend
+	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, userFound.ID)
 	if err != nil {
 		result.Post = nil
 		result.ResultCode = response.ErrServerFailed
@@ -184,7 +192,7 @@ func (s *sPostUser) CreatePost(
 		return result, fmt.Errorf("failed to create new feed: %w", err)
 	}
 
-	// 5.4. Create notification for friend
+	// 6.4. Create notification for friend
 	var notificationEntities []*notification_entity.Notification
 	for _, friendId := range friendIds {
 		content := truncate.TruncateContent(newPost.Content, 20)
@@ -215,7 +223,7 @@ func (s *sPostUser) CreatePost(
 		return result, fmt.Errorf("failed to create notifications: %w", err)
 	}
 
-	// 5.5. Send realtime notification (websocket)
+	// 6.5. Send realtime notification (websocket)
 	for _, friendId := range friendIds {
 		notificationSocketResponse := &consts.NotificationSocketResponse{
 			From:             userFound.FamilyName + " " + userFound.Name,
@@ -234,7 +242,7 @@ func (s *sPostUser) CreatePost(
 		}
 	}
 
-	// 6. Validate post after create
+	// 7. Validate post after create
 	validatePost, err := post_validator.NewValidatedPost(postEntity)
 	if err != nil {
 		result.Post = nil

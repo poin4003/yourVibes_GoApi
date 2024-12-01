@@ -24,20 +24,24 @@ func NewNewFeedRepositoryImplement(db *gorm.DB) *rNewFeed {
 func (r *rNewFeed) CreateMany(
 	ctx context.Context,
 	postId uuid.UUID,
-	friendIds []uuid.UUID,
+	userId uuid.UUID,
 ) error {
-	// 1. Create single post for single friend
-	var newFeeds []models.NewFeed
-	for _, friendId := range friendIds {
-		newFeeds = append(newFeeds, models.NewFeed{
-			UserId: friendId,
-			PostId: postId,
-			View:   0,
-		})
-	}
+	query := `
+		INSERT INTO new_feeds (user_id, post_id, view)
+		SELECT friend.friend_id, ?, 0
+		FROM friends friend
+		WHERE friend.user_id = ?
+		  AND NOT EXISTS (
+			  SELECT 1
+			  FROM new_feeds nf
+			  WHERE nf.user_id = friend.friend_id
+			    AND nf.post_id = ?
+		  )
+	`
 
-	// 2. Create new feed in db
-	if err := r.db.WithContext(ctx).Create(&newFeeds).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Exec(query, postId, userId, postId).
+		Error; err != nil {
 		return err
 	}
 	return nil

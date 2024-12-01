@@ -8,11 +8,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/redis/go-redis/v9"
 	"mime/multipart"
 	"net/http"
@@ -169,6 +171,14 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, queryResult.ResultCode, queryResult.HttpStatusCode, err.Error())
 		return
+	}
+
+	// 7. Check post advertise privacy
+	if queryResult.Post.IsAdvertisement {
+		if updatePostRequest.Privacy != pointer.Ptr(consts.PUBLIC) {
+			pkg_response.ErrorResponse(ctx, pkg_response.ErrAdMustBePublic, http.StatusBadRequest, "You can't update privacy of advertise")
+			return
+		}
 	}
 
 	// 7. Get user id from token
