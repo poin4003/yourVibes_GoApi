@@ -39,6 +39,23 @@ func (c *cBill) ConfirmPayment(ctx *gin.Context) {
 		}
 	}
 
+	// 4. Check resultCode to response for user if it failed
+	fmt.Println(confirmPaymentRequest.ResultCode)
+	if confirmPaymentRequest.ResultCode != "0" {
+		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
+	}
+
+	// 5. Call service to confirm payment
+	confirmPaymentCommand, err := confirmPaymentRequest.ToConfirmPaymentCommand()
+	if err != nil {
+		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
+	}
+
+	_, err = services.Bill().ConfirmPayment(ctx, confirmPaymentCommand)
+	if err != nil {
+		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
+	}
+
 	if strings.HasPrefix(redirectUrl, "exp://") || strings.HasPrefix(redirectUrl, "myapp://") {
 		htmlContent := fmt.Sprintf(`
 			<!DOCTYPE html>
@@ -58,23 +75,6 @@ func (c *cBill) ConfirmPayment(ctx *gin.Context) {
 
 		ctx.Data(http.StatusOK, "text/html", []byte(htmlContent))
 		return
-	}
-
-	// 4. Check resultCode to response for user if it failed
-	fmt.Println(confirmPaymentRequest.ResultCode)
-	if confirmPaymentRequest.ResultCode != "0" {
-		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
-	}
-
-	// 5. Call service to confirm payment
-	confirmPaymentCommand, err := confirmPaymentRequest.ToConfirmPaymentCommand()
-	if err != nil {
-		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
-	}
-
-	_, err = services.Bill().ConfirmPayment(ctx, confirmPaymentCommand)
-	if err != nil {
-		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
 	}
 
 	ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
