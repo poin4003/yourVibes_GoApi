@@ -123,27 +123,38 @@ func (r *rPost) DeleteOne(
 
 func (r *rPost) GetOne(
 	ctx context.Context,
-	query interface{},
-	args ...interface{},
-) (*entities.Post, error) {
-	var postModel models.Post
+	id uuid.UUID,
+	authenticatedUserId uuid.UUID,
+) (*entities.PostWithLiked, error) {
+	var postModel models.PostWithLiked
 
 	if err := r.db.WithContext(ctx).
-		Model(&postModel).
-		Where(query, args...).
+		Model(&models.Post{}).
+		Select(`posts.*,
+	   	EXISTS (
+	       SELECT 1
+	       FROM like_user_posts
+	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
+	   	) AS is_liked
+		`, authenticatedUserId).
+		Where("posts.id = ?", id).
+		Preload("User").
+		Preload("Media").
+		Preload("ParentPost.User").
+		Preload("ParentPost.Media").
 		First(&postModel).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return r.GetById(ctx, postModel.ID)
+	return mapper.FromPostWithLikedModel(&postModel), nil
 }
 
 func (r *rPost) GetMany(
 	ctx context.Context,
 	query *query.GetManyPostQuery,
-) ([]*entities.Post, *response.PagingResponse, error) {
-	var posts []*models.Post
+) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
+	var postModels []*models.PostWithLiked
 	var total int64
 
 	authenticatedUserId := query.AuthenticatedUserId
@@ -227,11 +238,19 @@ func (r *rPost) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.Offset(offset).Limit(limit).
-		Preload("Media").
+		Select(`posts.*,
+	   	EXISTS (
+	       SELECT 1
+	       FROM like_user_posts
+	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
+	   	) AS is_liked
+		`, authenticatedUserId).
 		Preload("User").
+		Preload("Media").
 		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
-		Find(&posts).Error; err != nil {
+		Find(&postModels).
+		Error; err != nil {
 		return nil, nil, err
 	}
 
@@ -241,9 +260,9 @@ func (r *rPost) GetMany(
 		Total: total,
 	}
 
-	var postEntities []*entities.Post
-	for _, post := range posts {
-		postEntity := mapper.FromPostModel(post)
+	var postEntities []*entities.PostWithLiked
+	for _, post := range postModels {
+		postEntity := mapper.FromPostWithLikedModel(post)
 		postEntities = append(postEntities, postEntity)
 	}
 

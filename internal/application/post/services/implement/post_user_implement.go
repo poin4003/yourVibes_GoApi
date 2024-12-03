@@ -495,7 +495,7 @@ func (s *sPostUser) GetPost(
 ) (result *post_query.GetOnePostQueryResult, err error) {
 	result = &post_query.GetOnePostQueryResult{}
 	// 1. Get post
-	postEntity, err := s.postRepo.GetById(ctx, query.PostId)
+	postEntity, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil
@@ -544,19 +544,8 @@ func (s *sPostUser) GetPost(
 		}
 	}
 
-	// 3. Check isLiked by authenticated user
-	likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(query.AuthenticatedUserId, query.PostId)
-	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		return result, err
-	}
-
-	isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, likeUserPostEntity)
-
 	// 4. Return
-	result.Post = mapper.NewPostWithLikedResultFromEntity(postEntity, isLiked)
+	result.Post = mapper.NewPostWithLikedResultFromEntity(postEntity)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
@@ -579,18 +568,7 @@ func (s *sPostUser) GetManyPosts(
 
 	var postResults []*common.PostResultWithLiked
 	for _, postEntity := range postEntities {
-		likeUserPost, err := post_entity.NewLikeUserPostEntity(query.AuthenticatedUserId, postEntity.ID)
-		if err != nil {
-			result.Posts = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
-			result.PagingResponse = nil
-			return result, err
-		}
-
-		isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, likeUserPost)
-
-		postResult := mapper.NewPostWithLikedResultFromEntity(postEntity, isLiked)
+		postResult := mapper.NewPostWithLikedResultFromEntity(postEntity)
 		postResults = append(postResults, postResult)
 	}
 

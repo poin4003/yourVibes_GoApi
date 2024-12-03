@@ -25,6 +25,25 @@ type Post struct {
 	Media           []*Media
 }
 
+type PostWithLiked struct {
+	ID              uuid.UUID
+	UserId          uuid.UUID
+	User            *User
+	ParentId        *uuid.UUID
+	ParentPost      *Post
+	Content         string
+	LikeCount       int
+	CommentCount    int
+	Privacy         consts.PrivacyLevel
+	Location        string
+	IsAdvertisement bool
+	Status          bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Media           []*Media
+	IsLiked         bool
+}
+
 type PostUpdate struct {
 	Content         *string
 	LikeCount       *int

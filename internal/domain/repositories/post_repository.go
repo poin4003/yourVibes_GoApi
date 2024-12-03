@@ -14,8 +14,8 @@ type (
 		CreateOne(ctx context.Context, entity *entities.Post) (*entities.Post, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.PostUpdate) (*entities.Post, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Post, error)
-		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Post, error)
-		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.Post, *response.PagingResponse, error)
+		GetOne(ctx context.Context, id uuid.UUID, authenticatedUserId uuid.UUID) (*entities.PostWithLiked, error)
+		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.PostWithLiked, *response.PagingResponse, error)
 		UpdateExpiredAdvertisements(ctx context.Context) error
 	}
 	IMediaRepository interface {
@@ -36,7 +36,7 @@ type (
 		CreateMany(ctx context.Context, postId uuid.UUID, userId uuid.UUID) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, postId uuid.UUID) error
 		DeleteMany(ctx context.Context, condition map[string]interface{}) error
-		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)
+		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.PostWithLiked, *response.PagingResponse, error)
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 	}

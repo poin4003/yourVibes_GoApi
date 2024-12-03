@@ -46,7 +46,7 @@ func (s *sPostLike) LikePost(
 ) (result *post_command.LikePostCommandResult, err error) {
 	result = &post_command.LikePostCommandResult{}
 	// 1. Find exist post
-	postFound, err := s.postRepo.GetById(ctx, command.PostId)
+	postFound, err := s.postRepo.GetOne(ctx, command.PostId, command.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil
@@ -115,7 +115,7 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
-		postFound, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
+		postUpdated, err := s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.1.3. Check like to response
 		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
@@ -157,8 +157,8 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to send notification: %w", err)
 		}
 
-		// 4.1.6. Map Post to PostDto to response for client
-		result.Post = mapper.NewPostWithLikedResultFromEntity(postFound, isLiked)
+		// 4.1.6. Map to result
+		result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 
@@ -192,7 +192,7 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
-		postFound, err = s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
+		postUpdated, err := s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.2.3. Check like to response
 		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
@@ -206,7 +206,7 @@ func (s *sPostLike) LikePost(
 		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, checkLikedToResponse)
 
 		// 4.2.4. Map post to postDto
-		result.Post = mapper.NewPostWithLikedResultFromEntity(postFound, isLiked)
+		result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 

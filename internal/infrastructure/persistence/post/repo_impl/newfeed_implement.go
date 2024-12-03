@@ -28,19 +28,27 @@ func (r *rNewFeed) CreateMany(
 ) error {
 	query := `
 		INSERT INTO new_feeds (user_id, post_id, view)
-		SELECT friend.friend_id, ?, 0
+		SELECT friend.friend_id, CAST(? AS UUID), 0
 		FROM friends friend
-		WHERE friend.user_id = ?
+		WHERE friend.user_id = CAST(? AS UUID)
 		  AND NOT EXISTS (
 			  SELECT 1
 			  FROM new_feeds nf
 			  WHERE nf.user_id = friend.friend_id
-			    AND nf.post_id = ?
+				AND nf.post_id = CAST(? AS UUID)
 		  )
+		UNION ALL
+		SELECT CAST(? AS UUID), CAST(? AS UUID), 0
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM new_feeds nf
+			WHERE nf.user_id = CAST(? AS UUID)
+			  AND nf.post_id = CAST(? AS UUID)
+		);
 	`
 
 	if err := r.db.WithContext(ctx).
-		Exec(query, postId, userId, postId).
+		Exec(query, postId, userId, postId, userId, postId, userId, postId).
 		Error; err != nil {
 		return err
 	}
@@ -81,8 +89,8 @@ func (r *rNewFeed) DeleteMany(
 func (r *rNewFeed) GetMany(
 	ctx context.Context,
 	query *query.GetNewFeedQuery,
-) ([]*entities.Post, *response.PagingResponse, error) {
-	var posts []*models.Post
+) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
+	var posts []*models.PostWithLiked
 	var total int64
 
 	limit := query.Limit
@@ -127,8 +135,17 @@ func (r *rNewFeed) GetMany(
 			(posts.privacy = ? AND posts.user_id = ?))
 		`, consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
 		).
+		Select(`posts.*,
+	   	EXISTS (
+	       SELECT 1
+	       FROM like_user_posts
+	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
+	   	) AS is_liked
+		`, authenticatedUserId).
 		Preload("User").
 		Preload("Media").
+		Preload("ParentPost.User").
+		Preload("ParentPost.Media").
 		Order("posts.created_at desc").
 		Offset(offset).
 		Limit(limit).
@@ -145,9 +162,9 @@ func (r *rNewFeed) GetMany(
 		Total: total,
 	}
 
-	var postEntities []*entities.Post
+	var postEntities []*entities.PostWithLiked
 	for _, post := range posts {
-		postEntity := mapper.FromPostModel(post)
+		postEntity := mapper.FromPostWithLikedModel(post)
 		postEntities = append(postEntities, postEntity)
 	}
 

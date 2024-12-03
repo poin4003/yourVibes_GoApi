@@ -6,7 +6,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
@@ -68,17 +67,7 @@ func (s *sPostNewFeed) GetNewFeeds(
 
 	var postResults []*common.PostResultWithLiked
 	for _, postEntity := range postEntities {
-		likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(query.UserId, postEntity.ID)
-		if err != nil {
-			result.Posts = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
-			result.PagingResponse = nil
-			return result, err
-		}
-
-		isLiked, _ := s.likeUserPostRepo.CheckUserLikePost(ctx, likeUserPostEntity)
-		postResults = append(postResults, mapper.NewPostWithLikedResultFromEntity(postEntity, isLiked))
+		postResults = append(postResults, mapper.NewPostWithLikedResultFromEntity(postEntity))
 	}
 
 	result.Posts = postResults
