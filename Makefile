@@ -10,4 +10,13 @@ migrate:
 swag:
 	swag init -g ./cmd/server/main.go -o ./cmd/swag/docs
 
+docker_build:
+	docker-compose up -d --build
+
+docker_stop:
+	docker-compose down
+
+docker_up:
+	docker compose up -d
+
 .PHONY: dev
