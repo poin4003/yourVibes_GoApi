@@ -25,7 +25,7 @@ func InitRouter() *gin.Engine {
 			"http://localhost:3000",
 			"http://localhost:8081",
 			"http://localhost:8080",
-			"0.tcp.ap.ngrok.io:15976",
+			"https://0.tcp.ap.ngrok.io:15976",
 		},
 		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:  []string{"Origin", "Content-Type", "Authorization"},
