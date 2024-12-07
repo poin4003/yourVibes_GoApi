@@ -1532,7 +1532,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "localhost:8080",
+	Host:             "https://0.tcp.ap.ngrok.io:15976",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",
