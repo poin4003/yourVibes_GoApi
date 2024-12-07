@@ -16,7 +16,7 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host http://0.tcp.ap.ngrok.io:15976
+// @host 0.tcp.ap.ngrok.io:15976
 // @BasePath /v1/2024
 // @schema http
 
