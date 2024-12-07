@@ -5,6 +5,8 @@ pipeline {
         DOCKER_IMAGE = '400034/yourvibes_api_server'
         DOCKER_TAG = 'latest'
         PROD_SERVER = credentials('PROD_SERVER')
+        PROD_USER = credentials('PROD_USER')
+        PROD_PASSWORD = credentials('PROD_PASSWORD')
         TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
         TELEGRAM_CHAT_ID = credentials('TELEGRAM_CHAT_ID')
     }
