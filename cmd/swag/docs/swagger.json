@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "https://0.tcp.ap.ngrok.io:15976",
+    "host": "http://0.tcp.ap.ngrok.io:15976",
     "basePath": "/v1/2024",
     "paths": {
         "/advertise/": {
