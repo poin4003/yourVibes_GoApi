@@ -89,19 +89,21 @@ pipeline {
         }
 
         success {
-            sendTelegramMessage("✅ Build #${BUILD_NUMBER} was successful! ✅", "${TELEGRAM_BOT_TOKEN}", "${TELEGRAM_CHAT_ID}")
+            sendTelegramMessage("✅ Build #${BUILD_NUMBER} was successful! ✅")
         }
 
         failure {
-            sendTelegramMessage("❌ Build #${BUILD_NUMBER} failed. ❌", "${TELEGRAM_BOT_TOKEN}", "${TELEGRAM_CHAT_ID}")
+            sendTelegramMessage("❌ Build #${BUILD_NUMBER} failed. ❌")
         }
     }
 }
 
-def sendTelegramMessage(String message, String token, String chatId) {
-    sh """
-    curl -s -X POST https://api.telegram.org/bot${token}/sendMessage \
-    -d chat_id=${chatId} \
-    -d text="${message}"
-    """
+def sendTelegramMessage(String message) {
+    withEnv(["MESSAGE=${message}"]) {
+        sh '''
+        curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage \
+        -d chat_id=$TELEGRAM_CHAT_ID \
+        -d text="$MESSAGE"
+        '''
+    }
 }
