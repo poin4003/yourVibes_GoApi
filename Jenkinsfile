@@ -4,8 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = '400034/yourvibes_api_server'
         DOCKER_TAG = 'latest'
-        PROD_USER = credentials('PROD_USER')
-        PROD_PASSWORD = credentials('PROD_PASSWORD')
         PROD_SERVER = credentials('PROD_SERVER')
         TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
         TELEGRAM_CHAT_ID = credentials('TELEGRAM_CHAT_ID')
@@ -75,18 +73,19 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to Production...'
-                    sshScript remote: [
-                        host: "${PROD_SERVER}",
-                        user: "${PROD_USER}",
-                        password: "${PROD_PASSWORD}"
-                    ], script: '''
-                         docker container stop yourvibes_api_server || echo "No container to stop"
-                         docker container rm yourvibes_api_server || echo "No container to remove"
-                         docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image to remove"
-                         docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                         docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    '''
-                }
+                    withCredentials([usernamePassword(credentialsId: 'prod-credentials', usernameVariable: 'PROD_USER', passwordVariable: 'PROD_PASSWORD')]) {
+                        sshScript remote: [
+                            host: "${PROD_SERVER}",
+                            user: "${PROD_USER}",
+                            password: "${PROD_PASSWORD}"
+                        ], script: '''
+                             docker container stop yourvibes_api_server || echo "No container to stop"
+                             docker container rm yourvibes_api_server || echo "No container to remove"
+                             docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image to remove"
+                             docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+                             docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '''
+                    }
             }
         }
     }
