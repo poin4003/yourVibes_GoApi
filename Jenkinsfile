@@ -20,7 +20,7 @@ pipeline {
 
         stage('Prepare Config') {
             steps {
-                sh 'cp -r /path/to/config $WORKSPACE/config'
+                sh 'cp -r "C:/workspace/GoLang/yourVibes_GoApi/config" "$WORKSPACE/config"'
             }
         }
 
