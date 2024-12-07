@@ -86,6 +86,7 @@ pipeline {
                              docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
                         '''
                     }
+                }
             }
         }
     }
