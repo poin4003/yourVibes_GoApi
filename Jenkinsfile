@@ -18,6 +18,12 @@ pipeline {
             }
         }
 
+        stage('Prepare Config') {
+            steps {
+                sh 'cp -r /path/to/config $WORKSPACE/config'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
