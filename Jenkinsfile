@@ -73,7 +73,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to Production...'
-                    withCredentials([usernamePassword(credentialsId: 'prod-credentials', usernameVariable: 'PROD_USER', passwordVariable: 'PROD_PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: 'PROD_CREDENTIALS', usernameVariable: 'PROD_USER', passwordVariable: 'PROD_PASSWORD')]) {
                         sshScript remote: [
                             host: "${PROD_SERVER}",
                             user: "${PROD_USER}",
