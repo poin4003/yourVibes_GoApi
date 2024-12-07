@@ -69,26 +69,36 @@ pipeline {
             }
         }
 
-        stage('Deploy to Production on Acer Archlinux server') {
-            steps {
-                script {
-                    echo 'Deploying to Production...'
-                    withCredentials([usernamePassword(credentialsId: 'PROD_CREDENTIALS', usernameVariable: 'PROD_USER', passwordVariable: 'PROD_PASSWORD')]) {
-                        sshScript remote: [
-                            host: "${PROD_SERVER}",
-                            user: "${PROD_USER}",
-                            password: "${PROD_PASSWORD}"
-                        ], script: '''
-                             docker container stop yourvibes_api_server || echo "No container to stop"
-                             docker container rm yourvibes_api_server || echo "No container to remove"
-                             docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image to remove"
-                             docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                             docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
-                    }
-                }
-            }
-        }
+       stage('Deploy to Production on Acer Archlinux server') {
+           steps {
+               script {
+                   echo 'Deploying to Production...'
+                   withCredentials([usernamePassword(credentialsId: 'PROD_CREDENTIALS', usernameVariable: 'PROD_USER', passwordVariable: 'PROD_PASSWORD')]) {
+                       sshScript remote: [
+                           host: "${PROD_SERVER}",
+                           user: "${PROD_USER}",
+                           password: "${PROD_PASSWORD}"
+                       ], script: '''
+                           echo "Checking if the Docker image exists..."
+                           docker images | grep ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "Docker image ${DOCKER_IMAGE}:${DOCKER_TAG} not found"
+
+                           echo "Stopping container if exists..."
+                           docker container stop yourvibes_api_server || echo "No container to stop"
+                           docker container rm yourvibes_api_server || echo "No container to remove"
+
+                           echo "Removing old image..."
+                           docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
+
+                           echo "Pulling the latest image..."
+                           docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                           echo "Running container..."
+                           docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                       '''
+                   }
+               }
+           }
+       }
     }
 
     post {
