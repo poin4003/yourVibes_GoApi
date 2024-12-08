@@ -1,4 +1,3 @@
-//
 pipeline {
     agent any
 
@@ -22,10 +21,7 @@ pipeline {
         stage('Prepare Config') {
             steps {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
-                    sh '''
-                        cp $CONFIG_FILE $WORKSPACE/config
-                        chmod 644 $WORKSPACE/config
-                    '''
+                    sh 'cp $CONFIG_FILE $WORKSPACE/config'
                 }
             }
         }
@@ -42,6 +38,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Running tests...'
+                sh 'ls $WORKSPACE/config'
             }
         }
 
