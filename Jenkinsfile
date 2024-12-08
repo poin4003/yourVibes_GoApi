@@ -83,9 +83,9 @@ pipeline {
                     ], script: '''
                          docker container stop yourvibes_api_server || echo "No container to stop"
                          docker container rm yourvibes_api_server || echo "No container to remove"
-                         docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image to remove"
-                         docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                         docker container run -d --rm --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                         docker image rmi 400034/yourvibes_api_server:latest || echo "No image to remove"
+                         docker image pull 400034/yourvibes_api_server:latest
+                         docker container run -d --rm --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
                     '''
                 }
             }
