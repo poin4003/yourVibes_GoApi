@@ -66,7 +66,7 @@ pipeline {
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}  # Pull image về
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
                         -v /c/workspace/GoLang/yourVibes_GoApi/config:/config
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        ${DOCKER_IMAGE}:${DOCKER_TAG} .
                     '''
                 }
             }
@@ -85,7 +85,7 @@ pipeline {
                            docker pull 400034/yourvibes_api_server:latest && \
                            docker run -d --name yourvibes_api_server -p 8080:8080 \
                            -v ~/documents/yourVibes_GoApi/config:/config
-                           400034/yourvibes_api_server:latest
+                           400034/yourvibes_api_server:latest .
                        "
                    '''
                }
