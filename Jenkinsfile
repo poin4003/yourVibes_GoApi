@@ -30,7 +30,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image for linux/amd64 platform...'
-                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--platform linux/amd64 .")
                 }
             }
         }
@@ -57,16 +57,15 @@ pipeline {
                 script {
                     echo 'Clearing server_golang-related images and containers...'
                     sh '''
-                        docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
-                        docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
+                        docker-compose -f docker-compose.yml down || echo "No container to stop or remove"
+                        docker-compose -f docker-compose.yml rm -f || echo "No container to remove"
                         docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
                     '''
 
                     echo 'Deploying to DEV environment...'
                     sh '''
-                        docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker network create dev || echo "Network already exists"
-                        docker container run -d --name yourvibes_api_server -p 8080:8080 --network dev ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker-compose -f docker-compose.yml pull
+                        docker-compose -f docker-compose.yml up -d
                     '''
                 }
             }
@@ -78,11 +77,12 @@ pipeline {
                     echo 'Deploying to Production...'
                     sh '''
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
-                            docker container stop yourvibes_api_server || echo 'No container to stop'
-                            docker container rm yourvibes_api_server || echo 'No container to remove'
-                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
-                            docker image pull 400034/yourvibes_api_server:latest
-                            docker container run -d --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
+                            cd /path/to/your/project && \
+                            docker-compose -f docker-compose.yml down || echo 'No container to stop or remove' && \
+                            docker-compose -f docker-compose.yml rm -f || echo 'No container to remove' && \
+                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
+                            docker-compose -f docker-compose.yml pull && \
+                            docker-compose -f docker-compose.yml up -d
                         "
                     '''
                 }
