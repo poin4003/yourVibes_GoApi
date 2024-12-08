@@ -18,13 +18,13 @@ pipeline {
             }
         }
 
-        stage('Prepare Config') {
-            steps {
-                withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
-                    sh 'cp $CONFIG_FILE $WORKSPACE/config'
-                }
-            }
-        }
+//         stage('Prepare Config') {
+//             steps {
+//                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
+//                     sh 'cp $CONFIG_FILE $WORKSPACE/config'
+//                 }
+//             }
+//         }
 
         stage('Build Docker Image') {
             steps {
@@ -38,7 +38,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Running tests...'
-                sh 'ls $WORKSPACE/config'
+                sh 'ls -a $WORKSPACE/config'
             }
         }
 
