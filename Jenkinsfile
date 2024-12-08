@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image for linux/amd64 platform...'
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--platform linux/amd64 .")
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--no-cache --platform linux/amd64 .")
                 }
             }
         }
