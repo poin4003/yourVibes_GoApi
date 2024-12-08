@@ -18,19 +18,19 @@ pipeline {
             }
         }
 
-//         stage('Prepare Config') {
-//             steps {
-//                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
-//                     sh 'cp $CONFIG_FILE $WORKSPACE/config'
-//                 }
-//             }
-//         }
+        stage('Prepare Config') {
+            steps {
+                withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
+                    sh 'cp $CONFIG_FILE $WORKSPACE/config'
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 script {
                     echo 'Building Docker image for linux/amd64 platform...'
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--platform linux/amd64 .")
+                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
                 }
             }
         }
