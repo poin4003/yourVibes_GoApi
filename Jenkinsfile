@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = '400034/yourvibes_api_server'
         DOCKER_TAG = 'latest'
-        PROD_SERVER_PORT = credentials('PROD_SERVER')
+        PROD_SERVER_PORT = credentials('PROD_SERVER_PORT')
         PROD_USER = credentials('PROD_USER')
         PROD_PASSWORD = credentials('PROD_PASSWORD')
         TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
@@ -77,7 +77,7 @@ pipeline {
                     echo 'Deploying to Production...'
                     sshScript remote: [
                         host: "0.tcp.ap.ngrok.io",
-                        port: "${PROD_SERVER_PORT}"
+                        port: "${PROD_SERVER_PORT}",
                         user: "${PROD_USER}",
                         password: "${PROD_PASSWORD}"
                     ], script: '''
