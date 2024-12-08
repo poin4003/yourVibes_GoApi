@@ -21,8 +21,10 @@ pipeline {
         stage('Prepare Config') {
             steps {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
-                    sh 'cp $CONFIG_FILE $WORKSPACE/config'
-                    sh 'ls -l $WORKSPACE/config'
+                    sh '''
+                        cp $CONFIG_FILE $WORKSPACE/config
+                        chmod 644 $WORKSPACE/config
+                    '''
                 }
             }
         }
@@ -31,7 +33,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image for linux/amd64 platform...'
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--no-cache --platform linux/amd64 .")
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--platform linux/amd64 .")
                 }
             }
         }
