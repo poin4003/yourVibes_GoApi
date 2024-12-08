@@ -75,17 +75,14 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to Production...'
-                    sshScript remote: [
-                        host: "0.tcp.ap.ngrok.io",
-                        port: "${PROD_SERVER_PORT}",
-                        user: "${PROD_USER}",
-                        password: "${PROD_PASSWORD}"
-                    ], script: '''
-                         docker container stop yourvibes_api_server || echo "No container to stop"
-                         docker container rm yourvibes_api_server || echo "No container to remove"
-                         docker image rmi 400034/yourvibes_api_server:latest || echo "No image to remove"
-                         docker image pull 400034/yourvibes_api_server:latest
-                         docker container run -d --rm --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
+                    sh '''
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
+                            docker container stop yourvibes_api_server || echo 'No container to stop'
+                            docker container rm yourvibes_api_server || echo 'No container to remove'
+                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
+                            docker image pull 400034/yourvibes_api_server:latest
+                            docker container run -d --rm --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
+                        "
                     '''
                 }
             }
