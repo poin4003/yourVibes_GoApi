@@ -17,6 +17,6 @@ docker_stop:
 	docker-compose down
 
 docker_up:
-	docker compose up -d
+	docker-compose up -d
 
 .PHONY: dev

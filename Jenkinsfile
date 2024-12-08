@@ -22,6 +22,7 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
                     sh 'cp $CONFIG_FILE $WORKSPACE/config'
+                    sh 'ls -l $WORKSPACE/config'
                 }
             }
         }
