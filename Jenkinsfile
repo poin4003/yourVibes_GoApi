@@ -51,46 +51,45 @@ pipeline {
             }
         }
 
-//         stage('Deploy Golang to DEV') {
-//             steps {
-//                 script {
-//                     echo 'Clearing server_golang-related images and containers...'
-//                     sh '''
-//                         docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
-//                         docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
-//                         docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
-//                     '''
-//
-//                     echo 'Deploying to DEV environment...'
-//                     sh '''
-//                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}  # Pull image về
-//                         docker run -d --name yourvibes_api_server -p 8080:8080 \
-//                         -v //c/workspace/GoLang/yourVibes_GoApi/config:/config \
-//                         ${DOCKER_IMAGE}:${DOCKER_TAG}
-//                     '''
-//                 }
-//             }
-//         }
+        stage('Deploy Golang to DEV') {
+            steps {
+                script {
+                    echo 'Clearing server_golang-related images and containers...'
+                    sh '''
+                        docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
+                        docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
+                        docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
+                    '''
 
+                    echo 'Deploying to DEV environment...'
+                    sh '''
+                        docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker run -d --name yourvibes_api_server -p 8080:8080 \
+                        -v $WORKSPACE/config:/config \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    '''
+                }
+            }
+        }
 
-       stage('Deploy to Production on Acer Archlinux server') {
-           steps {
-               script {
-                   echo 'Deploying to Production...'
-                   sh '''
-                       sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
-                           docker container stop yourvibes_api_server || echo 'No container to stop' && \
-                           docker container rm yourvibes_api_server || echo 'No container to remove' && \
-                           docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
-                           docker pull 400034/yourvibes_api_server:latest && \
-                           docker run -d --name yourvibes_api_server -p 8080:8080 \
-                           -v ~/documents/yourVibes_GoApi/config:/config \
-                           400034/yourvibes_api_server:latest
-                       "
-                   '''
-               }
-           }
-       }
+        stage('Deploy to Production on Acer Archlinux server') {
+            steps {
+                script {
+                    echo 'Deploying to Production...'
+                    sh '''
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
+                            docker container stop yourvibes_api_server || echo 'No container to stop' && \
+                            docker container rm yourvibes_api_server || echo 'No container to remove' && \
+                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
+                            docker pull 400034/yourvibes_api_server:latest && \
+                            docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -v ~/documents/yourVibes_GoApi/config:/config \
+                            400034/yourvibes_api_server:latest
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
