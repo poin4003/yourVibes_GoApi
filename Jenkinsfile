@@ -51,26 +51,26 @@ pipeline {
             }
         }
 
-        stage('Deploy Golang to DEV') {
-            steps {
-                script {
-                    echo 'Clearing server_golang-related images and containers...'
-                    sh '''
-                        docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
-                        docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
-                        docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
-                    '''
-
-                    echo 'Deploying to DEV environment...'
-                    sh '''
-                        docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}  # Pull image về
-                        docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v /c/workspace/GoLang/yourVibes_GoApi/config:/config \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    '''
-                }
-            }
-        }
+//         stage('Deploy Golang to DEV') {
+//             steps {
+//                 script {
+//                     echo 'Clearing server_golang-related images and containers...'
+//                     sh '''
+//                         docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
+//                         docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
+//                         docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
+//                     '''
+//
+//                     echo 'Deploying to DEV environment...'
+//                     sh '''
+//                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}  # Pull image về
+//                         docker run -d --name yourvibes_api_server -p 8080:8080 \
+//                         -v //c/workspace/GoLang/yourVibes_GoApi/config:/config \
+//                         ${DOCKER_IMAGE}:${DOCKER_TAG}
+//                     '''
+//                 }
+//             }
+//         }
 
 
        stage('Deploy to Production on Acer Archlinux server') {
