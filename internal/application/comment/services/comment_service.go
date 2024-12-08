@@ -6,8 +6,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
 
-// jfl;kasjdfkl;asjdf;klsdjaf;lkajsdf;lksadj
-
 type (
 	ICommentUser interface {
 		CreateComment(ctx context.Context, command *command.CreateCommentCommand) (result *command.CreateCommentResult, err error)
