@@ -65,8 +65,8 @@ pipeline {
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}  # Pull image về
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v /c/workspace/GoLang/yourVibes_GoApi/config:/config
-                        ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        -v /c/workspace/GoLang/yourVibes_GoApi/config:/config \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '''
                 }
             }
@@ -84,8 +84,8 @@ pipeline {
                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
                            docker pull 400034/yourvibes_api_server:latest && \
                            docker run -d --name yourvibes_api_server -p 8080:8080 \
-                           -v ~/documents/yourVibes_GoApi/config:/config
-                           400034/yourvibes_api_server:latest .
+                           -v ~/documents/yourVibes_GoApi/config:/config \
+                           400034/yourvibes_api_server:latest
                        "
                    '''
                }
