@@ -65,7 +65,7 @@ pipeline {
                     sh '''
                         docker image pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker network create dev || echo "Network already exists"
-                        docker container run -d --rm --name yourvibes_api_server -p 8080:8080 --network dev ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker container run -d --name yourvibes_api_server -p 8080:8080 --network dev ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '''
                 }
             }
@@ -81,7 +81,7 @@ pipeline {
                             docker container rm yourvibes_api_server || echo 'No container to remove'
                             docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
                             docker image pull 400034/yourvibes_api_server:latest
-                            docker container run -d --rm --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
+                            docker container run -d --name yourvibes_api_server -p 8080:8080 400034/yourvibes_api_server:latest
                         "
                     '''
                 }
