@@ -76,7 +76,8 @@ pipeline {
                 script {
                     echo 'Deploying to Production...'
                     sshScript remote: [
-                        host: "${PROD_SERVER}",
+                        host: "0.tcp.ap.ngrok.io",
+                        port: "${PROD_SERVER}"
                         user: "${PROD_USER}",
                         password: "${PROD_PASSWORD}"
                     ], script: '''

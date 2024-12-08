@@ -113,7 +113,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: 0.tcp.ap.ngrok.io:15976
+host: 0.tcp.ap.ngrok.io:18872
 info:
   contact:
     email: pchuy4003@gmail.com
