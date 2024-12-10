@@ -138,8 +138,8 @@ func (r *rPost) GetOne(
 	   	) AS is_liked
 		`, authenticatedUserId).
 		Where("posts.id = ?", id).
-		Preload("User").
 		Preload("Media").
+		Preload("User").
 		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
 		First(&postModel).

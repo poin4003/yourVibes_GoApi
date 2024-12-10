@@ -2,7 +2,6 @@ package post_user
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,7 +17,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"mime/multipart"
 	"net/http"
-	"time"
 )
 
 type cPostUser struct {
@@ -96,20 +94,6 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 
 	// 6. Map result to dto
 	postDto := response.ToPostDto(*result.Post)
-
-	cacheKey := fmt.Sprintf("posts:user:%s:*", userIdClaim)
-	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
-
-	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	for _, key := range keys {
-		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
-			panic(er.Error())
-		}
-	}
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
@@ -214,21 +198,6 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	// 10. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	// Delete cache
-	cacheKey := fmt.Sprintf("posts:user:%s:*", result.Post.UserId)
-	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
-
-	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	for _, key := range keys {
-		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
-			panic(er.Error())
-		}
-	}
-
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
 
@@ -264,27 +233,6 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		return
 	}
 
-	// 2. Check redis
-	cacheKey := fmt.Sprintf("posts:user:%s:page:%d:limit:%d", postQueryObject.UserID, postQueryObject.Page, postQueryObject.Limit)
-	cachePosts, err := p.redisClient.Get(context.Background(), cacheKey).Result()
-	if err == nil {
-		var postDto []response.PostDto
-		err = json.Unmarshal([]byte(cachePosts), &postDto)
-		if err == nil {
-			cacheTotalKey := fmt.Sprintf("posts:user:%s:total", postQueryObject.UserID)
-			cacheTatal, _ := p.redisClient.Get(context.Background(), cacheTotalKey).Int64()
-
-			paging := pkg_response.PagingResponse{
-				Limit: postQueryObject.Limit,
-				Page:  postQueryObject.Page,
-				Total: cacheTatal,
-			}
-
-			pkg_response.SuccessPagingResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, postDto, paging)
-			return
-		}
-	}
-
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
@@ -306,12 +254,6 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	for _, postResult := range result.Posts {
 		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
 	}
-
-	postsJson, _ := json.Marshal(postDtos)
-	p.redisClient.Set(context.Background(), cacheKey, postsJson, time.Minute*1)
-
-	cacheTotalKey := fmt.Sprintf("posts:user:%s:total", postQueryObject.UserID)
-	p.redisClient.Set(context.Background(), cacheTotalKey, result.PagingResponse.Total, time.Minute*1)
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, postDtos, *result.PagingResponse)
 }
@@ -343,37 +285,20 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Check redis
-	cachedPost, err := p.redisClient.Get(context.Background(), postId.String()).Result()
-	if err == nil {
-		var postDto response.PostDto
-		err = json.Unmarshal([]byte(cachedPost), &postDto)
-		if err != nil {
-			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-			return
-		}
-		pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, postDto)
-		return
-	}
-
-	// 4. Call service to handle get one
+	// 3. Call service to handle get one
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 5. Map to Dto
+	// 4. Map to Dto
 	postDto := response.ToPostWithLikedDto(*result.Post)
-
-	postJson, _ := json.Marshal(postDto)
-	p.redisClient.Set(context.Background(), postId.String(), postJson, time.Minute*1)
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
 }
@@ -431,21 +356,6 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
-	}
-
-	// Delete cache in redis
-	cacheKey := fmt.Sprintf("posts:user:%s:*", query_result.Post.UserId)
-	keys, _, err := p.redisClient.Scan(ctx, 0, cacheKey, 0).Result()
-
-	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	for _, key := range keys {
-		if er := p.redisClient.Del(context.Background(), key).Err(); er != nil {
-			panic(er.Error())
-		}
 	}
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postId)

@@ -164,4 +164,5 @@ func FromPostWithLikedModel(postModel *models.PostWithLiked) *post_entity.PostWi
 		UpdatedAt:       postModel.UpdatedAt,
 		Media:           medias,
 	}
+	return nil
 }
