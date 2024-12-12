@@ -74,6 +74,10 @@ func DBMigrator(db *gorm.DB) error {
 		&models.NewFeed{},
 		&models.Advertise{},
 		&models.Bill{},
+		&models.Admin{},
+		&models.UserReport{},
+		&models.PostReport{},
+		&models.CommentReport{},
 	)
 	return err
 }

@@ -65,31 +65,31 @@ pipeline {
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v $WORKSPACE/config:/config \
+                        -v $WORKSPACE/config/local.yaml:/config/local.yaml \
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '''
                 }
             }
         }
 
-        stage('Deploy to Production on Acer Archlinux server') {
-            steps {
-                script {
-                    echo 'Deploying to Production...'
-                    sh '''
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
-                            docker container stop yourvibes_api_server || echo 'No container to stop' && \
-                            docker container rm yourvibes_api_server || echo 'No container to remove' && \
-                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
-                            docker pull 400034/yourvibes_api_server:latest && \
-                            docker run -d --name yourvibes_api_server -p 8080:8080 \
-                            -v ~/documents/yourVibes_GoApi/config:/config \
-                            400034/yourvibes_api_server:latest
-                        "
-                    '''
-                }
-            }
-        }
+//         stage('Deploy to Production on Acer Archlinux server') {
+//             steps {
+//                 script {
+//                     echo 'Deploying to Production...'
+//                     sh '''
+//                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
+//                             docker container stop yourvibes_api_server || echo 'No container to stop' && \
+//                             docker container rm yourvibes_api_server || echo 'No container to remove' && \
+//                             docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
+//                             docker pull 400034/yourvibes_api_server:latest && \
+//                             docker run -d --name yourvibes_api_server -p 8080:8080 \
+//                             -v ~/documents/yourVibes_GoApi/config:/config \
+//                             400034/yourvibes_api_server:latest
+//                         "
+//                     '''
+//                 }
+//             }
+//         }
     }
 
     post {

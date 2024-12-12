@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "localhost:8080",
+    "host": "e0bd-14-161-34-15.ngrok-free.app",
     "basePath": "/v1/2024",
     "paths": {
         "/advertise/": {

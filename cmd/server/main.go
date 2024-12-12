@@ -16,9 +16,9 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host localhost:8080
+// @host e0bd-14-161-34-15.ngrok-free.app
 // @BasePath /v1/2024
-// @schema http
+// @schema https
 
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in header
