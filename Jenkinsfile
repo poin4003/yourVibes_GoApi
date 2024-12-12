@@ -23,8 +23,6 @@ pipeline {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
                     sh 'mkdir -p $WORKSPACE/config'
                     sh 'cp $CONFIG_FILE $WORKSPACE/config'
-                    sh 'ls -l $WORKSPACE/config'
-                    sh 'cat $WORKSPACE/config/local.yaml'
                 }
             }
         }
@@ -66,8 +64,10 @@ pipeline {
 
                     echo 'Setting up volume for configuration...'
                     sh '''
+                        sh 'ls -l $WORKSPACE/config'
+                        sh 'cat $WORKSPACE/config/local.yaml'
                         docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
-                        docker run --rm -v yourvibes_config:/config -v $WORKSPACE:/tmp-config busybox sh -c "cp -r /tmp-config/* /config/"
+                        docker run --rm -v yourvibes_config:/config -v $WORKSPACE:/tmp-config busybox sh -c "cp -r /tmp-config/config/local.yaml /config/"
                     '''
 
                     echo 'Deploying to DEV environment...'
