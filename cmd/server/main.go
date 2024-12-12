@@ -16,7 +16,7 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host e0bd-14-161-34-15.ngrok-free.app
+// @host yourvibesapi.duckdns.org
 // @BasePath /v1/2024
 // @schema https
 
