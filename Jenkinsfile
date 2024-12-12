@@ -58,11 +58,12 @@ pipeline {
                     sh '''
                         docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
                         docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
-                        docker image rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
+                        docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
                     '''
 
                     echo 'Deploying to DEV environment...'
                     sh '''
+                        ls $WORKSPACE/config
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
                         -v $WORKSPACE/config/local.yaml:/config/local.yaml \
