@@ -5,6 +5,7 @@ pipeline {
         DOCKER_IMAGE = '400034/yourvibes_api_server'
         DOCKER_TAG = 'latest'
         PROD_SERVER_PORT = credentials('PROD_SERVER_PORT')
+        PROD_SERVER_NAME = credentials('PROD_SERVER_NAME')
         PROD_USER = credentials('PROD_USER')
         PROD_PASSWORD = credentials('PROD_PASSWORD')
         TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
@@ -52,56 +53,73 @@ pipeline {
             }
         }
 
-        stage('Deploy Golang to DEV') {
-            steps {
-                script {
-                    echo 'Clearing server_golang-related images and containers...'
-                    sh '''
-                        docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
-                        docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
-                        docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
-                    '''
-
-                    echo 'Setting up volume for configuration...'
-                    sh '''
-                        ls -l $WORKSPACE/config
-                        cat $WORKSPACE/config/local.yaml
-                        docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
-                        docker run -v yourvibes_config:/config --name helper busybox sh -c "mkdir -p /config"
-                        docker cp $WORKSPACE/config/local.yaml helper:/config
-                        docker rm helper
-                    '''
-
-                    echo 'Deploying to DEV environment...'
-                    sh '''
-                        docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v yourvibes_config:/config \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    '''
-                }
-            }
-        }
-
-
-//         stage('Deploy to Production on Acer Archlinux server') {
+//         stage('Deploy Golang to DEV') {
 //             steps {
 //                 script {
-//                     echo 'Deploying to Production...'
+//                     echo 'Clearing server_golang-related images and containers...'
 //                     sh '''
-//                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@0.tcp.ap.ngrok.io "
-//                             docker container stop yourvibes_api_server || echo 'No container to stop' && \
-//                             docker container rm yourvibes_api_server || echo 'No container to remove' && \
-//                             docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
-//                             docker pull 400034/yourvibes_api_server:latest && \
-//                             docker run -d --name yourvibes_api_server -p 8080:8080 \
-//                             -v ~/documents/yourVibes_GoApi/config:/config \
-//                             400034/yourvibes_api_server:latest
-//                         "
+//                         docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
+//                         docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
+//                         docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
+//                     '''
+//
+//                     echo 'Setting up volume for configuration...'
+//                     sh '''
+//                         ls -l $WORKSPACE/config
+//                         cat $WORKSPACE/config/local.yaml
+//                         docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
+//                         docker run -v yourvibes_config:/config --name helper busybox sh -c "mkdir -p /config"
+//                         docker cp $WORKSPACE/config/local.yaml helper:/config
+//                         docker rm helper
+//                     '''
+//
+//                     echo 'Deploying to DEV environment...'
+//                     sh '''
+//                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+//                         docker run -d --name yourvibes_api_server -p 8080:8080 \
+//                         -v yourvibes_config:/config \
+//                         ${DOCKER_IMAGE}:${DOCKER_TAG}
 //                     '''
 //                 }
 //             }
 //         }
+
+        stage('Deploy to Production on Acer Archlinux server') {
+            steps {
+                script {
+                    echo 'Deploying to Production...'
+
+                    sh '''
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
+                            echo 'Stopping and removing existing containers and images...'
+                            docker container stop yourvibes_api_server || echo 'No container to stop' && \
+                            docker container rm yourvibes_api_server || echo 'No container to remove' && \
+                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
+                        "
+                    '''
+
+                    sh '''
+                        echo 'Setting up volume for production configuration...'
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@{PROD_SERVER_NAME} "
+                            docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
+                            docker run -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config' && \
+                            docker cp $WORKSPACE/config/local.yaml helper:/config && \
+                            docker rm helper
+                        "
+                    '''
+
+                    sh '''
+                        echo 'Deploying to production server...'
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@{PROD_SERVER_NAME} "
+                            docker pull 400034/yourvibes_api_server:latest && \
+                            docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -v yourvibes_config:/config \
+                            400034/yourvibes_api_server:latest
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
