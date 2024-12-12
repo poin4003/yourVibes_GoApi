@@ -22,7 +22,6 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
                     sh 'cp $CONFIG_FILE $WORKSPACE/config'
-                    sh 'cat $WORKSPACE/config/local.yaml'
                 }
             }
         }
@@ -64,7 +63,6 @@ pipeline {
 
                     echo 'Deploying to DEV environment...'
                     sh '''
-                        cat $WORKSPACE/config/local.yaml
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
                         -v $WORKSPACE/config/local.yaml:/config/local.yaml \
