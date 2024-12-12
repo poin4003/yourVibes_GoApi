@@ -21,6 +21,7 @@ pipeline {
         stage('Prepare Config') {
             steps {
                 withCredentials([file(credentialsId: 'config_file', variable: 'CONFIG_FILE')]) {
+                    sh 'ls -l $CONFIG_FILE'
                     sh 'cp -r $CONFIG_FILE $WORKSPACE/config'
                     sh 'cat $WORKSPACE/config/local.yaml'
                 }
