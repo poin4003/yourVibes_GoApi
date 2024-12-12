@@ -61,17 +61,19 @@ pipeline {
                         docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
                     '''
 
-                    echo 'Checking config directory...'
+                    echo 'Setting up volume for configuration...'
                     sh '''
-                        ls -la $WORKSPACE/config || echo "Config directory not found"
+                        docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
+                        docker run --rm -v yourvibes_config:/config -v $WORKSPACE:/tmp-config alpine \
+                        sh -c "cp /tmp-config/local.yaml /config/"
                     '''
 
                     echo 'Deploying to DEV environment...'
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker run -d --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker exec yourvibes_api_server mkdir -p /config
-                        docker cp $WORKSPACE/config/local.yaml yourvibes_api_server:/config
+                        docker run -d --name yourvibes_api_server -p 8080:8080 \
+                        -v yourvibes_config:/config \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '''
                 }
             }
