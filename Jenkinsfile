@@ -70,7 +70,7 @@ pipeline {
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v $WORKSPACE/config/local.yaml:/config/local.yaml \
+                        -v $WORKSPACE/config/local.yaml:/config/ \
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '''
                 }
