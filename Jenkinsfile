@@ -70,6 +70,7 @@ pipeline {
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker run -d --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker exec yourvibes_api_server mkdir -p /config
                         docker cp $WORKSPACE/config/local.yaml yourvibes_api_server:/config
                     '''
                 }
