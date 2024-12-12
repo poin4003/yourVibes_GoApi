@@ -69,9 +69,8 @@ pipeline {
                     echo 'Deploying to DEV environment...'
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker run -d --name yourvibes_api_server -p 8080:8080 \
-                        -v $WORKSPACE/config/:/config/ \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker run -d --name yourvibes_api_server -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker cp $WORKSPACE/config/local.yaml:/config
                     '''
                 }
             }
