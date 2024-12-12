@@ -94,15 +94,13 @@ pipeline {
     }
 
     post {
-        always {
-            cleanWs()
-        }
-
         success {
+            cleanWs()
             sendTelegramMessage("✅ Build #${BUILD_NUMBER} was successful! ✅")
         }
 
         failure {
+            cleanWs()
             sendTelegramMessage("❌ Build #${BUILD_NUMBER} failed. ❌")
         }
     }
