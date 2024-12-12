@@ -61,6 +61,11 @@ pipeline {
                         docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
                     '''
 
+                    echo 'Checking config directory...'
+                    sh '''
+                        ls -la $WORKSPACE/config || echo "Config directory not found"
+                    '''
+
                     echo 'Deploying to DEV environment...'
                     sh '''
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
