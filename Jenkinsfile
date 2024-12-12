@@ -100,7 +100,7 @@ pipeline {
 
                     sh '''
                         echo 'Setting up volume for production configuration...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@{PROD_SERVER_NAME} "
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
                             docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
                             docker run -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config' && \
                             docker cp $WORKSPACE/config/local.yaml helper:/config && \
@@ -110,7 +110,7 @@ pipeline {
 
                     sh '''
                         echo 'Deploying to production server...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@{PROD_SERVER_NAME} "
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
                             docker pull 400034/yourvibes_api_server:latest && \
                             docker run -d --name yourvibes_api_server -p 8080:8080 \
                             -v yourvibes_config:/config \
