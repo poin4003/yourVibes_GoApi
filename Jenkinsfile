@@ -68,7 +68,7 @@ pipeline {
 //                         ls -l $WORKSPACE/config
 //                         cat $WORKSPACE/config/local.yaml
 //                         docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
-//                         docker run -rm -v yourvibes_config:/config --name helper busybox sh -c "mkdir -p /config"
+//                         docker run --rm -v yourvibes_config:/config --name helper busybox sh -c "mkdir -p /config"
 //                         docker cp $WORKSPACE/config/local.yaml helper:/config
 //                     '''
 //
@@ -101,7 +101,7 @@ pipeline {
                         echo 'Setting up volume for production configuration...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
                             docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
-                            docker run -rm -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config' && \
+                            docker run --rm -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config' && \
                             docker cp ${WORKSPACE}/config/local.yaml helper:/config && \
                         "
                     '''
