@@ -64,7 +64,7 @@ pipeline {
                     echo 'Setting up volume for configuration...'
                     sh '''
                         docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
-                        docker run --rm -v yourvibes_config:/config -v $WORKSPACE:/tmp-config busybox sh -c "cp /tmp-config/config/local.yaml /config/"
+                        docker run --rm -v yourvibes_config:/config -v $WORKSPACE:/config busybox sh -c "cp /config/local.yaml /config/"
                     '''
 
                     echo 'Deploying to DEV environment...'
