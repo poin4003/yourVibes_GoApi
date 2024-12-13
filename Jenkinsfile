@@ -89,29 +89,27 @@ pipeline {
                     echo 'Deploying to Production...'
 
                     sh '''
+                        echo 'Copying local.yaml to production server...'
+                        sshpass -p "${PROD_PASSWORD}" scp -P "${PROD_SERVER_PORT}" \
+                        ${WORKSPACE}/config/local.yaml \
+                        "${PROD_USER}"@${PROD_SERVER_NAME}:/home/pchuy/documents/yourVibes_GoApi/config/
+                    '''
+
+                    sh '''
+                        echo 'Setting up Docker volume for production configuration...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            echo 'Stopping and removing existing containers and images...'
-                            docker container stop yourvibes_api_server || echo 'No container to stop'
-                            docker container rm yourvibes_api_server || echo 'No container to remove'
-                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
+                            docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
+                            docker run --rm -v yourvibes_config:/config -v /home/pchuy/documents/yourVibes_GoApi/config:/host busybox sh -c 'cp /host/local.yaml /config/local.yaml'
                         "
                     '''
 
                     sh '''
-                        echo 'Setting up volume for production configuration...'
+                        echo 'Deploying application to production server...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists'
-                            docker run --rm -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config'
-                            cat ${WORKSPACE}/config/local.yaml
-                            docker cp ${WORKSPACE}/config/local.yaml helper:/config
-                        "
-                    '''
-
-                    sh '''
-                        echo 'Deploying to production server...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker pull 400034/yourvibes_api_server:latest
-                            docker run -d --name yourvibes_api_server -p 8080:8080 -v yourvibes_config:/config 400034/yourvibes_api_server:latest
+                            docker pull 400034/yourvibes_api_server:latest && \
+                            docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -v yourvibes_config:/config \
+                            400034/yourvibes_api_server:latest
                         "
                     '''
                 }
