@@ -122,10 +122,10 @@ pipeline {
                         echo 'Deploying application to production server...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
                             docker pull 400034/yourvibes_api_server:latest && \
-                            docker network connect yourvibes_network yourvibes_api_server || echo 'Network already connected' && \
+                            docker network connect yourvibes_goapi_default yourvibes_api_server || echo 'Network already connected' && \
                             docker run -d --name yourvibes_api_server -p 8080:8080 \
                             -v yourvibes_config:/config \
-                            --network yourvibes_network \
+                            --network yourvibes_goapi_default \
                             400034/yourvibes_api_server:latest
                         "
                     '''
