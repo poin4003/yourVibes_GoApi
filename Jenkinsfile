@@ -83,43 +83,40 @@ pipeline {
 //             }
 //         }
 
-       stage('Deploy to Production on Acer Archlinux server') {
-           steps {
-               script {
-                   echo 'Deploying to Production...'
+        stage('Deploy to Production on Acer Archlinux server') {
+            steps {
+                script {
+                    echo 'Deploying to Production...'
 
-                   sh '''
-                       echo 'Deploying to production server...'
+                    sh '''
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
+                            echo 'Stopping and removing existing containers and images...'
+                            docker container stop yourvibes_api_server || echo 'No container to stop'
+                            docker container rm yourvibes_api_server || echo 'No container to remove'
+                            docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove'
+                        "
+                    '''
 
-                       sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                           echo 'Stopping and removing existing containers and images...' && \
-                           docker container stop yourvibes_api_server || echo 'No container to stop' && \
-                           docker container rm yourvibes_api_server || echo 'No container to remove' && \
-                           docker image rmi 400034/yourvibes_api_server:latest || echo 'No image to remove' && \
+                    sh '''
+                        echo 'Setting up volume for production configuration...'
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
+                            docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists'
+                            docker run --rm -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config'
+                            cat ${WORKSPACE}/config/local.yaml
+                            docker cp ${WORKSPACE}/config/local.yaml helper:/config
+                        "
+                    '''
 
-                           echo 'Setting up volume for production configuration...' && \
-                           docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
-                           docker run --rm -v yourvibes_config:/config --name helper busybox sh -c 'mkdir -p /config' && \
-
-                           echo 'Copying configuration file to production server...' && \
-                           scp -P ${PROD_SERVER_PORT} ${WORKSPACE}/config/local.yaml ${PROD_USER}@${PROD_SERVER_NAME}:/tmp/local.yaml && \
-
-                           echo 'Copying local.yaml into Docker volume...' && \
-                           docker run --rm -v yourvibes_config:/config -v /tmp:/host busybox sh -c 'cp /host/local.yaml /config/local.yaml' && \
-
-                           echo 'Cleaning up temporary files...' && \
-                           rm -f /tmp/local.yaml && \
-
-                           echo 'Starting new container...' && \
-                           docker pull 400034/yourvibes_api_server:latest && \
-                           docker run -d --name yourvibes_api_server -p 8080:8080 \
-                           -v yourvibes_config:/config \
-                           400034/yourvibes_api_server:latest
-                       "
-                   '''
-               }
-           }
-       }
+                    sh '''
+                        echo 'Deploying to production server...'
+                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
+                            docker pull 400034/yourvibes_api_server:latest
+                            docker run -d --name yourvibes_api_server -p 8080:8080 -v yourvibes_config:/config 400034/yourvibes_api_server:latest
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
