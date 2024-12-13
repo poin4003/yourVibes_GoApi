@@ -13,8 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - yourvibes_network
 
   redis:
     image: redis:latest
@@ -22,8 +20,6 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    networks:
-      - yourvibes_network
 
   yourvibes_server:
     build:
@@ -40,12 +36,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-    networks:
-      - yourvibes_network
 
 volumes:
   postgres_data:
-
-networks:
-  yourvibes_network:
-    driver: bridge
