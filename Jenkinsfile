@@ -89,21 +89,6 @@ pipeline {
                     echo 'Deploying to Production...'
 
                     sh '''
-                        echo 'Stopping and removing existing container...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker stop yourvibes_api_server || echo 'Container not running' && \
-                            docker rm yourvibes_api_server || echo 'Container not found'
-                        "
-                    '''
-
-                    sh '''
-                        echo 'Removing old Docker image...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker rmi 400034/yourvibes_api_server:latest || echo 'Image not found'
-                        "
-                    '''
-
-                    sh '''
                         echo 'Copying local.yaml to production server...'
                         sshpass -p "${PROD_PASSWORD}" scp -P "${PROD_SERVER_PORT}" \
                         ${WORKSPACE}/config/local.yaml \
@@ -121,12 +106,13 @@ pipeline {
                     sh '''
                         echo 'Deploying application to production server...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                           docker pull 400034/yourvibes_api_server:latest && \
-                           docker network connect yourvibes_network yourvibes_api_server || echo 'Network already connected' && \
-                           docker run -d --name yourvibes_api_server -p 8080:8080 \
-                           -v yourvibes_config:/config \
-                           --network yourvibes_network \
-                           400034/yourvibes_api_server:latest
+                            docker pull 400034/yourvibes_api_server:latest && \
+                            docker network connect yourvibes_network yourvibes_api_server || echo 'Network already connected' && \
+                            docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -v yourvibes_config:/config \
+                            --network yourvibes_network \
+                            400034/yourvibes_api_server:latest
+                        "
                     '''
                 }
             }
