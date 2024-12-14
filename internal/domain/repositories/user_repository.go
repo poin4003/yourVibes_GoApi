@@ -37,6 +37,9 @@ type (
 		GetFriendIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
 	}
+	IUserReportRepository interface {
+		CreateOne(ctx context.Context)
+	}
 )
 
 var (

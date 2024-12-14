@@ -8,7 +8,7 @@ import (
 type PostReport struct {
 	UserId         uuid.UUID `gorm:"type:uuid;primary_key;not null;"`
 	ReportedPostId uuid.UUID `gorm:"type:uuid;primary_key;not null;"`
-	AdminId        uuid.UUID `gorm:"type:uuid;not null;"`
+	AdminId        uuid.UUID `gorm:"type:uuid;"`
 	User           User      `gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ReportedPost   Post      `gorm:"foreignKey:ReportedPostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Admin          Admin     `gorm:"foreignKey:AdminId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
