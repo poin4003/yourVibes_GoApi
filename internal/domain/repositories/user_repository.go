@@ -38,7 +38,11 @@ type (
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
 	}
 	IUserReportRepository interface {
-		CreateOne(ctx context.Context)
+		GetByUserIdAndReportedUserId(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.UserReport, error)
+		CreateOne(ctx context.Context, entity *entities.UserReport) (*entities.UserReport, error)
+		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.UserReportUpdate) (*entities.UserReport, error)
+		DeleteOne(ctx context.Context, id uuid.UUID) error
+		GetMany(ctx context.Context, query *query.GetManyUserReportQuery) ([]*entities.UserReport, *response.PagingResponse, error)
 	}
 )
 
@@ -47,6 +51,7 @@ var (
 	localSetting       ISettingRepository
 	localFriendRequest IFriendRequestRepository
 	localFriend        IFriendRepository
+	localUserReport    IUserReportRepository
 )
 
 func User() IUserRepository {
@@ -81,6 +86,14 @@ func Friend() IFriendRepository {
 	return localFriend
 }
 
+func UserReport() IUserReportRepository {
+	if localUserReport == nil {
+		panic("repository_implement localUserReport not found for interface IUserReport")
+	}
+
+	return localUserReport
+}
+
 func InitUserRepository(i IUserRepository) {
 	localUser = i
 }
@@ -95,4 +108,8 @@ func InitFriendRequestRepository(i IFriendRequestRepository) {
 
 func InitFriendRepository(i IFriendRepository) {
 	localFriend = i
+}
+
+func InitUserReportRepository(i IUserReportRepository) {
+	localUserReport = i
 }

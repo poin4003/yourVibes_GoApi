@@ -26,6 +26,13 @@ type (
 		GetLikeUserComment(ctx context.Context, query *query.GetCommentLikeQuery) ([]*entities.User, *response.PagingResponse, error)
 		CheckUserLikeComment(ctx context.Context, entity *entities.LikeUserComment) (bool, error)
 	}
+	ICommentReportRepository interface {
+		GetByUserIdAndReportedCommentId(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.CommentReport, error)
+		CreateOne(ctx context.Context, entity *entities.CommentReport) (*entities.CommentReport, error)
+		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.CommentReportUpdate) (*entities.CommentReport, error)
+		DeleteOne(ctx context.Context, id uuid.UUID) error
+		GetMany(ctx context.Context, query *query.GetManyCommentReportQuery) ([]*entities.CommentReport, *response.PagingResponse, error)
+	}
 )
 
 var (

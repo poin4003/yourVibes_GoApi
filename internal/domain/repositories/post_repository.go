@@ -40,6 +40,13 @@ type (
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 	}
+	IPostReportRepository interface {
+		GetByUserIdAndReportedPostId(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (*entities.PostReport, error)
+		CreateOne(ctx context.Context, entity *entities.PostReport) (*entities.PostReport, error)
+		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
+		DeleteOne(ctx context.Context, id uuid.UUID) error
+		GetMany(ctx context.Context, query *query.GetManyPostReportQuery) ([]*entities.PostReport, *response.PagingResponse, error)
+	}
 )
 
 var (
@@ -47,6 +54,7 @@ var (
 	localPost         IPostRepository
 	localLikeUserPost ILikeUserPostRepository
 	localNewFeed      INewFeedRepository
+	localPostReport   IPostReportRepository
 )
 
 func Post() IPostRepository {
@@ -81,6 +89,14 @@ func NewFeed() INewFeedRepository {
 	return localNewFeed
 }
 
+func PostReport() IPostReportRepository {
+	if localPostReport == nil {
+		panic("repository_implement localPostReport not found for interface IPostReport")
+	}
+
+	return localPostReport
+}
+
 func InitPostRepository(i IPostRepository) {
 	localPost = i
 }
@@ -95,4 +111,8 @@ func InitLikeUserPostRepository(i ILikeUserPostRepository) {
 
 func InitNewFeedRepository(i INewFeedRepository) {
 	localNewFeed = i
+}
+
+func InitPostReportRepository(i IPostReportRepository) {
+	localPostReport = i
 }
