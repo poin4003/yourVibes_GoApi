@@ -102,7 +102,7 @@ func FromPostModel(postModel *models.Post) *post_entity.Post {
 	}
 }
 
-func FromPostWithLikedModel(postModel *models.PostWithLiked) *post_entity.PostWithLiked {
+func FromPostWithLikedModel(postModel *models.Post, isLiked bool) *post_entity.PostWithLiked {
 	var parentPost *post_entity.Post
 	if postModel.ParentPost != nil {
 		var medias []*post_entity.Media
@@ -158,11 +158,10 @@ func FromPostWithLikedModel(postModel *models.PostWithLiked) *post_entity.PostWi
 		Privacy:         postModel.Privacy,
 		Location:        postModel.Location,
 		IsAdvertisement: postModel.IsAdvertisement,
-		IsLiked:         postModel.IsLiked,
+		IsLiked:         isLiked,
 		Status:          postModel.Status,
 		CreatedAt:       postModel.CreatedAt,
 		UpdatedAt:       postModel.UpdatedAt,
 		Media:           medias,
 	}
-	return nil
 }

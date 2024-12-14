@@ -90,7 +90,7 @@ func (r *rNewFeed) GetMany(
 	ctx context.Context,
 	query *query.GetNewFeedQuery,
 ) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
-	var posts []*models.PostWithLiked
+	var posts []*models.Post
 	var total int64
 
 	limit := query.Limit
@@ -111,7 +111,7 @@ func (r *rNewFeed) GetMany(
 
 	db := r.db.WithContext(ctx)
 
-	err := db.Model(&models.Post{}).
+	if err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("new_feeds.user_id = ?", authenticatedUserId).
 		Where(`
@@ -120,13 +120,11 @@ func (r *rNewFeed) GetMany(
 			(posts.privacy = ? AND posts.user_id = ?))
 		`, consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
 		).
-		Count(&total).Error
-
-	if err != nil {
+		Count(&total).Error; err != nil {
 		return nil, nil, err
 	}
 
-	err = db.Model(&models.Post{}).
+	if err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("new_feeds.user_id = ?", query.UserId).
 		Where(`
@@ -150,10 +148,22 @@ func (r *rNewFeed) GetMany(
 		Offset(offset).
 		Limit(limit).
 		Find(&posts).
-		Error
-
-	if err != nil {
+		Error; err != nil {
 		return nil, nil, err
+	}
+
+	var likedPostIds []uuid.UUID
+	if err := r.db.Model(&models.LikeUserPost{}).
+		Select("post_id").
+		Where("user_id = ?", authenticatedUserId).
+		Find(&likedPostIds).
+		Error; err != nil {
+		return nil, nil, err
+	}
+
+	likedMap := make(map[uuid.UUID]bool)
+	for _, id := range likedPostIds {
+		likedMap[id] = true
 	}
 
 	pagingResponse := &response.PagingResponse{
@@ -164,7 +174,7 @@ func (r *rNewFeed) GetMany(
 
 	var postEntities []*entities.PostWithLiked
 	for _, post := range posts {
-		postEntity := mapper.FromPostWithLikedModel(post)
+		postEntity := mapper.FromPostWithLikedModel(post, likedMap[post.ID])
 		postEntities = append(postEntities, postEntity)
 	}
 

@@ -126,17 +126,10 @@ func (r *rPost) GetOne(
 	id uuid.UUID,
 	authenticatedUserId uuid.UUID,
 ) (*entities.PostWithLiked, error) {
-	var postModel models.PostWithLiked
+	var postModel models.Post
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.Post{}).
-		Select(`posts.*,
-	   	EXISTS (
-	       SELECT 1
-	       FROM like_user_posts
-	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
-	   	) AS is_liked
-		`, authenticatedUserId).
 		Where("posts.id = ?", id).
 		Preload("Media").
 		Preload("User").
@@ -147,14 +140,26 @@ func (r *rPost) GetOne(
 		return nil, err
 	}
 
-	return mapper.FromPostWithLikedModel(&postModel), nil
+	var isLiked bool
+	if err := r.db.Raw(`
+		SELECT EXISTS (
+			SELECT 1 
+			FROM like_user_posts
+			WHERE like_user_posts.post_id = ? AND like_user_posts.user_id = ?
+		)`, id, authenticatedUserId).
+		Scan(&isLiked).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return mapper.FromPostWithLikedModel(&postModel, isLiked), nil
 }
 
 func (r *rPost) GetMany(
 	ctx context.Context,
 	query *query.GetManyPostQuery,
 ) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
-	var postModels []*models.PostWithLiked
+	var postModels []*models.Post
 	var total int64
 
 	authenticatedUserId := query.AuthenticatedUserId
@@ -238,13 +243,6 @@ func (r *rPost) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.Offset(offset).Limit(limit).
-		Select(`posts.*,
-	   	EXISTS (
-	       SELECT 1
-	       FROM like_user_posts
-	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
-	   	) AS is_liked
-		`, authenticatedUserId).
 		Preload("User").
 		Preload("Media").
 		Preload("ParentPost.User").
@@ -252,6 +250,20 @@ func (r *rPost) GetMany(
 		Find(&postModels).
 		Error; err != nil {
 		return nil, nil, err
+	}
+
+	var likedPostIds []uuid.UUID
+	if err := r.db.Model(&models.LikeUserPost{}).
+		Select("post_id").
+		Where("user_id = ?", authenticatedUserId).
+		Find(&likedPostIds).
+		Error; err != nil {
+		return nil, nil, err
+	}
+
+	likedMap := make(map[uuid.UUID]bool)
+	for _, id := range likedPostIds {
+		likedMap[id] = true
 	}
 
 	pagingResponse := &response.PagingResponse{
@@ -262,7 +274,7 @@ func (r *rPost) GetMany(
 
 	var postEntities []*entities.PostWithLiked
 	for _, post := range postModels {
-		postEntity := mapper.FromPostWithLikedModel(post)
+		postEntity := mapper.FromPostWithLikedModel(post, likedMap[post.ID])
 		postEntities = append(postEntities, postEntity)
 	}
 
