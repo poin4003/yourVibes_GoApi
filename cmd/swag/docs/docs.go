@@ -823,12 +823,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User's email address",
-                        "name": "email",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
                         "description": "User's phone number",
                         "name": "phone_number",
                         "in": "formData"

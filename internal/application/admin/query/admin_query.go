@@ -18,7 +18,7 @@ type GetManyAdminQuery struct {
 	IdentityId   string
 	Birthday     time.Time
 	CreatedAt    time.Time
-	SortBy       bool
+	SortBy       string
 	IsDescending bool
 	Limit        int
 	Page         int

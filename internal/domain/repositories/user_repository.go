@@ -38,10 +38,10 @@ type (
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
 	}
 	IUserReportRepository interface {
-		GetByUserIdAndReportedUserId(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.UserReport, error)
+		GetById(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.UserReport, error)
 		CreateOne(ctx context.Context, entity *entities.UserReport) (*entities.UserReport, error)
-		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.UserReportUpdate) (*entities.UserReport, error)
-		DeleteOne(ctx context.Context, id uuid.UUID) error
+		UpdateOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID, updateData *entities.UserReportUpdate) (*entities.UserReport, error)
+		DeleteOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyUserReportQuery) ([]*entities.UserReport, *response.PagingResponse, error)
 	}
 )

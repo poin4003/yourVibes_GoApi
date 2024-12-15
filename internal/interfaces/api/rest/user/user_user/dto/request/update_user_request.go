@@ -3,7 +3,6 @@ package request
 import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -16,7 +15,6 @@ import (
 type UpdateUserRequest struct {
 	FamilyName      *string              `form:"family_name,omitempty"`
 	Name            *string              `form:"name,omitempty"`
-	Email           *string              `form:"email,omitempty"`
 	PhoneNumber     *string              `form:"phone_number,omitempty"`
 	Birthday        *time.Time           `form:"birthday,omitempty"`
 	Avatar          multipart.FileHeader `form:"avatar_url,omitempty" binding:"omitempty,file"`
@@ -35,7 +33,6 @@ func ValidateUpdateUserRequest(req interface{}) error {
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.FamilyName, validation.Length(2, 255)),
 		validation.Field(&dto.Name, validation.Length(2, 255)),
-		validation.Field(&dto.Email, is.Email),
 		validation.Field(&dto.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Avatar, validation.By(validateImage)),
 		validation.Field(&dto.Capwall, validation.By(validateImage)),

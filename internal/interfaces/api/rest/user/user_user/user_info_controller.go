@@ -118,7 +118,6 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 // @Produce      json
 // @Param        family_name      formData  string  false  "User's family name"
 // @Param        name             formData  string  false  "User's given name"
-// @Param        email            formData  string  false  "User's email address"
 // @Param        phone_number     formData  string  false  "User's phone number"
 // @Param        birthday         formData  string  false  "User's birthday"
 // @Param        avatar_url       formData  file    false  "Upload user avatar image"

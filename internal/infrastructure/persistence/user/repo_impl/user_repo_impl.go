@@ -81,14 +81,6 @@ func (r *rUser) UpdateOne(
 		updates["name"] = *updateData.Name
 	}
 
-	if updateData.Email != nil {
-		updates["email"] = *updateData.Email
-	}
-
-	if updateData.Password != nil {
-		updates["password"] = *updateData.Password
-	}
-
 	if updateData.PhoneNumber != nil {
 		updates["phone_number"] = *updateData.PhoneNumber
 	}
@@ -194,8 +186,8 @@ func (r *rUser) GetMany(
 	}
 
 	if !query.CreatedAt.IsZero() {
-		createAt := query.CreatedAt.Truncate(24 * time.Hour)
-		db = db.Where("created_at = ?", createAt)
+		createdAt := query.CreatedAt.Truncate(24 * time.Hour)
+		db = db.Where("created_at = ?", createdAt)
 	}
 
 	if query.SortBy != "" {

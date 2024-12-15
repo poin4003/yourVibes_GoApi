@@ -33,8 +33,6 @@ type AdminUpdate struct {
 	Birthday    *time.Time
 	Status      *bool
 	Role        *bool
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
 }
 
 func (ad *Admin) ValidateAdmin() error {

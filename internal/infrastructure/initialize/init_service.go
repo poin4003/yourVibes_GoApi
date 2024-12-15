@@ -10,8 +10,8 @@ import (
 	post_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
 	user_service "github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	user_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/user/services/implement"
-	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	admin_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/admin/repo_impl"
 	advertise_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/advertise/repo_impl"
 	comment_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
 	notification_repo_impl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
@@ -24,11 +24,14 @@ func InitServiceInterface() {
 
 	// 1. Initialize Repository
 	userRepo := user_repo_impl.NewUserRepositoryImplement(db)
+	userReportRepo := user_repo_impl.NewUserReportRepositoryImplement(db)
 	postRepo := post_repo_impl.NewPostRepositoryImplement(db)
+	postReportRepo := post_repo_impl.NewPostReportRepositoryImplement(db)
 	postLikeRepo := post_repo_impl.NewLikeUserPostRepositoryImplement(db)
 	mediaRepo := post_repo_impl.NewMediaRepositoryImplement(db)
 	settingRepo := user_repo_impl.NewSettingRepositoryImplement(db)
 	commentRepo := comment_repo_impl.NewCommentRepositoryImplement(db)
+	commentReportRepo := comment_repo_impl.NewCommentReportRepositoryImplement(db)
 	likeUserCommentRepo := comment_repo_impl.NewLikeUserCommentRepositoryImplement(db)
 	notificationRepo := notification_repo_impl.NewNotificationRepositoryImplement(db)
 	friendRepo := user_repo_impl.NewFriendImplement(db)
@@ -36,20 +39,25 @@ func InitServiceInterface() {
 	newFeedRepo := post_repo_impl.NewNewFeedRepositoryImplement(db)
 	advertiseRepo := advertise_repo_impl.NewAdvertiseRepositoryImplement(db)
 	billRepo := advertise_repo_impl.NewBillRepositoryImplement(db)
+	adminRepo := admin_repo_impl.NewAdminRepositoryImplement(db)
 
-	comment_repo.InitUserRepository(userRepo)
-	comment_repo.InitPostRepository(postRepo)
-	comment_repo.InitLikeUserPostRepository(postLikeRepo)
-	comment_repo.InitMediaRepository(mediaRepo)
-	comment_repo.InitSettingRepository(settingRepo)
-	comment_repo.InitCommentRepository(commentRepo)
-	comment_repo.InitLikeUserCommentRepository(likeUserCommentRepo)
-	comment_repo.InitNotificationRepository(notificationRepo)
-	comment_repo.InitFriendRepository(friendRepo)
-	comment_repo.InitFriendRequestRepository(friendRequestRepo)
-	comment_repo.InitNewFeedRepository(newFeedRepo)
-	advertise_repo.InitAdvertiseRepository(advertiseRepo)
-	advertise_repo.InitBillRepository(billRepo)
+	repository.InitUserRepository(userRepo)
+	repository.InitPostRepository(postRepo)
+	repository.InitLikeUserPostRepository(postLikeRepo)
+	repository.InitMediaRepository(mediaRepo)
+	repository.InitSettingRepository(settingRepo)
+	repository.InitCommentRepository(commentRepo)
+	repository.InitLikeUserCommentRepository(likeUserCommentRepo)
+	repository.InitNotificationRepository(notificationRepo)
+	repository.InitFriendRepository(friendRepo)
+	repository.InitFriendRequestRepository(friendRequestRepo)
+	repository.InitNewFeedRepository(newFeedRepo)
+	repository.InitAdvertiseRepository(advertiseRepo)
+	repository.InitBillRepository(billRepo)
+	repository.InitAdminRepository(adminRepo)
+	repository.InitUserReportRepository(userReportRepo)
+	repository.InitPostReportRepository(postReportRepo)
+	repository.InitCommentReportRepository(commentReportRepo)
 
 	// 2. Initialize Service
 	userAuthService := user_service_impl.NewUserLoginImplement(userRepo, settingRepo)

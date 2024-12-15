@@ -635,10 +635,6 @@ paths:
         in: formData
         name: name
         type: string
-      - description: User's email address
-        in: formData
-        name: email
-        type: string
       - description: User's phone number
         in: formData
         name: phone_number

@@ -41,10 +41,10 @@ type (
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 	}
 	IPostReportRepository interface {
-		GetByUserIdAndReportedPostId(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (*entities.PostReport, error)
+		GetById(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (*entities.PostReport, error)
 		CreateOne(ctx context.Context, entity *entities.PostReport) (*entities.PostReport, error)
-		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
-		DeleteOne(ctx context.Context, id uuid.UUID) error
+		UpdateOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
+		DeleteOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyPostReportQuery) ([]*entities.PostReport, *response.PagingResponse, error)
 	}
 )

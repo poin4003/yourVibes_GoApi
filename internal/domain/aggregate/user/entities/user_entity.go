@@ -34,8 +34,6 @@ type User struct {
 type UserUpdate struct {
 	FamilyName   *string
 	Name         *string
-	Email        *string
-	Password     *string
 	PhoneNumber  *string
 	Birthday     *time.Time
 	AvatarUrl    *string
@@ -96,8 +94,6 @@ func (u *UserUpdate) ValidateUserUpdate() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.FamilyName, validation.Length(2, 255)),
 		validation.Field(&u.Name, validation.Length(2, 255)),
-		validation.Field(&u.Email, is.Email),
-		validation.Field(&u.Password, validation.Length(8, 255)),
 		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),

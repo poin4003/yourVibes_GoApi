@@ -27,10 +27,10 @@ type (
 		CheckUserLikeComment(ctx context.Context, entity *entities.LikeUserComment) (bool, error)
 	}
 	ICommentReportRepository interface {
-		GetByUserIdAndReportedCommentId(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.CommentReport, error)
+		GetById(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) (*entities.CommentReport, error)
 		CreateOne(ctx context.Context, entity *entities.CommentReport) (*entities.CommentReport, error)
-		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.CommentReportUpdate) (*entities.CommentReport, error)
-		DeleteOne(ctx context.Context, id uuid.UUID) error
+		UpdateOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID, updateData *entities.CommentReportUpdate) (*entities.CommentReport, error)
+		DeleteOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyCommentReportQuery) ([]*entities.CommentReport, *response.PagingResponse, error)
 	}
 )
@@ -38,6 +38,7 @@ type (
 var (
 	localComment         ICommentRepository
 	localLikeUserComment ILikeUserCommentRepository
+	localCommentReport   ICommentReportRepository
 )
 
 func Comment() ICommentRepository {
@@ -56,10 +57,22 @@ func LikeUserComment() ILikeUserCommentRepository {
 	return localLikeUserComment
 }
 
+func CommentReport() ICommentReportRepository {
+	if localCommentReport == nil {
+		panic("repository_implement localCommentReport not found for interface ICommentReport")
+	}
+
+	return localCommentReport
+}
+
 func InitCommentRepository(i ICommentRepository) {
 	localComment = i
 }
 
 func InitLikeUserCommentRepository(i ILikeUserCommentRepository) {
 	localLikeUserComment = i
+}
+
+func InitCommentReportRepository(i ICommentReportRepository) {
+	localCommentReport = i
 }
