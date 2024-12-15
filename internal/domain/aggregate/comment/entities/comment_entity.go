@@ -30,6 +30,22 @@ type CommentUpdate struct {
 	Status          *bool      `validate:"omitempty"`
 }
 
+type CommentForReport struct {
+	ID              uuid.UUID
+	PostId          uuid.UUID
+	UserId          uuid.UUID
+	User            *User
+	ParentId        *uuid.UUID
+	Content         string
+	LikeCount       int
+	RepCommentCount int
+	CommentLeft     int
+	CommentRight    int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Status          bool
+}
+
 func (c *Comment) Validate() error {
 	validate := validator.New()
 	return validate.Struct(c)

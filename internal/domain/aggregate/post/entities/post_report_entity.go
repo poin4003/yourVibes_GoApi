@@ -10,8 +10,8 @@ type PostReport struct {
 	UserId         uuid.UUID
 	ReportedPostId uuid.UUID
 	AdminId        uuid.UUID
-	User           *User
-	ReportedPost   *Post
+	User           *UserForReport
+	ReportedPost   *PostForReport
 	Admin          *Admin
 	Reason         string
 	Status         bool

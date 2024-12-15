@@ -10,8 +10,8 @@ type UserReport struct {
 	UserId         uuid.UUID
 	ReportedUserId uuid.UUID
 	AdminId        uuid.UUID
-	User           *User
-	ReportedUser   *User
+	User           *UserForReport
+	ReportedUser   *UserForReport
 	Admin          *Admin
 	Reason         string
 	Status         bool

@@ -55,6 +55,24 @@ type PostUpdate struct {
 	UpdatedAt       *time.Time
 }
 
+type PostForReport struct {
+	ID              uuid.UUID
+	UserId          uuid.UUID
+	User            *User
+	ParentId        *uuid.UUID
+	ParentPost      *PostForReport
+	Content         string
+	LikeCount       int
+	CommentCount    int
+	Privacy         consts.PrivacyLevel
+	Location        string
+	IsAdvertisement bool
+	Status          bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Media           []*Media
+}
+
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.Length(2, 1000)),

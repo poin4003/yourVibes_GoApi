@@ -7,16 +7,17 @@ import (
 )
 
 type CommentReport struct {
-	UserId          uuid.UUID
-	ReportedPostId  uuid.UUID
-	AdminId         uuid.UUID
-	User            *User
-	ReportedComment *Comment
-	Admin           *Admin
-	Reason          string
-	Status          bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	UserId            uuid.UUID
+	ReportedCommentId uuid.UUID
+	AdminId           uuid.UUID
+	User              *UserForReport
+	ReportedComment   *CommentForReport
+	Post              *PostForReport
+	Admin             *Admin
+	Reason            string
+	Status            bool
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 type CommentReportUpdate struct {
@@ -27,7 +28,7 @@ type CommentReportUpdate struct {
 func (cr *CommentReport) ValidateCommentReport() error {
 	return validation.ValidateStruct(cr,
 		validation.Field(&cr.UserId, validation.Required),
-		validation.Field(&cr.ReportedPostId, validation.Required),
+		validation.Field(&cr.ReportedCommentId, validation.Required),
 		validation.Field(&cr.Reason, validation.Required, validation.Length(10, 255)),
 	)
 }
@@ -38,13 +39,13 @@ func NewCommentReport(
 	reason string,
 ) (*CommentReport, error) {
 	newCommentReport := &CommentReport{
-		UserId:         userId,
-		ReportedPostId: reportedCommentId,
-		AdminId:        uuid.Nil,
-		Reason:         reason,
-		Status:         false,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		UserId:            userId,
+		ReportedCommentId: reportedCommentId,
+		AdminId:           uuid.Nil,
+		Reason:            reason,
+		Status:            false,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 	}
 	if err := newCommentReport.ValidateCommentReport(); err != nil {
 		return nil, err
