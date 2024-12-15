@@ -17,11 +17,15 @@ type (
 		LikeComment(ctx context.Context, command *command.LikeCommentCommand) (result *command.LikeCommentResult, err error)
 		GetUsersOnLikeComment(ctx context.Context, query *query.GetCommentLikeQuery) (result *query.GetCommentLikeResult, err error)
 	}
+	ICommentReport interface {
+		CreateCommentReport(ctx context.Context, command *command.CreateReportCommentCommand) (result *command.CreateReportCommentCommandResult, err error)
+	}
 )
 
 var (
 	localCommentUser ICommentUser
 	localCommentLike ICommentLike
+	localCommentReport ICommentReport
 )
 
 func CommentUser() ICommentUser {
@@ -40,10 +44,22 @@ func CommentLike() ICommentLike {
 	return localCommentLike
 }
 
+func CommentReport() ICommentReport {
+	if localCommentReport == nil {
+		panic("repository_implement localCommentReport not found for interface ICommentReport")
+	}
+
+	return localCommentReport
+}
+
 func InitCommentUser(i ICommentUser) {
 	localCommentUser = i
 }
 
 func InitCommentLike(i ICommentLike) {
 	localCommentLike = i
+}
+
+func InitCommentReport(i ICommentReport) {
+	localCommentReport = i
 }

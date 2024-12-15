@@ -30,6 +30,9 @@ type (
 		UnFriend(ctx context.Context, command *command.UnFriendCommand) (result *command.UnFriendCommandResult, err error)
 		GetFriends(ctx context.Context, query *query.FriendQuery) (result *query.FriendQueryResult, err error)
 	}
+	IUserReport interface {
+		CreateUserReport(ctx context.Context, command *command.CreateReportUserCommand) (result *command.CreateReportUserCommandResult, err error)
+	}
 )
 
 var (
@@ -37,6 +40,7 @@ var (
 	localUserInfo         IUserInfo
 	localUserNotification IUserNotification
 	localUserFriend       IUserFriend
+	localUserReport       IUserReport
 )
 
 func UserAuth() IUserAuth {
@@ -71,6 +75,14 @@ func UserFriend() IUserFriend {
 	return localUserFriend
 }
 
+func UserReport() IUserReport {
+	if localUserReport == nil {
+		panic("repository_implement localUserReport not found for interface IUserReport")
+	}
+
+	return localUserReport
+}
+
 func InitUserAuth(i IUserAuth) {
 	localUserAuth = i
 }
@@ -85,4 +97,8 @@ func InitUserNotification(i IUserNotification) {
 
 func InitUserFriend(i IUserFriend) {
 	localUserFriend = i
+}
+
+func InitUserReport(i IUserReport) {
+	localUserReport = i
 }

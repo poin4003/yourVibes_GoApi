@@ -70,6 +70,7 @@ func NewAdmin(
 	phoneNumber string,
 	identityId string,
 	birthday time.Time,
+	role bool,
 ) (*Admin, error) {
 	admin := &Admin{
 		ID:          uuid.New(),
@@ -81,38 +82,7 @@ func NewAdmin(
 		IdentityId:  identityId,
 		Birthday:    birthday,
 		Status:      true,
-		Role:        false,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := admin.ValidateAdmin(); err != nil {
-		return nil, err
-	}
-
-	return admin, nil
-}
-
-func NewSuperAdmin(
-	familyName string,
-	name string,
-	email string,
-	password string,
-	phoneNumber string,
-	identityId string,
-	birthday time.Time,
-) (*Admin, error) {
-	admin := &Admin{
-		ID:          uuid.New(),
-		FamilyName:  familyName,
-		Name:        name,
-		Email:       email,
-		Password:    password,
-		PhoneNumber: phoneNumber,
-		IdentityId:  identityId,
-		Birthday:    birthday,
-		Status:      true,
-		Role:        true,
+		Role:        role,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

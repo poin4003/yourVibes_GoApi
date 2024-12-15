@@ -25,6 +25,9 @@ type (
 		DeleteNewFeed(ctx context.Context, command *command.DeleteNewFeedCommand) (result *command.DeleteNewFeedCommandResult, err error)
 		GetNewFeeds(ctx context.Context, query *query.GetNewFeedQuery) (result *query.GetNewFeedResult, err error)
 	}
+	IPostReport interface {
+		CreatePostReport(ctx context.Context, command *command.CreateReportPostCommand) (result *command.CreateReportPostCommandResult, err error)
+	}
 )
 
 var (
@@ -32,6 +35,7 @@ var (
 	localLikeUserPost IPostLike
 	localPostShare    IPostShare
 	localPostNewFeed  IPostNewFeed
+	localPostReport   IPostReport
 )
 
 func PostUser() IPostUser {
@@ -66,6 +70,14 @@ func PostNewFeed() IPostNewFeed {
 	return localPostNewFeed
 }
 
+func PostReport() IPostReport {
+	if localPostReport == nil {
+		panic("repository_implement localPostReport not found for interface IPostReport")
+	}
+
+	return localPostReport
+}
+
 func InitPostUser(i IPostUser) {
 	localPostUser = i
 }
@@ -80,4 +92,8 @@ func InitPostShare(i IPostShare) {
 
 func InitPostNewFeed(i IPostNewFeed) {
 	localPostNewFeed = i
+}
+
+func InitPostReport(i IPostReport) {
+	localPostReport = i
 }
