@@ -10,14 +10,14 @@ import (
 )
 
 type CreateAdminRequest struct {
-	FamilyName  string
-	Name        string
-	Email       string
-	Password    string
-	PhoneNumber string
-	IdentityId  string
-	Birthday    time.Time
-	Role        bool
+	FamilyName  string    `json:"family_name"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	Password    string    `json:"password"`
+	PhoneNumber string    `json:"phone_number"`
+	IdentityId  string    `json:"identity_id"`
+	Birthday    time.Time `json:"birthday"`
+	Role        *bool     `json:"role"`
 }
 
 func ValidateCreateAdminRequest(req interface{}) error {
@@ -34,7 +34,12 @@ func ValidateCreateAdminRequest(req interface{}) error {
 		validation.Field(&dto.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.IdentityId, validation.Required, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Birthday, validation.Required),
-		validation.Field(&dto.Role, validation.Required),
+		validation.Field(&dto.Role, validation.By(func(value interface{}) error {
+			if value == nil {
+				return fmt.Errorf("Role: cannot be nil")
+			}
+			return nil
+		})),
 	)
 }
 
@@ -47,6 +52,6 @@ func (req *CreateAdminRequest) ToCreateAdminCommand() (*admin_command.CreateAdmi
 		PhoneNumber: req.PhoneNumber,
 		IdentityId:  req.IdentityId,
 		Birthday:    req.Birthday,
-		Role:        req.Role,
+		Role:        *req.Role,
 	}, nil
 }

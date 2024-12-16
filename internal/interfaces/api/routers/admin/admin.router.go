@@ -3,6 +3,7 @@ package admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin"
 	super_admin_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth"
@@ -23,13 +24,23 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 			helpers.ValidateJsonBody(&auth_request.AdminLoginRequest{}, auth_request.ValidateLoginRequest),
 			AdminAuthController.Login,
 		)
-
-		// super admin
-		adminRouterPublic.POST("/",
-			helpers.ValidateJsonBody(&super_admin_request.CreateAdminRequest{}, super_admin_request.ValidateCreateAdminRequest),
-			SuperAdminController.CreateAdmin,
-		)
 	}
 
 	// Private router
+	adminRouterPrivate := Router.Group("/admins")
+	adminRouterPrivate.Use(middlewares.AdminAuthProtected())
+	{
+		// super admin
+		adminRouterPrivate.POST("/",
+			middlewares.CheckSuperAdminRole(),
+			helpers.ValidateJsonBody(&super_admin_request.CreateAdminRequest{}, super_admin_request.ValidateCreateAdminRequest),
+			SuperAdminController.CreateAdmin,
+		)
+
+		adminRouterPrivate.PATCH("/",
+			middlewares.CheckSuperAdminRole(),
+			helpers.ValidateJsonBody(&super_admin_request.UpdateAdminForSuperAdminRequest{}, super_admin_request.ValidateUpdateAdminForSuperAdminRequest),
+			SuperAdminController.UpdateAdmin,
+		)
+	}
 }

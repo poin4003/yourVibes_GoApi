@@ -45,7 +45,7 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 
 	// Private router
 	userRouterPrivate := Router.Group("/users")
-	userRouterPrivate.Use(middlewares.AuthProteced())
+	userRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
 		// user_info
 		userRouterPrivate.GET("/:userId", UserInfoController.GetInfoByUserId)

@@ -16,15 +16,15 @@ definitions:
         type: string
       email:
         type: string
-      familyName:
+      family_name:
         type: string
-      identityId:
+      identity_id:
         type: string
       name:
         type: string
       password:
         type: string
-      phoneNumber:
+      phone_number:
         type: string
       role:
         type: boolean
@@ -92,6 +92,15 @@ definitions:
     - password
     - phone_number
     type: object
+  request.UpdateAdminForSuperAdminRequest:
+    properties:
+      adminId:
+        type: string
+      role:
+        type: boolean
+      status:
+        type: boolean
+    type: object
   request.UpdateCommentInput:
     properties:
       content:
@@ -142,7 +151,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -154,6 +163,25 @@ info:
   version: 1.0.0
 paths:
   /admins/:
+    patch:
+      consumes:
+      - application/json
+      description: When super admin need to update role and status of admin
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateAdminForSuperAdminRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: update admin
+      tags:
+      - super_admin
     post:
       consumes:
       - application/json
@@ -168,6 +196,8 @@ paths:
       produces:
       - application/json
       responses: {}
+      security:
+      - ApiKeyAuth: []
       summary: Create admin
       tags:
       - super_admin

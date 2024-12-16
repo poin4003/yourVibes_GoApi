@@ -22,6 +22,11 @@ const docTemplate = `{
     "paths": {
         "/admins/": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "When super admin need to create new admin",
                 "consumes": [
                     "application/json"
@@ -41,6 +46,36 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.CreateAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When super admin need to update role and status of admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "update admin",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateAdminForSuperAdminRequest"
                         }
                     }
                 ],
@@ -1420,10 +1455,10 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "familyName": {
+                "family_name": {
                     "type": "string"
                 },
-                "identityId": {
+                "identity_id": {
                     "type": "string"
                 },
                 "name": {
@@ -1432,7 +1467,7 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "phone_number": {
                     "type": "string"
                 },
                 "role": {
@@ -1531,6 +1566,20 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateAdminForSuperAdminRequest": {
+            "type": "object",
+            "properties": {
+                "adminId": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
         "request.UpdateCommentInput": {
             "type": "object",
             "properties": {
@@ -1624,7 +1673,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

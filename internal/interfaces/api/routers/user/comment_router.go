@@ -19,7 +19,7 @@ func (cr *CommentRouter) InitCommentRouter(Router *gin.RouterGroup) {
 
 	// Private router
 	commentRouterPrivate := Router.Group("/comments")
-	commentRouterPrivate.Use(middlewares.AuthProteced())
+	commentRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
 		// Comment user
 		commentRouterPrivate.POST("/", commentUserController.CreateComment)

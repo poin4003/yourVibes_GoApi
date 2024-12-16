@@ -26,7 +26,7 @@ func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 
 	// Private router
 	advertiseRouterPrivate := Router.Group("/advertise")
-	advertiseRouterPrivate.Use(middlewares.AuthProteced())
+	advertiseRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
 		advertiseRouterPrivate.POST("/",
 			helpers.ValidateJsonBody(&advertise_request.CreateAdvertiseRequest{}, advertise_request.ValidateCreateAdvertiseRequest),

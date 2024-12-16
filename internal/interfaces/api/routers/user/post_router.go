@@ -21,7 +21,7 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 
 	// 2. Private router
 	postRouterPrivate := Router.Group("/posts")
-	postRouterPrivate.Use(middlewares.AuthProteced())
+	postRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
 		// post_user
 		postRouterPrivate.POST("/",

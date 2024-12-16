@@ -5,14 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
 
-func AuthProteced() gin.HandlerFunc {
+func AdminAuthProtected() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 
@@ -32,7 +30,7 @@ func AuthProteced() gin.HandlerFunc {
 		}
 
 		tokenStr := tokenParts[1]
-		secret := []byte(global.Config.Authentication.JwtSecretKey)
+		secret := []byte(global.Config.Authentication.JwtAdminSecretKey)
 
 		// 3. Parse jwt and authenticate secret key
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -48,22 +46,12 @@ func AuthProteced() gin.HandlerFunc {
 			return
 		}
 
-		// 4. Take userId from token
-		userId := token.Claims.(jwt.MapClaims)["id"]
+		// 4. Take claims from token
+		adminId := token.Claims.(jwt.MapClaims)["id"]
+		role := token.Claims.(jwt.MapClaims)["role"].(bool)
 
-		// 5. Check exist user in db
-		if err := global.Pdb.Model(&models.User{}).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				response.ErrorResponse(c, response.ErrInvalidToken, http.StatusForbidden, err.Error())
-				c.Abort()
-				return
-			}
-			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusInternalServerError, err.Error())
-			c.Abort()
-			return
-		}
-
-		c.Set("userId", userId)
+		c.Set("userId", adminId)
+		c.Set("role", role)
 
 		c.Next()
 	}
