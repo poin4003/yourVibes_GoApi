@@ -57,7 +57,7 @@ func FromPostReportModel(pr *models.PostReport) *post_entity.PostReport {
 		parentPost = &post_entity.PostForReport{
 			ID:              pr.ReportedPost.ParentPost.ID,
 			UserId:          pr.ReportedPost.ParentPost.UserId,
-			User:            ToUserEntity(&pr.ReportedPost.ParentPost.User),
+			User:            ToUserForReportEntity(&pr.ReportedPost.ParentPost.User),
 			ParentId:        pr.ReportedPost.ParentPost.ParentId,
 			Content:         pr.ReportedPost.ParentPost.Content,
 			LikeCount:       pr.ReportedPost.ParentPost.LikeCount,
@@ -87,7 +87,7 @@ func FromPostReportModel(pr *models.PostReport) *post_entity.PostReport {
 	reportedPost := &post_entity.PostForReport{
 		ID:              pr.ReportedPost.ID,
 		UserId:          pr.ReportedPost.UserId,
-		User:            ToUserEntity(&pr.ReportedPost.User),
+		User:            ToUserForReportEntity(&pr.ReportedPost.User),
 		ParentId:        pr.ReportedPost.ParentId,
 		ParentPost:      parentPost,
 		Content:         pr.ReportedPost.Content,
@@ -133,4 +133,35 @@ func FromPostReportModel(pr *models.PostReport) *post_entity.PostReport {
 	postReport.ReportedPostId = pr.ReportedPostId
 
 	return postReport
+}
+
+func ToUserForReportEntity(
+	userModel *models.User,
+) *post_entity.UserForReport {
+	if userModel == nil {
+		return nil
+	}
+
+	var userForReport = &post_entity.UserForReport{
+		FamilyName:   userModel.FamilyName,
+		Name:         userModel.Name,
+		Email:        userModel.Email,
+		Password:     userModel.Password,
+		PhoneNumber:  userModel.PhoneNumber,
+		Birthday:     userModel.Birthday,
+		AvatarUrl:    userModel.AvatarUrl,
+		CapwallUrl:   userModel.CapwallUrl,
+		Privacy:      userModel.Privacy,
+		Biography:    userModel.Biography,
+		AuthType:     userModel.AuthType,
+		AuthGoogleId: userModel.AuthGoogleId,
+		PostCount:    userModel.PostCount,
+		FriendCount:  userModel.FriendCount,
+		Status:       userModel.Status,
+		CreatedAt:    userModel.CreatedAt,
+		UpdatedAt:    userModel.UpdatedAt,
+	}
+	userForReport.ID = userModel.ID
+
+	return userForReport
 }

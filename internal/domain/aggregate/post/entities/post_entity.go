@@ -58,7 +58,7 @@ type PostUpdate struct {
 type PostForReport struct {
 	ID              uuid.UUID
 	UserId          uuid.UUID
-	User            *User
+	User            *UserForReport
 	ParentId        *uuid.UUID
 	ParentPost      *PostForReport
 	Content         string

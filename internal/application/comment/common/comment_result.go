@@ -38,7 +38,7 @@ type CommentForReportResult struct {
 	ID              uuid.UUID
 	PostId          uuid.UUID
 	UserId          uuid.UUID
-	User            *UserResult
+	User            *UserForReportResult
 	ParentId        *uuid.UUID
 	Content         string
 	LikeCount       int

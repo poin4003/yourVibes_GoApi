@@ -57,7 +57,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		parentPost = &comment_entity.PostForReport{
 			ID:              cr.ReportedComment.Post.ParentPost.ID,
 			UserId:          cr.ReportedComment.Post.ParentPost.UserId,
-			User:            ToUserEntity(&cr.ReportedComment.Post.ParentPost.User),
+			User:            ToUserForReportEntity(&cr.ReportedComment.Post.ParentPost.User),
 			ParentId:        cr.ReportedComment.Post.ParentPost.ParentId,
 			Content:         cr.ReportedComment.Post.ParentPost.Content,
 			LikeCount:       cr.ReportedComment.Post.ParentPost.LikeCount,
@@ -87,7 +87,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 	post := &comment_entity.PostForReport{
 		ID:              cr.ReportedComment.Post.ID,
 		UserId:          cr.ReportedComment.Post.UserId,
-		User:            ToUserEntity(&cr.ReportedComment.Post.User),
+		User:            ToUserForReportEntity(&cr.ReportedComment.Post.User),
 		ParentId:        cr.ReportedComment.Post.ParentId,
 		ParentPost:      parentPost,
 		Content:         cr.ReportedComment.Post.Content,
@@ -106,7 +106,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		ID:              cr.ReportedComment.ID,
 		PostId:          cr.ReportedComment.PostId,
 		UserId:          cr.ReportedComment.UserId,
-		User:            ToUserEntity(&cr.ReportedComment.User),
+		User:            ToUserForReportEntity(&cr.ReportedComment.User),
 		ParentId:        cr.ReportedComment.ParentId,
 		Content:         cr.ReportedComment.Content,
 		LikeCount:       cr.ReportedComment.LikeCount,
@@ -148,4 +148,35 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 	commentReport.ReportedCommentId = cr.ReportedCommentId
 
 	return commentReport
+}
+
+func ToUserForReportEntity(
+	userModel *models.User,
+) *comment_entity.UserForReport {
+	if userModel == nil {
+		return nil
+	}
+
+	var userForReport = &comment_entity.UserForReport{
+		FamilyName:   userModel.FamilyName,
+		Name:         userModel.Name,
+		Email:        userModel.Email,
+		Password:     userModel.Password,
+		PhoneNumber:  userModel.PhoneNumber,
+		Birthday:     userModel.Birthday,
+		AvatarUrl:    userModel.AvatarUrl,
+		CapwallUrl:   userModel.CapwallUrl,
+		Privacy:      userModel.Privacy,
+		Biography:    userModel.Biography,
+		AuthType:     userModel.AuthType,
+		AuthGoogleId: userModel.AuthGoogleId,
+		PostCount:    userModel.PostCount,
+		FriendCount:  userModel.FriendCount,
+		Status:       userModel.Status,
+		CreatedAt:    userModel.CreatedAt,
+		UpdatedAt:    userModel.UpdatedAt,
+	}
+	userForReport.ID = userModel.ID
+
+	return userForReport
 }

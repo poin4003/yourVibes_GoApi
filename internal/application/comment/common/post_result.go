@@ -9,7 +9,7 @@ import (
 type PostForReportResult struct {
 	ID              uuid.UUID
 	UserId          uuid.UUID
-	User            *UserResult
+	User            *UserForReportResult
 	ParentId        *uuid.UUID
 	ParentPost      *PostForReportResult
 	Content         string
