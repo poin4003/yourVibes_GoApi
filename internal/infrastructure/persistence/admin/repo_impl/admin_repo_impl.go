@@ -84,6 +84,10 @@ func (r *rAdmin) UpdateOne(
 		updates["role"] = *updateData.Role
 	}
 
+	if updateData.Password != nil {
+		updates["password"] = *updateData.Password
+	}
+
 	if err := r.db.WithContext(ctx).
 		Model(&models.Admin{}).
 		Where("id = ?", id).

@@ -32,7 +32,7 @@ func AuthProteced() gin.HandlerFunc {
 		}
 
 		tokenStr := tokenParts[1]
-		secret := []byte(global.Config.Authentication.JwtScretKey)
+		secret := []byte(global.Config.Authentication.JwtSecretKey)
 
 		// 3. Parse jwt and authenticate secret key
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {

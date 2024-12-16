@@ -129,6 +129,10 @@ func (r *rUser) UpdateOne(
 		updates["updated_at"] = *updateData.UpdatedAt
 	}
 
+	if updateData.Password != nil {
+		updates["password"] = *updateData.Password
+	}
+
 	if err := r.db.WithContext(ctx).
 		Model(&models.User{}).
 		Where("id = ?", id).

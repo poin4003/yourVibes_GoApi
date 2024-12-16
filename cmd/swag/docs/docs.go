@@ -20,6 +20,60 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admins/": {
+            "post": {
+                "description": "When super admin need to create new admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "Create admin",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/admins/login/": {
+            "post": {
+                "description": "When user login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_auth"
+                ],
+                "summary": "Admin login",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AdminLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/advertise/": {
             "get": {
                 "security": [
@@ -1342,6 +1396,50 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "request.AdminLoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateAdminRequest": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "familyName": {
+                    "type": "string"
+                },
+                "identityId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "boolean"
+                }
+            }
+        },
         "request.CreateAdvertiseRequest": {
             "type": "object",
             "required": [

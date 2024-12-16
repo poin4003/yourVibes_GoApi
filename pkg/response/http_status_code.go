@@ -24,6 +24,7 @@ const (
 	ErrAdMustBePublic                = 50014
 	ErrUserFriendAccess              = 50015
 	ErrUserPrivateAccess             = 50016
+	ErrCodeAdminHasExist             = 500017
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -65,6 +66,7 @@ var msg = map[int]string{
 	ErrAdMustBePublic:                "You must update privacy of post to PUBLIC before create advertise",
 	ErrUserFriendAccess:              "You must be friend to get full info",
 	ErrUserPrivateAccess:             "You can't get this private info",
+	ErrCodeAdminHasExist:             "Admin has already exist",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",

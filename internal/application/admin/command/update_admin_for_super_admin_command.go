@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 )
 
 type UpdateAdminForSuperAdminCommand struct {

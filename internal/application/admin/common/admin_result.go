@@ -10,7 +10,6 @@ type AdminResult struct {
 	FamilyName  string
 	Name        string
 	Email       string
-	Password    string
 	PhoneNumber string
 	IdentityId  string
 	Birthday    time.Time

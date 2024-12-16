@@ -36,6 +36,7 @@ type UserUpdate struct {
 	Name         *string
 	PhoneNumber  *string
 	Birthday     *time.Time
+	Password     *string
 	AvatarUrl    *string
 	CapwallUrl   *string
 	Privacy      *consts.PrivacyLevel
@@ -97,6 +98,7 @@ func (u *UserUpdate) ValidateUserUpdate() error {
 		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
+		validation.Field(&u.Password, validation.Length(2, 255)),
 		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
 		validation.Field(&u.Biography, validation.Length(0, 500)),
 		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),

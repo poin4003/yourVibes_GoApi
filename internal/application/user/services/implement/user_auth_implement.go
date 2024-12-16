@@ -67,7 +67,7 @@ func (s *sUserAuth) Login(
 	}
 
 	// 4. Generate token
-	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtScretKey)
+	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create access token: %v", err)
 	}
@@ -87,7 +87,7 @@ func (s *sUserAuth) Register(
 	// 1. Check user exist in user table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
 	if err != nil {
-		result.ResultCode = response.ErrCodeUserHasExists
+		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 

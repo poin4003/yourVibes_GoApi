@@ -1,5 +1,34 @@
 basePath: /v1/2024
 definitions:
+  request.AdminLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  request.CreateAdminRequest:
+    properties:
+      birthday:
+        type: string
+      email:
+        type: string
+      familyName:
+        type: string
+      identityId:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+      role:
+        type: boolean
+    type: object
   request.CreateAdvertiseRequest:
     properties:
       end_date:
@@ -124,6 +153,42 @@ info:
   title: API Documentation YourVibes backend
   version: 1.0.0
 paths:
+  /admins/:
+    post:
+      consumes:
+      - application/json
+      description: When super admin need to create new admin
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateAdminRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Create admin
+      tags:
+      - super_admin
+  /admins/login/:
+    post:
+      consumes:
+      - application/json
+      description: When user login
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.AdminLoginRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Admin login
+      tags:
+      - admin_auth
   /advertise/:
     get:
       consumes:

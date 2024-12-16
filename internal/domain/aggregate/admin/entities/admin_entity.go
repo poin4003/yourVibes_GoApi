@@ -26,7 +26,6 @@ type Admin struct {
 type AdminUpdate struct {
 	FamilyName  *string
 	Name        *string
-	Email       *string
 	Password    *string
 	PhoneNumber *string
 	IdentityId  *string
@@ -51,11 +50,10 @@ func (ad *Admin) ValidateAdmin() error {
 	)
 }
 
-func (ad *Admin) ValidateAdminUpdate() error {
+func (ad *AdminUpdate) ValidateAdminUpdate() error {
 	return validation.ValidateStruct(ad,
 		validation.Field(&ad.FamilyName, validation.Length(2, 255)),
 		validation.Field(&ad.Name, validation.Length(2, 255)),
-		validation.Field(&ad.Email, is.Email),
 		validation.Field(&ad.Password, validation.Length(2, 255)),
 		validation.Field(&ad.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&ad.IdentityId, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),

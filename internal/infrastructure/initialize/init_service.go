@@ -2,6 +2,8 @@ package initialize
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/global"
+	admin_service "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services"
+	admin_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services/implement"
 	advertise_service "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertise_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
 	comment_service "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
@@ -72,6 +74,9 @@ func InitServiceInterface() {
 	likeCommentService := comment_service_impl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 	advertiseService := advertise_service_impl.NewAdvertiseImplement(advertiseRepo, billRepo, notificationRepo)
 	billService := advertise_service_impl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
+	adminAuthService := admin_service_impl.NewAdminAuthImplement(adminRepo)
+	adminInfoService := admin_service_impl.NewAdminInfoImplement(adminRepo)
+	superAdminService := admin_service_impl.NewSuperAdminImplement(adminRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -85,4 +90,7 @@ func InitServiceInterface() {
 	comment_service.InitCommentLike(likeCommentService)
 	advertise_service.InitAdvertise(advertiseService)
 	advertise_service.InitBill(billService)
+	admin_service.InitAdminAuth(adminAuthService)
+	admin_service.InitAdminInfo(adminInfoService)
+	admin_service.InitSuperAdmin(superAdminService)
 }

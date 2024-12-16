@@ -45,7 +45,8 @@ type LoggerSetting struct {
 }
 
 type AuthenticationSetting struct {
-	JwtScretKey string `mapstructure:"jwtScretKey"`
+	JwtSecretKey      string `mapstructure:"jwtSecretKey"`
+	JwtAdminSecretKey string `mapstructure:"jwtAdminSecretKey"`
 }
 
 type CloudinarySetting struct {
