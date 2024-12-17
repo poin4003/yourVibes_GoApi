@@ -17,7 +17,7 @@ type CreateAdminRequest struct {
 	PhoneNumber string    `json:"phone_number"`
 	IdentityId  string    `json:"identity_id"`
 	Birthday    time.Time `json:"birthday"`
-	Role        *bool     `json:"role"`
+	Role        *bool     `json:"role,omitempty"`
 }
 
 func ValidateCreateAdminRequest(req interface{}) error {
@@ -34,12 +34,6 @@ func ValidateCreateAdminRequest(req interface{}) error {
 		validation.Field(&dto.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.IdentityId, validation.Required, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Birthday, validation.Required),
-		validation.Field(&dto.Role, validation.By(func(value interface{}) error {
-			if value == nil {
-				return fmt.Errorf("Role: cannot be nil")
-			}
-			return nil
-		})),
 	)
 }
 

@@ -44,7 +44,6 @@ func (ad *Admin) ValidateAdmin() error {
 		validation.Field(&ad.IdentityId, validation.Required, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&ad.Birthday, validation.Required),
 		validation.Field(&ad.Status, validation.Required),
-		validation.Field(&ad.Role, validation.Required),
 		validation.Field(&ad.CreatedAt, validation.Required),
 		validation.Field(&ad.UpdatedAt, validation.Required, validation.Min(ad.CreatedAt)),
 	)
