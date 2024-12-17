@@ -62,6 +62,13 @@ type SettingDto struct {
 	UpdatedAt time.Time       `json:"updated_at"`
 }
 
+type UserForReportDto struct {
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
+}
+
 func ToSettingDto(settingResult *common.SettingResult) *SettingDto {
 	return &SettingDto{
 		ID:        settingResult.ID,
@@ -124,6 +131,17 @@ func ToUserShortVerDto(
 	userResult *common.UserShortVerResult,
 ) *UserShortVerDto {
 	return &UserShortVerDto{
+		ID:         userResult.ID,
+		FamilyName: userResult.FamilyName,
+		Name:       userResult.Name,
+		AvatarUrl:  userResult.AvatarUrl,
+	}
+}
+
+func ToUserForReportDto(
+	userResult *common.UserForReportResult,
+) *UserForReportDto {
+	return &UserForReportDto{
 		ID:         userResult.ID,
 		FamilyName: userResult.FamilyName,
 		Name:       userResult.Name,

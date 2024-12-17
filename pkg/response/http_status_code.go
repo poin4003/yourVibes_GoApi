@@ -8,23 +8,26 @@ const (
 	ErrSendEmailOTP     = 30003
 
 	// Register Code
-	ErrCodeUserHasExists             = 50001 // user has already registered
-	ErrCodeValidateParamRegister     = 50002
-	ErrCodeValidateParamEmail        = 50003
-	ErrCodeValidate                  = 50004
-	ErrDataNotFound                  = 50005
-	ErrFriendRequestHasAlreadyExists = 50006
-	ErrFriendHasAlreadyExists        = 50007
-	ErrFriendRequestNotExists        = 50008
-	ErrFriendNotExist                = 50009
-	ErrMakeFriendWithYourSelf        = 50010
-	ErrAdsExpired                    = 50011
-	ErrPostFriendAccess              = 50012
-	ErrPostPrivateAccess             = 50013
-	ErrAdMustBePublic                = 50014
-	ErrUserFriendAccess              = 50015
-	ErrUserPrivateAccess             = 50016
-	ErrCodeAdminHasExist             = 500017
+	ErrCodeUserHasExists                = 50001 // user has already registered
+	ErrCodeValidateParamRegister        = 50002
+	ErrCodeValidateParamEmail           = 50003
+	ErrCodeValidate                     = 50004
+	ErrDataNotFound                     = 50005
+	ErrFriendRequestHasAlreadyExists    = 50006
+	ErrFriendHasAlreadyExists           = 50007
+	ErrFriendRequestNotExists           = 50008
+	ErrFriendNotExist                   = 50009
+	ErrMakeFriendWithYourSelf           = 50010
+	ErrAdsExpired                       = 50011
+	ErrPostFriendAccess                 = 50012
+	ErrPostPrivateAccess                = 50013
+	ErrAdMustBePublic                   = 50014
+	ErrUserFriendAccess                 = 50015
+	ErrUserPrivateAccess                = 50016
+	ErrCodeAdminHasExist                = 50017
+	ErrCodeUserReportHasAlreadyExist    = 50018
+	ErrCodePostReportHasAlreadyExist    = 50019
+	ErrCodeCommentReportHasAlreadyExist = 50020
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -50,23 +53,26 @@ var msg = map[int]string{
 	ErrInvalidOTP:       "OTP is invalid",
 	ErrSendEmailOTP:     "Failed to send email otp",
 
-	ErrCodeUserHasExists:             "User has already registered",
-	ErrCodeValidateParamRegister:     "Validate param register failed",
-	ErrCodeValidateParamEmail:        "Validate param email failed",
-	ErrCodeValidate:                  "Validate param failed",
-	ErrDataNotFound:                  "Data not found",
-	ErrFriendRequestHasAlreadyExists: "Friend request has already exist",
-	ErrFriendHasAlreadyExists:        "Friend has already exist",
-	ErrFriendRequestNotExists:        "Friend request has not exist",
-	ErrFriendNotExist:                "Friend has not exist",
-	ErrMakeFriendWithYourSelf:        "You can't make friend with yourself",
-	ErrAdsExpired:                    "Previous ads have not expired yet, you can't promote 2 advertise at a same time",
-	ErrPostFriendAccess:              "You must be friend to get this post",
-	ErrPostPrivateAccess:             "You can't get this post because it's private",
-	ErrAdMustBePublic:                "You must update privacy of post to PUBLIC before create advertise",
-	ErrUserFriendAccess:              "You must be friend to get full info",
-	ErrUserPrivateAccess:             "You can't get this private info",
-	ErrCodeAdminHasExist:             "Admin has already exist",
+	ErrCodeUserHasExists:                "User has already registered",
+	ErrCodeValidateParamRegister:        "Validate param register failed",
+	ErrCodeValidateParamEmail:           "Validate param email failed",
+	ErrCodeValidate:                     "Validate param failed",
+	ErrDataNotFound:                     "Data not found",
+	ErrFriendRequestHasAlreadyExists:    "Friend request has already exist",
+	ErrFriendHasAlreadyExists:           "Friend has already exist",
+	ErrFriendRequestNotExists:           "Friend request has not exist",
+	ErrFriendNotExist:                   "Friend has not exist",
+	ErrMakeFriendWithYourSelf:           "You can't make friend with yourself",
+	ErrAdsExpired:                       "Previous ads have not expired yet, you can't promote 2 advertise at a same time",
+	ErrPostFriendAccess:                 "You must be friend to get this post",
+	ErrPostPrivateAccess:                "You can't get this post because it's private",
+	ErrAdMustBePublic:                   "You must update privacy of post to PUBLIC before create advertise",
+	ErrUserFriendAccess:                 "You must be friend to get full info",
+	ErrUserPrivateAccess:                "You can't get this private info",
+	ErrCodeAdminHasExist:                "Admin has already exist",
+	ErrCodeUserReportHasAlreadyExist:    "You already report this user!",
+	ErrCodePostReportHasAlreadyExist:    "You already report this post!",
+	ErrCodeCommentReportHasAlreadyExist: "You already report this comment!",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",

@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
@@ -63,7 +62,7 @@ func FromUserReportModel(ur *models.UserReport) *user_entity.UserReport {
 	}
 
 	var admin *user_entity.Admin
-	if ur.AdminId != uuid.Nil {
+	if ur.AdminId != nil {
 		admin = &user_entity.Admin{
 			ID:          ur.Admin.ID,
 			FamilyName:  ur.Admin.FamilyName,

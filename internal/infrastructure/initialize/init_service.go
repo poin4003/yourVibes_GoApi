@@ -77,6 +77,9 @@ func InitServiceInterface() {
 	adminAuthService := admin_service_impl.NewAdminAuthImplement(adminRepo)
 	adminInfoService := admin_service_impl.NewAdminInfoImplement(adminRepo)
 	superAdminService := admin_service_impl.NewSuperAdminImplement(adminRepo)
+	userReportService := user_service_impl.NewUserReportImplement(userReportRepo)
+	postReportService := post_service_impl.NewPostReportImplement(postReportRepo)
+	commentReportService := comment_service_impl.NewCommentReportImplement(commentReportRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -93,4 +96,7 @@ func InitServiceInterface() {
 	admin_service.InitAdminAuth(adminAuthService)
 	admin_service.InitAdminInfo(adminInfoService)
 	admin_service.InitSuperAdmin(superAdminService)
+	user_service.InitUserReport(userReportService)
+	post_service.InitPostReport(postReportService)
+	comment_service.InitCommentReport(commentReportService)
 }

@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 )
@@ -50,7 +49,7 @@ func NewUserReportResult(
 	}
 
 	var admin *common.AdminResult
-	if userReport.AdminId != uuid.Nil {
+	if userReport.AdminId != nil {
 		admin = &common.AdminResult{
 			ID:          userReport.Admin.ID,
 			FamilyName:  userReport.Admin.FamilyName,
@@ -76,7 +75,6 @@ func NewUserReportResult(
 		CreatedAt:    userReport.CreatedAt,
 		UpdatedAt:    userReport.UpdatedAt,
 	}
-
 	userReportResult.UserId = userReport.UserId
 	userReportResult.ReportedUserId = userReport.ReportedUserId
 

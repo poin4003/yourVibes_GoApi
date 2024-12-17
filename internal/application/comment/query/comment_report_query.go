@@ -15,6 +15,7 @@ type GetOneCommentReportQuery struct {
 type GetManyCommentReportQuery struct {
 	Reason       string
 	CreatedAt    time.Time
+	Status       *bool
 	SortBy       string
 	IsDescending bool
 	Limit        int

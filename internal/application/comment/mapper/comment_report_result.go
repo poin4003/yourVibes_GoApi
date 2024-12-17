@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 )
@@ -103,7 +102,7 @@ func NewCommentReportResult(
 	}
 
 	var admin *common.AdminResult
-	if commentReport.AdminId != uuid.Nil {
+	if commentReport.AdminId != nil {
 		admin = &common.AdminResult{
 			ID:          commentReport.Admin.ID,
 			FamilyName:  commentReport.Admin.FamilyName,

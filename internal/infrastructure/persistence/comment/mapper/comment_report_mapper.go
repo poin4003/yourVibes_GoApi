@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
@@ -117,7 +116,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 	}
 
 	var admin *comment_entity.Admin
-	if cr.AdminId != uuid.Nil {
+	if cr.AdminId != nil {
 		admin = &comment_entity.Admin{
 			ID:          cr.Admin.ID,
 			FamilyName:  cr.Admin.FamilyName,

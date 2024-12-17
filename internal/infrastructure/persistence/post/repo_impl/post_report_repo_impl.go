@@ -31,7 +31,7 @@ func (r *rPostReport) GetById(
 		Model(&models.PostReport{}).
 		Where("user_id = ? AND reported_post_id = ?", userId, reportedPostId).
 		Preload("User").
-		Preload("ReportedPost").
+		Preload("ReportedPost.User").
 		Preload("Admin").
 		First(&postReportModel).
 		Error; err != nil {
@@ -116,6 +116,14 @@ func (r *rPostReport) GetMany(
 		db = db.Where("created_at = ?", createdAt)
 	}
 
+	if query.Status != nil {
+		if *query.Status {
+			db = db.Where("status = ?", true)
+		} else {
+			db = db.Where("status = ?", false)
+		}
+	}
+
 	if query.SortBy != "" {
 		switch query.SortBy {
 		case "user_id":
@@ -187,4 +195,20 @@ func (r *rPostReport) GetMany(
 	}
 
 	return postReportEntities, pagingResponse, nil
+}
+
+func (r *rPostReport) CheckExist(
+	ctx context.Context,
+	userId uuid.UUID,
+	reportedPostId uuid.UUID,
+) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.PostReport{}).
+		Where("user_id = ? AND reported_post_id = ?", userId, reportedPostId).
+		Count(&count).Error; err != nil {
+	}
+
+	return count > 0, nil
 }

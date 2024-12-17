@@ -31,7 +31,8 @@ func (r *rCommentReport) GetById(
 		Model(&models.CommentReport{}).
 		Where("user_id = ? AND reported_comment_id = ?", userId, reportedCommentId).
 		Preload("User").
-		Preload("Comment.Post").
+		Preload("ReportedComment.Post.User").
+		Preload("ReportedComment.User").
 		Preload("Admin").
 		First(&commentReportModel).
 		Error; err != nil {
@@ -116,6 +117,14 @@ func (r *rCommentReport) GetMany(
 		db = db.Where("created_at = ?", createdAt)
 	}
 
+	if query.Status != nil {
+		if *query.Status {
+			db = db.Where("status = ?", true)
+		} else {
+			db = db.Where("status = ?", false)
+		}
+	}
+
 	if query.SortBy != "" {
 		switch query.SortBy {
 		case "user_id":
@@ -187,4 +196,20 @@ func (r *rCommentReport) GetMany(
 	}
 
 	return commentReportEntities, pagingResponse, nil
+}
+
+func (r *rCommentReport) CheckExist(
+	ctx context.Context,
+	userId uuid.UUID,
+	reportedCommentId uuid.UUID,
+) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.CommentReport{}).
+		Where("user_id = ? AND reported_comment_id = ?", userId, reportedCommentId).
+		Count(&count).Error; err != nil {
+	}
+
+	return count > 0, nil
 }

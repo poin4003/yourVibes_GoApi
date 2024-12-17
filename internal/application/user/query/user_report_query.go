@@ -15,6 +15,7 @@ type GetOneUserReportQuery struct {
 type GetManyUserReportQuery struct {
 	Reason       string
 	CreatedAt    time.Time
+	Status       *bool
 	SortBy       string
 	IsDescending bool
 	Limit        int

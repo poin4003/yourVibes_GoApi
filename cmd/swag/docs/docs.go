@@ -479,6 +479,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/comments/report": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to report comment break our rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment_report"
+                ],
+                "summary": "report comment",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReportCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/comments/{comment_id}": {
             "delete": {
                 "security": [
@@ -786,6 +818,38 @@ const docTemplate = `{
                         "name": "post_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/report": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to report post break our rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post_report"
+                ],
+                "summary": "report post",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReportPostRequest"
+                        }
                     }
                 ],
                 "responses": {}
@@ -1523,6 +1587,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/report": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to report someone break our rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_report"
+                ],
+                "summary": "report user",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReportUserRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/verifyemail/": {
             "post": {
                 "description": "Before user registration",
@@ -1713,6 +1809,39 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReportCommentRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "report_comment_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReportPostRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "report_post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReportUserRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "reported_user_id": {
                     "type": "string"
                 }
             }

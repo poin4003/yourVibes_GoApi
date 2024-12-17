@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
@@ -103,7 +102,7 @@ func FromPostReportModel(pr *models.PostReport) *post_entity.PostReport {
 	}
 
 	var admin *post_entity.Admin
-	if pr.AdminId != uuid.Nil {
+	if pr.AdminId != nil {
 		admin = &post_entity.Admin{
 			ID:          pr.Admin.ID,
 			FamilyName:  pr.Admin.FamilyName,

@@ -9,7 +9,7 @@ import (
 type CommentReport struct {
 	UserId            uuid.UUID
 	ReportedCommentId uuid.UUID
-	AdminId           uuid.UUID
+	AdminId           *uuid.UUID
 	User              *UserForReport
 	ReportedComment   *CommentForReport
 	Post              *PostForReport
@@ -41,7 +41,7 @@ func NewCommentReport(
 	newCommentReport := &CommentReport{
 		UserId:            userId,
 		ReportedCommentId: reportedCommentId,
-		AdminId:           uuid.Nil,
+		AdminId:           &uuid.Nil,
 		Reason:            reason,
 		Status:            false,
 		CreatedAt:         time.Now(),

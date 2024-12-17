@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 )
 
 type CreateReportCommentCommand struct {
@@ -12,7 +12,7 @@ type CreateReportCommentCommand struct {
 }
 
 type CreateReportCommentCommandResult struct {
-	CommandReport  *common.UserReportResult
+	CommentReport  *common.CommentReportResult
 	ResultCode     int
 	HttpStatusCode int
 }

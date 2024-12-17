@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 )
@@ -89,7 +88,7 @@ func NewPostReportResult(
 	}
 
 	var admin *common.AdminResult
-	if postReport.AdminId != uuid.Nil {
+	if postReport.AdminId != nil {
 		admin = &common.AdminResult{
 			ID:          postReport.Admin.ID,
 			FamilyName:  postReport.Admin.FamilyName,

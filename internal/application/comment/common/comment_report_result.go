@@ -8,7 +8,7 @@ import (
 type CommentReportResult struct {
 	UserId            uuid.UUID
 	ReportedCommentId uuid.UUID
-	AdminId           uuid.UUID
+	AdminId           *uuid.UUID
 	User              *UserForReportResult
 	ReportedComment   *CommentForReportResult
 	Admin             *AdminResult

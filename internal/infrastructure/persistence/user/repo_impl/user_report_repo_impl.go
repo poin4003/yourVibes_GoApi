@@ -116,6 +116,14 @@ func (r *rUserReport) GetMany(
 		db = db.Where("created_at = ?", createdAt)
 	}
 
+	if query.Status != nil {
+		if *query.Status {
+			db = db.Where("status = ?", true)
+		} else {
+			db = db.Where("status = ?", false)
+		}
+	}
+
 	if query.SortBy != "" {
 		switch query.SortBy {
 		case "user_id":
@@ -187,4 +195,20 @@ func (r *rUserReport) GetMany(
 	}
 
 	return userReportEntities, pagingResponse, nil
+}
+
+func (r *rUserReport) CheckExist(
+	ctx context.Context,
+	userId uuid.UUID,
+	reportedUserId uuid.UUID,
+) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.UserReport{}).
+		Where("user_id = ? AND reported_user_id = ?", userId, reportedUserId).
+		Count(&count).Error; err != nil {
+	}
+
+	return count > 0, nil
 }

@@ -9,7 +9,7 @@ import (
 type PostReport struct {
 	UserId         uuid.UUID
 	ReportedPostId uuid.UUID
-	AdminId        uuid.UUID
+	AdminId        *uuid.UUID
 	User           *UserForReport
 	ReportedPost   *PostForReport
 	Admin          *Admin
@@ -40,7 +40,7 @@ func NewPostReport(
 	newPostReport := &PostReport{
 		UserId:         userId,
 		ReportedPostId: reportedPostId,
-		AdminId:        uuid.Nil,
+		AdminId:        &uuid.Nil,
 		Reason:         reason,
 		Status:         false,
 		CreatedAt:      time.Now(),

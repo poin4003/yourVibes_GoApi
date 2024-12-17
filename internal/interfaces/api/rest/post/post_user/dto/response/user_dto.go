@@ -12,8 +12,26 @@ type UserDto struct {
 	AvatarUrl  string    `json:"avatar_url"`
 }
 
+type UserForReportDto struct {
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
+}
+
 func ToUserDto(userResult *common.UserResult) *UserDto {
 	return &UserDto{
+		ID:         userResult.ID,
+		FamilyName: userResult.FamilyName,
+		Name:       userResult.Name,
+		AvatarUrl:  userResult.AvatarUrl,
+	}
+}
+
+func ToUserForReportDto(
+	userResult *common.UserForReportResult,
+) *UserForReportDto {
+	return &UserForReportDto{
 		ID:         userResult.ID,
 		FamilyName: userResult.FamilyName,
 		Name:       userResult.Name,
