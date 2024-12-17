@@ -152,6 +152,14 @@ func (r *rAdmin) GetMany(
 		db = db.Where("created_at = ?", createdAt)
 	}
 
+	if query.Status != nil {
+		if *query.Status {
+			db = db.Where("status = ?", true)
+		} else {
+			db = db.Where("status = ?", false)
+		}
+	}
+
 	if query.SortBy != "" {
 		switch query.SortBy {
 		case "id":

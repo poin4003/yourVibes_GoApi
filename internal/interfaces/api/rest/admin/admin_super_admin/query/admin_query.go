@@ -5,56 +5,59 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	admin_query "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	"regexp"
 	"time"
 )
 
-type UserQueryObject struct {
+type AdminQueryObject struct {
 	Name         string    `form:"name,omitempty"`
 	Email        string    `form:"email,omitempty"`
 	PhoneNumber  string    `form:"phone_number,omitempty"`
+	IdentityId   string    `form:"identity_id,omitempty"`
 	Birthday     time.Time `form:"birthday,omitempty"`
 	CreatedAt    time.Time `form:"created_at,omitempty"`
+	Status       *bool     `form:"status,omitempty"`
 	SortBy       string    `form:"sort_by,omitempty"`
-	IsDescending bool      `form:"isDescending,omitempty"`
+	IsDescending bool      `form:"is_descending,omitempty"`
 	Limit        int       `form:"limit,omitempty"`
 	Page         int       `form:"page,omitempty"`
 }
 
-func ValidateUserQueryObject(input interface{}) error {
-	query, ok := input.(*UserQueryObject)
+func ValidateAdminQueryObject(input interface{}) error {
+	query, ok := input.(*AdminQueryObject)
 	if !ok {
-		return fmt.Errorf("validateUserQueryObject failed")
+		return fmt.Errorf("validateAdminQueryObject failed")
 	}
 
-	return validation.ValidateStruct(&query,
+	return validation.ValidateStruct(query,
 		validation.Field(&query.Name, validation.Length(1, 510)),
 		validation.Field(&query.Email, is.Email),
-		validation.Field(&query.PhoneNumber, validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&query.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&query.IdentityId, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&query.Limit, validation.Min(0)),
 		validation.Field(&query.Page, validation.Min(0)),
 	)
 }
 
-func (req *UserQueryObject) ToGetOneUserQuery(
-	userId uuid.UUID,
-	authenticatedUserId uuid.UUID,
-) (*user_query.GetOneUserQuery, error) {
-	return &user_query.GetOneUserQuery{
-		UserId:              userId,
-		AuthenticatedUserId: authenticatedUserId,
+func (req *AdminQueryObject) ToGetOneAdminQuery(
+	adminID uuid.UUID,
+) (*admin_query.GetOneAdminQuery, error) {
+	return &admin_query.GetOneAdminQuery{
+		AdminId: adminID,
 	}, nil
 }
 
-func (req *UserQueryObject) ToGetManyUserQuery() (*user_query.GetManyUserQuery, error) {
-	return &user_query.GetManyUserQuery{
+func (req *AdminQueryObject) ToGetManyAdminQuery() (*admin_query.GetManyAdminQuery, error) {
+	return &admin_query.GetManyAdminQuery{
 		Name:         req.Name,
 		Email:        req.Email,
 		PhoneNumber:  req.PhoneNumber,
+		IdentityId:   req.IdentityId,
 		Birthday:     req.Birthday,
 		CreatedAt:    req.CreatedAt,
 		SortBy:       req.SortBy,
+		Status:       req.Status,
 		IsDescending: req.IsDescending,
 		Limit:        req.Limit,
 		Page:         req.Page,

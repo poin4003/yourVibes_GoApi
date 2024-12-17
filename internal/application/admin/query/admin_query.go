@@ -18,6 +18,7 @@ type GetManyAdminQuery struct {
 	IdentityId   string
 	Birthday     time.Time
 	CreatedAt    time.Time
+	Status       *bool
 	SortBy       string
 	IsDescending bool
 	Limit        int
@@ -31,7 +32,7 @@ type AdminQueryResult struct {
 }
 
 type AdminQueryListResult struct {
-	Admin          []*common.AdminShortVerResult
+	Admins         []*common.AdminShortVerResult
 	ResultCode     int
 	HttpStatusCode int
 	PagingResponse *response.PagingResponse

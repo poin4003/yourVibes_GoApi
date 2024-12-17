@@ -8,9 +8,9 @@ import (
 )
 
 type UpdateAdminForSuperAdminRequest struct {
-	AdminId *uuid.UUID
-	Role    *bool
-	Status  *bool
+	AdminId *uuid.UUID `json:"admin_id"`
+	Role    *bool      `json:"role"`
+	Status  *bool      `json:"status"`
 }
 
 func ValidateUpdateAdminForSuperAdminRequest(req interface{}) error {

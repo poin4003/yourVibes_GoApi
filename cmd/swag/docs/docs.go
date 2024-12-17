@@ -52,6 +52,95 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/admins/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve admins based on filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "Get a list of admins",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "name to filter admins",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by email",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by phone number",
+                        "name": "phone_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by identity id",
+                        "name": "identity_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by birthday",
+                        "name": "birthday",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation day",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "is_descending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/admins/login/": {
             "post": {
                 "description": "When user login",
@@ -136,6 +225,36 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.UpdateAdminForSuperAdminRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/admins/{admin_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve admin by its unique ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "Get admin by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Admin ID",
+                        "name": "admin_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -1601,7 +1720,7 @@ const docTemplate = `{
         "request.UpdateAdminForSuperAdminRequest": {
             "type": "object",
             "properties": {
-                "adminId": {
+                "admin_id": {
                     "type": "string"
                 },
                 "role": {
@@ -1725,7 +1844,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

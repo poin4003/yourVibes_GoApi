@@ -20,6 +20,12 @@ type AdminDto struct {
 	UpdatedAt   time.Time
 }
 
+type AdminShortVerResult struct {
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+}
+
 func ToAdminDto(
 	adminResult *common.AdminResult,
 ) *AdminDto {
@@ -35,5 +41,19 @@ func ToAdminDto(
 		Role:        adminResult.Role,
 		CreatedAt:   adminResult.CreatedAt,
 		UpdatedAt:   adminResult.UpdatedAt,
+	}
+}
+
+func ToAdminShortVerDto(
+	adminResult *common.AdminShortVerResult,
+) *AdminShortVerResult {
+	if adminResult == nil {
+		return nil
+	}
+
+	return &AdminShortVerResult{
+		ID:         adminResult.ID,
+		FamilyName: adminResult.FamilyName,
+		Name:       adminResult.Name,
 	}
 }

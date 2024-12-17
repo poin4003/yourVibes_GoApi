@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
+	admin_query "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	admin_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
 	admin_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
@@ -130,5 +133,60 @@ func (s *sSuperAdmin) UpdateAdmin(
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	result.Admin = mapper.NewAdminResult(adminFound)
+	return result, nil
+}
+
+func (s *sSuperAdmin) GetOneAdmin(
+	ctx context.Context,
+	query *query.GetOneAdminQuery,
+) (result *query.AdminQueryResult, err error) {
+	result = &admin_query.AdminQueryResult{}
+	// 1. Get admin info
+	adminEntity, err := s.adminRepo.GetById(ctx, query.AdminId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			result.Admin = nil
+			return result, nil
+		}
+		result.Admin = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
+	}
+
+	// 2. Map to result
+	result.Admin = mapper.NewAdminResult(adminEntity)
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
+func (s *sSuperAdmin) GetManyAdmin(
+	ctx context.Context,
+	query *query.GetManyAdminQuery,
+) (result *query.AdminQueryListResult, err error) {
+	result = &admin_query.AdminQueryListResult{}
+	// 1. Get list admin
+	adminEntities, paging, err := s.adminRepo.GetMany(ctx, query)
+	if err != nil {
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		result.PagingResponse = nil
+		result.Admins = nil
+		return result, err
+	}
+
+	var adminResults []*common.AdminShortVerResult
+	for _, adminEntity := range adminEntities {
+		adminResult := mapper.NewAdminShortVerResult(adminEntity)
+		adminResults = append(adminResults, adminResult)
+	}
+
+	result.Admins = adminResults
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	result.PagingResponse = paging
 	return result, nil
 }

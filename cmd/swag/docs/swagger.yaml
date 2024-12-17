@@ -94,7 +94,7 @@ definitions:
     type: object
   request.UpdateAdminForSuperAdminRequest:
     properties:
-      adminId:
+      admin_id:
         type: string
       role:
         type: boolean
@@ -164,7 +164,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -195,6 +195,83 @@ paths:
       summary: update admin
       tags:
       - admin
+  /admins/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve admins based on filters
+      parameters:
+      - description: name to filter admins
+        in: query
+        name: name
+        type: string
+      - description: Filter by email
+        in: query
+        name: email
+        type: string
+      - description: Filter by phone number
+        in: query
+        name: phone_number
+        type: string
+      - description: Filter by identity id
+        in: query
+        name: identity_id
+        type: string
+      - description: Filter by birthday
+        in: query
+        name: birthday
+        type: string
+      - description: Filter by creation day
+        in: query
+        name: created_at
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: is_descending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of admins
+      tags:
+      - super_admin
+  /admins/{admin_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve admin by its unique ID
+      parameters:
+      - description: Admin ID
+        in: path
+        name: admin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin by ID
+      tags:
+      - super_admin
   /admins/login/:
     post:
       consumes:
