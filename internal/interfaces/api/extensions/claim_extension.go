@@ -19,3 +19,17 @@ func GetUserID(ctx *gin.Context) (uuid.UUID, error) {
 
 	return userUUID, nil
 }
+
+func GetAdminID(ctx *gin.Context) (uuid.UUID, error) {
+	adminId, exists := ctx.Get("adminId")
+	if !exists {
+		return uuid.Nil, fmt.Errorf("Unauthorized: admin ID not found in context")
+	}
+
+	userUUID, err := uuid.Parse(adminId.(string))
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return userUUID, nil
+}

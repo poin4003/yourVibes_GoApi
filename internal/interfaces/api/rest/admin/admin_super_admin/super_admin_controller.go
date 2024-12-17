@@ -23,7 +23,7 @@ func NewSuperAdminController() *cSuperAdmin {
 // @Produce json
 // @Param input body request.CreateAdminRequest true "input"
 // @Security ApiKeyAuth
-// @Router /admins/ [post]
+// @Router /admins/super_admin [post]
 func (c *cSuperAdmin) CreateAdmin(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
@@ -66,7 +66,7 @@ func (c *cSuperAdmin) CreateAdmin(ctx *gin.Context) {
 // @Produce json
 // @Param input body request.UpdateAdminForSuperAdminRequest true "input"
 // @Security ApiKeyAuth
-// @Router /admins/ [patch]
+// @Router /admins/super_admin [patch]
 func (c *cSuperAdmin) UpdateAdmin(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")

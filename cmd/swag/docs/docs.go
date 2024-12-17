@@ -20,7 +20,66 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admins/": {
+        "/admins": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to update info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "update admin",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateAdminInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/admins/login/": {
+            "post": {
+                "description": "When user login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_auth"
+                ],
+                "summary": "Admin login",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AdminLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/admins/super_admin": {
             "post": {
                 "security": [
                     {
@@ -76,33 +135,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.UpdateAdminForSuperAdminRequest"
-                        }
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/admins/login/": {
-            "post": {
-                "description": "When user login",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_auth"
-                ],
-                "summary": "Admin login",
-                "parameters": [
-                    {
-                        "description": "input",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.AdminLoginRequest"
                         }
                     }
                 ],
@@ -1577,6 +1609,26 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "request.UpdateAdminInfoRequest": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "type": "string"
+                },
+                "family_name": {
+                    "type": "string"
+                },
+                "identity_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
                 }
             }
         },

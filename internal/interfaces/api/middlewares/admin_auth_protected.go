@@ -50,7 +50,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 		adminId := token.Claims.(jwt.MapClaims)["id"]
 		role := token.Claims.(jwt.MapClaims)["role"].(bool)
 
-		c.Set("userId", adminId)
+		c.Set("adminId", adminId)
 		c.Set("role", role)
 
 		c.Next()

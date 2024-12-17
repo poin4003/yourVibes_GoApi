@@ -101,6 +101,19 @@ definitions:
       status:
         type: boolean
     type: object
+  request.UpdateAdminInfoRequest:
+    properties:
+      birthday:
+        type: string
+      family_name:
+        type: string
+      identity_id:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
   request.UpdateCommentInput:
     properties:
       content:
@@ -162,7 +175,45 @@ info:
   title: API Documentation YourVibes backend
   version: 1.0.0
 paths:
-  /admins/:
+  /admins:
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to update info
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateAdminInfoRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: update admin
+      tags:
+      - admin
+  /admins/login/:
+    post:
+      consumes:
+      - application/json
+      description: When user login
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.AdminLoginRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Admin login
+      tags:
+      - admin_auth
+  /admins/super_admin:
     patch:
       consumes:
       - application/json
@@ -201,24 +252,6 @@ paths:
       summary: Create admin
       tags:
       - super_admin
-  /admins/login/:
-    post:
-      consumes:
-      - application/json
-      description: When user login
-      parameters:
-      - description: input
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/request.AdminLoginRequest'
-      produces:
-      - application/json
-      responses: {}
-      summary: Admin login
-      tags:
-      - admin_auth
   /advertise/:
     get:
       consumes:
