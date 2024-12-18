@@ -250,6 +250,10 @@ paths:
         in: query
         name: status
         type: boolean
+      - description: Filter by role
+        in: query
+        name: role
+        type: boolean
       - description: Sort by field
         in: query
         name: sort_by
@@ -273,7 +277,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get a list of admins
       tags:
-      - admin
+      - super_admin
   /admins/{admin_id}:
     get:
       consumes:
@@ -292,7 +296,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get admin by ID
       tags:
-      - admin
+      - super_admin
   /admins/login/:
     post:
       consumes:

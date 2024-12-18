@@ -18,6 +18,7 @@ type AdminQueryObject struct {
 	Birthday     time.Time `form:"birthday,omitempty"`
 	CreatedAt    time.Time `form:"created_at,omitempty"`
 	Status       *bool     `form:"status,omitempty"`
+	Role         *bool     `form:"role,omitempty"`
 	SortBy       string    `form:"sort_by,omitempty"`
 	IsDescending bool      `form:"is_descending,omitempty"`
 	Limit        int       `form:"limit,omitempty"`
@@ -58,6 +59,7 @@ func (req *AdminQueryObject) ToGetManyAdminQuery() (*admin_query.GetManyAdminQue
 		CreatedAt:    req.CreatedAt,
 		SortBy:       req.SortBy,
 		Status:       req.Status,
+		Role:         req.Role,
 		IsDescending: req.IsDescending,
 		Limit:        req.Limit,
 		Page:         req.Page,

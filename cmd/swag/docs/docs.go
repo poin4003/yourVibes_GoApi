@@ -67,7 +67,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "super_admin"
                 ],
                 "summary": "Get a list of admins",
                 "parameters": [
@@ -111,6 +111,12 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filter by status",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by role",
+                        "name": "role",
                         "in": "query"
                     },
                     {
@@ -245,7 +251,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "super_admin"
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [

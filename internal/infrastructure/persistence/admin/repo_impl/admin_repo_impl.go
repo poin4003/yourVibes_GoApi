@@ -160,6 +160,14 @@ func (r *rAdmin) GetMany(
 		}
 	}
 
+	if query.Role != nil {
+		if *query.Role {
+			db = db.Where("role = ?", true)
+		} else {
+			db = db.Where("role = ?", false)
+		}
+	}
+
 	if query.SortBy != "" {
 		switch query.SortBy {
 		case "id":

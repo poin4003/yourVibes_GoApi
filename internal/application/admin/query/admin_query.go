@@ -19,6 +19,7 @@ type GetManyAdminQuery struct {
 	Birthday     time.Time
 	CreatedAt    time.Time
 	Status       *bool
+	Role         *bool
 	SortBy       string
 	IsDescending bool
 	Limit        int
