@@ -7,15 +7,15 @@ import (
 )
 
 type CommentReportDto struct {
-	UserId            uuid.UUID
-	ReportedCommentId uuid.UUID
-	User              *UserForReportDto
-	ReportedComment   *CommentForReportDto
-	Post              *PostForReportDto
-	Reason            string
-	Status            bool
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UserId            uuid.UUID            `json:"user_id"`
+	ReportedCommentId uuid.UUID            `json:"reported_comment_id"`
+	User              *UserForReportDto    `json:"user"`
+	ReportedComment   *CommentForReportDto `json:"reported_comment"`
+	Post              *PostForReportDto    `json:"post"`
+	Reason            string               `json:"reason"`
+	Status            bool                 `json:"status"`
+	CreatedAt         time.Time            `json:"created_at"`
+	UpdatedAt         time.Time            `json:"updated_at"`
 }
 
 func ToCommentReportDto(commentResult *common.CommentReportResult) *CommentReportDto {

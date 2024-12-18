@@ -61,7 +61,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "super_admin"
+                    "admin"
                 ],
                 "summary": "Get a list of admins",
                 "parameters": [
@@ -239,7 +239,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "super_admin"
+                    "admin"
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [

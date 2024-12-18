@@ -6,9 +6,9 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin"
 	admin_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/request"
+	super_admin_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin"
 	super_admin_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
-	super_admin_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth"
 	auth_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/request"
 )
@@ -40,6 +40,15 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 			AdminController.UpdateAdminInfo,
 		)
 
+		adminRouterPrivate.GET("/:admin_id",
+			AdminController.GetAdminById,
+		)
+
+		adminRouterPrivate.GET("/",
+			helpers.ValidateQuery(&super_admin_query.AdminQueryObject{}, super_admin_query.ValidateAdminQueryObject),
+			AdminController.GetManyAdmins,
+		)
+
 		// super admin
 		adminRouterPrivate.POST("/super_admin",
 			middlewares.CheckSuperAdminRole(),
@@ -51,17 +60,6 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 			middlewares.CheckSuperAdminRole(),
 			helpers.ValidateJsonBody(&super_admin_request.UpdateAdminForSuperAdminRequest{}, super_admin_request.ValidateUpdateAdminForSuperAdminRequest),
 			SuperAdminController.UpdateAdmin,
-		)
-
-		adminRouterPrivate.GET("/:admin_id",
-			middlewares.CheckSuperAdminRole(),
-			SuperAdminController.GetAdminById,
-		)
-
-		adminRouterPrivate.GET("/",
-			middlewares.CheckSuperAdminRole(),
-			helpers.ValidateQuery(&super_admin_query.AdminQueryObject{}, super_admin_query.ValidateAdminQueryObject),
-			SuperAdminController.GetManyAdmins,
 		)
 	}
 }

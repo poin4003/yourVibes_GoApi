@@ -13,10 +13,10 @@ type UserDto struct {
 }
 
 type UserForReportDto struct {
-	ID         uuid.UUID
-	FamilyName string
-	Name       string
-	AvatarUrl  string
+	ID         uuid.UUID `json:"id"`
+	FamilyName string    `json:"family_name"`
+	Name       string    `json:"name"`
+	AvatarUrl  string    `json:"avatar_url"`
 }
 
 func ToUserDto(userResult *common.UserResult) *UserDto {

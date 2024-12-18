@@ -273,7 +273,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get a list of admins
       tags:
-      - super_admin
+      - admin
   /admins/{admin_id}:
     get:
       consumes:
@@ -292,7 +292,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get admin by ID
       tags:
-      - super_admin
+      - admin
   /admins/login/:
     post:
       consumes:

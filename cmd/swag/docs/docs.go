@@ -67,7 +67,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "super_admin"
+                    "admin"
                 ],
                 "summary": "Get a list of admins",
                 "parameters": [
@@ -245,7 +245,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "super_admin"
+                    "admin"
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [

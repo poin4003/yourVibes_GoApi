@@ -45,21 +45,21 @@ type PostWithLikedDto struct {
 }
 
 type PostForReportDto struct {
-	ID              uuid.UUID
-	UserId          uuid.UUID
-	User            *UserForReportDto
-	ParentId        *uuid.UUID
-	ParentPost      *PostForReportDto
-	Content         string
-	LikeCount       int
-	CommentCount    int
-	Privacy         consts.PrivacyLevel
-	Location        string
-	IsAdvertisement bool
-	Status          bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Media           []*MediaDto
+	ID              uuid.UUID           `json:"id"`
+	UserId          uuid.UUID           `json:"user_id"`
+	User            *UserForReportDto   `json:"user"`
+	ParentId        *uuid.UUID          `json:"parent_id"`
+	ParentPost      *PostForReportDto   `json:"parent_post"`
+	Content         string              `json:"content"`
+	LikeCount       int                 `json:"like_count"`
+	CommentCount    int                 `json:"comment_count"`
+	Privacy         consts.PrivacyLevel `json:"privacy"`
+	Location        string              `json:"location"`
+	IsAdvertisement bool                `json:"is_advertisement"`
+	Status          bool                `json:"status"`
+	CreatedAt       time.Time           `json:"created_at"`
+	UpdatedAt       time.Time           `json:"updated_at"`
+	Media           []*MediaDto         `json:"media"`
 }
 
 func ToPostDto(postResult common.PostResult) *PostDto {

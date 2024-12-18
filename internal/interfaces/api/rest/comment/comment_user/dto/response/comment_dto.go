@@ -36,17 +36,17 @@ type CommentWithLikedDto struct {
 }
 
 type CommentForReportDto struct {
-	ID              uuid.UUID
-	PostId          uuid.UUID
-	UserId          uuid.UUID
-	User            *UserForReportDto
-	ParentId        *uuid.UUID
-	Content         string
-	LikeCount       int
-	RepCommentCount int
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Status          bool
+	ID              uuid.UUID         `json:"id"`
+	PostId          uuid.UUID         `json:"post_id"`
+	UserId          uuid.UUID         `json:"user_id"`
+	User            *UserForReportDto `json:"user"`
+	ParentId        *uuid.UUID        `json:"parent_id"`
+	Content         string            `json:"content"`
+	LikeCount       int               `json:"like_count"`
+	RepCommentCount int               `json:"rep_comment_count"`
+	CreatedAt       time.Time         `json:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
+	Status          bool              `json:"status"`
 }
 
 func ToCommentDto(commentResult *common.CommentResult) *CommentDto {
