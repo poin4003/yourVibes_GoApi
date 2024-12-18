@@ -215,20 +215,6 @@ func (s *sUserInfo) UpdateUser(
 		return result, err
 	}
 
-	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.User = nil
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		return result, err
-	}
-
 	// 3. update Avatar
 	if command.Avatar != nil {
 		avatarUrl, err := cloudinary_util.UploadMediaToCloudinary(command.Avatar)
@@ -281,6 +267,20 @@ func (s *sUserInfo) UpdateUser(
 			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
+	}
+
+	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.User = nil
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		result.User = nil
+		result.ResultCode = response.ErrServerFailed
+		result.HttpStatusCode = http.StatusInternalServerError
+		return result, err
 	}
 
 	result.User = user_mapper.NewUserResultFromEntity(userFound)

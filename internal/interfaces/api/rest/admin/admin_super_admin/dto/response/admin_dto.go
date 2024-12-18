@@ -8,7 +8,6 @@ import (
 
 type AdminDto struct {
 	ID          uuid.UUID `json:"id"`
-	FamilyName  string    `json:"family_name"`
 	Name        string    `json:"name"`
 	Email       string    `json:"email"`
 	PhoneNumber string    `json:"phone_number"`
@@ -25,8 +24,7 @@ func ToAdminDto(
 ) *AdminDto {
 	return &AdminDto{
 		ID:          adminResult.ID,
-		FamilyName:  adminResult.FamilyName,
-		Name:        adminResult.Name,
+		Name:        adminResult.FamilyName + " " + adminResult.Name,
 		Email:       adminResult.Email,
 		PhoneNumber: adminResult.PhoneNumber,
 		IdentityId:  adminResult.IdentityId,
