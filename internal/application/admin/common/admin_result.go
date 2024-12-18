@@ -18,9 +18,3 @@ type AdminResult struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
-
-type AdminShortVerResult struct {
-	ID         uuid.UUID
-	FamilyName string
-	Name       string
-}

@@ -32,7 +32,7 @@ type AdminQueryResult struct {
 }
 
 type AdminQueryListResult struct {
-	Admins         []*common.AdminShortVerResult
+	Admins         []*common.AdminResult
 	ResultCode     int
 	HttpStatusCode int
 	PagingResponse *response.PagingResponse

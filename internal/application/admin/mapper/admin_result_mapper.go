@@ -33,17 +33,3 @@ func NewAdminResult(
 		UpdatedAt:   admin.UpdatedAt,
 	}
 }
-
-func NewAdminShortVerResult(
-	admin *admin_entity.Admin,
-) *common.AdminShortVerResult {
-	if admin == nil {
-		return nil
-	}
-
-	return &common.AdminShortVerResult{
-		ID:         admin.ID,
-		FamilyName: admin.FamilyName,
-		Name:       admin.Name,
-	}
-}

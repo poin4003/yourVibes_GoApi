@@ -150,9 +150,9 @@ func (c *cAdmin) GetManyAdmins(ctx *gin.Context) {
 	}
 
 	// 4. Map to dto
-	var adminDtos []*response.AdminShortVerResult
+	var adminDtos []*response.AdminDto
 	for _, adminResult := range result.Admins {
-		adminDtos = append(adminDtos, response.ToAdminShortVerDto(adminResult))
+		adminDtos = append(adminDtos, response.ToAdminDto(adminResult))
 	}
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, adminDtos, *result.PagingResponse)

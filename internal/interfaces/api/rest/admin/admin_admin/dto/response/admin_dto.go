@@ -8,7 +8,6 @@ import (
 
 type AdminDto struct {
 	ID          uuid.UUID `json:"id"`
-	FamilyName  string    `json:"family_name"`
 	Name        string    `json:"name"`
 	Email       string    `json:"email"`
 	PhoneNumber string    `json:"phone_number"`
@@ -20,19 +19,12 @@ type AdminDto struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-type AdminShortVerResult struct {
-	ID         uuid.UUID `json:"id"`
-	FamilyName string    `json:"family_name"`
-	Name       string    `json:"name"`
-}
-
 func ToAdminDto(
 	adminResult *common.AdminResult,
 ) *AdminDto {
 	return &AdminDto{
 		ID:          adminResult.ID,
-		FamilyName:  adminResult.FamilyName,
-		Name:        adminResult.Name,
+		Name:        adminResult.FamilyName + " " + adminResult.Name,
 		Email:       adminResult.Email,
 		PhoneNumber: adminResult.PhoneNumber,
 		IdentityId:  adminResult.IdentityId,
@@ -41,19 +33,5 @@ func ToAdminDto(
 		Role:        adminResult.Role,
 		CreatedAt:   adminResult.CreatedAt,
 		UpdatedAt:   adminResult.UpdatedAt,
-	}
-}
-
-func ToAdminShortVerDto(
-	adminResult *common.AdminShortVerResult,
-) *AdminShortVerResult {
-	if adminResult == nil {
-		return nil
-	}
-
-	return &AdminShortVerResult{
-		ID:         adminResult.ID,
-		FamilyName: adminResult.FamilyName,
-		Name:       adminResult.Name,
 	}
 }

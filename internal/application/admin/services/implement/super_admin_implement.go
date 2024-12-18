@@ -178,9 +178,9 @@ func (s *sSuperAdmin) GetManyAdmin(
 		return result, err
 	}
 
-	var adminResults []*common.AdminShortVerResult
+	var adminResults []*common.AdminResult
 	for _, adminEntity := range adminEntities {
-		adminResult := mapper.NewAdminShortVerResult(adminEntity)
+		adminResult := mapper.NewAdminResult(adminEntity)
 		adminResults = append(adminResults, adminResult)
 	}
 
