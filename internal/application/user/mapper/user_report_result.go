@@ -80,3 +80,23 @@ func NewUserReportResult(
 
 	return userReportResult
 }
+
+func NewUserReportShortVerResult(
+	userReport *user_entity.UserReport,
+) *common.UserReportShortVerResult {
+	if userReport == nil {
+		return nil
+	}
+
+	var userReportResult = &common.UserReportShortVerResult{
+		AdminId:   userReport.AdminId,
+		Reason:    userReport.Reason,
+		Status:    userReport.Status,
+		CreatedAt: userReport.CreatedAt,
+		UpdatedAt: userReport.UpdatedAt,
+	}
+	userReportResult.UserId = userReport.UserId
+	userReportResult.ReportedUserId = userReport.ReportedUserId
+
+	return userReportResult
+}

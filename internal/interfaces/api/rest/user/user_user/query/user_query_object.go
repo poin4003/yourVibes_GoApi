@@ -28,7 +28,7 @@ func ValidateUserQueryObject(input interface{}) error {
 		return fmt.Errorf("validateUserQueryObject failed")
 	}
 
-	return validation.ValidateStruct(&query,
+	return validation.ValidateStruct(query,
 		validation.Field(&query.Name, validation.Length(1, 510)),
 		validation.Field(&query.Email, is.Email),
 		validation.Field(&query.PhoneNumber, validation.Match((regexp.MustCompile((`^\d+$`))))),

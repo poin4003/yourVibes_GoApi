@@ -29,7 +29,7 @@ type UserReportQueryResult struct {
 }
 
 type UserReportQueryListResult struct {
-	UserReports    []*common.UserReportResult
+	UserReports    []*common.UserReportShortVerResult
 	ResultCode     int
 	HttpStatusCode int
 	PagingResponse *response.PagingResponse

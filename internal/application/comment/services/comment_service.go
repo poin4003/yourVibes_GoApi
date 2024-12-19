@@ -19,12 +19,15 @@ type (
 	}
 	ICommentReport interface {
 		CreateCommentReport(ctx context.Context, command *command.CreateReportCommentCommand) (result *command.CreateReportCommentCommandResult, err error)
+		HandleCommentReport(ctx context.Context, command *command.HandleCommentReportCommand) (result *command.HandleCommentReportCommandResult, err error)
+		GetDetailCommentReport(ctx context.Context, query *query.GetOneCommentReportQuery) (result *query.CommentReportQueryResult, err error)
+		GetManyCommentReport(ctx context.Context, query *query.GetManyCommentReportQuery) (result *query.CommentReportQueryListResult, err error)
 	}
 )
 
 var (
-	localCommentUser ICommentUser
-	localCommentLike ICommentLike
+	localCommentUser   ICommentUser
+	localCommentLike   ICommentLike
 	localCommentReport ICommentReport
 )
 

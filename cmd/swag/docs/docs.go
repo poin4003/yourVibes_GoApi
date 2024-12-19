@@ -486,6 +486,69 @@ const docTemplate = `{
             }
         },
         "/comments/report": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve comment report base on filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_comment_report"
+                ],
+                "summary": "Get a list of comment report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "reason to filter report",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation day",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
             "post": {
                 "security": [
                     {
@@ -512,6 +575,43 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.ReportCommentRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comments/report/{user_id}/{reported_comment_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a comment report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_comment_report"
+                ],
+                "summary": "Get comment report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported comment id",
+                        "name": "reported_comment_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -830,6 +930,69 @@ const docTemplate = `{
             }
         },
         "/posts/report": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve post report base on filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_post_report"
+                ],
+                "summary": "Get a list of post report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "reason to filter report",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation day",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
             "post": {
                 "security": [
                     {
@@ -856,6 +1019,43 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.ReportPostRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/report/{user_id}/{reported_post_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a post report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_post_report"
+                ],
+                "summary": "Get post report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported post id",
+                        "name": "reported_post_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -1594,6 +1794,69 @@ const docTemplate = `{
             }
         },
         "/users/report": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve users report base on filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_user_report"
+                ],
+                "summary": "Get a list of users report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "reason to filter report",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation day",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
             "post": {
                 "security": [
                     {
@@ -1620,6 +1883,43 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.ReportUserRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/users/report/{user_id}/{reported_user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a user report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_user_report"
+                ],
+                "summary": "Get user report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported user id",
+                        "name": "reported_user_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}

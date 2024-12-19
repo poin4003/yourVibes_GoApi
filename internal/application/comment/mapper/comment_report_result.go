@@ -134,3 +134,23 @@ func NewCommentReportResult(
 
 	return commentReportResult
 }
+
+func NewCommentReportShortVerResult(
+	commentReport *comment_entity.CommentReport,
+) *common.CommentReportShortVerResult {
+	if commentReport == nil {
+		return nil
+	}
+
+	var commentReportResult = &common.CommentReportShortVerResult{
+		AdminId:   commentReport.AdminId,
+		Reason:    commentReport.Reason,
+		Status:    commentReport.Status,
+		CreatedAt: commentReport.CreatedAt,
+		UpdatedAt: commentReport.UpdatedAt,
+	}
+	commentReportResult.UserId = commentReport.UserId
+	commentReportResult.ReportedCommentId = commentReport.ReportedCommentId
+
+	return commentReportResult
+}

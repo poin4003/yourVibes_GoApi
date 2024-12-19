@@ -119,3 +119,23 @@ func NewPostReportResult(
 
 	return postReportResult
 }
+
+func NewPostReportShortVerResult(
+	postReport *post_entity.PostReport,
+) *common.PostReportShortVerResult {
+	if postReport == nil {
+		return nil
+	}
+
+	var postReportResult = &common.PostReportShortVerResult{
+		AdminId:   postReport.AdminId,
+		Reason:    postReport.Reason,
+		Status:    postReport.Status,
+		CreatedAt: postReport.CreatedAt,
+		UpdatedAt: postReport.UpdatedAt,
+	}
+	postReportResult.UserId = postReport.UserId
+	postReportResult.ReportedPostId = postReport.ReportedPostId
+
+	return postReportResult
+}

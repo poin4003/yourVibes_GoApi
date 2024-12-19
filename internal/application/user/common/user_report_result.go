@@ -21,7 +21,7 @@ type UserReportResult struct {
 type UserReportShortVerResult struct {
 	UserId         uuid.UUID
 	ReportedUserId uuid.UUID
-	AdminId        uuid.UUID
+	AdminId        *uuid.UUID
 	Reason         string
 	Status         bool
 	CreatedAt      time.Time

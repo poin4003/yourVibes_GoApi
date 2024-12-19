@@ -22,7 +22,7 @@ type CommentReportResult struct {
 type CommentReportShortVerResult struct {
 	UserId            uuid.UUID
 	ReportedCommentId uuid.UUID
-	AdminId           uuid.UUID
+	AdminId           *uuid.UUID
 	Reason            string
 	Status            bool
 	CreatedAt         time.Time

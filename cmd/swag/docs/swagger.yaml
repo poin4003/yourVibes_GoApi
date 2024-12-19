@@ -538,6 +538,47 @@ paths:
       tags:
       - like_comment
   /comments/report:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve comment report base on filters
+      parameters:
+      - description: reason to filter report
+        in: query
+        name: reason
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Filter by creation day
+        in: query
+        name: created_at
+        type: string
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of comment report
+      tags:
+      - admin_comment_report
     post:
       consumes:
       - application/json
@@ -557,6 +598,30 @@ paths:
       summary: report comment
       tags:
       - comment_report
+  /comments/report/{user_id}/{reported_comment_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a comment report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported comment id
+        in: path
+        name: reported_comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get comment report detail
+      tags:
+      - admin_comment_report
   /posts/:
     get:
       consumes:
@@ -790,6 +855,47 @@ paths:
       tags:
       - post_new_feed
   /posts/report:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve post report base on filters
+      parameters:
+      - description: reason to filter report
+        in: query
+        name: reason
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Filter by creation day
+        in: query
+        name: created_at
+        type: string
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of post report
+      tags:
+      - admin_post_report
     post:
       consumes:
       - application/json
@@ -809,6 +915,30 @@ paths:
       summary: report post
       tags:
       - post_report
+  /posts/report/{user_id}/{reported_post_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a post report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported post id
+        in: path
+        name: reported_post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get post report detail
+      tags:
+      - admin_post_report
   /posts/share_post/{post_id}:
     post:
       consumes:
@@ -1225,6 +1355,47 @@ paths:
       tags:
       - user_auth
   /users/report:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve users report base on filters
+      parameters:
+      - description: reason to filter report
+        in: query
+        name: reason
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Filter by creation day
+        in: query
+        name: created_at
+        type: string
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of users report
+      tags:
+      - admin_user_report
     post:
       consumes:
       - application/json
@@ -1244,6 +1415,30 @@ paths:
       summary: report user
       tags:
       - user_report
+  /users/report/{user_id}/{reported_user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported user id
+        in: path
+        name: reported_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get user report detail
+      tags:
+      - admin_user_report
   /users/verifyemail/:
     post:
       consumes:

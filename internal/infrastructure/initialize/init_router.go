@@ -47,8 +47,9 @@ func InitRouter() *gin.Engine {
 	}
 	{
 		adminRouter.InitAdminRouter(MainGroup)
-	}
-	{
+		adminRouter.InitUserAdminRouter(MainGroup)
+		adminRouter.InitPostAdminRouter(MainGroup)
+		adminRouter.InitCommentAdminRouter(MainGroup)
 	}
 	return r
 }
