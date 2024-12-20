@@ -3,6 +3,7 @@ package implement
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
 	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
@@ -64,4 +65,16 @@ func (s *sAdminInfo) UpdateAdmin(
 	result.HttpStatusCode = http.StatusOK
 	result.Admin = mapper.NewAdminResult(adminFound)
 	return result, nil
+}
+
+func (s *sAdminInfo) GetAdminStatusById(
+	ctx context.Context,
+	id uuid.UUID,
+) (status bool, err error) {
+	adminStatus, err := s.adminRepo.GetStatusById(ctx, id)
+	if err != nil {
+		return false, err
+	}
+
+	return adminStatus, err
 }

@@ -11,6 +11,7 @@ import (
 type (
 	IAdminRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Admin, error)
+		GetStatusById(ctx context.Context, id uuid.UUID) (bool, error)
 		CreateOne(ctx context.Context, entity *entities.Admin) (*entities.Admin, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.AdminUpdate) (*entities.Admin, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Admin, error)

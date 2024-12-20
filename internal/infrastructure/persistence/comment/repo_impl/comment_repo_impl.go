@@ -27,6 +27,7 @@ func (r *rComment) GetById(
 ) (*entities.Comment, error) {
 	var commentModel models.Comment
 	if err := r.db.WithContext(ctx).
+		Where("status = true").
 		Preload("User").
 		First(&commentModel, id).
 		Error; err != nil {
@@ -167,6 +168,7 @@ func (r *rComment) GetOne(
 	if err := r.db.WithContext(ctx).
 		Model(comment).
 		Where(query, args...).
+		Where("status = true").
 		First(comment).
 		Error; err != nil {
 		return nil, err
@@ -183,6 +185,8 @@ func (r *rComment) GetMany(
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.Comment{})
+
+	db = db.Where("status = true")
 
 	// 1. If query have ParentId
 	if query.ParentId != uuid.Nil {

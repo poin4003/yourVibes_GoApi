@@ -26,5 +26,9 @@ func (par *PostAdminRouter) InitPostAdminRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&admin_post_report_query.PostReportQueryObject{}, admin_post_report_query.ValidatePostReportQueryObject),
 			adminPostReportController.GetManyPostReports,
 		)
+
+		adminRouterPrivate.PATCH("/report/:user_id/:reported_post_id",
+			adminPostReportController.HandlePostReport,
+		)
 	}
 }

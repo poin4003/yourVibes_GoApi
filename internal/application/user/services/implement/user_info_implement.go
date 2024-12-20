@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
@@ -287,4 +288,15 @@ func (s *sUserInfo) UpdateUser(
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
+}
+
+func (s *sUserInfo) GetUserStatusById(
+	ctx context.Context,
+	id uuid.UUID,
+) (status bool, err error) {
+	userStatus, err := s.userRepo.GetStatusById(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return userStatus, err
 }

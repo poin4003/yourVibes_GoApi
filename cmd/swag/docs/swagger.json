@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibesapi.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -609,6 +609,41 @@
                     }
                 ],
                 "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to handle report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_comment_report"
+                ],
+                "summary": "handle comment report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported comment id",
+                        "name": "reported_comment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/comments/{comment_id}": {
@@ -1036,6 +1071,41 @@
                     "admin_post_report"
                 ],
                 "summary": "Get post report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported post id",
+                        "name": "reported_post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to handle report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_post_report"
+                ],
+                "summary": "handle post report",
                 "parameters": [
                     {
                         "type": "string",
@@ -1924,7 +1994,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "When user need to handle report",
+                "description": "When admin need to handle report",
                 "consumes": [
                     "application/json"
                 ],

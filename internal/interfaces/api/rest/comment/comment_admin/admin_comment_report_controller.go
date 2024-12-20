@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -107,4 +109,55 @@ func (c *cAdminCommentReport) GetManyCommentReports(ctx *gin.Context) {
 	}
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, commentReportDtos, *result.PagingResponse)
+}
+
+// HandleCommentReport godoc
+// @Summary handle comment report
+// @Description When admin need to handle report
+// @Tags admin_comment_report
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param reported_comment_id path string true "Reported comment id"
+// @Security ApiKeyAuth
+// @Router /comments/report/{user_id}/{reported_comment_id} [patch]
+func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
+	// 1. Get userId from param path
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Get reportedCommentId from param path
+	reportedCommentIdStr := ctx.Param("reported_comment_id")
+	reportedCommentId, err := uuid.Parse(reportedCommentIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 3. Get admin id from token
+	adminIdClaim, err := extensions.GetAdminID(ctx)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// 4. Call service to handle comment report
+	handleCommentReportCommand, err := request.ToHandleCommentReportCommand(adminIdClaim, userId, reportedCommentId)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.CommentReport().HandleCommentReport(ctx, handleCommentReportCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

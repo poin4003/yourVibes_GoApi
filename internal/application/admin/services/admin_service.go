@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 )
@@ -12,6 +13,7 @@ type (
 	}
 	IAdminInfo interface {
 		UpdateAdmin(ctx context.Context, command *command.UpdateAdminInfoCommand) (result *command.UpdateAdminInfoCommandResult, err error)
+		GetAdminStatusById(ctx context.Context, id uuid.UUID) (status bool, err error)
 	}
 	ISuperAdmin interface {
 		CreateAdmin(ctx context.Context, command *command.CreateAdminCommand) (result *command.CreateAdminCommandResult, err error)

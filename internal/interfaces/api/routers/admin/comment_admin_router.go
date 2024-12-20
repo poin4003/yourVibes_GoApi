@@ -26,5 +26,9 @@ func (car *CommentAdminRouter) InitCommentAdminRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&admin_comment_report_query.CommentReportQueryObject{}, admin_comment_report_query.ValidateCommentReportQueryObject),
 			adminCommentReportController.GetManyCommentReports,
 		)
+
+		adminRouterPrivate.PATCH("/report/:user_id/:reported_comment_id",
+			adminCommentReportController.HandleCommentReport,
+		)
 	}
 }

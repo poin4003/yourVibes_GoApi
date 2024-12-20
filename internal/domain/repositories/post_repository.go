@@ -13,6 +13,7 @@ type (
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Post, error)
 		CreateOne(ctx context.Context, entity *entities.Post) (*entities.Post, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.PostUpdate) (*entities.Post, error)
+		UpdateMany(ctx context.Context, condition map[string]interface{}, updateData *entities.PostUpdate) error
 		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Post, error)
 		GetOne(ctx context.Context, id uuid.UUID, authenticatedUserId uuid.UUID) (*entities.PostWithLiked, error)
 		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.PostWithLiked, *response.PagingResponse, error)
@@ -44,6 +45,7 @@ type (
 		GetById(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (*entities.PostReport, error)
 		CreateOne(ctx context.Context, entity *entities.PostReport) (*entities.PostReport, error)
 		UpdateOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
+		UpdateMany(ctx context.Context, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyPostReportQuery) ([]*entities.PostReport, *response.PagingResponse, error)
 		CheckExist(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (bool, error)

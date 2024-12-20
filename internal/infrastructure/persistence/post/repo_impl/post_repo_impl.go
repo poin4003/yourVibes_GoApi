@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -27,6 +28,7 @@ func (r *rPost) GetById(
 ) (*entities.Post, error) {
 	var postModel models.Post
 	if err := r.db.WithContext(ctx).
+		Where("status = true").
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
@@ -104,6 +106,64 @@ func (r *rPost) UpdateOne(
 	return r.GetById(ctx, id)
 }
 
+func (r *rPost) UpdateMany(
+	ctx context.Context,
+	condition map[string]interface{},
+	updateData *entities.PostUpdate,
+) error {
+	if len(condition) == 0 {
+		return errors.New("condition cannot be empty")
+	}
+
+	updates := map[string]interface{}{}
+
+	if updateData.Content != nil {
+		updates["content"] = *updateData.Content
+	}
+
+	if updateData.LikeCount != nil {
+		updates["like_count"] = *updateData.LikeCount
+	}
+
+	if updateData.CommentCount != nil {
+		updates["comment_count"] = *updateData.CommentCount
+	}
+
+	if updateData.Privacy != nil {
+		updates["privacy"] = *updateData.Privacy
+	}
+
+	if updateData.Location != nil {
+		updates["location"] = *updateData.Location
+	}
+
+	if updateData.IsAdvertisement != nil {
+		updates["is_advertisement"] = *updateData.IsAdvertisement
+	}
+
+	if updateData.Status != nil {
+		updates["status"] = *updateData.Status
+	}
+
+	if updateData.UpdatedAt != nil {
+		updates["updated_at"] = *updateData.UpdatedAt
+	}
+
+	if len(updates) == 0 {
+		return errors.New("no updates specified")
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Where(condition).
+		Updates(updates).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rPost) DeleteOne(
 	ctx context.Context,
 	id uuid.UUID,
@@ -130,7 +190,7 @@ func (r *rPost) GetOne(
 
 	if err := r.db.WithContext(ctx).
 		Model(&models.Post{}).
-		Where("posts.id = ?", id).
+		Where("posts.id = ? AND status = true", id).
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").
@@ -173,6 +233,8 @@ func (r *rPost) GetMany(
 		"(privacy = ? OR (privacy = ? AND (user_id IN (?) OR user_id = ?)) OR (privacy = ? AND user_id = ?))",
 		consts.PUBLIC, consts.FRIEND_ONLY, friendSubQuery, authenticatedUserId, consts.PRIVATE, authenticatedUserId,
 	)
+
+	db = db.Where("status = ?", true)
 
 	if query.UserID != uuid.Nil {
 		db = db.Where("user_id = ?", query.UserID)

@@ -12,6 +12,7 @@ type (
 	IUserRepository interface {
 		CheckUserExistByEmail(ctx context.Context, email string) (bool, error)
 		GetById(ctx context.Context, id uuid.UUID) (*entities.User, error)
+		GetStatusById(ctx context.Context, id uuid.UUID) (bool, error)
 		CreateOne(ctx context.Context, entity *entities.User) (*entities.User, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.UserUpdate) (*entities.User, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.User, error)

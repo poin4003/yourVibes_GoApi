@@ -185,7 +185,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -622,6 +622,29 @@ paths:
       summary: Get comment report detail
       tags:
       - admin_comment_report
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to handle report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported comment id
+        in: path
+        name: reported_comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: handle comment report
+      tags:
+      - admin_comment_report
   /posts/:
     get:
       consumes:
@@ -937,6 +960,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get post report detail
+      tags:
+      - admin_post_report
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to handle report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported post id
+        in: path
+        name: reported_post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: handle post report
       tags:
       - admin_post_report
   /posts/share_post/{post_id}:
@@ -1442,7 +1488,7 @@ paths:
     patch:
       consumes:
       - application/json
-      description: When user need to handle report
+      description: When admin need to handle report
       parameters:
       - description: User ID
         in: path

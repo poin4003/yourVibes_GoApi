@@ -83,6 +83,32 @@ func (r *rPostReport) UpdateOne(
 	return r.GetById(ctx, userId, reportedPostId)
 }
 
+func (r *rPostReport) UpdateMany(
+	ctx context.Context,
+	reportedPostId uuid.UUID,
+	updateData *entities.PostReportUpdate,
+) error {
+	updates := map[string]interface{}{}
+
+	if updateData.AdminId != nil {
+		updates["admin_id"] = *updateData.AdminId
+	}
+
+	if updateData.Status != nil {
+		updates["status"] = *updateData.Status
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.PostReport{}).
+		Where("reported_post_id = ?", reportedPostId).
+		Updates(updates).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rPostReport) DeleteOne(
 	ctx context.Context,
 	userId uuid.UUID,

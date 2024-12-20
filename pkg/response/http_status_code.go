@@ -31,6 +31,7 @@ const (
 	ErrCodeUserReportHasAlreadyExist    = 50018
 	ErrCodePostReportHasAlreadyExist    = 50019
 	ErrCodeCommentReportHasAlreadyExist = 50020
+	ErrCodeReportIsAlreadyHandled       = 50021
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -79,6 +80,7 @@ var msg = map[int]string{
 	ErrCodeUserReportHasAlreadyExist:    "You already report this user!",
 	ErrCodePostReportHasAlreadyExist:    "You already report this post!",
 	ErrCodeCommentReportHasAlreadyExist: "You already report this comment!",
+	ErrCodeReportIsAlreadyHandled:       "Report is already handle",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",

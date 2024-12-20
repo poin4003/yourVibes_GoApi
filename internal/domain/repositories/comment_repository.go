@@ -30,6 +30,7 @@ type (
 		GetById(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) (*entities.CommentReport, error)
 		CreateOne(ctx context.Context, entity *entities.CommentReport) (*entities.CommentReport, error)
 		UpdateOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID, updateData *entities.CommentReportUpdate) (*entities.CommentReport, error)
+		UpdateMany(ctx context.Context, reportedCommentId uuid.UUID, updateData *entities.CommentReportUpdate) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyCommentReportQuery) ([]*entities.CommentReport, *response.PagingResponse, error)
 		CheckExist(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) (bool, error)

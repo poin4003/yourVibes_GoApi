@@ -4,28 +4,30 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 	"strings"
 )
 
 func UserAuthProtected() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
 
 		// 1. Check authHeader
 		if authHeader == "" {
-			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusUnauthorized, "Authorization header is empty")
-			c.Abort()
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, "Authorization header is empty")
+			ctx.Abort()
 			return
 		}
 
 		// 2. Take token from authHeader
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusUnauthorized, "Authorization header is invalid")
-			c.Abort()
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusUnauthorized, "Authorization header is invalid")
+			ctx.Abort()
 			return
 		}
 
@@ -41,16 +43,43 @@ func UserAuthProtected() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			response.ErrorResponse(c, response.ErrInvalidToken, http.StatusForbidden, err.Error())
-			c.Abort()
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, err.Error())
+			ctx.Abort()
 			return
 		}
 
 		// 4. Take userId from token
-		userId := token.Claims.(jwt.MapClaims)["id"]
+		userIdStr, ok := token.Claims.(jwt.MapClaims)["id"].(string)
+		if !ok {
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, "Invalid token")
+			ctx.Abort()
+			return
+		}
 
-		c.Set("userId", userId)
+		userId, err := uuid.Parse(userIdStr)
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, "Invalid token")
+			ctx.Abort()
+			return
+		}
 
-		c.Next()
+		// 5. Check user from db
+		userStatus, err := services.UserInfo().GetUserStatusById(ctx, userId)
+		if err != nil {
+			response.ErrorResponse(ctx, response.ErrServerFailed, http.StatusInternalServerError, "Invalid token")
+			ctx.Abort()
+			return
+		}
+
+		// 6. Check user status
+		if !userStatus {
+			response.ErrorResponse(ctx, response.ErrInvalidToken, http.StatusForbidden, "Invalid token")
+			ctx.Abort()
+			return
+		}
+
+		ctx.Set("userId", userId)
+
+		ctx.Next()
 	}
 }

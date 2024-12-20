@@ -34,6 +34,21 @@ func (r *rAdmin) GetById(
 	return mapper.FromAdminModel(&adminModel), nil
 }
 
+func (r *rAdmin) GetStatusById(
+	ctx context.Context,
+	id uuid.UUID,
+) (bool, error) {
+	var adminStatus bool
+	if err := r.db.WithContext(ctx).
+		Model(&models.Admin{}).
+		Select("status").
+		First(&adminStatus, id).
+		Error; err != nil {
+		return false, err
+	}
+	return adminStatus, nil
+}
+
 func (r *rAdmin) CreateOne(
 	ctx context.Context,
 	entity *entities.Admin,

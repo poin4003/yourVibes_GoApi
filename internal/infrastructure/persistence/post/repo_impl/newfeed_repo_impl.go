@@ -113,6 +113,7 @@ func (r *rNewFeed) GetMany(
 
 	if err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
+		Where("status = true").
 		Where("new_feeds.user_id = ?", authenticatedUserId).
 		Where(`
 			(posts.privacy = ? OR 
@@ -126,6 +127,7 @@ func (r *rNewFeed) GetMany(
 
 	if err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
+		Where("status = true").
 		Where("new_feeds.user_id = ?", query.UserId).
 		Where(`
 			(posts.privacy = ? OR 

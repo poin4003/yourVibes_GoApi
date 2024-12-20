@@ -11,19 +11,23 @@ import (
 	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	post_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"net/http"
 )
 
 type sPostReport struct {
 	postReportRepo post_report_repo.IPostReportRepository
+	postRepo       post_report_repo.IPostRepository
 }
 
 func NewPostReportImplement(
 	postReportRepo post_report_repo.IPostReportRepository,
+	postRepo post_report_repo.IPostRepository,
 ) *sPostReport {
 	return &sPostReport{
 		postReportRepo: postReportRepo,
+		postRepo:       postRepo,
 	}
 }
 
@@ -74,7 +78,59 @@ func (s *sPostReport) HandlePostReport(
 	ctx context.Context,
 	command *post_command.HandlePostReportCommand,
 ) (result *post_command.HandlePostReportCommandResult, err error) {
-	return nil, nil
+	result = &post_command.HandlePostReportCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exist
+	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if report is already handled
+	if !postReportFound.Status {
+		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You don't need to handle this report again")
+	}
+
+	// 3. Update reported post status
+	reportedPostUpdateEntity := &post_entity.PostUpdate{
+		Status: pointer.Ptr(false),
+	}
+
+	if err = reportedPostUpdateEntity.ValidatePostUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.postRepo.UpdateOne(ctx, command.ReportedPostId, reportedPostUpdateEntity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("post report not found")
+		}
+		return result, err
+	}
+
+	// 4. Update report status
+	postReportEntity := &post_entity.PostReportUpdate{
+		AdminId: pointer.Ptr(command.AdminId),
+		Status:  pointer.Ptr(false),
+	}
+
+	if err = s.postReportRepo.UpdateMany(ctx, command.ReportedPostId, postReportEntity); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }
 
 func (s *sPostReport) GetDetailPostReport(

@@ -8,6 +8,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -19,15 +20,21 @@ import (
 type sUserReport struct {
 	userReportRepo user_report_repo.IUserReportRepository
 	userRepo       user_report_repo.IUserRepository
+	postRepo       user_report_repo.IPostRepository
+	commentRepo    user_report_repo.ICommentRepository
 }
 
 func NewUserReportImplement(
 	userReportRepo user_report_repo.IUserReportRepository,
 	userRepo user_report_repo.IUserRepository,
+	postRepo user_report_repo.IPostRepository,
+	commentRepo user_report_repo.ICommentRepository,
 ) *sUserReport {
 	return &sUserReport{
 		userReportRepo: userReportRepo,
 		userRepo:       userRepo,
+		postRepo:       postRepo,
+		commentRepo:    commentRepo,
 	}
 }
 
@@ -82,18 +89,24 @@ func (s *sUserReport) HandleUserReport(
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exists
-	userReportFound, err := s.userReportRepo.CheckExist(ctx, command.UserId, command.ReportedUserId)
+	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
 		return result, err
 	}
 
-	if !userReportFound {
-		result.ResultCode = response.ErrDataNotFound
+	// 2. Check if report is already handled
+	if !userReportFound.Status {
+		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("user report not found")
+		return result, fmt.Errorf("You don't need to handle this report again")
 	}
 
-	// 2. Update reported user status
+	// 3. Update reported user status
 	reportedUserUpdateEntity := &user_entity.UserUpdate{
 		Status: pointer.Ptr(false),
 	}
@@ -112,7 +125,36 @@ func (s *sUserReport) HandleUserReport(
 		return result, err
 	}
 
-	// 3. Update report status
+	// 4. Update reportedUser posts status
+	postUpdateEntity := &post_entity.PostUpdate{
+		Status: pointer.Ptr(false),
+	}
+	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
+		return result, err
+	}
+
+	conditions := map[string]interface{}{
+		"user_id": command.ReportedUserId,
+	}
+
+	if err = s.postRepo.UpdateMany(ctx, conditions, postUpdateEntity); err != nil {
+		return result, err
+	}
+
+	// 5. Update reportedUser comment status
+	conditions = map[string]interface{}{
+		"user_id": command.ReportedUserId,
+	}
+
+	updateData := map[string]interface{}{
+		"status": false,
+	}
+
+	if err = s.commentRepo.UpdateMany(ctx, conditions, updateData); err != nil {
+		return result, err
+	}
+
+	// 6. Update report status
 	userReportEntity := &user_entity.UserReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
 		Status:  pointer.Ptr(false),

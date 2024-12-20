@@ -113,7 +113,7 @@ func (c *cAdminUserReport) GetManyUserReports(ctx *gin.Context) {
 
 // HandleUserReport godoc
 // @Summary handle user report
-// @Description When user need to handle report
+// @Description When admin need to handle report
 // @Tags admin_user_report
 // @Accept json
 // @Produce json

@@ -51,6 +51,21 @@ func (r *rUser) GetById(
 	return mapper.FromUserModel(&userModel), nil
 }
 
+func (r *rUser) GetStatusById(
+	ctx context.Context,
+	id uuid.UUID,
+) (bool, error) {
+	var userStatus bool
+	if err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Select("status").
+		First(&userStatus, id).
+		Error; err != nil {
+		return false, err
+	}
+	return userStatus, nil
+}
+
 func (r *rUser) CreateOne(
 	ctx context.Context,
 	entity *entities.User,

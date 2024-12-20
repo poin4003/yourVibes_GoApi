@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -107,4 +109,55 @@ func (c *cAdminPostReport) GetManyPostReports(ctx *gin.Context) {
 	}
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, postReportDtos, *result.PagingResponse)
+}
+
+// HandlePostReport godoc
+// @Summary handle post report
+// @Description When admin need to handle report
+// @Tags admin_post_report
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param reported_post_id path string true "Reported post id"
+// @Security ApiKeyAuth
+// @Router /posts/report/{user_id}/{reported_post_id} [patch]
+func (c *cAdminPostReport) HandlePostReport(ctx *gin.Context) {
+	// 1. Get userId from param path
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Get reportedPostId from param path
+	reportedPostIdStr := ctx.Param("reported_post_id")
+	reportedPostId, err := uuid.Parse(reportedPostIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 3. Get admin id from token
+	adminIdClaim, err := extensions.GetAdminID(ctx)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// 4. Call service to handle post report
+	handlePostReportCommand, err := request.ToHandlePostReportCommand(adminIdClaim, userId, reportedPostId)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.PostReport().HandlePostReport(ctx, handlePostReportCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
