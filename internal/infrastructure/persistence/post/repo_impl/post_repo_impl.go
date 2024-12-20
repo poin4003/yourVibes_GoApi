@@ -28,7 +28,6 @@ func (r *rPost) GetById(
 ) (*entities.Post, error) {
 	var postModel models.Post
 	if err := r.db.WithContext(ctx).
-		Where("status = true").
 		Preload("Media").
 		Preload("User").
 		Preload("ParentPost.User").

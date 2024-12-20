@@ -35,6 +35,7 @@ type (
 	IUserReport interface {
 		CreateUserReport(ctx context.Context, command *command.CreateReportUserCommand) (result *command.CreateReportUserCommandResult, err error)
 		HandleUserReport(ctx context.Context, command *command.HandleUserReportCommand) (result *command.HandleUserReportCommandResult, err error)
+		ActivateUserAccount(ctx context.Context, command *command.ActivateUserAccountCommand) (result *command.ActivateUserAccountCommandResult, err error)
 		GetDetailUserReport(ctx context.Context, query *query.GetOneUserReportQuery) (result *query.UserReportQueryResult, err error)
 		GetManyUserReport(ctx context.Context, query *query.GetManyUserReportQuery) (result *query.UserReportQueryListResult, err error)
 	}

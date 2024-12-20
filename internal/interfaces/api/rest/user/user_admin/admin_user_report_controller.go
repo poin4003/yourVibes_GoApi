@@ -3,6 +3,7 @@ package user_admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/dto/request"
@@ -159,5 +160,38 @@ func (c *cAdminUserReport) HandleUserReport(ctx *gin.Context) {
 	}
 
 	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}
+
+// ActivateUserAccount godoc
+// @Summary activate user account
+// @Description When admin need to activate user account
+// @Tags admin_user_report
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Security ApiKeyAuth
+// @Router /users/report/activate/{user_id} [patch]
+func (c *cAdminUserReport) ActivateUserAccount(ctx *gin.Context) {
+	// 1. Get userId from param path
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Call service to activate user account
+	activateUserAccountCommand := &command.ActivateUserAccountCommand{
+		UserId: userId,
+	}
+
+	result, err := services.UserReport().ActivateUserAccount(ctx, activateUserAccountCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 3. response
 	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

@@ -30,5 +30,9 @@ func (uar *UserAdminRouter) InitUserAdminRouter(Router *gin.RouterGroup) {
 		adminRouterPrivate.PATCH("/report/:user_id/:reported_user_id",
 			adminUserReportController.HandleUserReport,
 		)
+
+		adminRouterPrivate.PATCH("/report/activate/:user_id",
+			adminUserReportController.ActivateUserAccount,
+		)
 	}
 }

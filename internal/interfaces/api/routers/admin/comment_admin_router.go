@@ -30,5 +30,9 @@ func (car *CommentAdminRouter) InitCommentAdminRouter(Router *gin.RouterGroup) {
 		adminRouterPrivate.PATCH("/report/:user_id/:reported_comment_id",
 			adminCommentReportController.HandleCommentReport,
 		)
+
+		adminRouterPrivate.PATCH("/report/activate/:comment_id",
+			adminCommentReportController.ActivateComment,
+		)
 	}
 }

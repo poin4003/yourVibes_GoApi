@@ -169,6 +169,84 @@ func (s *sUserReport) HandleUserReport(
 	return result, nil
 }
 
+func (s *sUserReport) ActivateUserAccount(
+	ctx context.Context,
+	command *user_command.ActivateUserAccountCommand,
+) (result *user_command.ActivateUserAccountCommandResult, err error) {
+	result = &user_command.ActivateUserAccountCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exists
+	userFound, err := s.userRepo.GetById(ctx, command.UserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if user is already activate
+	if userFound.Status {
+		result.ResultCode = response.ErrCodeUserIsAlreadyActivated
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You don't need to activate this user account")
+	}
+
+	// 3. Update reported user status
+	reportedUserUpdateEntity := &user_entity.UserUpdate{
+		Status: pointer.Ptr(true),
+	}
+
+	if err = reportedUserUpdateEntity.ValidateUserUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, command.UserId, reportedUserUpdateEntity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 4. Update reportedUser posts status
+	postUpdateEntity := &post_entity.PostUpdate{
+		Status: pointer.Ptr(true),
+	}
+	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
+		return result, err
+	}
+
+	conditions := map[string]interface{}{
+		"user_id": command.UserId,
+	}
+
+	if err = s.postRepo.UpdateMany(ctx, conditions, postUpdateEntity); err != nil {
+		return result, err
+	}
+
+	// 5. Update reportedUser comment status
+	conditions = map[string]interface{}{
+		"user_id": command.UserId,
+	}
+
+	updateData := map[string]interface{}{
+		"status": true,
+	}
+
+	if err = s.commentRepo.UpdateMany(ctx, conditions, updateData); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
 func (s *sUserReport) GetDetailUserReport(
 	ctx context.Context,
 	query *user_query.GetOneUserReportQuery,

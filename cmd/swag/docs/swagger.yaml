@@ -645,6 +645,25 @@ paths:
       summary: handle comment report
       tags:
       - admin_comment_report
+  /comments/report/activate/{comment_id}:
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to activate comment
+      parameters:
+      - description: comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: activate comment account
+      tags:
+      - admin_comment_report
   /posts/:
     get:
       consumes:
@@ -983,6 +1002,25 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: handle post report
+      tags:
+      - admin_post_report
+  /posts/report/activate/{post_id}:
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to activate post
+      parameters:
+      - description: post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: activate post account
       tags:
       - admin_post_report
   /posts/share_post/{post_id}:
@@ -1506,6 +1544,25 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: handle user report
+      tags:
+      - admin_user_report
+  /users/report/activate/{user_id}:
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to activate user account
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: activate user account
       tags:
       - admin_user_report
   /users/verifyemail/:

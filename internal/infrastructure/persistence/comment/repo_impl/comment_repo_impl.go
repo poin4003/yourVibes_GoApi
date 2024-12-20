@@ -27,7 +27,6 @@ func (r *rComment) GetById(
 ) (*entities.Comment, error) {
 	var commentModel models.Comment
 	if err := r.db.WithContext(ctx).
-		Where("status = true").
 		Preload("User").
 		First(&commentModel, id).
 		Error; err != nil {
@@ -174,7 +173,7 @@ func (r *rComment) GetOne(
 		return nil, err
 	}
 
-	return r.GetById(ctx, comment.ID)
+	return mapper.FromCommentModel(comment), nil
 }
 
 func (r *rComment) GetMany(

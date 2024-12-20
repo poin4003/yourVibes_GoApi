@@ -3,6 +3,7 @@ package comment_admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/dto/request"
@@ -159,5 +160,38 @@ func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
 	}
 
 	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}
+
+// ActivateComment godoc
+// @Summary activate comment account
+// @Description When admin need to activate comment
+// @Tags admin_comment_report
+// @Accept json
+// @Produce json
+// @Param comment_id path string true "comment ID"
+// @Security ApiKeyAuth
+// @Router /comments/report/activate/{comment_id} [patch]
+func (c *cAdminCommentReport) ActivateComment(ctx *gin.Context) {
+	// 1. Get commentId from param path
+	commentIdStr := ctx.Param("comment_id")
+	commentId, err := uuid.Parse(commentIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Call service to activate user account
+	activateComment := &command.ActivateCommentCommand{
+		CommentId: commentId,
+	}
+
+	result, err := services.CommentReport().ActivateComment(ctx, activateComment)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 3. response
 	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

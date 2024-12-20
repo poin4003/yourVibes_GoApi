@@ -30,5 +30,9 @@ func (par *PostAdminRouter) InitPostAdminRouter(Router *gin.RouterGroup) {
 		adminRouterPrivate.PATCH("/report/:user_id/:reported_post_id",
 			adminPostReportController.HandlePostReport,
 		)
+
+		adminRouterPrivate.PATCH("/report/activate/:post_id",
+			adminPostReportController.ActivatePost,
+		)
 	}
 }

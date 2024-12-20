@@ -580,6 +580,36 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/comments/report/activate/{comment_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to activate comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_comment_report"
+                ],
+                "summary": "activate comment account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "comment ID",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/comments/report/{user_id}/{reported_comment_id}": {
             "get": {
                 "security": [
@@ -1054,6 +1084,36 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.ReportPostRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/report/activate/{post_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to activate post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_post_report"
+                ],
+                "summary": "activate post account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post ID",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -1953,6 +2013,36 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.ReportUserRequest"
                         }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/users/report/activate/{user_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to activate user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_user_report"
+                ],
+                "summary": "activate user account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}

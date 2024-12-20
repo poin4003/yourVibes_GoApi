@@ -133,6 +133,55 @@ func (s *sPostReport) HandlePostReport(
 	return result, nil
 }
 
+func (s *sPostReport) ActivatePost(
+	ctx context.Context,
+	command *post_command.ActivatePostCommand,
+) (result *post_command.ActivatePostCommandResult, err error) {
+	result = &post_command.ActivatePostCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exist
+	postFound, err := s.postRepo.GetById(ctx, command.PostId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if post already activate
+	if postFound.Status {
+		result.ResultCode = response.ErrCodePostIsAlreadyActivated
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You don't need to activate this post")
+	}
+
+	// 3. Update reported post status
+	reportedPostUpdateEntity := &post_entity.PostUpdate{
+		Status: pointer.Ptr(true),
+	}
+
+	if err = reportedPostUpdateEntity.ValidatePostUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.postRepo.UpdateOne(ctx, command.PostId, reportedPostUpdateEntity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("post report not found")
+		}
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
 func (s *sPostReport) GetDetailPostReport(
 	ctx context.Context,
 	query *post_query.GetOnePostReportQuery,

@@ -3,6 +3,7 @@ package post_admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/dto/request"
@@ -159,5 +160,38 @@ func (c *cAdminPostReport) HandlePostReport(ctx *gin.Context) {
 	}
 
 	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}
+
+// ActivatePost godoc
+// @Summary activate post account
+// @Description When admin need to activate post
+// @Tags admin_post_report
+// @Accept json
+// @Produce json
+// @Param post_id path string true "post ID"
+// @Security ApiKeyAuth
+// @Router /posts/report/activate/{post_id} [patch]
+func (c *cAdminPostReport) ActivatePost(ctx *gin.Context) {
+	// 1. Get postId from param path
+	postIdStr := ctx.Param("post_id")
+	postId, err := uuid.Parse(postIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Call service to activate post
+	activatePostCommand := &command.ActivatePostCommand{
+		PostId: postId,
+	}
+
+	result, err := services.PostReport().ActivatePost(ctx, activatePostCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 3. response
 	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
