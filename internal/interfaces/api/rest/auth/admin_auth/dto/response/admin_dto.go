@@ -7,17 +7,17 @@ import (
 )
 
 type AdminDto struct {
-	ID          uuid.UUID
-	FamilyName  string
-	Name        string
-	Email       string
-	PhoneNumber string
-	IdentityId  string
-	Birthday    time.Time
-	Status      bool
-	Role        bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uuid.UUID `json:"id"`
+	FamilyName  string    `json:"family_name"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	IdentityId  string    `json:"identity_id"`
+	Birthday    time.Time `json:"birthday"`
+	Status      bool      `json:"status"`
+	Role        bool      `json:"role"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func ToAdminDto(

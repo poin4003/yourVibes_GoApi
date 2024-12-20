@@ -47,7 +47,7 @@ func (c *cAdminAuth) Login(ctx *gin.Context) {
 
 	result, err := services.AdminAuth().Login(ctx, loginCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 

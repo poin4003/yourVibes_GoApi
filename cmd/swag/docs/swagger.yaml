@@ -185,7 +185,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -1437,6 +1437,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user report detail
+      tags:
+      - admin_user_report
+    patch:
+      consumes:
+      - application/json
+      description: When user need to handle report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported user id
+        in: path
+        name: reported_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: handle user report
       tags:
       - admin_user_report
   /users/verifyemail/:

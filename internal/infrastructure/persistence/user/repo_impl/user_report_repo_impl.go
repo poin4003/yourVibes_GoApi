@@ -83,6 +83,32 @@ func (r *rUserReport) UpdateOne(
 	return r.GetById(ctx, userId, reportedUserId)
 }
 
+func (r *rUserReport) UpdateMany(
+	ctx context.Context,
+	reportedUserId uuid.UUID,
+	updateData *entities.UserReportUpdate,
+) error {
+	updates := map[string]interface{}{}
+
+	if updateData.AdminId != nil {
+		updates["admin_id"] = *updateData.AdminId
+	}
+
+	if updateData.Status != nil {
+		updates["status"] = *updateData.Status
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.UserReport{}).
+		Where("reported_user_id = ?", reportedUserId).
+		Updates(updates).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rUserReport) DeleteOne(
 	ctx context.Context,
 	userId uuid.UUID,

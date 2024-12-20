@@ -20,6 +20,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -45,37 +46,53 @@ func (s *sUserAuth) Login(
 	loginCommand *command.LoginCommand,
 ) (result *command.LoginCommandResult, err error) {
 	result = &command.LoginCommandResult{}
+	result.User = nil
+	result.AccessToken = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", loginCommand.Email)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("invalid credentials")
+			result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
+			result.HttpStatusCode = http.StatusNotFound
+			return result, err
 		}
-		return nil, err
+		return result, err
 	}
 
-	// 2. Hash password
+	// 2. Return if account is blocked by admin
+	if userFound.Status == false {
+		result.ResultCode = response.ErrCodeAccountBlockedByAdmin
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("This account has been blocked for violating our community standards")
+	}
+
+	// 3. Hash password
 	if !crypto.CheckPasswordHash(loginCommand.Password, userFound.Password) {
-		return nil, fmt.Errorf("invalid credentials")
+		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("invalid credentials")
 	}
 
-	// 3. Put claims into token
+	// 4. Put claims into token
 	accessClaims := jwt.MapClaims{
 		"id":  userFound.ID,
 		"exp": time.Now().Add(time.Hour * 720).Unix(),
 	}
 
-	// 4. Generate token
+	// 5. Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot create access token: %v", err)
+		return result, fmt.Errorf("Cannot create access token: %v", err)
 	}
 
 	// 5. Map to command result
 	result.User = mapper.NewUserResultFromEntity(userFound)
-	result.AccessToken = accessTokenGen
-
+	result.AccessToken = &accessTokenGen
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }
 

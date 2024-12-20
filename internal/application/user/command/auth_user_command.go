@@ -27,6 +27,8 @@ type RegisterCommandResult struct {
 }
 
 type LoginCommandResult struct {
-	User        *common.UserWithSettingResult
-	AccessToken string
+	User           *common.UserWithSettingResult
+	AccessToken    *string
+	ResultCode     int
+	HttpStatusCode int
 }

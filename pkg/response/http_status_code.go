@@ -1,11 +1,14 @@
 package response
 
 const (
-	ErrCodeSuccess      = 20001 // Success
-	ErrCodeParamInvalid = 20003 // Email is invalid
-	ErrInvalidToken     = 30001 // Token is invalid
-	ErrInvalidOTP       = 30002 // OTP is invalid
-	ErrSendEmailOTP     = 30003
+	ErrCodeSuccess                    = 20001 // Success
+	ErrCodeParamInvalid               = 20003 // Email is invalid
+	ErrInvalidToken                   = 30001 // Token is invalid
+	ErrInvalidOTP                     = 30002 // OTP is invalid
+	ErrSendEmailOTP                   = 30003
+	ErrCodeAccountBlockedByAdmin      = 30004
+	ErrCodeAccountBlockedBySuperAdmin = 30005
+	ErrCodeEmailOrPasswordIsWrong     = 30006
 
 	// Register Code
 	ErrCodeUserHasExists                = 50001 // user has already registered
@@ -47,11 +50,14 @@ const (
 )
 
 var msg = map[int]string{
-	ErrCodeSuccess:      "Success",
-	ErrCodeParamInvalid: "Email is invalid",
-	ErrInvalidToken:     "Token is invalid",
-	ErrInvalidOTP:       "OTP is invalid",
-	ErrSendEmailOTP:     "Failed to send email otp",
+	ErrCodeSuccess:                    "Success",
+	ErrCodeParamInvalid:               "Email is invalid",
+	ErrInvalidToken:                   "Token is invalid",
+	ErrInvalidOTP:                     "OTP is invalid",
+	ErrSendEmailOTP:                   "Failed to send email otp",
+	ErrCodeAccountBlockedByAdmin:      "Account blocked",
+	ErrCodeAccountBlockedBySuperAdmin: "Account blocked by super admin, contact to activate",
+	ErrCodeEmailOrPasswordIsWrong:     "Email or password is wrong",
 
 	ErrCodeUserHasExists:                "User has already registered",
 	ErrCodeValidateParamRegister:        "Validate param register failed",

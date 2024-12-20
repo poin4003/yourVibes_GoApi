@@ -1923,6 +1923,41 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to handle report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_user_report"
+                ],
+                "summary": "handle user report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported user id",
+                        "name": "reported_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/users/verifyemail/": {
@@ -2279,7 +2314,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

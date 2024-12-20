@@ -11,19 +11,23 @@ import (
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"net/http"
 )
 
 type sUserReport struct {
 	userReportRepo user_report_repo.IUserReportRepository
+	userRepo       user_report_repo.IUserRepository
 }
 
 func NewUserReportImplement(
 	userReportRepo user_report_repo.IUserReportRepository,
+	userRepo user_report_repo.IUserRepository,
 ) *sUserReport {
 	return &sUserReport{
 		userReportRepo: userReportRepo,
+		userRepo:       userRepo,
 	}
 }
 
@@ -74,7 +78,53 @@ func (s *sUserReport) HandleUserReport(
 	ctx context.Context,
 	command *user_command.HandleUserReportCommand,
 ) (result *user_command.HandleUserReportCommandResult, err error) {
-	return nil, nil
+	result = &user_command.HandleUserReportCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exists
+	userReportFound, err := s.userReportRepo.CheckExist(ctx, command.UserId, command.ReportedUserId)
+	if err != nil {
+		return result, err
+	}
+
+	if !userReportFound {
+		result.ResultCode = response.ErrDataNotFound
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("user report not found")
+	}
+
+	// 2. Update reported user status
+	reportedUserUpdateEntity := &user_entity.UserUpdate{
+		Status: pointer.Ptr(false),
+	}
+
+	if err = reportedUserUpdateEntity.ValidateUserUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, command.ReportedUserId, reportedUserUpdateEntity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 3. Update report status
+	userReportEntity := &user_entity.UserReportUpdate{
+		AdminId: pointer.Ptr(command.AdminId),
+		Status:  pointer.Ptr(false),
+	}
+
+	if err = s.userReportRepo.UpdateMany(ctx, command.ReportedUserId, userReportEntity); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }
 
 func (s *sUserReport) GetDetailUserReport(

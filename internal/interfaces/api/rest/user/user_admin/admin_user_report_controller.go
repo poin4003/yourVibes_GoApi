@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -107,4 +109,55 @@ func (c *cAdminUserReport) GetManyUserReports(ctx *gin.Context) {
 	}
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, userReportDtos, *result.PagingResponse)
+}
+
+// HandleUserReport godoc
+// @Summary handle user report
+// @Description When user need to handle report
+// @Tags admin_user_report
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param reported_user_id path string true "Reported user id"
+// @Security ApiKeyAuth
+// @Router /users/report/{user_id}/{reported_user_id} [patch]
+func (c *cAdminUserReport) HandleUserReport(ctx *gin.Context) {
+	// 1. Get userId from param path
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Get reportedUserId from param path
+	reportedUserIdStr := ctx.Param("reported_user_id")
+	reportedUserId, err := uuid.Parse(reportedUserIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 3. Get admin id from token
+	adminIdClaim, err := extensions.GetAdminID(ctx)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// 4. Call service to handle user report
+	handleUserReportCommand, err := request.ToHandleUserReportCommand(adminIdClaim, userId, reportedUserId)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.UserReport().HandleUserReport(ctx, handleUserReportCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

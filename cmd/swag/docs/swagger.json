@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibesapi.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -1900,6 +1900,41 @@
                     "admin_user_report"
                 ],
                 "summary": "Get user report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reported user id",
+                        "name": "reported_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to handle report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_user_report"
+                ],
+                "summary": "handle user report",
                 "parameters": [
                     {
                         "type": "string",

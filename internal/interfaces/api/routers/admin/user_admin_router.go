@@ -26,5 +26,9 @@ func (uar *UserAdminRouter) InitUserAdminRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&admin_user_report_query.UserReportQueryObject{}, admin_user_report_query.ValidateUserReportQueryObject),
 			adminUserReportController.GetManyUserReports,
 		)
+
+		adminRouterPrivate.PATCH("/report/:user_id/:reported_user_id",
+			adminUserReportController.HandleUserReport,
+		)
 	}
 }

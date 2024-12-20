@@ -41,6 +41,7 @@ type (
 		GetById(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.UserReport, error)
 		CreateOne(ctx context.Context, entity *entities.UserReport) (*entities.UserReport, error)
 		UpdateOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID, updateData *entities.UserReportUpdate) (*entities.UserReport, error)
+		UpdateMany(ctx context.Context, reportedUserId uuid.UUID, updateData *entities.UserReportUpdate) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyUserReportQuery) ([]*entities.UserReport, *response.PagingResponse, error)
 		CheckExist(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (bool, error)

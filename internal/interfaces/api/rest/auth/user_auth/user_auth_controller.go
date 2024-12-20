@@ -120,7 +120,7 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 
 	result, err := services.UserAuth().Login(ctx, loginCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeLoginFailed, http.StatusBadRequest, err.Error())
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
