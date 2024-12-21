@@ -169,6 +169,41 @@ func (s *sUserReport) HandleUserReport(
 	return result, nil
 }
 
+func (s *sUserReport) DeleteUserReport(
+	ctx context.Context,
+	command *user_command.DeleteUserReportCommand,
+) (result *user_command.DeleteUserReportCommandResult, err error) {
+	result = &user_command.DeleteUserReportCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exists
+	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if report is already handled
+	if !userReportFound.Status {
+		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You can't delete this report, it's already handled")
+	}
+
+	// 3. Delete report
+	if err = s.userReportRepo.DeleteOne(ctx, command.UserId, command.ReportedUserId); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
 func (s *sUserReport) ActivateUserAccount(
 	ctx context.Context,
 	command *user_command.ActivateUserAccountCommand,

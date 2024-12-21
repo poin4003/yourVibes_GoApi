@@ -28,6 +28,7 @@ type (
 	IPostReport interface {
 		CreatePostReport(ctx context.Context, command *command.CreateReportPostCommand) (result *command.CreateReportPostCommandResult, err error)
 		HandlePostReport(ctx context.Context, command *command.HandlePostReportCommand) (result *command.HandlePostReportCommandResult, err error)
+		DeletePostReport(ctx context.Context, command *command.DeletePostReportCommand) (result *command.DeletePostReportCommandResult, err error)
 		ActivatePost(ctx context.Context, command *command.ActivatePostCommand) (result *command.ActivatePostCommandResult, err error)
 		GetDetailPostReport(ctx context.Context, query *query.GetOnePostReportQuery) (result *query.PostReportQueryResult, err error)
 		GetManyPostReport(ctx context.Context, query *query.GetManyPostReportQuery) (result *query.PostReportQueryListResult, err error)

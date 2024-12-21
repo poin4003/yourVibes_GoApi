@@ -115,8 +115,8 @@ func (r *rPostReport) DeleteOne(
 	reportedPostId uuid.UUID,
 ) error {
 	if err := r.db.WithContext(ctx).
-		Delete(&models.PostReport{}).
 		Where("user_id = ? AND reported_post_id = ?", userId, reportedPostId).
+		Delete(&models.PostReport{}).
 		Error; err != nil {
 		return err
 	}

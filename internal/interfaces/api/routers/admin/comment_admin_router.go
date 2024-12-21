@@ -31,6 +31,10 @@ func (car *CommentAdminRouter) InitCommentAdminRouter(Router *gin.RouterGroup) {
 			adminCommentReportController.HandleCommentReport,
 		)
 
+		adminRouterPrivate.DELETE("/report/:user_id/:reported_comment_id",
+			adminCommentReportController.DeleteCommentReport,
+		)
+
 		adminRouterPrivate.PATCH("/report/activate/:comment_id",
 			adminCommentReportController.ActivateComment,
 		)

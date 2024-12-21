@@ -31,6 +31,10 @@ func (uar *UserAdminRouter) InitUserAdminRouter(Router *gin.RouterGroup) {
 			adminUserReportController.HandleUserReport,
 		)
 
+		adminRouterPrivate.DELETE("/report/:user_id/:reported_user_id",
+			adminUserReportController.DeleteUserReport,
+		)
+
 		adminRouterPrivate.PATCH("/report/activate/:user_id",
 			adminUserReportController.ActivateUserAccount,
 		)

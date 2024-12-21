@@ -116,8 +116,8 @@ func (r *rCommentReport) DeleteOne(
 	reportedCommentId uuid.UUID,
 ) error {
 	if err := r.db.WithContext(ctx).
-		Delete(&models.CommentReport{}).
 		Where("user_id = ? AND reported_comment_id = ?", userId, reportedCommentId).
+		Delete(&models.CommentReport{}).
 		Error; err != nil {
 		return err
 	}

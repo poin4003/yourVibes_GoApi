@@ -28,7 +28,7 @@ func (pr *PostReport) ValidatePostReport() error {
 	return validation.ValidateStruct(pr,
 		validation.Field(&pr.UserId, validation.Required),
 		validation.Field(&pr.ReportedPostId, validation.Required),
-		validation.Field(&pr.Reason, validation.Required, validation.Length(10, 255)),
+		validation.Field(&pr.Reason, validation.Required, validation.Length(2, 255)),
 	)
 }
 

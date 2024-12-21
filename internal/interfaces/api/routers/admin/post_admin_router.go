@@ -31,6 +31,10 @@ func (par *PostAdminRouter) InitPostAdminRouter(Router *gin.RouterGroup) {
 			adminPostReportController.HandlePostReport,
 		)
 
+		adminRouterPrivate.DELETE("/report/:user_id/:reported_post_id",
+			adminPostReportController.DeletePostReport,
+		)
+
 		adminRouterPrivate.PATCH("/report/activate/:post_id",
 			adminPostReportController.ActivatePost,
 		)

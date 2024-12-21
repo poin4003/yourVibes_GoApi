@@ -29,7 +29,7 @@ func (cr *CommentReport) ValidateCommentReport() error {
 	return validation.ValidateStruct(cr,
 		validation.Field(&cr.UserId, validation.Required),
 		validation.Field(&cr.ReportedCommentId, validation.Required),
-		validation.Field(&cr.Reason, validation.Required, validation.Length(10, 255)),
+		validation.Field(&cr.Reason, validation.Required, validation.Length(2, 255)),
 	)
 }
 

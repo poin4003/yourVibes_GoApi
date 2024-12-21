@@ -133,6 +133,41 @@ func (s *sPostReport) HandlePostReport(
 	return result, nil
 }
 
+func (s *sPostReport) DeletePostReport(
+	ctx context.Context,
+	command *post_command.DeletePostReportCommand,
+) (result *post_command.DeletePostReportCommandResult, err error) {
+	result = &post_command.DeletePostReportCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exist
+	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if report is already handled
+	if !postReportFound.Status {
+		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You can't delete this report, it's already handled")
+	}
+
+	// 3. Delete report
+	if err = s.postReportRepo.DeleteOne(ctx, command.UserId, command.ReportedPostId); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
 func (s *sPostReport) ActivatePost(
 	ctx context.Context,
 	command *post_command.ActivatePostCommand,

@@ -28,7 +28,7 @@ func (ur *UserReport) ValidateUserReport() error {
 	return validation.ValidateStruct(ur,
 		validation.Field(&ur.UserId, validation.Required),
 		validation.Field(&ur.ReportedUserId, validation.Required),
-		validation.Field(&ur.Reason, validation.Required, validation.Length(10, 255)),
+		validation.Field(&ur.Reason, validation.Required, validation.Length(2, 255)),
 	)
 }
 

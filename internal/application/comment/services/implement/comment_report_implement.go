@@ -133,6 +133,41 @@ func (s *sCommentReport) HandleCommentReport(
 	return result, nil
 }
 
+func (s *sCommentReport) DeleteCommentReport(
+	ctx context.Context,
+	command *comment_command.DeleteCommentReportCommand,
+) (result *comment_command.DeleteCommentReportCommandResult, err error) {
+	result = &comment_command.DeleteCommentReportCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check exist
+	commentReportFound, err := s.commentReportRepo.GetById(ctx, command.UserId, command.ReportedCommentId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check if report is already handled
+	if !commentReportFound.Status {
+		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("You can't delete this report, it's already handled")
+	}
+
+	// 3. Delete report
+	if err = s.commentReportRepo.DeleteOne(ctx, command.UserId, command.ReportedCommentId); err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
 func (s *sCommentReport) ActivateComment(
 	ctx context.Context,
 	command *comment_command.ActivateCommentCommand,

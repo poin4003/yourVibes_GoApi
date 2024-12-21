@@ -20,6 +20,7 @@ type (
 	ICommentReport interface {
 		CreateCommentReport(ctx context.Context, command *command.CreateReportCommentCommand) (result *command.CreateReportCommentCommandResult, err error)
 		HandleCommentReport(ctx context.Context, command *command.HandleCommentReportCommand) (result *command.HandleCommentReportCommandResult, err error)
+		DeleteCommentReport(ctx context.Context, command *command.DeleteCommentReportCommand) (result *command.DeleteCommentReportCommandResult, err error)
 		ActivateComment(ctx context.Context, command *command.ActivateCommentCommand) (result *command.ActivateCommentCommandResult, err error)
 		GetDetailCommentReport(ctx context.Context, query *query.GetOneCommentReportQuery) (result *query.CommentReportQueryResult, err error)
 		GetManyCommentReport(ctx context.Context, query *query.GetManyCommentReportQuery) (result *query.CommentReportQueryListResult, err error)

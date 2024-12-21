@@ -185,7 +185,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -599,6 +599,29 @@ paths:
       tags:
       - comment_report
   /comments/report/{user_id}/{reported_comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: When admin need to delete report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported comment id
+        in: path
+        name: reported_comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: delete comment report
+      tags:
+      - admin_comment_report
     get:
       consumes:
       - application/json
@@ -958,6 +981,29 @@ paths:
       tags:
       - post_report
   /posts/report/{user_id}/{reported_post_id}:
+    delete:
+      consumes:
+      - application/json
+      description: When admin need to delete report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported post id
+        in: path
+        name: reported_post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: delete post report
+      tags:
+      - admin_post_report
     get:
       consumes:
       - application/json
@@ -1500,6 +1546,29 @@ paths:
       tags:
       - user_report
   /users/report/{user_id}/{reported_user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: When admin need to delete report
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Reported user id
+        in: path
+        name: reported_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: delete user report
+      tags:
+      - admin_user_report
     get:
       consumes:
       - application/json

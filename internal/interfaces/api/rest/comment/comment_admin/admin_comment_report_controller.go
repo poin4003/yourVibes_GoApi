@@ -163,6 +163,50 @@ func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
 	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
 
+// DeleteCommentReport godoc
+// @Summary delete comment report
+// @Description When admin need to delete report
+// @Tags admin_comment_report
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param reported_comment_id path string true "Reported comment id"
+// @Security ApiKeyAuth
+// @Router /comments/report/{user_id}/{reported_comment_id} [delete]
+func (c *cAdminCommentReport) DeleteCommentReport(ctx *gin.Context) {
+	// 1. Get userId from param path
+	userIdStr := ctx.Param("user_id")
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 2. Get reportedCommentId from param path
+	reportedCommentIdStr := ctx.Param("reported_comment_id")
+	reportedCommentId, err := uuid.Parse(reportedCommentIdStr)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 3. Call service to delete user report
+	deleteCommentReportCommand, err := request.ToDeleteCommentReportCommand(userId, reportedCommentId)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.CommentReport().DeleteCommentReport(ctx, deleteCommentReportCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	// 4. response
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}
+
 // ActivateComment godoc
 // @Summary activate comment account
 // @Description When admin need to activate comment
