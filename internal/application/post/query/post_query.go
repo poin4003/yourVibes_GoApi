@@ -25,6 +25,11 @@ type GetManyPostQuery struct {
 	Page                int
 }
 
+type CheckPostOwnerQuery struct {
+	PostId uuid.UUID
+	UserId uuid.UUID
+}
+
 type GetOnePostQueryResult struct {
 	Post           *common.PostResultWithLiked
 	ResultCode     int

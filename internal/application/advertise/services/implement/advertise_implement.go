@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	advertise_command "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
@@ -11,6 +12,7 @@ import (
 	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/payment"
+	"gorm.io/gorm"
 	"net/http"
 	"time"
 )
@@ -142,7 +144,7 @@ func (s *sAdvertise) CreateAdvertise(
 	return result, nil
 }
 
-func (s *sAdvertise) GetAdvertise(
+func (s *sAdvertise) GetManyAdvertise(
 	ctx context.Context,
 	query *advertise_query.GetManyAdvertiseQuery,
 ) (result *advertise_query.GetManyAdvertiseResults, err error) {
@@ -166,5 +168,30 @@ func (s *sAdvertise) GetAdvertise(
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	result.PagingResponse = paging
+	return result, nil
+}
+
+func (s *sAdvertise) GetAdvertise(
+	ctx context.Context,
+	query *advertise_query.GetOneAdvertiseQuery,
+) (result *advertise_query.GetOneAdvertiseResult, err error) {
+	result = &advertise_query.GetOneAdvertiseResult{}
+	result.Advertise = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Get advertise detail
+	advertise, err := s.advertiseRepo.GetOne(ctx, query.AdvertiseId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusNotFound
+			return result, nil
+		}
+		return result, err
+	}
+
+	result.Advertise = mapper.NewAdvertiseDetailFromEntity(advertise)
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }

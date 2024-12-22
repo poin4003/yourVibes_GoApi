@@ -8,7 +8,7 @@ import (
 )
 
 type AdvertiseQueryObject struct {
-	PostId string `form:"post_id,omitempty"`
+	PostId string `form:"post_id,required"`
 	Limit  int    `form:"limit,omitempty"`
 	Page   int    `form:"page,omitempty"`
 }
@@ -20,6 +20,7 @@ func ValidateAdvertiseQueryObject(input interface{}) error {
 	}
 
 	return validation.ValidateStruct(query,
+		validation.Field(&query.PostId, validation.Required),
 		validation.Field(&query.Limit, validation.Min(0)),
 		validation.Field(&query.Page, validation.Min(0)),
 	)

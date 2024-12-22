@@ -37,20 +37,20 @@ func (r *rAdvertise) GetById(
 
 func (r *rAdvertise) GetOne(
 	ctx context.Context,
-	query interface{},
-	args ...interface{},
-) (*entities.Advertise, error) {
+	id uuid.UUID,
+) (*entities.AdvertiseDetail, error) {
 	var advertiseModel models.Advertise
 
 	if err := r.db.WithContext(ctx).
 		Model(&advertiseModel).
-		Where(query, args...).
-		First(&advertiseModel).
+		Preload("Bill").
+		Preload("Post.User").
+		First(&advertiseModel, id).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return r.GetById(ctx, advertiseModel.ID)
+	return mapper.FromAdvertiseModelForAdvertiseDetail(&advertiseModel), nil
 }
 
 func (r *rAdvertise) GetMany(
@@ -59,6 +59,38 @@ func (r *rAdvertise) GetMany(
 ) ([]*entities.Advertise, *response.PagingResponse, error) {
 	var advertises []*models.Advertise
 	var total int64
+
+	db := r.db.WithContext(ctx).
+		Model(&models.Advertise{}).
+		Joins("JOIN posts ON posts.id = advertises.post_id").
+		Joins("JOIN users ON users.id = posts.user_id").
+		Joins("LEFT JOIN bills ON bills.advertise_id = advertises.id")
+
+	if query.PostId != uuid.Nil {
+		db = db.Where("advertises.post_id = ?", query.PostId)
+	}
+
+	if query.Email != "" {
+		db = db.Where("users.email = ?", query.Email)
+	}
+
+	if query.Status != nil {
+		db = db.Where("bills.status = ?", query.Status)
+	}
+
+	if !query.FromDate.IsZero() {
+		db = db.Where("advertises.created_at >= ?", query.FromDate)
+	}
+	if !query.ToDate.IsZero() {
+		db = db.Where("advertises.created_at <= ?", query.ToDate)
+	}
+
+	if query.FromPrice > 0 {
+		db = db.Where("bills.price >= ?", query.FromPrice)
+	}
+	if query.ToPrice > 0 {
+		db = db.Where("bills.price <= ?", query.ToPrice)
+	}
 
 	limit := query.Limit
 	page := query.Page
@@ -69,12 +101,6 @@ func (r *rAdvertise) GetMany(
 		page = 1
 	}
 	offset := (page - 1) * limit
-
-	db := r.db.WithContext(ctx).Model(&models.Advertise{})
-
-	if query.PostId != uuid.Nil {
-		db = db.Where("advertises.post_id = ?", query.PostId)
-	}
 
 	if err := db.Count(&total).
 		Offset(offset).

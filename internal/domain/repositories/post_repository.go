@@ -18,6 +18,7 @@ type (
 		GetOne(ctx context.Context, id uuid.UUID, authenticatedUserId uuid.UUID) (*entities.PostWithLiked, error)
 		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.PostWithLiked, *response.PagingResponse, error)
 		UpdateExpiredAdvertisements(ctx context.Context) error
+		CheckPostOwner(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (bool, error)
 	}
 	IMediaRepository interface {
 		GetById(ctx context.Context, id uint) (*entities.Media, error)

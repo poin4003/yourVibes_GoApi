@@ -2,6 +2,7 @@ package advertise_user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	advertise_services "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	post_services "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
@@ -98,7 +99,7 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 // @Tags advertise_user
 // @Accept json
 // @Produce json
-// @Param post_id query string false "post_id to filter ads"
+// @Param post_id query string true "post_id to filter ads"
 // @Param limit query int false "Limit of ads per page"
 // @Param page query int false "Page number for pagination"
 // @Security ApiKeyAuth
@@ -118,20 +119,49 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Call service to handle get many
+	// 3. Get userId from token
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	postId, err := uuid.Parse(advertiseQueryObject.PostId)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	// 4. Call service to check owner
+	checkPostOwnerQuery := &post_query.CheckPostOwnerQuery{
+		PostId: postId,
+		UserId: userIdClaim,
+	}
+	isOwner, err := post_services.PostUser().CheckPostOwner(ctx, checkPostOwnerQuery)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if !isOwner {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, "You can't access this advertise, only for owner")
+		return
+	}
+
+	// 5. Call service to handle get many
 	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	result, err := advertise_services.Advertise().GetAdvertise(ctx, getManyAdvertiseQuery)
+	result, err := advertise_services.Advertise().GetManyAdvertise(ctx, getManyAdvertiseQuery)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	// 4. Convert to dto
+	// 6. Convert to dto
 	var advertiseDtos []*response.AdvertiseWithBillDto
 	for _, advertiseResult := range result.Advertises {
 		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(*advertiseResult))

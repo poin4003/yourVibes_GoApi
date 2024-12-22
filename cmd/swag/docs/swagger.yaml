@@ -363,6 +363,7 @@ paths:
       - description: post_id to filter ads
         in: query
         name: post_id
+        required: true
         type: string
       - description: Limit of ads per page
         in: query

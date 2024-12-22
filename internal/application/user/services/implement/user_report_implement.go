@@ -157,7 +157,7 @@ func (s *sUserReport) HandleUserReport(
 	// 6. Update report status
 	userReportEntity := &user_entity.UserReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
-		Status:  pointer.Ptr(false),
+		Status:  pointer.Ptr(true),
 	}
 
 	if err = s.userReportRepo.UpdateMany(ctx, command.ReportedUserId, userReportEntity); err != nil {

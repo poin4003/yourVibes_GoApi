@@ -289,7 +289,8 @@ const docTemplate = `{
                         "type": "string",
                         "description": "post_id to filter ads",
                         "name": "post_id",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "integer",

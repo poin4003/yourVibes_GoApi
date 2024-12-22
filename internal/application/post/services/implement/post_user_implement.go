@@ -578,3 +578,15 @@ func (s *sPostUser) GetManyPosts(
 	result.PagingResponse = paging
 	return result, nil
 }
+
+func (s *sPostUser) CheckPostOwner(
+	ctx context.Context,
+	query *post_query.CheckPostOwnerQuery,
+) (bool, error) {
+	isOwner, err := s.postRepo.CheckPostOwner(ctx, query.PostId, query.UserId)
+	if err != nil {
+		return false, err
+	}
+
+	return isOwner, nil
+}

@@ -121,7 +121,7 @@ func (s *sCommentReport) HandleCommentReport(
 	// 4. Update report status
 	commentReportEntity := &comment_entity.CommentReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
-		Status:  pointer.Ptr(false),
+		Status:  pointer.Ptr(true),
 	}
 
 	if err = s.commentReportRepo.UpdateMany(ctx, command.ReportedCommentId, commentReportEntity); err != nil {

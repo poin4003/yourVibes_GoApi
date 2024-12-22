@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -373,4 +374,31 @@ func (r *rPost) UpdateExpiredAdvertisements(
 	}
 
 	return nil
+}
+
+func (r *rPost) CheckPostOwner(
+	ctx context.Context,
+	postId uuid.UUID,
+	userId uuid.UUID,
+) (bool, error) {
+	var ownerId string
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Select("user_id").
+		Where("id = ?", postId).
+		First(&ownerId).
+		Error; err != nil {
+		return false, err
+	}
+
+	ownerUUID, err := uuid.Parse(ownerId)
+	if err != nil {
+		return false, fmt.Errorf("invalid UUID for user_id: %v", err)
+	}
+
+	if ownerUUID != userId {
+		return false, nil
+	}
+
+	return true, nil
 }

@@ -121,7 +121,7 @@ func (s *sPostReport) HandlePostReport(
 	// 4. Update report status
 	postReportEntity := &post_entity.PostReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
-		Status:  pointer.Ptr(false),
+		Status:  pointer.Ptr(true),
 	}
 
 	if err = s.postReportRepo.UpdateMany(ctx, command.ReportedPostId, postReportEntity); err != nil {

@@ -22,6 +22,17 @@ type AdvertiseUpdate struct {
 	UpdatedAt *time.Time
 }
 
+type AdvertiseDetail struct {
+	ID        uuid.UUID
+	PostId    uuid.UUID
+	Post      *PostForAdvertise
+	StartDate time.Time
+	EndDate   time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Bill      *Bill
+}
+
 func (a *Advertise) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.PostId, validation.Required),
