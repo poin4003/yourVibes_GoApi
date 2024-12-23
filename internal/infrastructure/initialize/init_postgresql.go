@@ -32,10 +32,10 @@ func InitPostgreSql() {
 	global.Pdb = db
 	global.Logger.Info("Initializing PostgreSQL Successfully")
 
-	err = DBMigrator(db)
-	if err != nil {
-		global.Logger.Info("Migrate to postgres failed")
-	}
+	// err = DBMigrator(db)
+	// if err != nil {
+	// 	global.Logger.Info("Migrate to postgres failed")
+	// }
 
 	SetPool()
 }

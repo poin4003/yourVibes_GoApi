@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type PostReportResult struct {
@@ -23,6 +24,8 @@ type PostReportShortVerResult struct {
 	ReportedPostId uuid.UUID
 	AdminId        *uuid.UUID
 	Reason         string
+	UserEmail      string
+	AdminEmail     *string
 	Status         bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

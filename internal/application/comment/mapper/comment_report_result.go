@@ -142,12 +142,19 @@ func NewCommentReportShortVerResult(
 		return nil
 	}
 
+	var adminEmail *string
+	if commentReport.Admin != nil {
+		adminEmail = &commentReport.Admin.Email
+	}
+
 	var commentReportResult = &common.CommentReportShortVerResult{
-		AdminId:   commentReport.AdminId,
-		Reason:    commentReport.Reason,
-		Status:    commentReport.Status,
-		CreatedAt: commentReport.CreatedAt,
-		UpdatedAt: commentReport.UpdatedAt,
+		AdminId:    commentReport.AdminId,
+		Reason:     commentReport.Reason,
+		UserEmail:  commentReport.User.Email,
+		AdminEmail: adminEmail,
+		Status:     commentReport.Status,
+		CreatedAt:  commentReport.CreatedAt,
+		UpdatedAt:  commentReport.UpdatedAt,
 	}
 	commentReportResult.UserId = commentReport.UserId
 	commentReportResult.ReportedCommentId = commentReport.ReportedCommentId

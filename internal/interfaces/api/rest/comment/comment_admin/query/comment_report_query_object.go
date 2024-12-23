@@ -2,14 +2,19 @@ package query
 
 import (
 	"fmt"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
-	"time"
 )
 
 type CommentReportQueryObject struct {
 	Reason       string    `form:"reason,omitempty"`
+	UserEmail    string    `form:"user_email,omitempty"`
+	AdminEmail   string    `form:"admin_email,omitempty"`
+	FromDate     time.Time `form:"from_date,omitempty"`
+	ToDate       time.Time `form:"to_date,omitempty"`
 	CreatedAt    time.Time `form:"created_at,omitempty"`
 	Status       *bool     `form:"status,omitempty"`
 	SortBy       string    `form:"sort_by,omitempty"`
@@ -44,6 +49,10 @@ func ToGetOneCommentReportQuery(
 func (req *CommentReportQueryObject) ToGetManyCommentQuery() (*comment_query.GetManyCommentReportQuery, error) {
 	return &comment_query.GetManyCommentReportQuery{
 		Reason:       req.Reason,
+		UserEmail:    req.UserEmail,
+		AdminEmail:   req.AdminEmail,
+		FromDate:     req.FromDate,
+		ToDate:       req.ToDate,
 		CreatedAt:    req.CreatedAt,
 		Status:       req.Status,
 		SortBy:       req.SortBy,

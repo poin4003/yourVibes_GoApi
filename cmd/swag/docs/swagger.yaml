@@ -185,7 +185,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -555,6 +555,22 @@ paths:
       - description: Filter by creation day
         in: query
         name: created_at
+        type: string
+      - description: Filter by user email
+        in: query
+        name: user_email
+        type: string
+      - description: Filter by admin email
+        in: query
+        name: admin_email
+        type: string
+      - description: Filter by from date
+        in: query
+        name: from_date
+        type: string
+      - description: Filter by to date
+        in: query
+        name: to_date
         type: string
       - description: Sort by field
         in: query
@@ -937,6 +953,22 @@ paths:
       - description: Filter by creation day
         in: query
         name: created_at
+        type: string
+      - description: Filter by user email
+        in: query
+        name: user_email
+        type: string
+      - description: Filter by admin email
+        in: query
+        name: admin_email
+        type: string
+      - description: Filter by from date
+        in: query
+        name: from_date
+        type: string
+      - description: Filter by to date
+        in: query
+        name: to_date
         type: string
       - description: Sort by field
         in: query

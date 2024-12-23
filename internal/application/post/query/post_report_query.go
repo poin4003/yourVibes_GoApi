@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOnePostReportQuery struct {
@@ -14,6 +15,10 @@ type GetOnePostReportQuery struct {
 
 type GetManyPostReportQuery struct {
 	Reason       string
+	UserEmail    string
+	AdminEmail   string
+	FromDate     time.Time
+	ToDate       time.Time
 	CreatedAt    time.Time
 	Status       *bool
 	SortBy       string

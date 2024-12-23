@@ -2,14 +2,19 @@ package query
 
 import (
 	"fmt"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
-	"time"
 )
 
 type PostReportQueryObject struct {
 	Reason       string    `form:"reason,omitempty"`
+	UserEmail    string    `form:"user_email,omitempty"`
+	AdminEmail   string    `form:"admin_email,omitemtpy"`
+	FromDate     time.Time `form:"from_date,omitemtpy"`
+	ToDate       time.Time `form:"to_date,omitemtpy"`
 	CreatedAt    time.Time `form:"created_at,omitempty"`
 	Status       *bool     `form:"status,omitempty"`
 	SortBy       string    `form:"sort_by,omitempty"`
@@ -44,6 +49,10 @@ func ToGetOnePostReportQuery(
 func (req *PostReportQueryObject) ToGetManyPostQuery() (*post_query.GetManyPostReportQuery, error) {
 	return &post_query.GetManyPostReportQuery{
 		Reason:       req.Reason,
+		UserEmail:    req.UserEmail,
+		AdminEmail:   req.AdminEmail,
+		FromDate:     req.FromDate,
+		ToDate:       req.ToDate,
 		CreatedAt:    req.CreatedAt,
 		Status:       req.Status,
 		SortBy:       req.SortBy,

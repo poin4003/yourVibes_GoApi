@@ -525,6 +525,30 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Filter by user email",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by admin email",
+                        "name": "admin_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by from date",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by to date",
+                        "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Sort by field",
                         "name": "sort_by",
                         "in": "query"
@@ -1065,6 +1089,30 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by creation day",
                         "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user email",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by admin email",
+                        "name": "admin_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by from date",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by to date",
+                        "name": "to_date",
                         "in": "query"
                     },
                     {
@@ -2610,7 +2658,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

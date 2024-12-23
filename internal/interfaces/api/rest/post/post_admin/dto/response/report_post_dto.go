@@ -1,9 +1,10 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
-	"time"
 )
 
 type PostReportDto struct {
@@ -22,6 +23,8 @@ type PostReportDto struct {
 type PostReportShortVerDto struct {
 	UserId         uuid.UUID  `json:"user_id"`
 	ReportedPostId uuid.UUID  `json:"reported_post_id"`
+	UserEmail      string     `json:"user_email"`
+	AdminEmail     *string    `json:"admin_email"`
 	AdminId        *uuid.UUID `json:"admin_id"`
 	Reason         string     `json:"reason"`
 	Status         bool       `json:"status"`
@@ -58,6 +61,8 @@ func ToPostReportShortVerDto(
 	return &PostReportShortVerDto{
 		UserId:         postResult.UserId,
 		ReportedPostId: postResult.ReportedPostId,
+		UserEmail:      postResult.UserEmail,
+		AdminEmail:     postResult.AdminEmail,
 		AdminId:        postResult.AdminId,
 		Reason:         postResult.Reason,
 		Status:         postResult.Status,

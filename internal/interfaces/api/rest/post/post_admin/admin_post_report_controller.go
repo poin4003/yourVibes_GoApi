@@ -1,6 +1,8 @@
 package post_admin
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -10,7 +12,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cAdminPostReport struct{}
@@ -74,6 +75,10 @@ func (c *cAdminPostReport) GetPostReport(ctx *gin.Context) {
 // @Param        reason        query     string  false  "reason to filter report"
 // @Param        status        query     bool    false  "Filter by status"
 // @Param        created_at    query     string  false  "Filter by creation day"
+// @Param        user_email    query     string  false  "Filter by user email"
+// @Param        admin_email   query     string  false  "Filter by admin email"
+// @Param        from_date     query     string  false  "Filter by from date"
+// @Param        to_date       query     string  false  "Filter by to date"
 // @Param        sort_by       query     string  false  "Sort by field"
 // @Param        isDescending  query     bool    false  "Sort in descending order"
 // @Param        limit         query     int     false  "Number of results per page"

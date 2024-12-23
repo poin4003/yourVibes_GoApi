@@ -1,9 +1,10 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
-	"time"
 )
 
 type CommentReportDto struct {
@@ -23,6 +24,8 @@ type CommentReportDto struct {
 type CommentReportShortVerDto struct {
 	UserId            uuid.UUID  `json:"user_id"`
 	ReportedCommentId uuid.UUID  `json:"reported_comment_id"`
+	UserEmail         string     `json:"user_email"`
+	AdminEmail        *string    `json:"admin_email"`
 	AdminId           *uuid.UUID `json:"admin_id"`
 	Reason            string     `json:"reason"`
 	Status            bool       `json:"status"`
@@ -53,19 +56,21 @@ func ToCommentReportDto(
 }
 
 func ToCommentReportShortVerDto(
-	userReportResult *common.CommentReportShortVerResult,
+	commentReportResult *common.CommentReportShortVerResult,
 ) *CommentReportShortVerDto {
-	if userReportResult == nil {
+	if commentReportResult == nil {
 		return nil
 	}
 
 	return &CommentReportShortVerDto{
-		UserId:            userReportResult.UserId,
-		ReportedCommentId: userReportResult.ReportedCommentId,
-		AdminId:           userReportResult.AdminId,
-		Reason:            userReportResult.Reason,
-		Status:            userReportResult.Status,
-		CreatedAt:         userReportResult.CreatedAt,
-		UpdatedAt:         userReportResult.UpdatedAt,
+		UserId:            commentReportResult.UserId,
+		ReportedCommentId: commentReportResult.ReportedCommentId,
+		UserEmail:         commentReportResult.UserEmail,
+		AdminEmail:        commentReportResult.AdminEmail,
+		AdminId:           commentReportResult.AdminId,
+		Reason:            commentReportResult.Reason,
+		Status:            commentReportResult.Status,
+		CreatedAt:         commentReportResult.CreatedAt,
+		UpdatedAt:         commentReportResult.UpdatedAt,
 	}
 }

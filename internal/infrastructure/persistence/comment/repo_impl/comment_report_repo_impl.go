@@ -2,6 +2,8 @@ package repo_impl
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
@@ -9,7 +11,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rCommentReport struct {
@@ -132,10 +133,34 @@ func (r *rCommentReport) GetMany(
 	var commentReportModels []*models.CommentReport
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&models.CommentReport{})
+	db := r.db.WithContext(ctx).
+		Model(&models.CommentReport{}).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, email")
+		}).
+		Preload("Admin", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, email")
+		})
 
 	if query.Reason != "" {
-		db = db.Where("reason = ?", query.Reason)
+		db = db.Where("comment_reports.reason = ?", query.Reason)
+	}
+
+	if query.UserEmail != "" {
+		db = db.Joins("LEFT JOIN users ON users.id = comment_reports.user_id").
+			Where("users.email = ?", query.UserEmail)
+	}
+
+	if query.AdminEmail != "" {
+		db = db.Joins("LEFT JOIN admins ON admins.id = comment_reports.admin_id").
+			Where("admins.email = ?", query.AdminEmail)
+	}
+
+	if !query.FromDate.IsZero() {
+		db = db.Where("comment_reports.created_at >= ?", query.FromDate)
+	}
+	if !query.ToDate.IsZero() {
+		db = db.Where("comment_reports.created_at <= ?", query.ToDate)
 	}
 
 	if !query.CreatedAt.IsZero() {
@@ -144,44 +169,29 @@ func (r *rCommentReport) GetMany(
 	}
 
 	if query.Status != nil {
-		if *query.Status {
-			db = db.Where("status = ?", true)
-		} else {
-			db = db.Where("status = ?", false)
-		}
+		db = db.Where("comment_reports.status = ?", *query.Status)
 	}
 
 	if query.SortBy != "" {
+		sortColumn := ""
 		switch query.SortBy {
 		case "user_id":
-			if query.IsDescending {
-				db = db.Order("user_id DESC")
-			} else {
-				db = db.Order("user_id ASC")
-			}
+			sortColumn = "comment_reports.user_id"
 		case "reported_comment_id":
-			if query.IsDescending {
-				db = db.Order("reported_comment_id DESC")
-			} else {
-				db = db.Order("reported_comment_id ASC")
-			}
+			sortColumn = "comment_reports.reported_comment_id"
 		case "admin_id":
-			if query.IsDescending {
-				db = db.Order("admin_id DESC")
-			} else {
-				db = db.Order("admin_id ASC")
-			}
+			sortColumn = "comment_reports.admin_id"
 		case "reason":
-			if query.IsDescending {
-				db = db.Order("reason DESC")
-			} else {
-				db = db.Order("reason ASC")
-			}
+			sortColumn = "comment_reports.reason"
 		case "created_at":
+			sortColumn = "comment_reports.created_at"
+		}
+
+		if sortColumn != "" {
 			if query.IsDescending {
-				db = db.Order("created_at DESC")
+				db = db.Order(sortColumn + "DESC")
 			} else {
-				db = db.Order("created_at ASC")
+				db = db.Order(sortColumn + "ASC")
 			}
 		}
 	}

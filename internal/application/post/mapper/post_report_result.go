@@ -127,12 +127,19 @@ func NewPostReportShortVerResult(
 		return nil
 	}
 
+	var adminEmail *string
+	if postReport.Admin != nil {
+		adminEmail = &postReport.Admin.Email
+	}
+
 	var postReportResult = &common.PostReportShortVerResult{
-		AdminId:   postReport.AdminId,
-		Reason:    postReport.Reason,
-		Status:    postReport.Status,
-		CreatedAt: postReport.CreatedAt,
-		UpdatedAt: postReport.UpdatedAt,
+		AdminId:    postReport.AdminId,
+		UserEmail:  postReport.User.Email,
+		AdminEmail: adminEmail,
+		Reason:     postReport.Reason,
+		Status:     postReport.Status,
+		CreatedAt:  postReport.CreatedAt,
+		UpdatedAt:  postReport.UpdatedAt,
 	}
 	postReportResult.UserId = postReport.UserId
 	postReportResult.ReportedPostId = postReport.ReportedPostId
