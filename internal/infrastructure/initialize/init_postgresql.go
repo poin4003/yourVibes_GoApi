@@ -2,9 +2,10 @@ package initialize
 
 import (
 	"fmt"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	_ "log"
 	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 
 	"go.uber.org/zap"
 
@@ -31,10 +32,10 @@ func InitPostgreSql() {
 	global.Pdb = db
 	global.Logger.Info("Initializing PostgreSQL Successfully")
 
-	//err = DBMigrator(db)
-	//if err != nil {
-	//	global.Logger.Info("Migrate to postgres failed")
-	//}
+	err = DBMigrator(db)
+	if err != nil {
+		global.Logger.Info("Migrate to postgres failed")
+	}
 
 	SetPool()
 }
