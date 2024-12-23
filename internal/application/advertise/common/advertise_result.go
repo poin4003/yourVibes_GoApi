@@ -1,13 +1,15 @@
 package common
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type AdvertiseWithBillResult struct {
 	ID           uuid.UUID
 	PostId       uuid.UUID
+	UserEmail    string
 	StartDate    time.Time
 	EndDate      time.Time
 	DayRemaining int

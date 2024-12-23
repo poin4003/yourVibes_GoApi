@@ -1,8 +1,10 @@
 package response
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 )
 
 type MediaDto struct {
@@ -14,18 +16,18 @@ type MediaDto struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-//func ToMediaDto(mediaResult []*common.MediaResult) []*MediaDto {
-//	var mediaDtos []*MediaDto
-//	for _, media := range mediaResult {
-//		mediaDto := &MediaDto{
-//			ID:        media.ID,
-//			PostId:    media.PostId,
-//			MediaUrl:  media.MediaUrl,
-//			Status:    media.Status,
-//			CreatedAt: media.CreatedAt,
-//			UpdatedAt: media.UpdatedAt,
-//		}
-//		mediaDtos = append(mediaDtos, mediaDto)
-//	}
-//	return mediaDtos
-//}
+func ToMediaDto(mediaResult []*common.MediaResult) []*MediaDto {
+	var mediaDtos []*MediaDto
+	for _, media := range mediaResult {
+		mediaDto := &MediaDto{
+			ID:        media.ID,
+			PostId:    media.PostId,
+			MediaUrl:  media.MediaUrl,
+			Status:    media.Status,
+			CreatedAt: media.CreatedAt,
+			UpdatedAt: media.UpdatedAt,
+		}
+		mediaDtos = append(mediaDtos, mediaDto)
+	}
+	return mediaDtos
+}

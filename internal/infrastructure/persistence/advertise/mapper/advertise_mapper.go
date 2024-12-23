@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	advertise_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
@@ -20,6 +19,10 @@ func ToAdvertiseModel(advertise *entities.Advertise) *models.Advertise {
 }
 
 func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
+	var post = &entities.PostForAdvertise{
+		User: ToUserForAdvertiseEntity(&a.Post.User),
+	}
+
 	var bill = &entities.Bill{
 		ID:          a.Bill.ID,
 		AdvertiseId: a.Bill.AdvertiseId,
@@ -31,6 +34,7 @@ func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
 
 	var advertise = &entities.Advertise{
 		PostId:    a.PostId,
+		Post:      post,
 		StartDate: a.StartDate,
 		EndDate:   a.EndDate,
 		CreatedAt: a.CreatedAt,
@@ -42,12 +46,12 @@ func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
 	return advertise
 }
 
-func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.AdvertiseDetail {
-	var parentPost *advertise_entity.PostForAdvertise
+func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Advertise {
+	var parentPost *entities.PostForAdvertise
 	if a.Post.ParentPost != nil {
-		var medias []*advertise_entity.Media
+		var medias []*entities.Media
 		for _, media := range a.Post.ParentPost.Media {
-			medias = append(medias, &advertise_entity.Media{
+			medias = append(medias, &entities.Media{
 				ID:        media.ID,
 				MediaUrl:  media.MediaUrl,
 				PostId:    media.PostId,
@@ -56,7 +60,7 @@ func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Adverti
 				UpdatedAt: media.UpdatedAt,
 			})
 		}
-		parentPost = &advertise_entity.PostForAdvertise{
+		parentPost = &entities.PostForAdvertise{
 			ID:              a.Post.ParentPost.ID,
 			UserId:          a.Post.ParentPost.UserId,
 			User:            ToUserForAdvertiseEntity(&a.Post.ParentPost.User),
@@ -74,9 +78,9 @@ func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Adverti
 		}
 	}
 
-	var medias []*advertise_entity.Media
+	var medias []*entities.Media
 	for _, media := range a.Post.Media {
-		medias = append(medias, &advertise_entity.Media{
+		medias = append(medias, &entities.Media{
 			ID:        media.ID,
 			MediaUrl:  media.MediaUrl,
 			PostId:    media.PostId,
@@ -86,7 +90,7 @@ func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Adverti
 		})
 	}
 
-	post := &advertise_entity.PostForAdvertise{
+	post := &entities.PostForAdvertise{
 		ID:              a.Post.ID,
 		UserId:          a.Post.UserId,
 		User:            ToUserForAdvertiseEntity(&a.Post.User),
@@ -113,7 +117,7 @@ func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Adverti
 		Status:      a.Bill.Status,
 	}
 
-	var advertise = &entities.AdvertiseDetail{
+	var advertise = &entities.Advertise{
 		PostId:    a.PostId,
 		Post:      post,
 		StartDate: a.StartDate,
@@ -129,12 +133,12 @@ func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Adverti
 
 func ToUserForAdvertiseEntity(
 	userModel *models.User,
-) *advertise_entity.UserForAdvertise {
+) *entities.UserForAdvertise {
 	if userModel == nil {
 		return nil
 	}
 
-	var userForAdvertise = &advertise_entity.UserForAdvertise{
+	var userForAdvertise = &entities.UserForAdvertise{
 		FamilyName:   userModel.FamilyName,
 		Name:         userModel.Name,
 		Email:        userModel.Email,

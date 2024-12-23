@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/poin4003/yourVibes_GoApi/global"
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
@@ -20,7 +22,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sPostUser struct {
@@ -582,11 +583,24 @@ func (s *sPostUser) GetManyPosts(
 func (s *sPostUser) CheckPostOwner(
 	ctx context.Context,
 	query *post_query.CheckPostOwnerQuery,
-) (bool, error) {
+) (result *post_query.CheckPostOwnerQueryResult, err error) {
+	result = &post_query.CheckPostOwnerQueryResult{}
+	result.IsOwner = false
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+
 	isOwner, err := s.postRepo.CheckPostOwner(ctx, query.PostId, query.UserId)
 	if err != nil {
-		return false, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
 	}
 
-	return isOwner, nil
+	result.IsOwner = isOwner
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }

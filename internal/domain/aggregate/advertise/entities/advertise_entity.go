@@ -1,14 +1,16 @@
 package entities
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	"time"
 )
 
 type Advertise struct {
 	ID        uuid.UUID
 	PostId    uuid.UUID
+	Post      *PostForAdvertise
 	StartDate time.Time
 	EndDate   time.Time
 	CreatedAt time.Time
@@ -20,17 +22,6 @@ type AdvertiseUpdate struct {
 	StartDate *time.Time
 	EndDate   *time.Time
 	UpdatedAt *time.Time
-}
-
-type AdvertiseDetail struct {
-	ID        uuid.UUID
-	PostId    uuid.UUID
-	Post      *PostForAdvertise
-	StartDate time.Time
-	EndDate   time.Time
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Bill      *Bill
 }
 
 func (a *Advertise) Validate() error {

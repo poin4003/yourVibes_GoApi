@@ -1,10 +1,11 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	advertise_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/validator"
-	"time"
 )
 
 func NewAdvertiseWithBillResultFromValidateEntity(
@@ -34,6 +35,7 @@ func NewAdvertiseWithBillResultFromEntity(
 	return &common.AdvertiseWithBillResult{
 		ID:           advertise.ID,
 		PostId:       advertise.PostId,
+		UserEmail:    advertise.Post.User.Email,
 		StartDate:    advertise.StartDate,
 		EndDate:      advertise.EndDate,
 		DayRemaining: dayRemaining,
@@ -73,7 +75,7 @@ func NewAdvertiseWithoutBillResultFromEntity(
 }
 
 func NewAdvertiseDetailFromEntity(
-	advertise *entities.AdvertiseDetail,
+	advertise *entities.Advertise,
 ) *common.AdvertiseDetail {
 
 	if advertise == nil {

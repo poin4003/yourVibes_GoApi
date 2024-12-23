@@ -50,6 +50,7 @@ func InitRouter() *gin.Engine {
 		adminRouter.InitUserAdminRouter(MainGroup)
 		adminRouter.InitPostAdminRouter(MainGroup)
 		adminRouter.InitCommentAdminRouter(MainGroup)
+		adminRouter.InitAdvertiseAdminRouter(MainGroup)
 	}
 	return r
 }

@@ -189,9 +189,9 @@ func (r *rCommentReport) GetMany(
 
 		if sortColumn != "" {
 			if query.IsDescending {
-				db = db.Order(sortColumn + "DESC")
+				db = db.Order(sortColumn + " DESC")
 			} else {
-				db = db.Order(sortColumn + "ASC")
+				db = db.Order(sortColumn + " ASC")
 			}
 		}
 	}

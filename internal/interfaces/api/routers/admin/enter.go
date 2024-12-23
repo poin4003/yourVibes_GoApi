@@ -5,4 +5,5 @@ type AdminRouterGroup struct {
 	UserAdminRouter
 	PostAdminRouter
 	CommentAdminRouter
+	AdvertiseAdminRouter
 }

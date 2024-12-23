@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
@@ -38,7 +39,7 @@ func (r *rAdvertise) GetById(
 func (r *rAdvertise) GetOne(
 	ctx context.Context,
 	id uuid.UUID,
-) (*entities.AdvertiseDetail, error) {
+) (*entities.Advertise, error) {
 	var advertiseModel models.Advertise
 
 	if err := r.db.WithContext(ctx).
@@ -70,8 +71,8 @@ func (r *rAdvertise) GetMany(
 		db = db.Where("advertises.post_id = ?", query.PostId)
 	}
 
-	if query.Email != "" {
-		db = db.Where("users.email = ?", query.Email)
+	if query.UserEmail != "" {
+		db = db.Where("users.email = ?", query.UserEmail)
 	}
 
 	if query.Status != nil {
@@ -92,6 +93,24 @@ func (r *rAdvertise) GetMany(
 		db = db.Where("bills.price <= ?", query.ToPrice)
 	}
 
+	if query.SortBy != "" {
+		sortColumn := ""
+		switch query.SortBy {
+		case "price":
+			sortColumn = "bills.price"
+		case "created_at":
+			sortColumn = "advertises.created_at"
+		}
+
+		if sortColumn != "" {
+			if query.IsDescending {
+				db = db.Order(sortColumn + " DESC")
+			} else {
+				db = db.Order(sortColumn + " ASC")
+			}
+		}
+	}
+
 	limit := query.Limit
 	page := query.Page
 	if limit <= 0 {
@@ -106,7 +125,12 @@ func (r *rAdvertise) GetMany(
 		Offset(offset).
 		Limit(limit).
 		Preload("Bill").
-		Order("advertises.created_at desc").
+		Preload("Post", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, user_id")
+		}).
+		Preload("Post.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("users.id, users.email")
+		}).
 		Find(&advertises).
 		Error; err != nil {
 		return nil, nil, err

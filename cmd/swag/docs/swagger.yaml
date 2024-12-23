@@ -185,7 +185,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -400,6 +400,83 @@ paths:
       summary: Create advertise
       tags:
       - advertise_user
+  /advertise/{advertise_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve advertise
+      parameters:
+      - description: Advertise ID
+        in: path
+        name: advertise_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get advertise detail
+      tags:
+      - admin_advertise_report
+  /advertise/admin:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve advertise base on filters
+      parameters:
+      - description: post id to get advertise
+        in: query
+        name: post_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Filter by user email
+        in: query
+        name: user_email
+        type: string
+      - description: Filter by from date
+        in: query
+        name: from_date
+        type: string
+      - description: Filter by to date
+        in: query
+        name: to_date
+        type: string
+      - description: Filter by from price
+        in: query
+        name: from_price
+        type: integer
+      - description: Filter by to price
+        in: query
+        name: to_price
+        type: integer
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: is_descending
+        type: boolean
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of advertise
+      tags:
+      - admin_advertise_report
   /comments/:
     get:
       consumes:

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 )
@@ -30,6 +31,8 @@ func ValidatePostReportQueryObject(input interface{}) error {
 	}
 
 	return validation.ValidateStruct(query,
+		validation.Field(&query.UserEmail, is.Email),
+		validation.Field(&query.AdminEmail, is.Email),
 		validation.Field(&query.Reason, validation.Length(10, 255)),
 		validation.Field(&query.Limit, validation.Min(0)),
 		validation.Field(&query.Page, validation.Min(0)),

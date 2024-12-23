@@ -1,6 +1,8 @@
 package advertise_user
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	advertise_services "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
@@ -12,7 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/response"
 	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cAdvertise struct {
@@ -137,13 +138,13 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 		PostId: postId,
 		UserId: userIdClaim,
 	}
-	isOwner, err := post_services.PostUser().CheckPostOwner(ctx, checkPostOwnerQuery)
+	checkOwnerResult, err := post_services.PostUser().CheckPostOwner(ctx, checkPostOwnerQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkg_response.ErrorResponse(ctx, checkOwnerResult.ResultCode, checkOwnerResult.HttpStatusCode, err.Error())
 		return
 	}
 
-	if !isOwner {
+	if !checkOwnerResult.IsOwner {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusForbidden, "You can't access this advertise, only for owner")
 		return
 	}

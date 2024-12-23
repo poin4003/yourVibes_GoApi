@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
@@ -37,8 +38,10 @@ func (req *AdvertiseQueryObject) ToGetManyAdvertiseQuery() (*advertise_query.Get
 	}
 
 	return &advertise_query.GetManyAdvertiseQuery{
-		PostId: postId,
-		Page:   req.Page,
-		Limit:  req.Limit,
+		PostId:       postId,
+		SortBy:       "created_at",
+		IsDescending: true,
+		Page:         req.Page,
+		Limit:        req.Limit,
 	}, nil
 }

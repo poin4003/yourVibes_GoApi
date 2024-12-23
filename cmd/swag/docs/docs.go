@@ -338,6 +338,125 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/advertise/admin": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve advertise base on filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_advertise_report"
+                ],
+                "summary": "Get a list of advertise",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post id to get advertise",
+                        "name": "post_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user email",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by from date",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by to date",
+                        "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by from price",
+                        "name": "from_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by to price",
+                        "name": "to_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "is_descending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/advertise/{advertise_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve advertise",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_advertise_report"
+                ],
+                "summary": "Get advertise detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Advertise ID",
+                        "name": "advertise_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/comments/": {
             "get": {
                 "security": [
@@ -2658,7 +2777,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

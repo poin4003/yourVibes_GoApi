@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOneAdvertiseQuery struct {
@@ -12,15 +13,17 @@ type GetOneAdvertiseQuery struct {
 }
 
 type GetManyAdvertiseQuery struct {
-	PostId    uuid.UUID
-	Email     string
-	Status    *bool
-	FromDate  time.Time
-	ToDate    time.Time
-	FromPrice int
-	ToPrice   int
-	Limit     int
-	Page      int
+	PostId       uuid.UUID
+	UserEmail    string
+	Status       *bool
+	FromDate     time.Time
+	ToDate       time.Time
+	FromPrice    int
+	ToPrice      int
+	SortBy       string
+	IsDescending bool
+	Limit        int
+	Page         int
 }
 
 type GetOneAdvertiseResult struct {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 )
@@ -13,7 +14,7 @@ type (
 		DeletePost(ctx context.Context, command *command.DeletePostCommand) (result *command.DeletePostCommandResult, err error)
 		GetPost(ctx context.Context, query *query.GetOnePostQuery) (result *query.GetOnePostQueryResult, err error)
 		GetManyPosts(ctx context.Context, query *query.GetManyPostQuery) (result *query.GetManyPostQueryResult, err error)
-		CheckPostOwner(ctx context.Context, query *query.CheckPostOwnerQuery) (bool, error)
+		CheckPostOwner(ctx context.Context, query *query.CheckPostOwnerQuery) (result *query.CheckPostOwnerQueryResult, err error)
 	}
 	IPostLike interface {
 		LikePost(ctx context.Context, command *command.LikePostCommand) (result *command.LikePostCommandResult, err error)

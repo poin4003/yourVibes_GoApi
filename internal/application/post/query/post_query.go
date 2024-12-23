@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOnePostQuery struct {
@@ -41,4 +42,10 @@ type GetManyPostQueryResult struct {
 	ResultCode     int
 	HttpStatusCode int
 	PagingResponse *response.PagingResponse
+}
+
+type CheckPostOwnerQueryResult struct {
+	IsOwner        bool
+	ResultCode     int
+	HttpStatusCode int
 }
