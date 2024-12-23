@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
@@ -13,7 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sPostReport struct {
@@ -93,7 +94,7 @@ func (s *sPostReport) HandlePostReport(
 	}
 
 	// 2. Check if report is already handled
-	if !postReportFound.Status {
+	if postReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("You don't need to handle this report again")
@@ -152,7 +153,7 @@ func (s *sPostReport) DeletePostReport(
 	}
 
 	// 2. Check if report is already handled
-	if !postReportFound.Status {
+	if postReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("You can't delete this report, it's already handled")

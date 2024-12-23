@@ -1,15 +1,16 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type PostForAdvertiseDto struct {
-	ID              uuid.UUID
-	UserId          uuid.UUID
-	User            *UserForAdvertiseDto
+	ID     uuid.UUID
+	UserId uuid.UUID
+	// User            *UserForAdvertiseDto
 	ParentId        *uuid.UUID
 	ParentPost      *PostForAdvertiseDto
 	Content         string
@@ -21,5 +22,5 @@ type PostForAdvertiseDto struct {
 	Status          bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	Media           []*MediaResult
+	// Media           []*MediaResult
 }

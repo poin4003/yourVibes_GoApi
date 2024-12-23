@@ -1,6 +1,8 @@
 package user_admin
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -10,7 +12,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_admin/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cAdminUserReport struct{}
@@ -71,13 +72,18 @@ func (c *cAdminUserReport) GetUserReport(ctx *gin.Context) {
 // @Tags         admin_user_report
 // @Accept       json
 // @Produce      json
-// @Param        reason        query     string  false  "reason to filter report"
-// @Param        status        query     bool    false  "Filter by status"
-// @Param        created_at    query     string  false  "Filter by creation day"
-// @Param        sort_by       query     string  false  "Sort by field"
-// @Param        isDescending  query     bool    false  "Sort in descending order"
-// @Param        limit         query     int     false  "Number of results per page"
-// @Param        page          query     int     false  "Page number"
+// @Param        reason              query     string  false  "reason to filter report"
+// @Param        status              query     bool    false  "Filter by status"
+// @Param        created_at          query     string  false  "Filter by creation day"
+// @Param        user_email          query     string  false  "Filter by user email"
+// @Param        reported_user_email query     string  false  "Filter by reported user email"
+// @Param        admin_email         query     string  false  "Filter by admin email"
+// @Param        from_date           query     string  false  "Filter by from date"
+// @Param        to_date             query     string  false  "Filter by to date"
+// @Param        sort_by       		 query     string  false  "Sort by field"
+// @Param        isDescending  		 query     bool    false  "Sort in descending order"
+// @Param        limit         		 query     int     false  "Number of results per page"
+// @Param        page                query     int     false  "Page number"
 // @Security ApiKeyAuth
 // @Router       /users/report [get]
 func (c *cAdminUserReport) GetManyUserReports(ctx *gin.Context) {

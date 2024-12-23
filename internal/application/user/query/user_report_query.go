@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOneUserReportQuery struct {
@@ -13,13 +14,18 @@ type GetOneUserReportQuery struct {
 }
 
 type GetManyUserReportQuery struct {
-	Reason       string
-	CreatedAt    time.Time
-	Status       *bool
-	SortBy       string
-	IsDescending bool
-	Limit        int
-	Page         int
+	Reason            string
+	UserEmail         string
+	ReportedUserEmail string
+	AdminEmail        string
+	FromDate          time.Time
+	ToDate            time.Time
+	CreatedAt         time.Time
+	Status            *bool
+	SortBy            string
+	IsDescending      bool
+	Limit             int
+	Page              int
 }
 
 type UserReportQueryResult struct {

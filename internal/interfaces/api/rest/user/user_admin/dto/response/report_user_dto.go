@@ -1,9 +1,10 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
-	"time"
 )
 
 type UserReportDto struct {
@@ -20,13 +21,16 @@ type UserReportDto struct {
 }
 
 type UserReportShortVerDto struct {
-	UserId         uuid.UUID  `json:"user_id"`
-	ReportedUserId uuid.UUID  `json:"reported_user_id"`
-	AdminId        *uuid.UUID `json:"admin_id"`
-	Reason         string     `json:"reason"`
-	Status         bool       `json:"status"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	UserId            uuid.UUID  `json:"user_id"`
+	ReportedUserId    uuid.UUID  `json:"reported_user_id"`
+	UserEmail         string     `json:"user_email"`
+	ReportedUserEmail string     `json:"reported_user_email"`
+	AdminEmail        *string    `json:"admin_email"`
+	AdminId           *uuid.UUID `json:"admin_id"`
+	Reason            string     `json:"reason"`
+	Status            bool       `json:"status"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 func ToUserReportDto(
@@ -58,12 +62,15 @@ func ToUserReportShortVerDto(
 	}
 
 	return &UserReportShortVerDto{
-		UserId:         userReportResult.UserId,
-		ReportedUserId: userReportResult.ReportedUserId,
-		AdminId:        userReportResult.AdminId,
-		Reason:         userReportResult.Reason,
-		Status:         userReportResult.Status,
-		CreatedAt:      userReportResult.CreatedAt,
-		UpdatedAt:      userReportResult.UpdatedAt,
+		UserId:            userReportResult.UserId,
+		ReportedUserId:    userReportResult.ReportedUserId,
+		AdminId:           userReportResult.AdminId,
+		Reason:            userReportResult.Reason,
+		UserEmail:         userReportResult.UserEmail,
+		ReportedUserEmail: userReportResult.ReportedUserEmail,
+		AdminEmail:        userReportResult.AdminEmail,
+		Status:            userReportResult.Status,
+		CreatedAt:         userReportResult.CreatedAt,
+		UpdatedAt:         userReportResult.UpdatedAt,
 	}
 }

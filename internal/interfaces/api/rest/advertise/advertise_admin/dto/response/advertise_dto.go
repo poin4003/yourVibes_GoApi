@@ -1,9 +1,10 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
-	"time"
 )
 
 type AdvertiseWithBillDto struct {
@@ -20,7 +21,7 @@ type AdvertiseWithBillDto struct {
 type AdvertiseDetail struct {
 	ID     uuid.UUID `json:"id"`
 	PostId uuid.UUID `json:"post_id"`
-	Post
+	// Post
 	StartDate    time.Time                `json:"start_date"`
 	EndDate      time.Time                `json:"end_date"`
 	DayRemaining int                      `json:"day_remaining"`

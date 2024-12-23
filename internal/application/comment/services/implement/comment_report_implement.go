@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	comment_command "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
@@ -13,7 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sCommentReport struct {
@@ -93,7 +94,7 @@ func (s *sCommentReport) HandleCommentReport(
 	}
 
 	// 2. Check if report is already handled
-	if !commentReportFound.Status {
+	if commentReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("Your dont't need to handle this report again")
@@ -152,10 +153,10 @@ func (s *sCommentReport) DeleteCommentReport(
 	}
 
 	// 2. Check if report is already handled
-	if !commentReportFound.Status {
+	if commentReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You can't delete this report, it's already handled")
+		return result, fmt.Errorf("you can't delete this report, it's already handled")
 	}
 
 	// 3. Delete report

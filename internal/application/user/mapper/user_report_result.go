@@ -88,12 +88,20 @@ func NewUserReportShortVerResult(
 		return nil
 	}
 
+	var adminEmail *string
+	if userReport.Admin != nil {
+		adminEmail = &userReport.Admin.Email
+	}
+
 	var userReportResult = &common.UserReportShortVerResult{
-		AdminId:   userReport.AdminId,
-		Reason:    userReport.Reason,
-		Status:    userReport.Status,
-		CreatedAt: userReport.CreatedAt,
-		UpdatedAt: userReport.UpdatedAt,
+		AdminId:           userReport.AdminId,
+		UserEmail:         userReport.User.Email,
+		ReportedUserEmail: userReport.ReportedUser.Email,
+		AdminEmail:        adminEmail,
+		Reason:            userReport.Reason,
+		Status:            userReport.Status,
+		CreatedAt:         userReport.CreatedAt,
+		UpdatedAt:         userReport.UpdatedAt,
 	}
 	userReportResult.UserId = userReport.UserId
 	userReportResult.ReportedUserId = userReport.ReportedUserId

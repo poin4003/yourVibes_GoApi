@@ -2033,6 +2033,36 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Filter by user email",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by reported user email",
+                        "name": "reported_user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by admin email",
+                        "name": "admin_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by from date",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by to date",
+                        "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Sort by field",
                         "name": "sort_by",
                         "in": "query"
