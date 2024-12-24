@@ -19,6 +19,7 @@ type (
 		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.PostWithLiked, *response.PagingResponse, error)
 		UpdateExpiredAdvertisements(ctx context.Context) error
 		CheckPostOwner(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (bool, error)
+		GetTotalPostCount(ctx context.Context) (int, error)
 	}
 	IMediaRepository interface {
 		GetById(ctx context.Context, id uint) (*entities.Media, error)

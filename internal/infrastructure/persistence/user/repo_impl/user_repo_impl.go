@@ -288,3 +288,16 @@ func (r *rUser) GetMany(
 
 	return users, pagingResponse, nil
 }
+
+func (r *rUser) GetTotalUserCount(ctx context.Context) (int, error) {
+	var total int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Count(&total).
+		Error; err != nil {
+		return 0, err
+	}
+
+	return int(total), nil
+}

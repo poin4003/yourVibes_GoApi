@@ -1210,6 +1210,32 @@ paths:
       summary: share post
       tags:
       - post_share
+  /revenue/monthly_revenue:
+    get:
+      consumes:
+      - application/json
+      description: Get monthly revenue
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get monthly revenue
+      tags:
+      - revenue_admin
+  /revenue/system_stats:
+    get:
+      consumes:
+      - application/json
+      description: Get system stats
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get system stats
+      tags:
+      - revenue_admin
   /users/:
     get:
       consumes:

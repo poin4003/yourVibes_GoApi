@@ -2,6 +2,8 @@ package repo_impl
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
@@ -119,4 +121,68 @@ func (r *rBill) CheckExists(
 	}
 
 	return count > 0, nil
+}
+
+func (r *rBill) GetMonthlyRevenue(ctx context.Context, date time.Time) ([]string, []int64, error) {
+	months := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+
+	revenueByMonth := make([]int64, 12)
+
+	var revenues []entities.Revenue
+	if err := r.db.WithContext(ctx).
+		Model(&models.Bill{}).
+		Select("EXTRACT(MONTH FROM created_at) AS month, SUM(price) AS total").
+		Where("EXTRACT(YEAR FROM created_at) = ?", date.Year()).
+		Where("status = true").
+		Group("month").
+		Order("month").
+		Scan(&revenues).
+		Error; err != nil {
+		return nil, nil, err
+	}
+
+	for _, revenue := range revenues {
+		monthIndex := int(revenue.Month) - 1
+		if monthIndex >= 0 && monthIndex < 12 {
+			revenueByMonth[monthIndex] = revenue.Total
+		}
+	}
+
+	return months, revenueByMonth, nil
+}
+
+func (r *rBill) GetRevenueForMonth(ctx context.Context, date time.Time) (int64, error) {
+	var total int64
+	startDate := time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, date.Location())
+	endDate := startDate.AddDate(0, 1, 0)
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Bill{}).
+		Where("created_at >= ? AND created_at < ?", startDate, endDate).
+		Where("status = true").
+		Select("COALESCE(CAST(SUM(price) AS INT), 0) AS total").
+		Scan(&total).
+		Error; err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *rBill) GetRevenueForDay(ctx context.Context, date time.Time) (int64, error) {
+	var total int64
+	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1)
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Bill{}).
+		Where("created_at >= ? AND created_at < ?", startOfDay, endOfDay).
+		Where("status = true").
+		Select("COALESCE(CAST(SUM(price) AS INT), 0) AS total").
+		Scan(&total).
+		Error; err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }

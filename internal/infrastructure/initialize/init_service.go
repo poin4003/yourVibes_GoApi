@@ -10,6 +10,8 @@ import (
 	comment_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
 	post_service "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	post_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
+	revenue_service "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services"
+	revenue_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services/implement"
 	user_service "github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	user_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/user/services/implement"
 	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
@@ -80,6 +82,7 @@ func InitServiceInterface() {
 	userReportService := user_service_impl.NewUserReportImplement(userReportRepo, userRepo, postRepo, commentRepo)
 	postReportService := post_service_impl.NewPostReportImplement(postReportRepo, postRepo)
 	commentReportService := comment_service_impl.NewCommentReportImplement(commentReportRepo, commentRepo)
+	revenueService := revenue_service_impl.NewRevenueImplement(billRepo, userRepo, postRepo)
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -99,4 +102,5 @@ func InitServiceInterface() {
 	user_service.InitUserReport(userReportService)
 	post_service.InitPostReport(postReportService)
 	comment_service.InitCommentReport(commentReportService)
+	revenue_service.InitRevenue(revenueService)
 }

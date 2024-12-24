@@ -17,6 +17,7 @@ type (
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.UserUpdate) (*entities.User, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.User, error)
 		GetMany(ctx context.Context, query *query.GetManyUserQuery) ([]*entities.User, *response.PagingResponse, error)
+		GetTotalUserCount(ctx context.Context) (int, error)
 	}
 	ISettingRepository interface {
 		GetById(ctx context.Context, id uint) (*entities.Setting, error)

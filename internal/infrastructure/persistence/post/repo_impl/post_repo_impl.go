@@ -402,3 +402,15 @@ func (r *rPost) CheckPostOwner(
 
 	return true, nil
 }
+
+func (r *rPost) GetTotalPostCount(ctx context.Context) (int, error) {
+	var total int64
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Count(&total).
+		Error; err != nil {
+		return 0, err
+	}
+
+	return int(total), nil
+}

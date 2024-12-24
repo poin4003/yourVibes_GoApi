@@ -1593,6 +1593,48 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/revenue/monthly_revenue": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get monthly revenue",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "revenue_admin"
+                ],
+                "summary": "Get monthly revenue",
+                "responses": {}
+            }
+        },
+        "/revenue/system_stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get system stats",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "revenue_admin"
+                ],
+                "summary": "Get system stats",
+                "responses": {}
+            }
+        },
         "/users/": {
             "get": {
                 "security": [

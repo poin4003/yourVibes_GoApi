@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
@@ -28,6 +29,9 @@ type (
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.BillUpdate) (*entities.Bill, error)
 		DeleteOne(ctx context.Context, id uuid.UUID) error
 		CheckExists(ctx context.Context, postId uuid.UUID) (bool, error)
+		GetMonthlyRevenue(ctx context.Context, date time.Time) ([]string, []int64, error)
+		GetRevenueForMonth(ctx context.Context, date time.Time) (int64, error)
+		GetRevenueForDay(ctx context.Context, date time.Time) (int64, error)
 	}
 )
 
