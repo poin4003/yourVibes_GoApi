@@ -18,7 +18,7 @@ import (
 
 // @host yourvibesapi.duckdns.org:8080
 // @BasePath /v1/2024
-// @schema https
+// @schema http
 
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in header
