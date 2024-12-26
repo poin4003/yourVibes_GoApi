@@ -13,10 +13,10 @@ import (
 
 type UpdatePostRequest struct {
 	Content  *string                `form:"content,omitempty"`
-	Privacy  *consts.PrivacyLevel   `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
+	Privacy  *consts.PrivacyLevel   `form:"privacy,omitempty" binding:"omitempty"`
 	Location *string                `form:"location,omitempty"`
 	MediaIDs []uint                 `form:"media_ids,omitempty"`
-	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty,files"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty"`
 }
 
 func ValidateUpdatePostRequest(req interface{}) error {

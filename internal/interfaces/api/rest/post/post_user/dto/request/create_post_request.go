@@ -13,9 +13,9 @@ import (
 
 type CreatePostRequest struct {
 	Content  string                 `form:"content,omitempty" binding:"omitempty"`
-	Privacy  consts.PrivacyLevel    `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
+	Privacy  consts.PrivacyLevel    `form:"privacy,omitempty" binding:"omitempty"`
 	Location string                 `form:"location,omitempty"`
-	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty,files"`
+	Media    []multipart.FileHeader `form:"media,omitempty" binding:"omitempty"`
 }
 
 func ValidateCreatePostRequest(req interface{}) error {

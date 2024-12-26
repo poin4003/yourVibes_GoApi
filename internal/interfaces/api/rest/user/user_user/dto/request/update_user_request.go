@@ -18,11 +18,11 @@ type UpdateUserRequest struct {
 	Name            *string              `form:"name,omitempty"`
 	PhoneNumber     *string              `form:"phone_number,omitempty"`
 	Birthday        *time.Time           `form:"birthday,omitempty"`
-	Avatar          multipart.FileHeader `form:"avatar_url,omitempty" binding:"omitempty,file"`
-	Capwall         multipart.FileHeader `form:"capwall_url,omitempty" binding:"omitempty,file"`
-	Privacy         *consts.PrivacyLevel `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
+	Avatar          multipart.FileHeader `form:"avatar_url,omitempty" binding:"omitempty"`
+	Capwall         multipart.FileHeader `form:"capwall_url,omitempty" binding:"omitempty"`
+	Privacy         *consts.PrivacyLevel `form:"privacy,omitempty" binding:"omitempty"`
 	Biography       *string              `form:"biography,omitempty"`
-	LanguageSetting *consts.Language     `form:"language_setting,omitempty" binding:"omitempty,language_setting"`
+	LanguageSetting *consts.Language     `form:"language_setting,omitempty" binding:"omitempty"`
 }
 
 func ValidateUpdateUserRequest(req interface{}) error {

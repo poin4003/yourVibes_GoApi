@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -10,7 +11,7 @@ import (
 
 type SharePostRequest struct {
 	Content  string              `form:"content,omitempty" binding:"omitempty"`
-	Privacy  consts.PrivacyLevel `form:"privacy,omitempty" binding:"omitempty,privacy_enum"`
+	Privacy  consts.PrivacyLevel `form:"privacy,omitempty" binding:"omitempty"`
 	Location string              `form:"location,omitempty"`
 }
 
