@@ -12,7 +12,7 @@ type CreatePostCommand struct {
 	Content  string
 	Privacy  consts.PrivacyLevel
 	Location string
-	Media    []multipart.File
+	Media    []multipart.FileHeader
 }
 
 type CreatePostCommandResult struct {

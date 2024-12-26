@@ -1,19 +1,20 @@
 package settings
 
 type Config struct {
-	Server            ServerSetting         `mapstructure:"server"`
-	PostgreSql        PostgreSqlSetting     `mapstructure:"postgresql"`
-	Logger            LoggerSetting         `mapstructure:"logger"`
-	Redis             RedisSetting          `mapstructure:"redis"`
-	Authentication    AuthenticationSetting `mapstructure:"authentication"`
-	CloudinarySetting CloudinarySetting     `mapstructure:"cloudinary"`
-	MailService       MailServiceSetting    `mapstructure:"mail_service"`
-	MomoSetting       MomoSetting           `mapstructure:"momo"`
+	Server         ServerSetting         `mapstructure:"server"`
+	PostgreSql     PostgreSqlSetting     `mapstructure:"postgresql"`
+	Logger         LoggerSetting         `mapstructure:"logger"`
+	Media          MediaSetting          `mapstructure:"media"`
+	Redis          RedisSetting          `mapstructure:"redis"`
+	Authentication AuthenticationSetting `mapstructure:"authentication"`
+	MailService    MailServiceSetting    `mapstructure:"mail_service"`
+	MomoSetting    MomoSetting           `mapstructure:"momo"`
 }
 
 type ServerSetting struct {
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Port           int    `mapstructure:"port"`
+	Mode           string `mapstructure:"mode"`
+	ServerEndpoint string `mapstructure:"server_endpoint"`
 }
 
 type PostgreSqlSetting struct {
@@ -49,11 +50,8 @@ type AuthenticationSetting struct {
 	JwtAdminSecretKey string `mapstructure:"jwtAdminSecretKey"`
 }
 
-type CloudinarySetting struct {
-	CloudName    string `mapstructure:"cloud_name"`
-	ApiKey       string `mapstructure:"api_key"`
-	ApiSecretKey string `mapstructure:"api_secret_key"`
-	Folder       string `mapstructure:"folder"`
+type MediaSetting struct {
+	Folder string `mapstructure:"folder"`
 }
 
 type MailServiceSetting struct {

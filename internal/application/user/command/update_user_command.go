@@ -14,8 +14,8 @@ type UpdateUserCommand struct {
 	Name            *string
 	PhoneNumber     *string
 	Birthday        *time.Time
-	Avatar          multipart.File
-	Capwall         multipart.File
+	Avatar          *multipart.FileHeader
+	Capwall         *multipart.FileHeader
 	Privacy         *consts.PrivacyLevel
 	Biography       *string
 	LanguageSetting *consts.Language

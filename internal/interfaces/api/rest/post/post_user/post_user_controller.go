@@ -15,7 +15,6 @@ import (
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/redis/go-redis/v9"
-	"mime/multipart"
 	"net/http"
 )
 
@@ -58,29 +57,15 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 3. Get file from body
-	files := createPostRequest.Media
-
-	// 3.1. Convert multipart.FileHeader to multipart.File
-	var uploadedFiles []multipart.File
-	for _, file := range files {
-		openFile, err := file.Open()
-		if err != nil {
-			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-			return
-		}
-		uploadedFiles = append(uploadedFiles, openFile)
-	}
-
-	// 4. Get user id from token
+	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// 5. Call service to handle create post
-	createPostCommand, err := createPostRequest.ToCreatePostCommand(userIdClaim, uploadedFiles)
+	// 4. Call service to handle create post
+	createPostCommand, err := createPostRequest.ToCreatePostCommand(userIdClaim, createPostRequest.Media)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -92,7 +77,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 6. Map result to dto
+	// 5. Map result to dto
 	postDto := response.ToPostDto(*result.Post)
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
@@ -171,19 +156,8 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 8. Get file from body
-	var uploadedFiles []multipart.File
-	for _, fileHeader := range updatePostRequest.Media {
-		openFile, err := fileHeader.Open()
-		if err != nil {
-			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-			return
-		}
-		uploadedFiles = append(uploadedFiles, openFile)
-	}
-
-	// 9. Call service to handle update post
-	updatePostCommand, err := updatePostRequest.ToUpdatePostCommand(&postId, uploadedFiles)
+	// 8. Call service to handle update post
+	updatePostCommand, err := updatePostRequest.ToUpdatePostCommand(&postId, updatePostRequest.Media)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -195,7 +169,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 10. Map to dto
+	// 9. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)

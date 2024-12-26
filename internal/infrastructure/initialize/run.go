@@ -14,7 +14,6 @@ func Run() *gin.Engine {
 	fmt.Println("Loading configuration postgreSql", m.Username, m.Port)
 	InitLogger()
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
-	InitCloudinary()
 	InitRedis()
 	InitPostgreSql()
 	InitSocketHub()

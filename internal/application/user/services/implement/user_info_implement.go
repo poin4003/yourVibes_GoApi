@@ -13,7 +13,7 @@ import (
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/cloudinary_util"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -178,19 +178,18 @@ func (s *sUserInfo) UpdateUser(
 	command *user_command.UpdateUserCommand,
 ) (result *user_command.UpdateUserCommandResult, err error) {
 	result = &user_command.UpdateUserCommandResult{}
+	result.User = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. update setting language
 	if command.LanguageSetting != nil {
 		settingFound, err := s.settingRepo.GetSetting(ctx, "user_id=?", command.UserId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.User = nil
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("Failed to get setting for user %v: %w", command.UserId, err)
 		}
 		_, err = s.settingRepo.UpdateOne(ctx, settingFound.ID,
@@ -210,19 +209,13 @@ func (s *sUserInfo) UpdateUser(
 
 	err = updateUserEntity.ValidateUserUpdate()
 	if err != nil {
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	// 3. update Avatar
 	if command.Avatar != nil {
-		avatarUrl, err := cloudinary_util.UploadMediaToCloudinary(command.Avatar)
+		avatarUrl, err := media.SaveMedia(command.Avatar)
 		if err != nil {
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to upload Avatar: %w", err)
 		}
 
@@ -231,25 +224,18 @@ func (s *sUserInfo) UpdateUser(
 		})
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.User = nil
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 	}
 
 	// 4. update Capwall
 	if command.Capwall != nil {
-		capwallUrl, err := cloudinary_util.UploadMediaToCloudinary(command.Capwall)
+		capwallUrl, err := media.SaveMedia(command.Capwall)
 		if err != nil {
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to upload Capwall: %w", err)
 		}
 
@@ -258,14 +244,10 @@ func (s *sUserInfo) UpdateUser(
 		})
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.User = nil
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 	}
@@ -273,14 +255,10 @@ func (s *sUserInfo) UpdateUser(
 	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.User = nil
 			result.ResultCode = response.ErrDataNotFound
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 

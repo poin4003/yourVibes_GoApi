@@ -9,7 +9,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"mime/multipart"
 	"net/http"
 )
 
@@ -149,28 +148,8 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	// 4. Get avatar and capwall from body
-	var openFileAvatar multipart.File
-	var openFileCapwall multipart.File
-
-	if updateUserRequest.Avatar.Size != 0 {
-		openFileAvatar, err = updateUserRequest.Avatar.Open()
-		if err != nil {
-			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-			return
-		}
-	}
-
-	if updateUserRequest.Capwall.Size != 0 {
-		openFileCapwall, err = updateUserRequest.Capwall.Open()
-		if err != nil {
-			pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
-			return
-		}
-	}
-
-	// 5. Call service to handle update user
-	updateUserCommand, err := updateUserRequest.ToUpdateUserCommand(userIdClaim, openFileAvatar, openFileCapwall)
+	// 4. Call service to handle update user
+	updateUserCommand, err := updateUserRequest.ToUpdateUserCommand(userIdClaim, &updateUserRequest.Avatar, &updateUserRequest.Capwall)
 	result, err := services.UserInfo().UpdateUser(ctx, updateUserCommand)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())

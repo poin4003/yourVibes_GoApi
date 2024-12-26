@@ -13,7 +13,7 @@ type UpdatePostCommand struct {
 	Privacy  *consts.PrivacyLevel
 	Location *string
 	MediaIDs []uint
-	Media    []multipart.File
+	Media    []multipart.FileHeader
 }
 
 type UpdatePostCommandResult struct {

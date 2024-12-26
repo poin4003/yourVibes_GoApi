@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"net/http"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -18,7 +19,6 @@ import (
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/cloudinary_util"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"gorm.io/gorm"
@@ -62,6 +62,9 @@ func (s *sPostUser) CreatePost(
 	command *post_command.CreatePostCommand,
 ) (result *post_command.CreatePostCommandResult, err error) {
 	result = &post_command.CreatePostCommandResult{}
+	result.Post = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. CreatePost
 	newPost, err := post_entity.NewPost(
 		command.UserId,
@@ -71,54 +74,32 @@ func (s *sPostUser) CreatePost(
 	)
 
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	postEntity, err := s.postRepo.CreateOne(ctx, newPost)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	// 2. Create Media and upload media to cloudinary_util
 	if len(command.Media) > 0 {
 		for _, file := range command.Media {
-			// 2.1. upload to cloudinary and get mediaUrl
-			mediaUrl, err := cloudinary_util.UploadMediaToCloudinary(file)
+			// 2.1. Save file and get mediaUrl
+			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to upload media to cloudinary: %w", err)
-			}
-
-			if mediaUrl == "" {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
-				return result, fmt.Errorf("failed to upload media to cloudinary: empty media url")
 			}
 
 			// 2.2. create Media model and save to database
 			mediaEntity, err := post_entity.NewMedia(postEntity.ID, mediaUrl)
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, err
 			}
 
 			_, err = s.mediaRepo.CreateOne(ctx, mediaEntity)
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to create media record: %w", err)
 			}
 		}
@@ -128,14 +109,10 @@ func (s *sPostUser) CreatePost(
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.Post = nil
 			result.ResultCode = response.ErrDataNotFound
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, fmt.Errorf("failed to find user: %w", err)
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to get user: %w", err)
 	}
 
@@ -147,14 +124,10 @@ func (s *sPostUser) CreatePost(
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdate)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.Post = nil
 			result.ResultCode = response.ErrDataNotFound
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, fmt.Errorf("failed to update user: %w", err)
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to update user: %w", err)
 	}
 
@@ -170,9 +143,6 @@ func (s *sPostUser) CreatePost(
 	// 6.1. Get friend id of user friend list
 	friendIds, err := s.friendRepo.GetFriendIds(ctx, userFound.ID)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to get friends: %w", err)
 	}
 
@@ -187,9 +157,6 @@ func (s *sPostUser) CreatePost(
 	// 6.3. Create new feed for friend
 	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, userFound.ID)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to create new feed: %w", err)
 	}
 
@@ -207,9 +174,6 @@ func (s *sPostUser) CreatePost(
 		)
 
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
@@ -218,9 +182,6 @@ func (s *sPostUser) CreatePost(
 
 	_, err = s.notificationRepo.CreateMany(ctx, notificationEntities)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to create notifications: %w", err)
 	}
 
@@ -236,9 +197,6 @@ func (s *sPostUser) CreatePost(
 
 		err = global.SocketHub.SendNotification(friendId.String(), notificationSocketResponse)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to send notifications: %w", err)
 		}
 	}
@@ -246,9 +204,6 @@ func (s *sPostUser) CreatePost(
 	// 7. Validate post after create
 	validatePost, err := post_validator.NewValidatedPost(postEntity)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to validate post: %w", err)
 	}
 
@@ -263,6 +218,9 @@ func (s *sPostUser) UpdatePost(
 	command *post_command.UpdatePostCommand,
 ) (result *post_command.UpdatePostCommandResult, err error) {
 	result = &post_command.UpdatePostCommandResult{}
+	result.Post = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. update post information
 	updateData := &post_entity.PostUpdate{
 		Content:  command.Content,
@@ -272,23 +230,16 @@ func (s *sPostUser) UpdatePost(
 
 	err = updateData.ValidatePostUpdate()
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	postEntity, err := s.postRepo.UpdateOne(ctx, *command.PostId, updateData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.Post = nil
 			result.ResultCode = response.ErrDataNotFound
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -296,26 +247,19 @@ func (s *sPostUser) UpdatePost(
 	if len(command.MediaIDs) > 0 {
 		for _, mediaId := range command.MediaIDs {
 			// 2.1. Get media information from database
-			media, err := s.mediaRepo.GetOne(ctx, "id=?", mediaId)
+			mediaRecord, err := s.mediaRepo.GetOne(ctx, "id=?", mediaId)
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					result.Post = nil
 					result.ResultCode = response.ErrDataNotFound
 					result.HttpStatusCode = http.StatusBadRequest
 					return result, err
 				}
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to get media record: %w", err)
 			}
 
 			// 2.2. Delete media from cloudinary
-			if media.MediaUrl != "" {
-				if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
-					result.Post = nil
-					result.ResultCode = response.ErrServerFailed
-					result.HttpStatusCode = http.StatusInternalServerError
+			if mediaRecord.MediaUrl != "" {
+				if err := media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
 					return result, fmt.Errorf("failed to delete media record: %w", err)
 				}
 			}
@@ -323,14 +267,10 @@ func (s *sPostUser) UpdatePost(
 			// 2.3. Delete media from databases
 			if err := s.mediaRepo.DeleteOne(ctx, mediaId); err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					result.Post = nil
 					result.ResultCode = response.ErrDataNotFound
 					result.HttpStatusCode = http.StatusBadRequest
 					return result, nil
 				}
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to delete media record: %w", err)
 			}
 		}
@@ -340,29 +280,20 @@ func (s *sPostUser) UpdatePost(
 	if len(command.Media) > 0 {
 		for _, file := range command.Media {
 			// 3.1. upload to cloudinary and get mediaUrl
-			mediaUrl, err := cloudinary_util.UploadMediaToCloudinary(file)
+			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to upload media to cloudinary: %w", err)
 			}
 
 			// 3.2. create Media model and save to database
 			mediaEntity, err := post_entity.NewMedia(postEntity.ID, mediaUrl)
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, err
 			}
 
 			_, err = s.mediaRepo.CreateOne(ctx, mediaEntity)
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, fmt.Errorf("failed to create media record: %w", err)
 			}
 		}
@@ -379,6 +310,8 @@ func (s *sPostUser) DeletePost(
 	command *post_command.DeletePostCommand,
 ) (result *post_command.DeletePostCommandResult, err error) {
 	result = &post_command.DeletePostCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get media array of post
 	medias, err := s.mediaRepo.GetMany(ctx, "post_id=?", command.PostId)
 	if err != nil {
@@ -387,29 +320,25 @@ func (s *sPostUser) DeletePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to get media records: %w", err)
 	}
 
-	// 2. Delete media from database and cloudinary
-	for _, media := range medias {
-		// 2.1. Delete media from cloudinary
-		if err := cloudinary_util.DeleteMediaFromCloudinary(media.MediaUrl); err != nil {
+	// 2. Delete media from database and folder
+	for _, mediaRecord := range medias {
+		// 2.1. Delete media from folder
+		if err := media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
 			result.ResultCode = response.ErrServerFailed
 			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to delete media record: %w", err)
 		}
 
 		// 2.1. Delete media from databases
-		if err := s.mediaRepo.DeleteOne(ctx, media.ID); err != nil {
+		if err := s.mediaRepo.DeleteOne(ctx, mediaRecord.ID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, nil
 			}
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to delete media record: %w", err)
 		}
 	}
@@ -419,19 +348,14 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 3. Delete new feed
-
 	err = s.newFeedRepo.DeleteMany(ctx, deleteCondition)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to delete media records: %w", err)
 	}
 
 	// 4. Delete advertise and bill
 	err = s.advertiseRepo.DeleteMany(ctx, deleteCondition)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to delete media records: %w", err)
 	}
 
@@ -443,8 +367,6 @@ func (s *sPostUser) DeletePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to delete media records: %w", err)
 	}
 
@@ -456,8 +378,6 @@ func (s *sPostUser) DeletePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to get user: %w", err)
 	}
 
@@ -468,8 +388,6 @@ func (s *sPostUser) DeletePost(
 
 	err = userUpdateEntity.ValidateUserUpdate()
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to update user: %w", err)
 	}
 
@@ -480,8 +398,6 @@ func (s *sPostUser) DeletePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to update media records: %w", err)
 	}
 

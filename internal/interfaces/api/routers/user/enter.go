@@ -5,4 +5,5 @@ type UserRouterGroup struct {
 	PostRouter
 	CommentRouter
 	AdvertiseRouter
+	MediaRouter
 }

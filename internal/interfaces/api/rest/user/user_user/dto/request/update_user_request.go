@@ -2,14 +2,15 @@ package request
 
 import (
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/google/uuid"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"mime/multipart"
 	"regexp"
 	"strings"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/google/uuid"
+	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 )
 
 type UpdateUserRequest struct {
@@ -61,17 +62,17 @@ func validateImage(value interface{}) error {
 		return fmt.Errorf("file must be an image")
 	}
 
-	if fileHeader.Size > 10*1024*1024 {
-		return fmt.Errorf("file size must be less than 10MB")
-	}
+	// if fileHeader.Size > 10*1024*1024 {
+	// 	return fmt.Errorf("file size must be less than 10MB")
+	// }
 
 	return nil
 }
 
 func (req *UpdateUserRequest) ToUpdateUserCommand(
 	userId uuid.UUID,
-	avatar multipart.File,
-	capwall multipart.File,
+	avatar *multipart.FileHeader,
+	capwall *multipart.FileHeader,
 ) (*user_command.UpdateUserCommand, error) {
 	return &user_command.UpdateUserCommand{
 		UserId:          &userId,

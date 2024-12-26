@@ -8,6 +8,8 @@ import (
 	advertise_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
 	comment_service "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
 	comment_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
+	media_service "github.com/poin4003/yourVibes_GoApi/internal/application/media/services"
+	media_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/media/services/implement"
 	post_service "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	post_service_impl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
 	revenue_service "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services"
@@ -83,6 +85,7 @@ func InitServiceInterface() {
 	postReportService := post_service_impl.NewPostReportImplement(postReportRepo, postRepo)
 	commentReportService := comment_service_impl.NewCommentReportImplement(commentReportRepo, commentRepo)
 	revenueService := revenue_service_impl.NewRevenueImplement(billRepo, userRepo, postRepo)
+	mediaService := media_service_impl.NewMediaImplement()
 
 	user_service.InitUserAuth(userAuthService)
 	user_service.InitUserInfo(userInfoService)
@@ -103,4 +106,5 @@ func InitServiceInterface() {
 	post_service.InitPostReport(postReportService)
 	comment_service.InitCommentReport(commentReportService)
 	revenue_service.InitRevenue(revenueService)
+	media_service.InitMedia(mediaService)
 }

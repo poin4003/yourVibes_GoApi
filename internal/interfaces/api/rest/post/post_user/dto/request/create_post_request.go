@@ -2,12 +2,13 @@ package request
 
 import (
 	"fmt"
+	"mime/multipart"
+	"strings"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"mime/multipart"
-	"strings"
 )
 
 type CreatePostRequest struct {
@@ -56,16 +57,16 @@ func validateMediaForCreate(value interface{}) error {
 		return fmt.Errorf("file must be an image or video")
 	}
 
-	if fileHeader.Size > 10*1024*1024 {
-		return fmt.Errorf("file size must be less than 10M")
-	}
+	// if fileHeader.Size > 10*1024*1024 {
+	// 	return fmt.Errorf("file size must be less than 10M")
+	// }
 
 	return nil
 }
 
 func (req *CreatePostRequest) ToCreatePostCommand(
 	userId uuid.UUID,
-	media []multipart.File,
+	media []multipart.FileHeader,
 ) (*post_command.CreatePostCommand, error) {
 	return &post_command.CreatePostCommand{
 		UserId:   userId,
