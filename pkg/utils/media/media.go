@@ -24,25 +24,35 @@ func SaveMedia(fileHeader *multipart.FileHeader) (string, error) {
 	uniqueFileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
 
 	// 3. Define path to save file
-	filePath := filepath.Join(global.Config.Media.Folder, uniqueFileName)
+	mediaFolder := global.Config.Media.Folder
 
-	// 4. Create file in directory
+	// 4. Ensure the directory exists
+	err = os.MkdirAll(mediaFolder, os.ModePerm)
+	if err != nil {
+		return "", fmt.Errorf("failed to create media directory: %w", err)
+	}
+
+	filePath := filepath.Join(mediaFolder, uniqueFileName)
+
+	// 5. Create file in directory
 	outFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer outFile.Close()
 
-	// 5. Copy data into file
+	// 6. Copy data into file
 	_, err = outFile.ReadFrom(file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to write data to file: %w", err)
 	}
 
+	// 7. Generate the file URL
 	fileUrl := fmt.Sprintf("%s:%d/v1/2024/media/%s",
 		global.Config.Server.ServerEndpoint,
 		global.Config.Server.Port,
 		uniqueFileName)
+
 	return fileUrl, nil
 }
 

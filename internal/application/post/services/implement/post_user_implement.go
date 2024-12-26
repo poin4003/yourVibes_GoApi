@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"net/http"
+
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
 	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -82,14 +83,14 @@ func (s *sPostUser) CreatePost(
 		return result, err
 	}
 
-	// 2. Create Media and upload media to cloudinary_util
+	// 2. Create Media and upload media
 	if len(command.Media) > 0 {
 		for _, file := range command.Media {
 			// 2.1. Save file and get mediaUrl
 			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				return result, fmt.Errorf("failed to upload media to cloudinary: %w", err)
+				return result, fmt.Errorf("failed to upload media: %w", err)
 			}
 
 			// 2.2. create Media model and save to database
@@ -243,7 +244,7 @@ func (s *sPostUser) UpdatePost(
 		return result, err
 	}
 
-	// 2. delete media in database and delete media from cloudinary
+	// 2. delete media in database and delete media
 	if len(command.MediaIDs) > 0 {
 		for _, mediaId := range command.MediaIDs {
 			// 2.1. Get media information from database
@@ -276,14 +277,14 @@ func (s *sPostUser) UpdatePost(
 		}
 	}
 
-	// 3. Create Media and upload media to cloudinary_util
+	// 3. Create Media and upload media
 	if len(command.Media) > 0 {
 		for _, file := range command.Media {
 			// 3.1. upload to cloudinary and get mediaUrl
 			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				return result, fmt.Errorf("failed to upload media to cloudinary: %w", err)
+				return result, fmt.Errorf("failed to upload media: %w", err)
 			}
 
 			// 3.2. create Media model and save to database
