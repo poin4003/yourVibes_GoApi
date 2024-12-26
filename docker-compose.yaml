@@ -36,6 +36,9 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
+    volumes:
+      - yourvibes_storage:/storage
 
 volumes:
   postgres_data:
+  yourvibes_storage:
