@@ -126,6 +126,7 @@ pipeline {
                             docker run -d --name yourvibes_api_server -p 8080:8080 \
                             -v yourvibes_config:/config \
                             -v yourvibes_goapi_yourvibes_storage:/storages \
+                            -v yourvibes_goapi_tmp_volume:/tmp \
                             --network yourvibes_goapi_default \
                             400034/yourvibes_api_server:latest
                         "
