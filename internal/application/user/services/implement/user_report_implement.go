@@ -278,6 +278,11 @@ func (s *sUserReport) ActivateUserAccount(
 		return result, err
 	}
 
+	// 6. Delete report
+	if err = s.userReportRepo.DeleteByUserId(ctx, command.UserId); err != nil {
+		return result, err
+	}
+
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

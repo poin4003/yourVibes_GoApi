@@ -49,6 +49,7 @@ type (
 		UpdateOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
 		UpdateMany(ctx context.Context, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) error
 		DeleteOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) error
+		DeleteByPostId(ctx context.Context, postId uuid.UUID) error
 		GetMany(ctx context.Context, query *query.GetManyPostReportQuery) ([]*entities.PostReport, *response.PagingResponse, error)
 		CheckExist(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (bool, error)
 	}

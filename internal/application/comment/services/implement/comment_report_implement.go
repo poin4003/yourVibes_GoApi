@@ -213,6 +213,11 @@ func (s *sCommentReport) ActivateComment(
 		return result, err
 	}
 
+	// 4. Delete report
+	if err = s.commentReportRepo.DeleteByCommentId(ctx, command.CommentId); err != nil {
+		return result, err
+	}
+
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

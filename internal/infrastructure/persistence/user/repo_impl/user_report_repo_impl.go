@@ -125,6 +125,20 @@ func (r *rUserReport) DeleteOne(
 	return nil
 }
 
+func (r *rUserReport) DeleteByUserId(
+	ctx context.Context,
+	userId uuid.UUID,
+) error {
+	if err := r.db.WithContext(ctx).
+		Where("reported_user_id = ?", userId).
+		Delete(&models.UserReport{}).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rUserReport) GetMany(
 	ctx context.Context,
 	query *query.GetManyUserReportQuery,

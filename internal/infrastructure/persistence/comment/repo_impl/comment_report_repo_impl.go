@@ -126,6 +126,20 @@ func (r *rCommentReport) DeleteOne(
 	return nil
 }
 
+func (r *rCommentReport) DeleteByCommentId(
+	ctx context.Context,
+	commentId uuid.UUID,
+) error {
+	if err := r.db.WithContext(ctx).
+		Where("reported_comment_id = ?", commentId).
+		Delete(&models.CommentReport{}).
+		Error; err != nil {
+		return nil
+	}
+
+	return nil
+}
+
 func (r *rCommentReport) GetMany(
 	ctx context.Context,
 	query *query.GetManyCommentReportQuery,

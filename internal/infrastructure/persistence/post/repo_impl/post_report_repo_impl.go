@@ -125,6 +125,20 @@ func (r *rPostReport) DeleteOne(
 	return nil
 }
 
+func (r *rPostReport) DeleteByPostId(
+	ctx context.Context,
+	postId uuid.UUID,
+) error {
+	if err := r.db.WithContext(ctx).
+		Where("reported_post_id = ?", postId).
+		Delete(&models.PostReport{}).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *rPostReport) GetMany(
 	ctx context.Context,
 	query *query.GetManyPostReportQuery,

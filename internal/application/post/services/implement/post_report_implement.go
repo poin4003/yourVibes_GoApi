@@ -213,6 +213,11 @@ func (s *sPostReport) ActivatePost(
 		return result, err
 	}
 
+	// 4. Delete report
+	if err = s.postReportRepo.DeleteByPostId(ctx, command.PostId); err != nil {
+		return result, err
+	}
+
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
