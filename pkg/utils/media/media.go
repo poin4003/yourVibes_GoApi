@@ -78,7 +78,14 @@ func DeleteMedia(mediaLink string) error {
 	// 2. Get media path
 	filePath := filepath.Join(global.Config.Media.Folder, fileName)
 
-	// 2. Delete file
+	// 3. Check file exist
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// 4. Delete file
 	if err := os.Remove(filePath); err != nil {
 		return err
 	}
