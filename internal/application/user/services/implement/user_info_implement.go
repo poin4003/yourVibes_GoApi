@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/google/uuid"
 	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
@@ -15,7 +17,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sUserInfo struct {
@@ -213,7 +214,7 @@ func (s *sUserInfo) UpdateUser(
 	}
 
 	// 3. update Avatar
-	if command.Avatar != nil {
+	if command.Avatar != nil && command.Avatar.Size > 0 && command.Avatar.Filename != "" {
 		avatarUrl, err := media.SaveMedia(command.Avatar)
 		if err != nil {
 			return result, fmt.Errorf("failed to upload Avatar: %w", err)
@@ -233,7 +234,7 @@ func (s *sUserInfo) UpdateUser(
 	}
 
 	// 4. update Capwall
-	if command.Capwall != nil {
+	if command.Capwall != nil && command.Capwall.Size > 0 && command.Capwall.Filename != "" {
 		capwallUrl, err := media.SaveMedia(command.Capwall)
 		if err != nil {
 			return result, fmt.Errorf("failed to upload Capwall: %w", err)

@@ -3,6 +3,7 @@ package cronjob
 import (
 	"context"
 	"fmt"
+
 	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/robfig/cron/v3"
 )
@@ -33,10 +34,10 @@ func StartPushAdvertiseToNewFeedCronJob(
 ) {
 	c := cron.New()
 
-	//_, err := c.AddFunc("@every 1m", func() {
-	//	cronJob := NewPushToNewFeedCronJob(newFeedRepo)
-	//	cronJob.Run()
-	//})
+	// _, err := c.AddFunc("@every 1m", func() {
+	// 	cronJob := NewPushToNewFeedCronJob(newFeedRepo)
+	// 	cronJob.Run()
+	// })
 
 	_, err := c.AddFunc("@daily", func() {
 		cronJob := NewPushToNewFeedCronJob(newFeedRepo)
