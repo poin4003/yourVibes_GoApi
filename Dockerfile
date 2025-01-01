@@ -12,6 +12,8 @@ FROM scratch
 
 COPY ./config /config
 
+COPY ./templates /templates
+
 COPY --from=builder /build/yourvibes_api_server /
 
 ENTRYPOINT [ "/yourvibes_api_server", "config/local.yaml" ]

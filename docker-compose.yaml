@@ -38,8 +38,10 @@ services:
     volumes:
       - yourvibes_storage:/storages
       - tmp_volume:/tmp
+#      - template_volume:/templates
 
 volumes:
   postgres_data:
   yourvibes_storage:
   tmp_volume:
+#  template_volume:
