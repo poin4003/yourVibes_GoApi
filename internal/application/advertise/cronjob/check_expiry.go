@@ -44,6 +44,10 @@ func StartCheckExpiryCronJob(
 	cronJob := NewCheckExpiryCronJob(postRepo, newFeedRepo)
 	cronJob.Run()
 
+	//_, err := c.AddFunc("@every 1m", func() {
+	//	cronJob.Run()
+	//})
+
 	_, err := c.AddFunc("@daily", func() {
 		cronJob.Run()
 	})
