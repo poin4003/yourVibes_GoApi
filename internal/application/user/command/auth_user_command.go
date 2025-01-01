@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
@@ -21,12 +22,29 @@ type LoginCommand struct {
 	Password string
 }
 
+type AuthGoogleCommand struct {
+	OpenId       string
+	AuthGoogleId string
+	Platform     consts.Platform
+	FamilyName   string
+	Name         string
+	Email        string
+	AvatarUrl    string
+}
+
 type RegisterCommandResult struct {
 	User       *common.UserWithSettingResult
 	ResultCode int
 }
 
 type LoginCommandResult struct {
+	User           *common.UserWithSettingResult
+	AccessToken    *string
+	ResultCode     int
+	HttpStatusCode int
+}
+
+type AuthGoogleCommandResult struct {
 	User           *common.UserWithSettingResult
 	AccessToken    *string
 	ResultCode     int

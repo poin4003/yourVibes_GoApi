@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 )
 
@@ -20,6 +21,21 @@ func NewValidatedUser(user *user_entity.User) (*ValidatedUser, error) {
 	}
 
 	if err := user.ValidateUser(); err != nil {
+		return nil, err
+	}
+
+	return &ValidatedUser{
+		User:        *user,
+		isValidated: true,
+	}, nil
+}
+
+func NewValidatedUserForGoogleAuth(user *user_entity.User) (*ValidatedUser, error) {
+	if user == nil {
+		return nil, fmt.Errorf("NewValidateUser: user is nil")
+	}
+
+	if err := user.ValidateUserForGoogleAuth(); err != nil {
 		return nil, err
 	}
 

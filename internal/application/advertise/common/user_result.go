@@ -11,8 +11,8 @@ type UserForAdvertiseResult struct {
 	FamilyName  string
 	Name        string
 	Email       string
-	PhoneNumber string
-	Birthday    time.Time
+	PhoneNumber *string
+	Birthday    *time.Time
 	AvatarUrl   string
 	CapwallUrl  string
 	Privacy     consts.PrivacyLevel

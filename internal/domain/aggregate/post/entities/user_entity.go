@@ -20,15 +20,15 @@ type UserForReport struct {
 	FamilyName   string
 	Name         string
 	Email        string
-	Password     string
-	PhoneNumber  string
-	Birthday     time.Time
+	Password     *string
+	PhoneNumber  *string
+	Birthday     *time.Time
 	AvatarUrl    string
 	CapwallUrl   string
 	Privacy      consts.PrivacyLevel
 	Biography    string
 	AuthType     consts.AuthType
-	AuthGoogleId string
+	AuthGoogleId *string
 	PostCount    int
 	FriendCount  int
 	Status       bool

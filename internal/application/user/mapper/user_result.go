@@ -1,11 +1,12 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
-	"time"
 )
 
 func NewUserShortVerValidateEntity(
@@ -70,8 +71,8 @@ func NewUserResultWithoutPrivateInfo(
 		FamilyName:   user.FamilyName,
 		Name:         user.Name,
 		Email:        "",
-		PhoneNumber:  "",
-		Birthday:     time.Time{},
+		PhoneNumber:  nil,
+		Birthday:     nil,
 		AvatarUrl:    user.AvatarUrl,
 		CapwallUrl:   user.CapwallUrl,
 		Privacy:      user.Privacy,

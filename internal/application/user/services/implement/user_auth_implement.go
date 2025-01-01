@@ -2,11 +2,19 @@ package implement
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
@@ -20,10 +28,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type sUserAuth struct {
@@ -43,9 +47,9 @@ func NewUserLoginImplement(
 
 func (s *sUserAuth) Login(
 	ctx context.Context,
-	loginCommand *command.LoginCommand,
-) (result *command.LoginCommandResult, err error) {
-	result = &command.LoginCommandResult{}
+	loginCommand *user_command.LoginCommand,
+) (result *user_command.LoginCommandResult, err error) {
+	result = &user_command.LoginCommandResult{}
 	result.User = nil
 	result.AccessToken = nil
 	result.ResultCode = response.ErrServerFailed
@@ -63,14 +67,14 @@ func (s *sUserAuth) Login(
 	}
 
 	// 2. Return if account is blocked by admin
-	if userFound.Status == false {
+	if !userFound.Status {
 		result.ResultCode = response.ErrCodeAccountBlockedByAdmin
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("This account has been blocked for violating our community standards")
+		return result, fmt.Errorf("this account has been blocked for violating our community standards")
 	}
 
 	// 3. Hash password
-	if !crypto.CheckPasswordHash(loginCommand.Password, userFound.Password) {
+	if !crypto.CheckPasswordHash(loginCommand.Password, *userFound.Password) {
 		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("invalid credentials")
@@ -85,7 +89,7 @@ func (s *sUserAuth) Login(
 	// 5. Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
-		return result, fmt.Errorf("Cannot create access token: %v", err)
+		return result, fmt.Errorf("cannot create access token: %v", err)
 	}
 
 	// 5. Map to command result
@@ -98,9 +102,9 @@ func (s *sUserAuth) Login(
 
 func (s *sUserAuth) Register(
 	ctx context.Context,
-	registerCommand *command.RegisterCommand,
-) (result *command.RegisterCommandResult, err error) {
-	result = &command.RegisterCommandResult{}
+	registerCommand *user_command.RegisterCommand,
+) (result *user_command.RegisterCommandResult, err error) {
+	result = &user_command.RegisterCommandResult{}
 	// 1. Check user exist in user table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
 	if err != nil {
@@ -141,14 +145,13 @@ func (s *sUserAuth) Register(
 	}
 
 	// 5. Create new user
-	newUser, err := user_entity.NewUser(
+	newUser, err := user_entity.NewUserLocal(
 		registerCommand.FamilyName,
 		registerCommand.Name,
 		registerCommand.Email,
 		hashedPassword,
 		registerCommand.PhoneNumber,
 		registerCommand.Birthday,
-		consts.LOCAL_AUTH,
 	)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
@@ -241,4 +244,149 @@ func (s *sUserAuth) VerifyEmail(
 	}
 
 	return response.ErrCodeSuccess, nil
+}
+
+func (s *sUserAuth) AuthGoogle(
+	ctx context.Context,
+	command *user_command.AuthGoogleCommand,
+) (result *user_command.AuthGoogleCommandResult, err error) {
+	result = &user_command.AuthGoogleCommandResult{}
+	result.User = nil
+	result.AccessToken = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+
+	// 1. Verify Google access token
+	var googleTokenInfoUrl = global.Config.GoogleSetting.GoogleTokensInfoUrl
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s?id_token=%s", googleTokenInfoUrl, command.OpenId), nil)
+	if err != nil {
+		return result, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		result.ResultCode = response.ErrInvalidToken
+		result.HttpStatusCode = http.StatusForbidden
+		return result, fmt.Errorf("failed to verify openid: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		result.ResultCode = response.ErrInvalidToken
+		result.HttpStatusCode = http.StatusForbidden
+		return result, fmt.Errorf("invalid open id")
+	}
+
+	var tokenInfo common.TokenInfo
+	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
+		return result, fmt.Errorf("failed to decode token info: %w", err)
+	}
+
+	validClientIds := []string{
+		global.Config.GoogleSetting.WebClientId,
+		global.Config.GoogleSetting.AndroidClientId,
+		global.Config.GoogleSetting.IosClientId,
+	}
+
+	clientIdValid := false
+	for _, validID := range validClientIds {
+		if tokenInfo.Aud == validID {
+			clientIdValid = true
+			break
+		}
+	}
+
+	if !clientIdValid {
+		result.ResultCode = response.ErrInvalidToken
+		result.HttpStatusCode = http.StatusForbidden
+		return result, fmt.Errorf("invalid client id")
+	}
+
+	// 3. Get user by email
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 2.1. Create new user
+			newUser, err := user_entity.NewUserGoogle(
+				command.FamilyName,
+				command.Name,
+				command.Email,
+				command.AuthGoogleId,
+				command.AvatarUrl,
+			)
+			if err != nil {
+				return result, err
+			}
+
+			createdUser, err := s.userRepo.CreateOne(ctx, newUser)
+			if err != nil {
+				return result, err
+			}
+
+			// 2.2. Create setting for user
+			newSetting, err := user_entity.NewSetting(createdUser.ID, consts.VI)
+			if err != nil {
+				return result, err
+			}
+
+			createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
+			if err != nil {
+				return result, err
+			}
+
+			createdUser.Setting = createdSetting
+
+			// 2.3. Validate user
+			validatedUser, err := user_validator.NewValidatedUserForGoogleAuth(createdUser)
+			if err != nil {
+				return result, err
+			}
+
+			accessClaims := jwt.MapClaims{
+				"id":  validatedUser.ID,
+				"exp": time.Now().Add(time.Hour * 720).Unix(),
+			}
+
+			// 2.4. Generate token
+			accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+			if err != nil {
+				return result, fmt.Errorf("cannot create access token: %w", err)
+			}
+			result.User = mapper.NewUserResultFromValidateEntity(validatedUser)
+			result.AccessToken = &accessTokenGen
+			result.ResultCode = response.ErrCodeSuccess
+			result.HttpStatusCode = http.StatusOK
+
+			return result, nil
+		}
+		return result, err
+	}
+
+	// 3. Check authType
+	// 3.1. Return if auth type is local
+	if userFound.AuthType == consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeInvalidLocalAuthType
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("you can't use local account to google login")
+	}
+
+	// 4. Check auth google id
+	accessClaims := jwt.MapClaims{
+		"id":  userFound.ID,
+		"exp": time.Now().Add(time.Hour * 720).Unix(),
+	}
+
+	// 4.1 Generate token
+	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+	if err != nil {
+		return result, fmt.Errorf("cannot create access token: %w", err)
+	}
+
+	result.User = mapper.NewUserResultFromEntity(userFound)
+	result.AccessToken = &accessTokenGen
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }

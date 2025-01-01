@@ -1787,6 +1787,33 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/auth_google/": {
+            "post": {
+                "description": "When user need google login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_auth"
+                ],
+                "summary": "User auth google",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AuthGoogleRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/friends/friend_request": {
             "get": {
                 "security": [
@@ -2524,6 +2551,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "consts.Platform": {
+            "type": "string",
+            "enum": [
+                "web",
+                "android",
+                "ios"
+            ],
+            "x-enum-varnames": [
+                "WEB",
+                "ANDROID",
+                "IOS"
+            ]
+        },
         "request.AdminLoginRequest": {
             "type": "object",
             "required": [
@@ -2536,6 +2576,32 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "request.AuthGoogleRequest": {
+            "type": "object",
+            "properties": {
+                "auth_google_id": {
+                    "type": "string"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "family_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "open_id": {
+                    "type": "string"
+                },
+                "platform": {
+                    "$ref": "#/definitions/consts.Platform"
                 }
             }
         },

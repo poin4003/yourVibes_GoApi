@@ -1,10 +1,11 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type UserWithSettingDto struct {
@@ -12,8 +13,8 @@ type UserWithSettingDto struct {
 	FamilyName  string              `json:"family_name"`
 	Name        string              `json:"name"`
 	Email       string              `json:"email"`
-	PhoneNumber string              `json:"phone_number"`
-	Birthday    time.Time           `json:"birthday"`
+	PhoneNumber *string             `json:"phone_number"`
+	Birthday    *time.Time          `json:"birthday"`
 	AvatarUrl   string              `json:"avatar_url"`
 	CapwallUrl  string              `json:"capwall_url"`
 	Privacy     consts.PrivacyLevel `json:"privacy"`

@@ -1,5 +1,15 @@
 basePath: /v1/2024
 definitions:
+  consts.Platform:
+    enum:
+    - web
+    - android
+    - ios
+    type: string
+    x-enum-varnames:
+    - WEB
+    - ANDROID
+    - IOS
   request.AdminLoginRequest:
     properties:
       email:
@@ -9,6 +19,23 @@ definitions:
     required:
     - email
     - password
+    type: object
+  request.AuthGoogleRequest:
+    properties:
+      auth_google_id:
+        type: string
+      avatar_url:
+        type: string
+      email:
+        type: string
+      family_name:
+        type: string
+      name:
+        type: string
+      open_id:
+        type: string
+      platform:
+        $ref: '#/definitions/consts.Platform'
     type: object
   request.CreateAdminRequest:
     properties:
@@ -1356,6 +1383,24 @@ paths:
       summary: Get user by ID
       tags:
       - user_info
+  /users/auth_google/:
+    post:
+      consumes:
+      - application/json
+      description: When user need google login
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.AuthGoogleRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: User auth google
+      tags:
+      - user_auth
   /users/friends/{friend_id}/:
     delete:
       description: unfriend

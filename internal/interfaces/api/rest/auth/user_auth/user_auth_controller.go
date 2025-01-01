@@ -132,3 +132,48 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 		"user":         userDto,
 	})
 }
+
+// AuthGoogle documentation
+// @Summary User auth google
+// @Description When user need google login
+// @Tags user_auth
+// @Accept json
+// @Produce json
+// @Param input body request.AuthGoogleRequest true "input"
+// @Router /users/auth_google/ [post]
+func (c *cUserAuth) AuthGoogle(ctx *gin.Context) {
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to authGoogleRequest
+	authGoogleRequest, ok := body.(*request.AuthGoogleRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle auth google
+	authGoogleCommand, err := authGoogleRequest.ToAuthGoogleCommand()
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.UserAuth().AuthGoogle(ctx, authGoogleCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 4. Map to dto
+	userDto := response.ToUserWithSettingDto(result.User)
+
+	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{
+		"access_token": result.AccessToken,
+		"user":         userDto,
+	})
+}

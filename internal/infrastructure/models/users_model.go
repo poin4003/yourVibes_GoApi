@@ -12,15 +12,15 @@ type User struct {
 	FamilyName   string              `gorm:"type:varchar(255);not null"`
 	Name         string              `gorm:"type:varchar(255);not null"`
 	Email        string              `gorm:"type:varchar(50);unique;not null"`
-	Password     string              `gorm:"type:varchar(255);not null"`
-	PhoneNumber  string              `gorm:"type:varchar(15);not null"`
-	Birthday     time.Time           `gorm:"type:timestamptz;not null"`
+	Password     *string             `gorm:"type:varchar(255);"`
+	PhoneNumber  *string             `gorm:"type:varchar(15);"`
+	Birthday     *time.Time          `gorm:"type:timestamptz;"`
 	AvatarUrl    string              `gorm:"type:varchar(255);default:null"`
 	CapwallUrl   string              `gorm:"type:varchar(255);default:null"`
 	Privacy      consts.PrivacyLevel `gorm:"type:varchar(20);default:'public'"`
 	Biography    string              `gorm:"type:text;default:null"`
 	AuthType     consts.AuthType     `gorm:"type:varchar(10);default:'local'"`
-	AuthGoogleId string              `gorm:"type:varchar(255);default:null"`
+	AuthGoogleId *string             `gorm:"type:varchar(255);default:null"`
 	PostCount    int                 `gorm:"type:int;default:0"`
 	FriendCount  int                 `gorm:"type:int;default:0"`
 	Status       bool                `gorm:"default:true"`

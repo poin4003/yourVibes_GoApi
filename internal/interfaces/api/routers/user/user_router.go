@@ -40,6 +40,11 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			UserAuthController.Login,
 		)
 
+		userRouterPublic.POST("/auth_google",
+			helpers.ValidateJsonBody(&auth_request.AuthGoogleRequest{}, auth_request.ValidateAuthGoogleRequest),
+			UserAuthController.AuthGoogle,
+		)
+
 		// user_notification
 		userRouterPublic.GET("/notifications/ws/:user_id", UserNotificationController.SendNotification)
 	}

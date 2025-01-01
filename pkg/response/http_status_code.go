@@ -9,6 +9,8 @@ const (
 	ErrCodeAccountBlockedByAdmin      = 30004
 	ErrCodeAccountBlockedBySuperAdmin = 30005
 	ErrCodeEmailOrPasswordIsWrong     = 30006
+	ErrCodeInvalidLocalAuthType       = 30007
+	ErrCodeInvalidGoogleAuthType      = 30008
 
 	// Register Code
 	ErrCodeUserHasExists                = 50001 // user has already registered
@@ -62,6 +64,8 @@ var msg = map[int]string{
 	ErrCodeAccountBlockedByAdmin:      "Account blocked",
 	ErrCodeAccountBlockedBySuperAdmin: "Account blocked by super admin, contact to activate",
 	ErrCodeEmailOrPasswordIsWrong:     "Email or password is wrong",
+	ErrCodeInvalidLocalAuthType:       "Invalid local auth type, you must use form to login",
+	ErrCodeInvalidGoogleAuthType:      "Invalid google auth type, you must use google to login",
 
 	ErrCodeUserHasExists:                "User has already registered",
 	ErrCodeValidateParamRegister:        "Validate param register failed",

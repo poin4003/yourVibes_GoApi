@@ -12,6 +12,7 @@ type (
 		Login(ctx context.Context, loginCommand *command.LoginCommand) (result *command.LoginCommandResult, err error)
 		Register(ctx context.Context, registerCommand *command.RegisterCommand) (result *command.RegisterCommandResult, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
+		AuthGoogle(ctx context.Context, command *command.AuthGoogleCommand) (result *command.AuthGoogleCommandResult, err error)
 	}
 	IUserInfo interface {
 		GetInfoByUserId(ctx context.Context, query *query.GetOneUserQuery) (result *query.UserQueryResult, err error)

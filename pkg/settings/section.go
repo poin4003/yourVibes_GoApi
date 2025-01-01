@@ -9,6 +9,7 @@ type Config struct {
 	Authentication AuthenticationSetting `mapstructure:"authentication"`
 	MailService    MailServiceSetting    `mapstructure:"mail_service"`
 	MomoSetting    MomoSetting           `mapstructure:"momo"`
+	GoogleSetting  GoogleSetting         `mapstructure:"google"`
 }
 
 type ServerSetting struct {
@@ -69,4 +70,11 @@ type MomoSetting struct {
 	IpnURL       string `mapstructure:"ipn_url"`
 	EndpointHost string `mapstructure:"endpoint_host"`
 	EndpointPath string `mapstructure:"endpoint_path"`
+}
+
+type GoogleSetting struct {
+	GoogleTokensInfoUrl string `mapstructure:"google_tokens_info_url"`
+	WebClientId         string `mapstructure:"web_client_id"`
+	AndroidClientId     string `mapstructure:"android_client_id"`
+	IosClientId         string `mapstructure:"ios_client_id"`
 }

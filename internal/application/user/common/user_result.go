@@ -1,9 +1,10 @@
 package common
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type UserWithSettingResult struct {
@@ -11,8 +12,8 @@ type UserWithSettingResult struct {
 	FamilyName  string
 	Name        string
 	Email       string
-	PhoneNumber string
-	Birthday    time.Time
+	PhoneNumber *string
+	Birthday    *time.Time
 	AvatarUrl   string
 	CapwallUrl  string
 	Privacy     consts.PrivacyLevel
@@ -40,8 +41,8 @@ type UserWithoutSettingResult struct {
 	FamilyName   string
 	Name         string
 	Email        string
-	PhoneNumber  string
-	Birthday     time.Time
+	PhoneNumber  *string
+	Birthday     *time.Time
 	AvatarUrl    string
 	CapwallUrl   string
 	Privacy      consts.PrivacyLevel
@@ -59,8 +60,8 @@ type UserForReportResult struct {
 	FamilyName  string
 	Name        string
 	Email       string
-	PhoneNumber string
-	Birthday    time.Time
+	PhoneNumber *string
+	Birthday    *time.Time
 	AvatarUrl   string
 	CapwallUrl  string
 	Privacy     consts.PrivacyLevel
