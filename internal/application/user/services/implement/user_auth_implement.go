@@ -77,7 +77,7 @@ func (s *sUserAuth) Login(
 	if userFound.AuthType != consts.LOCAL_AUTH {
 		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, err
+		return result, fmt.Errorf("invalid auth type")
 	}
 
 	// 4. Hash password
