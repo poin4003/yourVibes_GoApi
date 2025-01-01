@@ -147,6 +147,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/admins/change_password/": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to change password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_auth"
+                ],
+                "summary": "admin change password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ChangeAdminPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/admins/login/": {
             "post": {
                 "description": "When user login",
@@ -1814,6 +1846,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/change_password/": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to change password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_auth"
+                ],
+                "summary": "User change password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/friends/friend_request": {
             "get": {
                 "security": [
@@ -2602,6 +2666,28 @@ const docTemplate = `{
                 },
                 "platform": {
                     "$ref": "#/definitions/consts.Platform"
+                }
+            }
+        },
+        "request.ChangeAdminPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ChangePasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
                 }
             }
         },

@@ -34,7 +34,13 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 	adminRouterPrivate := Router.Group("/admins")
 	adminRouterPrivate.Use(middlewares.AdminAuthProtected())
 	{
-		// admin
+		// admin auth
+		adminRouterPrivate.PATCH("/change_password",
+			helpers.ValidateJsonBody(&auth_request.ChangeAdminPasswordRequest{}, auth_request.ValidateChangePasswordRequest),
+			AdminAuthController.ChangeAdminPassword,
+		)
+
+		// admin info
 		adminRouterPrivate.PATCH("/",
 			helpers.ValidateJsonBody(&admin_request.UpdateAdminInfoRequest{}, admin_request.ValidateUpdateAdminInfoRequest),
 			AdminController.UpdateAdminInfo,

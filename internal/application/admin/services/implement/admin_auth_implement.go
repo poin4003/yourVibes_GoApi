@@ -8,10 +8,12 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/global"
 	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
+	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	admin_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 	"net/http"
 	"time"
@@ -79,6 +81,54 @@ func (s *sAdminAuth) Login(
 	// 6. Map to result
 	result.AccessToken = &accessTokenGen
 	result.Admin = mapper.NewAdminResult(adminFound)
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
+func (s *sAdminAuth) ChangeAdminPassword(
+	ctx context.Context,
+	command *admin_command.ChangeAdminPasswordCommand,
+) (result *admin_command.ChangeAdminPasswordCommandResult, err error) {
+	result = &admin_command.ChangeAdminPasswordCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Find admin
+	adminFound, err := s.adminRepo.GetById(ctx, command.AdminId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check old password
+	if !crypto.CheckPasswordHash(command.OldPassword, adminFound.Password) {
+		result.ResultCode = response.ErrCodeOldPasswordIsWrong
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("old password is wrong")
+	}
+
+	// 3. Update new password
+	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	if err != nil {
+		return result, err
+	}
+
+	updateAdminData := &admin_entity.AdminUpdate{
+		Password: pointer.Ptr(hashedPassword),
+	}
+	if err := updateAdminData.ValidateAdminUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.adminRepo.UpdateOne(ctx, command.AdminId, updateAdminData)
+	if err != nil {
+		return result, err
+	}
+
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

@@ -37,6 +37,20 @@ definitions:
       platform:
         $ref: '#/definitions/consts.Platform'
     type: object
+  request.ChangeAdminPasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  request.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
   request.CreateAdminRequest:
     properties:
       birthday:
@@ -324,6 +338,26 @@ paths:
       summary: Get admin by ID
       tags:
       - super_admin
+  /admins/change_password/:
+    patch:
+      consumes:
+      - application/json
+      description: When admin need to change password
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.ChangeAdminPasswordRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: admin change password
+      tags:
+      - admin_auth
   /admins/login/:
     post:
       consumes:
@@ -1399,6 +1433,26 @@ paths:
       - application/json
       responses: {}
       summary: User auth google
+      tags:
+      - user_auth
+  /users/change_password/:
+    patch:
+      consumes:
+      - application/json
+      description: When user need to change password
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: User change password
       tags:
       - user_auth
   /users/friends/{friend_id}/:

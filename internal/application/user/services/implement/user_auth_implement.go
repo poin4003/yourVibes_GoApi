@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"net/http"
 	"strconv"
 	"strings"
@@ -251,6 +252,61 @@ func (s *sUserAuth) VerifyEmail(
 	}
 
 	return response.ErrCodeSuccess, nil
+}
+
+func (s *sUserAuth) ChangePassword(
+	ctx context.Context,
+	command *user_command.ChangePasswordCommand,
+) (result *user_command.ChangePasswordCommandResult, err error) {
+	result = &user_command.ChangePasswordCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Find user
+	userFound, err := s.userRepo.GetById(ctx, command.UserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.UserNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 2. Check auth type
+	if userFound.AuthType != consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeInvalidLocalAuthType
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, err
+	}
+
+	// 3. Check old password
+	if !crypto.CheckPasswordHash(command.OldPassword, *userFound.Password) {
+		result.ResultCode = response.ErrCodeOldPasswordIsWrong
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("old password is wrong")
+	}
+
+	// 4. Update new password
+	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	if err != nil {
+		return result, err
+	}
+
+	updateUserData := &user_entity.UserUpdate{
+		Password: pointer.Ptr(hashedPassword),
+	}
+	if err := updateUserData.ValidateUserUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, command.UserId, updateUserData)
+	if err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
 }
 
 func (s *sUserAuth) AuthGoogle(

@@ -11,6 +11,7 @@ const (
 	ErrCodeEmailOrPasswordIsWrong     = 30006
 	ErrCodeInvalidLocalAuthType       = 30007
 	ErrCodeInvalidGoogleAuthType      = 30008
+	ErrCodeOldPasswordIsWrong         = 30009
 
 	// Register Code
 	ErrCodeUserHasExists                = 50001 // user has already registered
@@ -66,6 +67,7 @@ var msg = map[int]string{
 	ErrCodeEmailOrPasswordIsWrong:     "Email or password is wrong",
 	ErrCodeInvalidLocalAuthType:       "Invalid local auth type, you must use form to login",
 	ErrCodeInvalidGoogleAuthType:      "Invalid google auth type, you must use google to login",
+	ErrCodeOldPasswordIsWrong:         "Old password is wrong",
 
 	ErrCodeUserHasExists:                "User has already registered",
 	ErrCodeValidateParamRegister:        "Validate param register failed",

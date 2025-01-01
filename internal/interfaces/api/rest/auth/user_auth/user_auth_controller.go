@@ -3,6 +3,7 @@ package user_auth
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/response"
 	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
@@ -176,4 +177,51 @@ func (c *cUserAuth) AuthGoogle(ctx *gin.Context) {
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})
+}
+
+// ChangePassword documentation
+// @Summary User change password
+// @Description When user need to change password
+// @Tags user_auth
+// @Accept json
+// @Produce json
+// @Param input body request.ChangePasswordRequest true "input"
+// @Security ApiKeyAuth
+// @Router /users/change_password/ [patch]
+func (c *cUserAuth) ChangePassword(ctx *gin.Context) {
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to change password request
+	changePasswordRequest, ok := body.(*request.ChangePasswordRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get user id from token
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	// 4. Call service to handle change password
+	changePasswordCommand, err := changePasswordRequest.ToChangePasswordCommand(userIdClaim)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.UserAuth().ChangePassword(ctx, changePasswordCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, nil)
 }

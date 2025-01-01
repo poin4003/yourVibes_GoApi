@@ -53,6 +53,12 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	userRouterPrivate := Router.Group("/users")
 	userRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
+		// user authentication
+		userRouterPrivate.PATCH("/change_password",
+			helpers.ValidateJsonBody(&auth_request.ChangePasswordRequest{}, auth_request.ValidateChangePasswordRequest),
+			UserAuthController.ChangePassword,
+		)
+
 		// user_info
 		userRouterPrivate.GET("/:userId", UserInfoController.GetInfoByUserId)
 
