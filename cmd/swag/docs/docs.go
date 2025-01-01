@@ -1878,6 +1878,33 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/forgot_user_password/": {
+            "post": {
+                "description": "When user forgot and change password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_auth"
+                ],
+                "summary": "User forgot password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ForgotUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/friends/friend_request": {
             "get": {
                 "security": [
@@ -2054,6 +2081,33 @@ const docTemplate = `{
                         "description": "current page",
                         "name": "page",
                         "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/users/get_otp_forgot_user_password/": {
+            "post": {
+                "description": "Before forgot password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_auth"
+                ],
+                "summary": "User get otp forgot user password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetOtpForgotUserPasswordRequest"
+                        }
                     }
                 ],
                 "responses": {}
@@ -2757,6 +2811,28 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ForgotUserPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "otp": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.GetOtpForgotUserPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }

@@ -2,6 +2,7 @@ package user_auth
 
 import (
 	"github.com/gin-gonic/gin"
+	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
@@ -224,4 +225,80 @@ func (c *cUserAuth) ChangePassword(ctx *gin.Context) {
 	}
 
 	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, nil)
+}
+
+// GetOtpForgotUserPassword documentation
+// @Summary User get otp forgot user password
+// @Description Before forgot password
+// @Tags user_auth
+// @Accept json
+// @Produce json
+// @Param input body request.GetOtpForgotUserPasswordRequest true "input"
+// @Router /users/get_otp_forgot_user_password/ [post]
+func (c *cUserAuth) GetOtpForgotUserPassword(ctx *gin.Context) {
+	// 1. Get body from form
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to get otp forgot user password request
+	getOtpForgotUserPasswordRequest, ok := body.(*request.GetOtpForgotUserPasswordRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to get otp forgot user password request
+	getOtpForgotUserPasswordCommand := &user_command.GetOtpForgotUserPasswordCommand{
+		Email: getOtpForgotUserPasswordRequest.Email,
+	}
+
+	result, err := services.UserAuth().GetOtpForgotUserPassword(ctx, getOtpForgotUserPasswordCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}
+
+// ForgotUserPassword documentation
+// @Summary User forgot password
+// @Description When user forgot and change password
+// @Tags user_auth
+// @Accept json
+// @Produce json
+// @Param input body request.ForgotUserPasswordRequest true "input"
+// @Router /users/forgot_user_password/ [post]
+func (c *cUserAuth) ForgotUserPassword(ctx *gin.Context) {
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to forgot user password request
+	forgotUserPasswordRequest, ok := body.(*request.ForgotUserPasswordRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle forgot user password
+	forgotUserPasswordCommand, err := forgotUserPasswordRequest.ToForgotUserPasswordCommand()
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.UserAuth().ForgotUserPassword(ctx, forgotUserPasswordCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

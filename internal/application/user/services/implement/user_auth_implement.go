@@ -131,7 +131,7 @@ func (s *sUserAuth) Register(
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			result.ResultCode = response.ErrCodeOtpNotExists
 			return result, fmt.Errorf("no OTP found for %s", registerCommand.Email)
 		}
@@ -227,7 +227,7 @@ func (s *sUserAuth) VerifyEmail(
 		fmt.Println("Get failed::", err)
 		return response.ErrCodeOtpNotExists, err
 	case otpFound != "":
-		return response.ErrCodeOtpNotExists, fmt.Errorf("otp %s already exists but not registered", otpFound)
+		return response.ErrCodeOtpNotExists, fmt.Errorf("otp already exists but not registered")
 	}
 
 	// 4. Generate OTP
@@ -243,7 +243,7 @@ func (s *sUserAuth) VerifyEmail(
 	err = sendto.SendTemplateEmailOtp(
 		[]string{email},
 		consts.HOST_EMAIL,
-		"otp-auth.html",
+		"otp_auth.html",
 		map[string]interface{}{"otp": strconv.Itoa(otpNew)},
 	)
 
@@ -300,6 +300,145 @@ func (s *sUserAuth) ChangePassword(
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, command.UserId, updateUserData)
+	if err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
+func (s *sUserAuth) GetOtpForgotUserPassword(
+	ctx context.Context,
+	command *user_command.GetOtpForgotUserPasswordCommand,
+) (result *user_command.GetOtpForgotUserPasswordCommandResult, err error) {
+	result = &user_command.GetOtpForgotUserPasswordCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Hash Email
+	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
+
+	// 2. Check user exist
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.UserNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, err
+		}
+		return result, err
+	}
+
+	// 3. Check auth type
+	if userFound.AuthType != consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeInvalidLocalAuthType
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("you can't use forgot password if auth type is googleOAuth")
+	}
+
+	// 4. Check OTP exists
+	userKey := utils.GetOtpForgotPasswordUser(hashEmail)
+	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
+
+	switch {
+	case err == redis.Nil:
+		fmt.Println("Key does not exist")
+	case err != nil:
+		fmt.Println("Get failed::", err)
+		return result, err
+	case otpFound != "":
+		result.ResultCode = response.ErrCodeOtpNotExists
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("otp already exists but not registered")
+	}
+
+	// 5. Generate OTP
+	otpNew := random.GenerateSixDigitOtp()
+
+	// 6. Save OTP into Redis with expiration time
+	if err = global.Rdb.SetEx(ctx, userKey, strconv.Itoa(otpNew), time.Duration(consts.TIME_OTP_FORGOT_USER_PASSWORD)*time.Minute).Err(); err != nil {
+		return result, err
+	}
+
+	// 7. Send OTP
+	if err = sendto.SendTemplateEmailOtp(
+		[]string{command.Email},
+		consts.HOST_EMAIL,
+		"otp_forgot_password.html",
+		map[string]interface{}{"otp": strconv.Itoa(otpNew)},
+	); err != nil {
+		result.ResultCode = response.ErrSendEmailOTP
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}
+
+func (s *sUserAuth) ForgotUserPassword(
+	ctx context.Context,
+	command *user_command.ForgotUserPasswordCommand,
+) (result *user_command.ForgotUserPasswordCommandResult, err error) {
+	result = &user_command.ForgotUserPasswordCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check user exist
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.UserNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("user %s doesn't exists", command.Email)
+		}
+		return result, err
+	}
+
+	// 2. Check auth type
+	if userFound.AuthType != consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeInvalidLocalAuthType
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("you can't use forgot password if auth type is googleOAuth")
+	}
+
+	// 3. Get Otp from Redis
+	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
+	userKey := utils.GetOtpForgotPasswordUser(hashEmail)
+	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
+
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			result.ResultCode = response.ErrCodeOtpNotExists
+			return result, fmt.Errorf("no otp found for %s", command.Email)
+		}
+		result.ResultCode = response.ErrCodeOtpNotExists
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, err
+	}
+
+	// 4. Compare otp
+	if otpFound != command.Otp {
+		result.ResultCode = response.ErrInvalidOTP
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("otp does not match for %s", command.Email)
+	}
+
+	// 5. Update new password
+	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	if err != nil {
+		return result, err
+	}
+
+	updateUserData := &user_entity.UserUpdate{
+		Password: pointer.Ptr(hashedPassword),
+	}
+
+	if err = updateUserData.ValidateUserUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
 	if err != nil {
 		return result, err
 	}

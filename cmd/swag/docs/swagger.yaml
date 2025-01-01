@@ -98,6 +98,20 @@ definitions:
     - content
     - post_id
     type: object
+  request.ForgotUserPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+      otp:
+        type: string
+    type: object
+  request.GetOtpForgotUserPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -1455,6 +1469,24 @@ paths:
       summary: User change password
       tags:
       - user_auth
+  /users/forgot_user_password/:
+    post:
+      consumes:
+      - application/json
+      description: When user forgot and change password
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.ForgotUserPasswordRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: User forgot password
+      tags:
+      - user_auth
   /users/friends/{friend_id}/:
     delete:
       description: unfriend
@@ -1569,6 +1601,24 @@ paths:
       summary: Accept friend request
       tags:
       - user_friend
+  /users/get_otp_forgot_user_password/:
+    post:
+      consumes:
+      - application/json
+      description: Before forgot password
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetOtpForgotUserPasswordRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: User get otp forgot user password
+      tags:
+      - user_auth
   /users/login/:
     post:
       consumes:

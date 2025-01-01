@@ -1,0 +1,36 @@
+package request
+
+import (
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	"regexp"
+)
+
+type ForgotUserPasswordRequest struct {
+	Email       string `json:"email"`
+	Otp         string `json:"otp"`
+	NewPassword string `json:"new_password"`
+}
+
+func ValidateForgotUserPasswordRequest(req interface{}) error {
+	dto, ok := req.(*ForgotUserPasswordRequest)
+	if !ok {
+		return fmt.Errorf("input is not ForgotUserPasswordRequest")
+	}
+
+	return validation.ValidateStruct(dto,
+		validation.Field(&dto.Email, validation.Required, is.Email),
+		validation.Field(&dto.Otp, validation.Required, validation.Length(6, 6), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.NewPassword, validation.Required, validation.Length(8, 255)),
+	)
+}
+
+func (req *ForgotUserPasswordRequest) ToForgotUserPasswordCommand() (*user_command.ForgotUserPasswordCommand, error) {
+	return &user_command.ForgotUserPasswordCommand{
+		Email:       req.Email,
+		Otp:         req.Otp,
+		NewPassword: req.NewPassword,
+	}, nil
+}

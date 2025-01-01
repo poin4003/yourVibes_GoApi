@@ -29,6 +29,16 @@ type ChangePasswordCommand struct {
 	NewPassword string
 }
 
+type GetOtpForgotUserPasswordCommand struct {
+	Email string
+}
+
+type ForgotUserPasswordCommand struct {
+	Email       string
+	Otp         string
+	NewPassword string
+}
+
 type AuthGoogleCommand struct {
 	OpenId       string
 	AuthGoogleId string
@@ -52,6 +62,16 @@ type LoginCommandResult struct {
 }
 
 type ChangePasswordCommandResult struct {
+	ResultCode     int
+	HttpStatusCode int
+}
+
+type GetOtpForgotUserPasswordCommandResult struct {
+	ResultCode     int
+	HttpStatusCode int
+}
+
+type ForgotUserPasswordCommandResult struct {
 	ResultCode     int
 	HttpStatusCode int
 }

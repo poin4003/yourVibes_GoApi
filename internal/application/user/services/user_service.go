@@ -13,6 +13,8 @@ type (
 		Register(ctx context.Context, registerCommand *command.RegisterCommand) (result *command.RegisterCommandResult, err error)
 		VerifyEmail(ctx context.Context, email string) (resultCode int, err error)
 		ChangePassword(ctx context.Context, command *command.ChangePasswordCommand) (result *command.ChangePasswordCommandResult, err error)
+		GetOtpForgotUserPassword(ctx context.Context, command *command.GetOtpForgotUserPasswordCommand) (result *command.GetOtpForgotUserPasswordCommandResult, err error)
+		ForgotUserPassword(ctx context.Context, command *command.ForgotUserPasswordCommand) (result *command.ForgotUserPasswordCommandResult, err error)
 		AuthGoogle(ctx context.Context, command *command.AuthGoogleCommand) (result *command.AuthGoogleCommandResult, err error)
 	}
 	IUserInfo interface {

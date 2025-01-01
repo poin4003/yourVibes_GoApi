@@ -45,6 +45,16 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			UserAuthController.AuthGoogle,
 		)
 
+		userRouterPublic.POST("/get_otp_forgot_user_password",
+			helpers.ValidateJsonBody(&auth_request.GetOtpForgotUserPasswordRequest{}, auth_request.ValidateGetOtpForgotUserPasswordRequest),
+			UserAuthController.GetOtpForgotUserPassword,
+		)
+
+		userRouterPublic.POST("/forgot_user_password",
+			helpers.ValidateJsonBody(&auth_request.ForgotUserPasswordRequest{}, auth_request.ValidateForgotUserPasswordRequest),
+			UserAuthController.ForgotUserPassword,
+		)
+
 		// user_notification
 		userRouterPublic.GET("/notifications/ws/:user_id", UserNotificationController.SendNotification)
 	}
