@@ -60,7 +60,7 @@ func (s *sUserAuth) Login(
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
-			result.HttpStatusCode = http.StatusNotFound
+			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
 		return result, err
@@ -73,26 +73,33 @@ func (s *sUserAuth) Login(
 		return result, fmt.Errorf("this account has been blocked for violating our community standards")
 	}
 
-	// 3. Hash password
+	// 3. Check auth type
+	if userFound.AuthType != consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, err
+	}
+
+	// 4. Hash password
 	if !crypto.CheckPasswordHash(loginCommand.Password, *userFound.Password) {
 		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("invalid credentials")
 	}
 
-	// 4. Put claims into token
+	// 5. Put claims into token
 	accessClaims := jwt.MapClaims{
 		"id":  userFound.ID,
 		"exp": time.Now().Add(time.Hour * 720).Unix(),
 	}
 
-	// 5. Generate token
+	// 6. Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
 		return result, fmt.Errorf("cannot create access token: %v", err)
 	}
 
-	// 5. Map to command result
+	// 7. Map to command result
 	result.User = mapper.NewUserResultFromEntity(userFound)
 	result.AccessToken = &accessTokenGen
 	result.ResultCode = response.ErrCodeSuccess
