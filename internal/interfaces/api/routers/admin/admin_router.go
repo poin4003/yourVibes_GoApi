@@ -53,6 +53,13 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 			SuperAdminController.CreateAdmin,
 		)
 
+		// Change admin password
+		adminRouterPrivate.POST("/super_admin/forgot_admin_password",
+			middlewares.CheckSuperAdminRole(),
+			helpers.ValidateJsonBody(&super_admin_request.ForgotAdminPasswordRequest{}, super_admin_request.ValidateForgotAdminPasswordRequest),
+			SuperAdminController.ForgotAdminPassword,
+		)
+
 		adminRouterPrivate.GET("/:admin_id",
 			middlewares.CheckSuperAdminRole(),
 			SuperAdminController.GetAdminById,

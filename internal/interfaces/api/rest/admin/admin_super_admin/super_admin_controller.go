@@ -193,3 +193,43 @@ func (c *cSuperAdmin) GetManyAdmins(ctx *gin.Context) {
 
 	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, adminDtos, *result.PagingResponse)
 }
+
+// ForgotAdminPassword documentation
+// @Summary Admin forgot password
+// @Description When super admin change admin password
+// @Tags super_admin
+// @Accept json
+// @Produce json
+// @Param input body request.ForgotAdminPasswordRequest true "input"
+// @Security ApiKeyAuth
+// @Router /admins/super_admin/forgot_admin_password [post]
+func (c *cSuperAdmin) ForgotAdminPassword(ctx *gin.Context) {
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to forgot admin password request
+	forgotAdminPasswordRequest, ok := body.(*request.ForgotAdminPasswordRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle forgot  password
+	forgotAdminPasswordCommand, err := forgotAdminPasswordRequest.ToForgotAdminPasswordCommand()
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.AdminAuth().ForgotAdminPassword(ctx, forgotAdminPasswordCommand)
+	if err != nil {
+		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		return
+	}
+
+	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+}

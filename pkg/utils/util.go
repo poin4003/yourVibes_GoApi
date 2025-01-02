@@ -9,7 +9,3 @@ func GetUserKey(hashKey string) string {
 func GetOtpForgotPasswordUser(hashKey string) string {
 	return fmt.Sprint("cpu:%s:otp", hashKey)
 }
-
-func GetOtpForgotPasswordAdmin(hashKey string) string {
-	return fmt.Sprint("cpa:%s:otp", hashKey)
-}

@@ -268,6 +268,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/admins/super_admin/forgot_admin_password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When super admin change admin password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "Admin forgot password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ForgotAdminPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/admins/{admin_id}": {
             "get": {
                 "security": [
@@ -2815,6 +2847,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ForgotAdminPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                }
+            }
+        },
         "request.ForgotUserPasswordRequest": {
             "type": "object",
             "properties": {
@@ -3047,7 +3090,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

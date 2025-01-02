@@ -133,3 +133,45 @@ func (s *sAdminAuth) ChangeAdminPassword(
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }
+
+func (s *sAdminAuth) ForgotAdminPassword(
+	ctx context.Context,
+	command *admin_command.ForgotAdminPasswordCommand,
+) (result *admin_command.ForgotAdminPasswordCommandResult, err error) {
+	result = &admin_command.ForgotAdminPasswordCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	// 1. Check admin exist
+	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			result.ResultCode = response.ErrDataNotFound
+			result.HttpStatusCode = http.StatusBadRequest
+			return result, fmt.Errorf("admin %s doesn't exists", command.Email)
+		}
+		return result, err
+	}
+
+	// 2. Update new password
+	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	if err != nil {
+		return result, err
+	}
+
+	updateAdminData := &admin_entity.AdminUpdate{
+		Password: pointer.Ptr(hashedPassword),
+	}
+
+	if err = updateAdminData.ValidateAdminUpdate(); err != nil {
+		return result, err
+	}
+
+	_, err = s.adminRepo.UpdateOne(ctx, adminFound.ID, updateAdminData)
+	if err != nil {
+		return result, err
+	}
+
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}

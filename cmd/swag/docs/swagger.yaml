@@ -98,6 +98,13 @@ definitions:
     - content
     - post_id
     type: object
+  request.ForgotAdminPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+    type: object
   request.ForgotUserPasswordRequest:
     properties:
       email:
@@ -240,7 +247,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -427,6 +434,26 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create admin
+      tags:
+      - super_admin
+  /admins/super_admin/forgot_admin_password:
+    post:
+      consumes:
+      - application/json
+      description: When super admin change admin password
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.ForgotAdminPasswordRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Admin forgot password
       tags:
       - super_admin
   /advertise/:

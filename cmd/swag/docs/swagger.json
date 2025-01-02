@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibesapi.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -256,6 +256,38 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.UpdateAdminForSuperAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/admins/super_admin/forgot_admin_password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When super admin change admin password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "super_admin"
+                ],
+                "summary": "Admin forgot password",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ForgotAdminPasswordRequest"
                         }
                     }
                 ],
@@ -2805,6 +2837,17 @@
                     "type": "string"
                 },
                 "post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ForgotAdminPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
                     "type": "string"
                 }
             }

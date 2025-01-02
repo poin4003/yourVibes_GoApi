@@ -13,7 +13,7 @@ type GetOtpForgotUserPasswordRequest struct {
 func ValidateGetOtpForgotUserPasswordRequest(req interface{}) error {
 	dto, ok := req.(*GetOtpForgotUserPasswordRequest)
 	if !ok {
-		return fmt.Errorf("input is not ValidateGetOtpForgotUserPasswordRequest")
+		return fmt.Errorf("input is not GetOtpForgotUserPasswordRequest")
 	}
 
 	return validation.ValidateStruct(dto,

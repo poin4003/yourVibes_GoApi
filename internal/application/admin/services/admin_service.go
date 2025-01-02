@@ -11,6 +11,7 @@ type (
 	IAdminAuth interface {
 		Login(ctx context.Context, command *command.LoginCommand) (result *command.LoginCommandResult, err error)
 		ChangeAdminPassword(ctx context.Context, command *command.ChangeAdminPasswordCommand) (result *command.ChangeAdminPasswordCommandResult, err error)
+		ForgotAdminPassword(ctx context.Context, command *command.ForgotAdminPasswordCommand) (result *command.ForgotAdminPasswordCommandResult, err error)
 	}
 	IAdminInfo interface {
 		UpdateAdmin(ctx context.Context, command *command.UpdateAdminInfoCommand) (result *command.UpdateAdminInfoCommandResult, err error)
