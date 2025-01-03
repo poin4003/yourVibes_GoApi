@@ -27,7 +27,9 @@ func (r *rComment) GetById(
 ) (*entities.Comment, error) {
 	var commentModel models.Comment
 	if err := r.db.WithContext(ctx).
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		First(&commentModel, id).
 		Error; err != nil {
 		return nil, err
@@ -220,8 +222,33 @@ func (r *rComment) GetMany(
 
 	offset := (page - 1) * limit
 
-	if err := db.Offset(offset).Limit(limit).Order("comment_left ASC").Preload("User").Find(&comments).Error; err != nil {
+	if err := db.Offset(offset).Limit(limit).
+		Order("comment_left ASC").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Find(&comments).
+		Error; err != nil {
 		return nil, nil, err
+	}
+
+	var commentIds []uuid.UUID
+	for _, comment := range comments {
+		commentIds = append(commentIds, comment.ID)
+	}
+
+	var likeCommentIds []uuid.UUID
+	if err := r.db.Model(&models.LikeUserComment{}).
+		Select("comment_id").
+		Where("user_id = ? AND comment_id IN ?", query.AuthenticatedUserId, commentIds).
+		Find(&likeCommentIds).
+		Error; err != nil {
+		return nil, nil, err
+	}
+
+	likedMap := make(map[uuid.UUID]bool)
+	for _, id := range likeCommentIds {
+		likedMap[id] = true
 	}
 
 	pagingResponse := &response.PagingResponse{
@@ -231,8 +258,8 @@ func (r *rComment) GetMany(
 	}
 
 	var commentEntities []*entities.Comment
-	for _, commentModel := range comments {
-		commentEntities = append(commentEntities, mapper.FromCommentModel(commentModel))
+	for _, comment := range comments {
+		commentEntities = append(commentEntities, mapper.FromCommentModelWithLiked(comment, likedMap[comment.ID]))
 	}
 
 	return commentEntities, pagingResponse, nil

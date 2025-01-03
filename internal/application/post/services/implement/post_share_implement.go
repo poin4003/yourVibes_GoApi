@@ -36,6 +36,9 @@ func (s *sPostShare) SharePost(
 	command *post_command.SharePostCommand,
 ) (result *post_command.SharePostCommandResult, err error) {
 	result = &post_command.SharePostCommandResult{}
+	result.Post = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find post by post_id
 	postEntity, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
@@ -45,9 +48,6 @@ func (s *sPostShare) SharePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -62,26 +62,17 @@ func (s *sPostShare) SharePost(
 			&command.PostId,
 		)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
 		// 2.2. Create new post
 		newSharePost, err := s.postRepo.CreateOne(ctx, newPost)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
 		validatePost, err := post_validator.NewValidatedPost(newSharePost)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
@@ -111,25 +102,16 @@ func (s *sPostShare) SharePost(
 			&rootPost.ID,
 		)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 		// 3.2. Create new post
 		newSharePost, err := s.postRepo.CreateOne(ctx, newPost)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
 		validatePost, err := post_validator.NewValidatedPost(newSharePost)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 

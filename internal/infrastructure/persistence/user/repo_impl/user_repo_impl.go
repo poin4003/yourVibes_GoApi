@@ -210,43 +210,27 @@ func (r *rUser) GetMany(
 	}
 
 	if query.SortBy != "" {
+		sortColumn := ""
 		switch query.SortBy {
 		case "id":
-			if query.IsDescending {
-				db = db.Order("id DESC")
-			} else {
-				db = db.Order("id ASC")
-			}
+			sortColumn = "id"
 		case "name":
-			combinedName := "unaccent(family_name || ' ' name)"
-			if query.IsDescending {
-				db = db.Order(combinedName + "DESC")
-			} else {
-				db = db.Order(combinedName + "ASC")
-			}
+			sortColumn = "unaccent(family_name || ' ' name)"
 		case "email":
-			if query.IsDescending {
-				db = db.Order("email DESC")
-			} else {
-				db = db.Order("email ASC")
-			}
+			sortColumn = "email"
 		case "phone_number":
-			if query.IsDescending {
-				db = db.Order("phone_number DESC")
-			} else {
-				db = db.Order("phone_number ASC")
-			}
+			sortColumn = "phone_number"
 		case "birthday":
-			if query.IsDescending {
-				db = db.Order("birthday DESC")
-			} else {
-				db = db.Order("birthday ASC")
-			}
+			sortColumn = "birthday"
 		case "created_at":
+			sortColumn = "created_at"
+		}
+
+		if sortColumn != "" {
 			if query.IsDescending {
-				db = db.Order("created_at DESC")
+				db = db.Order(sortColumn + " DESC")
 			} else {
-				db = db.Order("created_at ASC")
+				db = db.Order(sortColumn + " ASC")
 			}
 		}
 	}
@@ -268,6 +252,7 @@ func (r *rUser) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.WithContext(ctx).
+		Select("id, family_name, name, avatar_url").
 		Offset(offset).
 		Limit(limit).
 		Find(&userModels).
@@ -281,12 +266,12 @@ func (r *rUser) GetMany(
 		Total: total,
 	}
 
-	users := make([]*entities.User, len(userModels))
-	for i, user := range userModels {
-		users[i] = mapper.FromUserModel(&user)
+	var userEntities []*entities.User
+	for _, user := range userModels {
+		userEntities = append(userEntities, mapper.FromUserModel(&user))
 	}
 
-	return users, pagingResponse, nil
+	return userEntities, pagingResponse, nil
 }
 
 func (r *rUser) GetTotalUserCount(ctx context.Context) (int, error) {

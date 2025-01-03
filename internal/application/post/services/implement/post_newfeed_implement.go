@@ -37,11 +37,11 @@ func (s *sPostNewFeed) DeleteNewFeed(
 	command *post_command.DeleteNewFeedCommand,
 ) (result *post_command.DeleteNewFeedCommandResult, err error) {
 	result = &post_command.DeleteNewFeedCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 
 	err = s.newFeedRepo.DeleteOne(ctx, command.UserId, command.PostId)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -55,13 +55,13 @@ func (s *sPostNewFeed) GetNewFeeds(
 	query *post_query.GetNewFeedQuery,
 ) (result *post_query.GetNewFeedResult, err error) {
 	result = &post_query.GetNewFeedResult{}
+	result.Posts = nil
+	result.PagingResponse = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 
 	postEntities, paging, err := s.newFeedRepo.GetMany(ctx, query)
 	if err != nil {
-		result.Posts = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 

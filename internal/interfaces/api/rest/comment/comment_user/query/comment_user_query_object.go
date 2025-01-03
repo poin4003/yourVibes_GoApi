@@ -1,15 +1,30 @@
 package query
 
 import (
+	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
 
 type CommentQueryObject struct {
-	PostId   string `form:"post_id" binding:"required"`
+	PostId   string `form:"post_id"`
 	ParentId string `form:"parent_id,omitempty"`
 	Limit    int    `form:"limit,omitempty"`
 	Page     int    `form:"page,omitempty"`
+}
+
+func ValidateCommentQueryObject(input interface{}) error {
+	query, ok := input.(*CommentQueryObject)
+	if !ok {
+		return fmt.Errorf("input is not CommentQueryObject")
+	}
+
+	return validation.ValidateStruct(query,
+		validation.Field(&query.PostId, validation.Required),
+		validation.Field(&query.Limit, validation.Min(0)),
+		validation.Field(&query.Page, validation.Min(0)),
+	)
 }
 
 func (req *CommentQueryObject) ToGetManyCommentQuery(

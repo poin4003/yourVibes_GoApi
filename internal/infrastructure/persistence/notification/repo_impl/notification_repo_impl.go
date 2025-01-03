@@ -25,7 +25,9 @@ func (r *rNotification) GetById(
 ) (*entities.Notification, error) {
 	var notificationModel models.Notification
 	if err := r.db.WithContext(ctx).
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		First(&notificationModel, id).
 		Error; err != nil {
 		return nil, err
@@ -187,30 +189,23 @@ func (r *rNotification) GetMany(
 	}
 
 	if query.SortBy != "" {
+		sortColumn := ""
 		switch query.SortBy {
 		case "id":
-			if query.IsDescending {
-				db = db.Order("id DESC")
-			} else {
-				db = db.Order("id ASC")
-			}
+			sortColumn = "id"
 		case "from":
-			if query.IsDescending {
-				db = db.Order("from DESC")
-			} else {
-				db = db.Order("from ASC")
-			}
+			sortColumn = "from"
 		case "notification_type":
-			if query.IsDescending {
-				db = db.Order("notification_type DESC")
-			} else {
-				db = db.Order("notification_type ASC")
-			}
+			sortColumn = "notification_type"
 		case "created_at":
+			sortColumn = "created_at"
+		}
+
+		if sortColumn != "" {
 			if query.IsDescending {
-				db = db.Order("created_at DESC")
+				db = db.Order(sortColumn + " DESC")
 			} else {
-				db = db.Order("created_at ASC")
+				db = db.Order(sortColumn + " ASC")
 			}
 		}
 	}
@@ -233,7 +228,9 @@ func (r *rNotification) GetMany(
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).
 		Where("user_id=?", query.UserId).
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		Find(&notificationModels).
 		Error; err != nil {
 		return nil, nil, err
@@ -245,10 +242,10 @@ func (r *rNotification) GetMany(
 		Total: total,
 	}
 
-	notifications := make([]*entities.Notification, len(notificationModels))
-	for i, notification := range notificationModels {
-		notifications[i] = mapper.FromNotificationModel(notification)
+	var notificationEntities []*entities.Notification
+	for _, notification := range notificationModels {
+		notificationEntities = append(notificationEntities, mapper.FromNotificationModel(notification))
 	}
 
-	return notifications, &pagingResponse, nil
+	return notificationEntities, &pagingResponse, nil
 }

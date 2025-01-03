@@ -64,6 +64,7 @@ func (r *rLikeUserPost) GetLikeUserPost(
 	db := r.db.WithContext(ctx).Model(&models.User{})
 
 	err := db.Joins("JOIN like_user_posts ON like_user_posts.user_id = users.id").
+		Select("id, family_name, name, avatar_url").
 		Where("like_user_posts.post_id = ?", query.PostId).
 		Count(&total).
 		Offset(offset).

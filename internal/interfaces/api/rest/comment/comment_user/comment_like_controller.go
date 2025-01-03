@@ -70,7 +70,21 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /comments/like_comment/{comment_id} [get]
 func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
-	// 1. Get comment id from param
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
+
+	// 2. Convert to CommentLikeQueryObject
+	commentLikeQueryObject, ok := queryInput.(*query.CommentLikeQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Get comment id from param
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
@@ -78,15 +92,8 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 		return
 	}
 
-	// 2. Get query
-	var query query.CommentLikeQueryObject
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, fmt.Sprintf("invalid query"))
-		return
-	}
-
-	// 3. Call service to handle get user like comment
-	getUserLikeCommentQuery, err := query.ToGetCommentLikeQuery(commentId)
+	// 4. Call service to handle get user like comment
+	getUserLikeCommentQuery, err := commentLikeQueryObject.ToGetCommentLikeQuery(commentId)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -98,6 +105,7 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 		return
 	}
 
+	// 5. Map to dto
 	var userDtos []*response.UserDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserDto(userResult))

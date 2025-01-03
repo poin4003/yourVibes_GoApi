@@ -39,44 +39,34 @@ func (s *sCommentLike) LikeComment(
 	command *comment_command.LikeCommentCommand,
 ) (result *comment_command.LikeCommentResult, err error) {
 	result = &comment_command.LikeCommentResult{}
+	result.Comment = nil
+	result.ResultCode = response.ErrDataNotFound
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get comment by id
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.Comment = nil
 			result.ResultCode = response.ErrDataNotFound
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("Error when find comment %w", err.Error())
 	}
 
 	// 2. Check status of like
 	likeUserCommentEntity, err := comment_entity.NewLikeUserCommentEntity(command.UserId, command.CommentId)
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	checkLikeComment, err := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to check like: %w", err)
 	}
 
 	if !checkLikeComment {
 		// 2.1. Create like if not exits
 		if err := s.likeUserCommentRepo.CreateLikeUserComment(ctx, likeUserCommentEntity); err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create like: %w", err)
 		}
 
@@ -87,9 +77,6 @@ func (s *sCommentLike) LikeComment(
 
 		err = updateCommentData.ValidateCommentUpdate()
 		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to update comment: %w", err)
 		}
 
@@ -98,7 +85,7 @@ func (s *sCommentLike) LikeComment(
 		// 2. Check like status of authenticated user
 		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
+		result.Comment = mapper.NewCommentWithLikedResultFromEntityAndIsLiked(commentFound, isLiked)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
@@ -106,14 +93,10 @@ func (s *sCommentLike) LikeComment(
 		// 3.1. Delete like if it exits
 		if err := s.likeUserCommentRepo.DeleteLikeUserComment(ctx, likeUserCommentEntity); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.Comment = nil
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, fmt.Errorf("failed to find delete like: %w", err)
 			}
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to delete like: %w", err)
 		}
 
@@ -124,9 +107,6 @@ func (s *sCommentLike) LikeComment(
 
 		err = updateCommentData.ValidateCommentUpdate()
 		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to update comment: %w", err)
 		}
 
@@ -135,7 +115,7 @@ func (s *sCommentLike) LikeComment(
 		// 3.3. Check like status of authenticated user
 		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
+		result.Comment = mapper.NewCommentWithLikedResultFromEntityAndIsLiked(commentFound, isLiked)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil

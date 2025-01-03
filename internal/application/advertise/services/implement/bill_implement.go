@@ -40,9 +40,9 @@ func (s *sBill) ConfirmPayment(
 	command *bill_command.ConfirmPaymentCommand,
 ) (result *bill_command.ConfirmPaymentResult, err error) {
 	result = &bill_command.ConfirmPaymentResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	if command == nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("command confirm payment is nil")
 	}
 
@@ -54,8 +54,6 @@ func (s *sBill) ConfirmPayment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -66,8 +64,6 @@ func (s *sBill) ConfirmPayment(
 
 	err = updateBillData.ValidateUpdateBill()
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -78,8 +74,6 @@ func (s *sBill) ConfirmPayment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -92,8 +86,6 @@ func (s *sBill) ConfirmPayment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -104,8 +96,6 @@ func (s *sBill) ConfirmPayment(
 
 	err = updatePostData.ValidatePostUpdate()
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -116,8 +106,6 @@ func (s *sBill) ConfirmPayment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 

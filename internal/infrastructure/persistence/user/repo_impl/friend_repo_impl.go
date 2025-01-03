@@ -73,6 +73,7 @@ func (r *rFriend) GetFriends(
 
 	err := db.Joins("JOIN friends ON friends.user_id = users.id").
 		Where("friends.friend_id = ?", query.UserId).
+		Select("id, family_name, name, avatar_url").
 		Count(&total).
 		Offset(offset).
 		Limit(limit).

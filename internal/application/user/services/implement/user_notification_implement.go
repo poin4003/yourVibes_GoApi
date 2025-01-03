@@ -33,12 +33,12 @@ func (s *sUserNotification) GetNotificationByUserId(
 	query *user_query.GetManyNotificationQuery,
 ) (result *user_query.GetManyNotificationQueryResult, err error) {
 	result = &user_query.GetManyNotificationQueryResult{}
+	result.Notifications = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get notification
 	notificationEntities, paging, err := s.notificationRepo.GetMany(ctx, query)
 	if err != nil {
-		result.Notifications = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -60,6 +60,8 @@ func (s *sUserNotification) UpdateOneStatusNotification(
 	command *user_command.UpdateOneStatusNotificationCommand,
 ) (result *user_command.UpdateOneStatusNotificationCommandResult, err error) {
 	result = &user_command.UpdateOneStatusNotificationCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	notificationUpdateEntity := &user_entity.NotificationUpdate{
 		Status: pointer.Ptr(false),
 	}
@@ -69,8 +71,6 @@ func (s *sUserNotification) UpdateOneStatusNotification(
 	_, err = s.notificationRepo.UpdateOne(ctx, command.NotificationId, newNotificationUpdateEntity)
 
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -84,6 +84,8 @@ func (s *sUserNotification) UpdateManyStatusNotification(
 	command *user_command.UpdateManyStatusNotificationCommand,
 ) (result *user_command.UpdateManyStatusNotificationCommandResult, err error) {
 	result = &user_command.UpdateManyStatusNotificationCommandResult{}
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	update_conditions := map[string]interface{}{
 		"status":  true,
 		"user_id": command.UserId,
@@ -94,8 +96,6 @@ func (s *sUserNotification) UpdateManyStatusNotification(
 
 	err = s.notificationRepo.UpdateMany(ctx, update_conditions, update_data)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 

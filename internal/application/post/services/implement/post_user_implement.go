@@ -412,6 +412,9 @@ func (s *sPostUser) GetPost(
 	query *post_query.GetOnePostQuery,
 ) (result *post_query.GetOnePostQueryResult, err error) {
 	result = &post_query.GetOnePostQueryResult{}
+	result.Post = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get post
 	postEntity, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
 	if err != nil {
@@ -421,9 +424,6 @@ func (s *sPostUser) GetPost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -438,9 +438,6 @@ func (s *sPostUser) GetPost(
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
-				result.Post = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, err
 			}
 			if !isFriend {
@@ -474,13 +471,13 @@ func (s *sPostUser) GetManyPosts(
 	query *post_query.GetManyPostQuery,
 ) (result *post_query.GetManyPostQueryResult, err error) {
 	result = &post_query.GetManyPostQueryResult{}
+	result.Posts = nil
+	result.PagingResponse = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 
 	postEntities, paging, err := s.postRepo.GetMany(ctx, query)
 	if err != nil {
-		result.Posts = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 

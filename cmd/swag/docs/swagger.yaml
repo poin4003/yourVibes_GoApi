@@ -86,7 +86,7 @@ definitions:
     - redirect_url
     - start_date
     type: object
-  request.CreateCommentInput:
+  request.CreateCommentRequest:
     properties:
       content:
         type: string
@@ -94,9 +94,6 @@ definitions:
         type: string
       post_id:
         type: string
-    required:
-    - content
-    - post_id
     type: object
   request.ForgotAdminPasswordRequest:
     properties:
@@ -197,7 +194,7 @@ definitions:
       phone_number:
         type: string
     type: object
-  request.UpdateCommentInput:
+  request.UpdateCommentRequest:
     properties:
       content:
         type: string
@@ -620,7 +617,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/request.CreateCommentInput'
+          $ref: '#/definitions/request.CreateCommentRequest'
       produces:
       - application/json
       responses: {}
@@ -663,7 +660,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/request.UpdateCommentInput'
+          $ref: '#/definitions/request.UpdateCommentRequest'
       produces:
       - application/json
       responses: {}

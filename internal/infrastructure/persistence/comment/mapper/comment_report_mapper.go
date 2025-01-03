@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToCommentReportModel(commentReport *comment_entity.CommentReport) *models.CommentReport {
+func ToCommentReportModel(commentReport *commentEntity.CommentReport) *models.CommentReport {
 	cr := &models.CommentReport{
 		Reason:    commentReport.Reason,
 		Status:    commentReport.Status,
@@ -18,8 +18,8 @@ func ToCommentReportModel(commentReport *comment_entity.CommentReport) *models.C
 	return cr
 }
 
-func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentReport {
-	var user = &comment_entity.UserForReport{
+func FromCommentReportModel(cr *models.CommentReport) *commentEntity.CommentReport {
+	var user = &commentEntity.UserForReport{
 		ID:           cr.User.ID,
 		FamilyName:   cr.User.FamilyName,
 		Name:         cr.User.Name,
@@ -40,11 +40,11 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		UpdatedAt:    cr.User.UpdatedAt,
 	}
 
-	var parentPost *comment_entity.PostForReport
+	var parentPost *commentEntity.PostForReport
 	if cr.ReportedComment.Post.ParentPost != nil {
-		var medias []*comment_entity.Media
+		var medias []*commentEntity.Media
 		for _, media := range cr.ReportedComment.Post.ParentPost.Media {
-			medias = append(medias, &comment_entity.Media{
+			medias = append(medias, &commentEntity.Media{
 				ID:        media.ID,
 				MediaUrl:  media.MediaUrl,
 				PostId:    media.PostId,
@@ -53,7 +53,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 				UpdatedAt: media.UpdatedAt,
 			})
 		}
-		parentPost = &comment_entity.PostForReport{
+		parentPost = &commentEntity.PostForReport{
 			ID:              cr.ReportedComment.Post.ParentPost.ID,
 			UserId:          cr.ReportedComment.Post.ParentPost.UserId,
 			User:            ToUserForReportEntity(&cr.ReportedComment.Post.ParentPost.User),
@@ -71,9 +71,9 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		}
 	}
 
-	var medias []*comment_entity.Media
+	var medias []*commentEntity.Media
 	for _, media := range cr.ReportedComment.Post.Media {
-		medias = append(medias, &comment_entity.Media{
+		medias = append(medias, &commentEntity.Media{
 			ID:        media.ID,
 			MediaUrl:  media.MediaUrl,
 			PostId:    media.PostId,
@@ -83,7 +83,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		})
 	}
 
-	post := &comment_entity.PostForReport{
+	post := &commentEntity.PostForReport{
 		ID:              cr.ReportedComment.Post.ID,
 		UserId:          cr.ReportedComment.Post.UserId,
 		User:            ToUserForReportEntity(&cr.ReportedComment.Post.User),
@@ -101,7 +101,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		Media:           medias,
 	}
 
-	reportedComment := &comment_entity.CommentForReport{
+	reportedComment := &commentEntity.CommentForReport{
 		ID:              cr.ReportedComment.ID,
 		PostId:          cr.ReportedComment.PostId,
 		UserId:          cr.ReportedComment.UserId,
@@ -115,9 +115,9 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		Status:          cr.ReportedComment.Status,
 	}
 
-	var admin *comment_entity.Admin
+	var admin *commentEntity.Admin
 	if cr.AdminId != nil {
-		admin = &comment_entity.Admin{
+		admin = &commentEntity.Admin{
 			ID:          cr.Admin.ID,
 			FamilyName:  cr.Admin.FamilyName,
 			Name:        cr.Admin.Name,
@@ -132,7 +132,7 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 		}
 	}
 
-	var commentReport = &comment_entity.CommentReport{
+	var commentReport = &commentEntity.CommentReport{
 		AdminId:         cr.AdminId,
 		User:            user,
 		ReportedComment: reportedComment,
@@ -151,12 +151,12 @@ func FromCommentReportModel(cr *models.CommentReport) *comment_entity.CommentRep
 
 func ToUserForReportEntity(
 	userModel *models.User,
-) *comment_entity.UserForReport {
+) *commentEntity.UserForReport {
 	if userModel == nil {
 		return nil
 	}
 
-	var userForReport = &comment_entity.UserForReport{
+	var userForReport = &commentEntity.UserForReport{
 		FamilyName:   userModel.FamilyName,
 		Name:         userModel.Name,
 		Email:        userModel.Email,

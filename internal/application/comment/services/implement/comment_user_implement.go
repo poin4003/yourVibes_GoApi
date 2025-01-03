@@ -405,48 +405,31 @@ func (s *sCommentUser) GetManyComments(
 	query *comment_query.GetManyCommentQuery,
 ) (result *comment_query.GetManyCommentsResult, err error) {
 	result = &comment_query.GetManyCommentsResult{}
+	result.Comments = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	result.PagingResponse = nil
 
 	// Get next layer of comment by root comment
 	if query.ParentId != uuid.Nil {
 		_, err = s.commentRepo.GetById(ctx, query.ParentId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.Comments = nil
 				result.ResultCode = response.ErrDataNotFound
 				result.HttpStatusCode = http.StatusBadRequest
-				result.PagingResponse = nil
 				return result, err
 			}
-			result.Comments = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
-			result.PagingResponse = nil
 			return result, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		queryResult, paging, err := s.commentRepo.GetMany(ctx, query)
 		if err != nil {
-			result.Comments = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
-			result.PagingResponse = nil
 			return result, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		var commentResults []*common.CommentResultWithLiked
 		for _, commentEntity := range queryResult {
-			likeUserCommentEntity, err := comment_entity.NewLikeUserCommentEntity(query.AuthenticatedUserId, commentEntity.ID)
-			if err != nil {
-				result.Comments = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
-				result.PagingResponse = nil
-				return result, fmt.Errorf("Error when find like user comment %w", err.Error())
-			}
-
-			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
-
-			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(commentEntity, isLiked))
+			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(commentEntity))
 		}
 
 		result.Comments = commentResults
@@ -458,26 +441,12 @@ func (s *sCommentUser) GetManyComments(
 		// Get first layer if it don't have parent id
 		queryResult, paging, err := s.commentRepo.GetMany(ctx, query)
 		if err != nil {
-			result.Comments = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
-			result.PagingResponse = nil
 			return result, fmt.Errorf("Error when find parent comment %w", err.Error())
 		}
 
 		var commentResults []*common.CommentResultWithLiked
 		for _, commentEntity := range queryResult {
-			likeUserCommentEntity, err := comment_entity.NewLikeUserCommentEntity(query.AuthenticatedUserId, commentEntity.ID)
-			if err != nil {
-				result.Comments = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
-				result.PagingResponse = nil
-				return result, fmt.Errorf("Error when find like user comment %w", err.Error())
-			}
-
-			isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
-			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(commentEntity, isLiked))
+			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(commentEntity))
 		}
 
 		result.Comments = commentResults

@@ -124,15 +124,22 @@ func (r *rBill) CheckExists(
 }
 
 func (r *rBill) GetMonthlyRevenue(ctx context.Context, date time.Time) ([]string, []int64, error) {
-	months := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+	months := make([]string, 13)
+	revenueByMonth := make([]int64, 13)
 
-	revenueByMonth := make([]int64, 12)
+	startDate := date.AddDate(0, -12, 0)
+
+	currentDate := startDate
+	for i := 0; i < 13; i++ {
+		months[i] = currentDate.Format("01/2006")
+		currentDate = currentDate.AddDate(0, 1, 0)
+	}
 
 	var revenues []entities.Revenue
 	if err := r.db.WithContext(ctx).
 		Model(&models.Bill{}).
-		Select("EXTRACT(MONTH FROM created_at) AS month, SUM(price) AS total").
-		Where("EXTRACT(YEAR FROM created_at) = ?", date.Year()).
+		Select("DATE_TRUNC('month', created_at) AS month, SUM(price) AS total").
+		Where("created_at >= ?", startDate).
 		Where("status = true").
 		Group("month").
 		Order("month").
@@ -141,11 +148,17 @@ func (r *rBill) GetMonthlyRevenue(ctx context.Context, date time.Time) ([]string
 		return nil, nil, err
 	}
 
+	monthIndexMap := make(map[string]int)
+	for i, month := range months {
+		monthIndexMap[month] = i
+	}
+
 	for _, revenue := range revenues {
-		monthIndex := int(revenue.Month) - 1
-		if monthIndex >= 0 && monthIndex < 12 {
-			revenueByMonth[monthIndex] = revenue.Total
+		monthStr := revenue.Month.Format("01/2006")
+		if idx, exists := monthIndexMap[monthStr]; exists {
+			revenueByMonth[idx] = revenue.Total
 		}
+
 	}
 
 	return months, revenueByMonth, nil

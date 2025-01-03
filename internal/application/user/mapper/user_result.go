@@ -5,18 +5,18 @@ import (
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
 )
 
 func NewUserShortVerValidateEntity(
-	user *user_validator.ValidatedUser,
+	user *userValidator.ValidatedUser,
 ) *common.UserShortVerResult {
 	return NewUserShortVerEntity(&user.User)
 }
 
 func NewUserShortVerEntity(
-	user *user_entity.User,
+	user *userEntity.User,
 ) *common.UserShortVerResult {
 	if user == nil {
 		return nil
@@ -31,7 +31,7 @@ func NewUserShortVerEntity(
 }
 
 func NewUserResultWithoutSettingEntity(
-	user *user_entity.User,
+	user *userEntity.User,
 	friendStatus consts.FriendStatus,
 ) *common.UserWithoutSettingResult {
 	if user == nil || friendStatus == "" {
@@ -59,7 +59,7 @@ func NewUserResultWithoutSettingEntity(
 }
 
 func NewUserResultWithoutPrivateInfo(
-	user *user_entity.User,
+	user *userEntity.User,
 	friendStatus consts.FriendStatus,
 ) *common.UserWithoutSettingResult {
 	if user == nil || friendStatus == "" {
@@ -87,13 +87,13 @@ func NewUserResultWithoutPrivateInfo(
 }
 
 func NewUserResultFromValidateEntity(
-	user *user_validator.ValidatedUser,
+	user *userValidator.ValidatedUser,
 ) *common.UserWithSettingResult {
 	return NewUserResultFromEntity(&user.User)
 }
 
 func NewUserResultFromEntity(
-	user *user_entity.User,
+	user *userEntity.User,
 ) *common.UserWithSettingResult {
 	if user == nil {
 		return nil
@@ -120,7 +120,7 @@ func NewUserResultFromEntity(
 }
 
 func NewSettingResultFromEntity(
-	setting *user_entity.Setting,
+	setting *userEntity.Setting,
 ) *common.SettingResult {
 	if setting == nil {
 		return nil

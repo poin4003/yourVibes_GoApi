@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
+	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToAdminModel(admin *admin_entity.Admin) *models.Admin {
+func ToAdminModel(admin *adminEntity.Admin) *models.Admin {
 	ad := &models.Admin{
 		FamilyName:  admin.FamilyName,
 		Name:        admin.Name,
@@ -24,8 +24,8 @@ func ToAdminModel(admin *admin_entity.Admin) *models.Admin {
 	return ad
 }
 
-func FromAdminModel(ad *models.Admin) *admin_entity.Admin {
-	admin := &admin_entity.Admin{
+func FromAdminModel(ad *models.Admin) *adminEntity.Admin {
+	admin := &adminEntity.Admin{
 		FamilyName:  ad.FamilyName,
 		Name:        ad.Name,
 		Email:       ad.Email,

@@ -26,15 +26,21 @@ func NewCommentUserController() *cCommentUser {
 // @Tags comment_user
 // @Accept json
 // @Produce json
-// @Param input body request.CreateCommentInput true "input"
+// @Param input body request.CreateCommentRequest true "input"
 // @Security ApiKeyAuth
 // @Router /comments/ [post]
 func (p *cCommentUser) CreateComment(ctx *gin.Context) {
-	var commentInput request.CreateCommentInput
-
 	// 1. Get body
-	if err := ctx.ShouldBindJSON(&commentInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to create comment request
+	createCommentRequest, ok := body.(*request.CreateCommentRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -46,7 +52,7 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	}
 
 	// 3. Call service to handle create comment
-	createCommentCommand, err := commentInput.ToCreateCommentCommand(userIdClaims)
+	createCommentCommand, err := createCommentRequest.ToCreateCommentCommand(userIdClaims)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -64,7 +70,7 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, commentDto)
 }
 
-// GetManyComment documentation
+// GetComment documentation
 // @Summary Get many comment
 // @Description Retrieve multiple comment filtered by various criteria.
 // @Tags comment_user
@@ -78,9 +84,16 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 // @Router /comments/ [get]
 func (p *cCommentUser) GetComment(ctx *gin.Context) {
 	// 1. Get query
-	var query query.CommentQueryObject
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		return
+	}
+
+	// 2. Convert to CommentQueryObject
+	commentQueryObject, ok := queryInput.(*query.CommentQueryObject)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -92,7 +105,7 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 	}
 
 	// 3. Call service to handle get many
-	getManyCommentQuery, err := query.ToGetManyCommentQuery(userIdClaims)
+	getManyCommentQuery, err := commentQueryObject.ToGetManyCommentQuery(userIdClaims)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
@@ -149,14 +162,21 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param comment_id path string true "commentId"
-// @Param input body request.UpdateCommentInput true "input"
+// @Param input body request.UpdateCommentRequest true "input"
 // @Security ApiKeyAuth
 // @Router /comments/{comment_id} [patch]
 func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	// 1. Get body
-	var updateInput request.UpdateCommentInput
-	if err := ctx.ShouldBindJSON(&updateInput); err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to update comment request
+	updateCommentRequest, ok := body.(*request.UpdateCommentRequest)
+	if !ok {
+		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -169,7 +189,7 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	}
 
 	// 3. Call service to handle update comment
-	updateCommentCommand, err := updateInput.ToUpdateCommentCommand(commentId)
+	updateCommentCommand, err := updateCommentRequest.ToUpdateCommentCommand(commentId)
 	if err != nil {
 		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return

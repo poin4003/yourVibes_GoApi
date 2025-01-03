@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToFriendModel(friend *user_entity.Friend) *models.Friend {
+func ToFriendModel(friend *userEntity.Friend) *models.Friend {
 	f := &models.Friend{
 		UserId:   friend.UserId,
 		FriendId: friend.FriendId,
@@ -14,8 +14,8 @@ func ToFriendModel(friend *user_entity.Friend) *models.Friend {
 	return f
 }
 
-func FromFriendModel(f *models.Friend) *user_entity.Friend {
-	var friend = &user_entity.Friend{
+func FromFriendModel(f *models.Friend) *userEntity.Friend {
+	var friend = &userEntity.Friend{
 		UserId:   f.UserId,
 		FriendId: f.FriendId,
 	}

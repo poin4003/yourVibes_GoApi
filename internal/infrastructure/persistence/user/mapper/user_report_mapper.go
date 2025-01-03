@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToUserReportModel(userReport *user_entity.UserReport) *models.UserReport {
+func ToUserReportModel(userReport *userEntity.UserReport) *models.UserReport {
 	ur := &models.UserReport{
 		Reason:    userReport.Reason,
 		Status:    userReport.Status,
@@ -18,8 +18,8 @@ func ToUserReportModel(userReport *user_entity.UserReport) *models.UserReport {
 	return ur
 }
 
-func FromUserReportModel(ur *models.UserReport) *user_entity.UserReport {
-	var user = &user_entity.UserForReport{
+func FromUserReportModel(ur *models.UserReport) *userEntity.UserReport {
+	var user = &userEntity.UserForReport{
 		ID:           ur.User.ID,
 		FamilyName:   ur.User.FamilyName,
 		Name:         ur.User.Name,
@@ -40,7 +40,7 @@ func FromUserReportModel(ur *models.UserReport) *user_entity.UserReport {
 		UpdatedAt:    ur.User.UpdatedAt,
 	}
 
-	var reportedUser = &user_entity.UserForReport{
+	var reportedUser = &userEntity.UserForReport{
 		ID:           ur.ReportedUser.ID,
 		FamilyName:   ur.ReportedUser.FamilyName,
 		Name:         ur.ReportedUser.Name,
@@ -61,9 +61,9 @@ func FromUserReportModel(ur *models.UserReport) *user_entity.UserReport {
 		UpdatedAt:    ur.ReportedUser.UpdatedAt,
 	}
 
-	var admin *user_entity.Admin
+	var admin *userEntity.Admin
 	if ur.AdminId != nil {
-		admin = &user_entity.Admin{
+		admin = &userEntity.Admin{
 			ID:          ur.Admin.ID,
 			FamilyName:  ur.Admin.FamilyName,
 			Name:        ur.Admin.Name,
@@ -78,7 +78,7 @@ func FromUserReportModel(ur *models.UserReport) *user_entity.UserReport {
 		}
 	}
 
-	var userReport = &user_entity.UserReport{
+	var userReport = &userEntity.UserReport{
 		AdminId:      ur.AdminId,
 		User:         user,
 		ReportedUser: reportedUser,

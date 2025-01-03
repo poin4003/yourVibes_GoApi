@@ -29,9 +29,13 @@ func (r *rPost) GetById(
 ) (*entities.Post, error) {
 	var postModel models.Post
 	if err := r.db.WithContext(ctx).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		Preload("Media").
-		Preload("User").
-		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
 		First(&postModel, id).
 		Error; err != nil {
@@ -191,9 +195,13 @@ func (r *rPost) GetOne(
 	if err := r.db.WithContext(ctx).
 		Model(&models.Post{}).
 		Where("posts.id = ? AND status = true", id).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		Preload("Media").
-		Preload("User").
-		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
 		First(&postModel).
 		Error; err != nil {
@@ -254,36 +262,25 @@ func (r *rPost) GetMany(
 	}
 
 	if query.SortBy != "" {
+		sortColumn := ""
 		switch query.SortBy {
 		case "id":
-			if query.IsDescending {
-				db = db.Order("id DESC")
-			} else {
-				db = db.Order("id ASC")
-			}
+			sortColumn = "id"
 		case "title":
-			if query.IsDescending {
-				db = db.Order("title DESC")
-			} else {
-				db = db.Order("title ASC")
-			}
+			sortColumn = "title"
 		case "content":
-			if query.IsDescending {
-				db = db.Order("content DESC")
-			} else {
-				db = db.Order("content ASC")
-			}
+			sortColumn = "content"
 		case "created_at":
-			if query.IsDescending {
-				db = db.Order("created_at DESC")
-			} else {
-				db = db.Order("created_at ASC")
-			}
+			sortColumn = "created_at"
 		case "location":
+			sortColumn = "location"
+		}
+
+		if sortColumn != "" {
 			if query.IsDescending {
-				db = db.Order("location DESC")
+				db = db.Order(sortColumn + " DESC")
 			} else {
-				db = db.Order("location ASC")
+				db = db.Order(sortColumn + " ASC")
 			}
 		}
 	}
@@ -305,19 +302,28 @@ func (r *rPost) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.Offset(offset).Limit(limit).
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		Preload("Media").
-		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
 		Find(&postModels).
 		Error; err != nil {
 		return nil, nil, err
 	}
 
+	var postIds []uuid.UUID
+	for _, post := range postModels {
+		postIds = append(postIds, post.ID)
+	}
+
 	var likedPostIds []uuid.UUID
 	if err := r.db.Model(&models.LikeUserPost{}).
 		Select("post_id").
-		Where("user_id = ?", authenticatedUserId).
+		Where("user_id = ? AND post_id IN ?", authenticatedUserId, postIds).
 		Find(&likedPostIds).
 		Error; err != nil {
 		return nil, nil, err

@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToSettingModel(setting *user_entity.Setting) *models.Setting {
+func ToSettingModel(setting *userEntity.Setting) *models.Setting {
 	s := &models.Setting{
 		UserId:    setting.UserId,
 		Language:  setting.Language,
@@ -18,8 +18,8 @@ func ToSettingModel(setting *user_entity.Setting) *models.Setting {
 	return s
 }
 
-func FromSettingModel(s *models.Setting) *user_entity.Setting {
-	var setting = &user_entity.Setting{
+func FromSettingModel(s *models.Setting) *userEntity.Setting {
+	var setting = &userEntity.Setting{
 		UserId:    s.UserId,
 		Language:  s.Language,
 		Status:    s.Status,

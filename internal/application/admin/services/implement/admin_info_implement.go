@@ -30,6 +30,9 @@ func (s *sAdminInfo) UpdateAdmin(
 	command *admin_command.UpdateAdminInfoCommand,
 ) (result *admin_command.UpdateAdminInfoCommandResult, err error) {
 	result = &admin_command.UpdateAdminInfoCommandResult{}
+	result.Admin = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Update admin info
 	updateAdminEntity := &admin_entity.AdminUpdate{
 		FamilyName:  command.FamilyName,
@@ -40,9 +43,6 @@ func (s *sAdminInfo) UpdateAdmin(
 	}
 
 	if err = updateAdminEntity.ValidateAdminUpdate(); err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
 		return result, err
 	}
 
@@ -54,9 +54,6 @@ func (s *sAdminInfo) UpdateAdmin(
 			result.Admin = nil
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
 		return result, err
 	}
 

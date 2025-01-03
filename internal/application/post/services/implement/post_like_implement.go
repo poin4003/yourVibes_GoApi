@@ -45,6 +45,9 @@ func (s *sPostLike) LikePost(
 	command *post_command.LikePostCommand,
 ) (result *post_command.LikePostCommandResult, err error) {
 	result = &post_command.LikePostCommandResult{}
+	result.Post = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find exist post
 	postFound, err := s.postRepo.GetOne(ctx, command.PostId, command.UserId)
 	if err != nil {
@@ -54,9 +57,6 @@ func (s *sPostLike) LikePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("Error when find post %w", err.Error())
 	}
 
@@ -69,26 +69,17 @@ func (s *sPostLike) LikePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("Error when find user %w", err.Error())
 	}
 
 	// 3. Check like status (like or dislike)
 	likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	checkLiked, err := s.postLikeRepo.CheckUserLikePost(ctx, likeUserPostEntity)
 	if err != nil {
-		result.Post = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to check like: %w", err)
 	}
 
@@ -96,9 +87,6 @@ func (s *sPostLike) LikePost(
 	if !checkLiked {
 		// 4.1.1 Create new like if it not exist
 		if err := s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostEntity); err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create like: %w", err)
 		}
 
@@ -109,9 +97,6 @@ func (s *sPostLike) LikePost(
 
 		err = updateData.ValidatePostUpdate()
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
@@ -134,9 +119,6 @@ func (s *sPostLike) LikePost(
 
 		_, err = s.notificationRepo.CreateOne(ctx, notificationEntity)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create notification: %w", err)
 		}
 
@@ -151,9 +133,6 @@ func (s *sPostLike) LikePost(
 
 		err = global.SocketHub.SendNotification(postFound.UserId.String(), notificationSocketResponse)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to send notification: %w", err)
 		}
 
@@ -173,9 +152,6 @@ func (s *sPostLike) LikePost(
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, fmt.Errorf("failed to find delete like: %w", err)
 			}
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to delete like: %w", err)
 		}
 
@@ -186,9 +162,6 @@ func (s *sPostLike) LikePost(
 
 		err = updateData.ValidatePostUpdate()
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
@@ -197,9 +170,6 @@ func (s *sPostLike) LikePost(
 		// 4.2.3. Check like to response
 		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
 		if err != nil {
-			result.Post = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
 
@@ -219,13 +189,13 @@ func (s *sPostLike) GetUsersOnLikes(
 	query *post_query.GetPostLikeQuery,
 ) (result *post_query.GetPostLikeQueryResult, err error) {
 	result = &post_query.GetPostLikeQueryResult{}
+	result.Users = nil
+	result.PagingResponse = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 
 	likeUserPostEntities, paging, err := s.postLikeRepo.GetLikeUserPost(ctx, query)
 	if err != nil {
-		result.Users = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 

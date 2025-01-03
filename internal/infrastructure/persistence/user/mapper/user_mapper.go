@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToUserModel(user *user_entity.User) *models.User {
+func ToUserModel(user *userEntity.User) *models.User {
 	u := &models.User{
 		FamilyName:   user.FamilyName,
 		Name:         user.Name,
@@ -30,8 +30,8 @@ func ToUserModel(user *user_entity.User) *models.User {
 	return u
 }
 
-func FromUserModel(userModel *models.User) *user_entity.User {
-	var setting = &user_entity.Setting{
+func FromUserModel(userModel *models.User) *userEntity.User {
+	var setting = &userEntity.Setting{
 		ID:        userModel.Setting.ID,
 		UserId:    userModel.Setting.UserId,
 		Language:  userModel.Setting.Language,
@@ -40,7 +40,7 @@ func FromUserModel(userModel *models.User) *user_entity.User {
 		UpdatedAt: userModel.Setting.UpdatedAt,
 	}
 
-	var user = &user_entity.User{
+	var user = &userEntity.User{
 		FamilyName:   userModel.FamilyName,
 		Name:         userModel.Name,
 		Email:        userModel.Email,
@@ -65,8 +65,8 @@ func FromUserModel(userModel *models.User) *user_entity.User {
 	return user
 }
 
-func FromUserModelList(userModelList []*models.User) []*user_entity.User {
-	userEntityList := []*user_entity.User{}
+func FromUserModelList(userModelList []*models.User) []*userEntity.User {
+	userEntityList := []*userEntity.User{}
 	for _, userModel := range userModelList {
 		userEntityList = append(userEntityList, FromUserModel(userModel))
 	}

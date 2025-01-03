@@ -2,11 +2,11 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 )
 
 func NewUserReportResult(
-	userReport *user_entity.UserReport,
+	userReport *userEntity.UserReport,
 ) *common.UserReportResult {
 	if userReport == nil {
 		return nil
@@ -82,7 +82,7 @@ func NewUserReportResult(
 }
 
 func NewUserReportShortVerResult(
-	userReport *user_entity.UserReport,
+	userReport *userEntity.UserReport,
 ) *common.UserReportShortVerResult {
 	if userReport == nil {
 		return nil

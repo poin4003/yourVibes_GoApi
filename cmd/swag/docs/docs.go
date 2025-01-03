@@ -592,7 +592,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.CreateCommentInput"
+                            "$ref": "#/definitions/request.CreateCommentRequest"
                         }
                     }
                 ],
@@ -985,7 +985,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.UpdateCommentInput"
+                            "$ref": "#/definitions/request.UpdateCommentRequest"
                         }
                     }
                 ],
@@ -2829,12 +2829,8 @@ const docTemplate = `{
                 }
             }
         },
-        "request.CreateCommentInput": {
+        "request.CreateCommentRequest": {
             "type": "object",
-            "required": [
-                "content",
-                "post_id"
-            ],
             "properties": {
                 "content": {
                     "type": "string"
@@ -2997,7 +2993,7 @@ const docTemplate = `{
                 }
             }
         },
-        "request.UpdateCommentInput": {
+        "request.UpdateCommentRequest": {
             "type": "object",
             "properties": {
                 "content": {

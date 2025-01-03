@@ -66,6 +66,7 @@ func (r *rLikeUserComment) GetLikeUserComment(
 
 	err := db.Joins("JOIN like_user_comments ON like_user_comments.user_id = users.id").
 		Where("like_user_comments.comment_id = ?", query.CommentId).
+		Select("id, family_name, name, avatar_url").
 		Count(&total).
 		Offset(offset).
 		Limit(limit).

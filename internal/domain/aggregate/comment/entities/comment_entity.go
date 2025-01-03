@@ -1,33 +1,34 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"time"
 )
 
 type Comment struct {
-	ID              uuid.UUID  `validate:"omitempty,uuid4"`
-	PostId          uuid.UUID  `validate:"required,uuid4"`
-	UserId          uuid.UUID  `validate:"required,uuid4"`
-	User            *User      `validate:"omitempty"`
-	ParentId        *uuid.UUID `validate:"omitempty,uuid4"`
-	Content         string     `validate:"required,min=2,max=500"`
-	LikeCount       int        `validate:"omitempty"`
-	RepCommentCount int        `validate:"omitempty"`
-	CommentLeft     int        `validate:"omitempty"`
-	CommentRight    int        `validate:"omitempty"`
-	CreatedAt       time.Time  `validate:"omitempty"`
-	UpdatedAt       time.Time  `validate:"omitempty,gtefield=CreatedAt"`
-	Status          bool       `validate:"omitempty"`
+	ID              uuid.UUID
+	PostId          uuid.UUID
+	UserId          uuid.UUID
+	User            *User
+	ParentId        *uuid.UUID
+	Content         string
+	LikeCount       int
+	RepCommentCount int
+	CommentLeft     int
+	CommentRight    int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Status          bool
+	IsLiked         bool
 }
 
 type CommentUpdate struct {
-	Content         *string    `validate:"omitempty,min=2,max=500"`
-	LikeCount       *int       `validate:"omitempty"`
-	RepCommentCount *int       `validate:"omitempty"`
-	UpdatedAt       *time.Time `validate:"omitempty,gtefield=CreatedAt"`
-	Status          *bool      `validate:"omitempty"`
+	Content         *string
+	LikeCount       *int
+	RepCommentCount *int
+	UpdatedAt       *time.Time
+	Status          *bool
 }
 
 type CommentForReport struct {
@@ -46,14 +47,19 @@ type CommentForReport struct {
 	Status          bool
 }
 
-func (c *Comment) Validate() error {
-	validate := validator.New()
-	return validate.Struct(c)
+func (c *Comment) ValidateComment() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.PostId, validation.Required),
+		validation.Field(&c.UserId, validation.Required),
+		validation.Field(&c.Content, validation.Required, validation.Length(2, 500)),
+		validation.Field(&c.CreatedAt, validation.Min(c.CreatedAt)),
+	)
 }
 
 func (cu *CommentUpdate) ValidateCommentUpdate() error {
-	validate := validator.New()
-	return validate.Struct(cu)
+	return validation.ValidateStruct(cu,
+		validation.Field(&cu.Content, validation.Length(2, 500)),
+	)
 }
 
 func NewComment(
@@ -76,7 +82,7 @@ func NewComment(
 		CommentRight:    commentRight,
 		Status:          true,
 	}
-	if err := comment.Validate(); err != nil {
+	if err := comment.ValidateComment(); err != nil {
 		return nil, err
 	}
 

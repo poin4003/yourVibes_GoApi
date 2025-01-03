@@ -142,9 +142,13 @@ func (r *rNewFeed) GetMany(
 	       WHERE like_user_posts.post_id = posts.id AND like_user_posts.user_id = ?
 	   	) AS is_liked
 		`, authenticatedUserId).
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
 		Preload("Media").
-		Preload("ParentPost.User").
 		Preload("ParentPost.Media").
 		Order("posts.created_at desc").
 		Offset(offset).

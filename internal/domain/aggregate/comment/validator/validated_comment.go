@@ -19,7 +19,7 @@ func NewValidatedComment(comment *comment_entity.Comment) (*ValidatedComment, er
 		return nil, fmt.Errorf("comment is nil")
 	}
 
-	if err := comment.Validate(); err != nil {
+	if err := comment.ValidateComment(); err != nil {
 		return nil, err
 	}
 

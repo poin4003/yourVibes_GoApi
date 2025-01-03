@@ -15,12 +15,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	user_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
-	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
+	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
@@ -32,13 +32,13 @@ import (
 )
 
 type sUserAuth struct {
-	userRepo    user_repo.IUserRepository
-	settingRepo user_repo.ISettingRepository
+	userRepo    userRepo.IUserRepository
+	settingRepo userRepo.ISettingRepository
 }
 
 func NewUserLoginImplement(
-	userRepo user_repo.IUserRepository,
-	settingRepo user_repo.ISettingRepository,
+	userRepo userRepo.IUserRepository,
+	settingRepo userRepo.ISettingRepository,
 ) *sUserAuth {
 	return &sUserAuth{
 		userRepo:    userRepo,
@@ -48,9 +48,9 @@ func NewUserLoginImplement(
 
 func (s *sUserAuth) Login(
 	ctx context.Context,
-	loginCommand *user_command.LoginCommand,
-) (result *user_command.LoginCommandResult, err error) {
-	result = &user_command.LoginCommandResult{}
+	loginCommand *userCommand.LoginCommand,
+) (result *userCommand.LoginCommandResult, err error) {
+	result = &userCommand.LoginCommandResult{}
 	result.User = nil
 	result.AccessToken = nil
 	result.ResultCode = response.ErrServerFailed
@@ -110,9 +110,9 @@ func (s *sUserAuth) Login(
 
 func (s *sUserAuth) Register(
 	ctx context.Context,
-	registerCommand *user_command.RegisterCommand,
-) (result *user_command.RegisterCommandResult, err error) {
-	result = &user_command.RegisterCommandResult{}
+	registerCommand *userCommand.RegisterCommand,
+) (result *userCommand.RegisterCommandResult, err error) {
+	result = &userCommand.RegisterCommandResult{}
 	// 1. Check user exist in user table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *sUserAuth) Register(
 	}
 
 	// 5. Create new user
-	newUser, err := user_entity.NewUserLocal(
+	newUser, err := userEntity.NewUserLocal(
 		registerCommand.FamilyName,
 		registerCommand.Name,
 		registerCommand.Email,
@@ -173,7 +173,7 @@ func (s *sUserAuth) Register(
 	}
 
 	// 6. Create setting for user
-	newSetting, err := user_entity.NewSetting(createdUser.ID, consts.VI)
+	newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		return result, err
@@ -188,7 +188,7 @@ func (s *sUserAuth) Register(
 	createdUser.Setting = createdSetting
 
 	// 7. Validate user
-	validatedUser, err := user_validator.NewValidatedUser(createdUser)
+	validatedUser, err := userValidator.NewValidatedUser(createdUser)
 	if err != nil {
 		result.ResultCode = response.ErrServerFailed
 		return result, err
@@ -256,9 +256,9 @@ func (s *sUserAuth) VerifyEmail(
 
 func (s *sUserAuth) ChangePassword(
 	ctx context.Context,
-	command *user_command.ChangePasswordCommand,
-) (result *user_command.ChangePasswordCommandResult, err error) {
-	result = &user_command.ChangePasswordCommandResult{}
+	command *userCommand.ChangePasswordCommand,
+) (result *userCommand.ChangePasswordCommandResult, err error) {
+	result = &userCommand.ChangePasswordCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find user
@@ -292,7 +292,7 @@ func (s *sUserAuth) ChangePassword(
 		return result, err
 	}
 
-	updateUserData := &user_entity.UserUpdate{
+	updateUserData := &userEntity.UserUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 	if err := updateUserData.ValidateUserUpdate(); err != nil {
@@ -311,9 +311,9 @@ func (s *sUserAuth) ChangePassword(
 
 func (s *sUserAuth) GetOtpForgotUserPassword(
 	ctx context.Context,
-	command *user_command.GetOtpForgotUserPasswordCommand,
-) (result *user_command.GetOtpForgotUserPasswordCommandResult, err error) {
-	result = &user_command.GetOtpForgotUserPasswordCommandResult{}
+	command *userCommand.GetOtpForgotUserPasswordCommand,
+) (result *userCommand.GetOtpForgotUserPasswordCommandResult, err error) {
+	result = &userCommand.GetOtpForgotUserPasswordCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Hash Email
@@ -379,9 +379,9 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 
 func (s *sUserAuth) ForgotUserPassword(
 	ctx context.Context,
-	command *user_command.ForgotUserPasswordCommand,
-) (result *user_command.ForgotUserPasswordCommandResult, err error) {
-	result = &user_command.ForgotUserPasswordCommandResult{}
+	command *userCommand.ForgotUserPasswordCommand,
+) (result *userCommand.ForgotUserPasswordCommandResult, err error) {
+	result = &userCommand.ForgotUserPasswordCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check user exist
@@ -430,7 +430,7 @@ func (s *sUserAuth) ForgotUserPassword(
 		return result, err
 	}
 
-	updateUserData := &user_entity.UserUpdate{
+	updateUserData := &userEntity.UserUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 
@@ -450,9 +450,9 @@ func (s *sUserAuth) ForgotUserPassword(
 
 func (s *sUserAuth) AuthGoogle(
 	ctx context.Context,
-	command *user_command.AuthGoogleCommand,
-) (result *user_command.AuthGoogleCommandResult, err error) {
-	result = &user_command.AuthGoogleCommandResult{}
+	command *userCommand.AuthGoogleCommand,
+) (result *userCommand.AuthGoogleCommandResult, err error) {
+	result = &userCommand.AuthGoogleCommandResult{}
 	result.User = nil
 	result.AccessToken = nil
 	result.ResultCode = response.ErrServerFailed
@@ -511,7 +511,7 @@ func (s *sUserAuth) AuthGoogle(
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 2.1. Create new user
-			newUser, err := user_entity.NewUserGoogle(
+			newUser, err := userEntity.NewUserGoogle(
 				command.FamilyName,
 				command.Name,
 				command.Email,
@@ -528,7 +528,7 @@ func (s *sUserAuth) AuthGoogle(
 			}
 
 			// 2.2. Create setting for user
-			newSetting, err := user_entity.NewSetting(createdUser.ID, consts.VI)
+			newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 			if err != nil {
 				return result, err
 			}
@@ -541,7 +541,7 @@ func (s *sUserAuth) AuthGoogle(
 			createdUser.Setting = createdSetting
 
 			// 2.3. Validate user
-			validatedUser, err := user_validator.NewValidatedUserForGoogleAuth(createdUser)
+			validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
 			if err != nil {
 				return result, err
 			}

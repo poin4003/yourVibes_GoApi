@@ -2,18 +2,20 @@ package entities
 
 import (
 	"fmt"
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 )
 
 type LikeUserComment struct {
-	UserId    uuid.UUID `validate:"required,uuid4"`
-	CommentId uuid.UUID `validate:"required,uuid4"`
+	UserId    uuid.UUID
+	CommentId uuid.UUID
 }
 
-func (luc *LikeUserComment) Validate() error {
-	validate := validator.New()
-	return validate.Struct(luc)
+func (luc *LikeUserComment) ValidateLikeUserComment() error {
+	return validation.ValidateStruct(luc,
+		validation.Field(&luc.UserId, validation.Required),
+		validation.Field(&luc.CommentId, validation.Required),
+	)
 }
 
 func NewLikeUserCommentEntity(
@@ -26,7 +28,7 @@ func NewLikeUserCommentEntity(
 		UserId:    userId,
 		CommentId: commentId,
 	}
-	if err := newLikeUserComment.Validate(); err != nil {
+	if err := newLikeUserComment.ValidateLikeUserComment(); err != nil {
 		return nil, err
 	}
 

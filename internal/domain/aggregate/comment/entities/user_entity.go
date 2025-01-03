@@ -1,17 +1,18 @@
 package entities
 
 import (
-	"github.com/go-playground/validator/v10"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 )
 
 type User struct {
-	ID         uuid.UUID `validate:"omitempty,uuid4"`
-	FamilyName string    `validate:"required,min=2"`
-	Name       string    `validate:"required,min=2"`
-	AvatarUrl  string    `validate:"omitempty,url"`
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
 }
 
 type UserForReport struct {
@@ -35,7 +36,10 @@ type UserForReport struct {
 	UpdatedAt    time.Time
 }
 
-func (u *User) Validate() error {
-	validate := validator.New()
-	return validate.Struct(u)
+func (u *User) ValidateUser() error {
+	return validation.ValidateStruct(u,
+		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.AvatarUrl, is.URL),
+	)
 }

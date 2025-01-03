@@ -1,6 +1,8 @@
 package entities
 
+import "time"
+
 type Revenue struct {
-	Month int
+	Month time.Time
 	Total int64
 }

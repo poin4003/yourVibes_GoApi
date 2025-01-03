@@ -45,6 +45,9 @@ func (s *sUserInfo) GetInfoByUserId(
 	query *user_query.GetOneUserQuery,
 ) (result *user_query.UserQueryResult, err error) {
 	result = &user_query.UserQueryResult{}
+	result.User = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
@@ -54,9 +57,6 @@ func (s *sUserInfo) GetInfoByUserId(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -75,9 +75,6 @@ func (s *sUserInfo) GetInfoByUserId(
 		FriendId: query.UserId,
 	})
 	if err != nil {
-		result.User = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -91,9 +88,6 @@ func (s *sUserInfo) GetInfoByUserId(
 			FriendId: query.UserId,
 		})
 		if err != nil {
-			result.User = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 		if isSendFriendRequest {
@@ -105,9 +99,6 @@ func (s *sUserInfo) GetInfoByUserId(
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
-				result.User = nil
-				result.ResultCode = response.ErrServerFailed
-				result.HttpStatusCode = http.StatusInternalServerError
 				return result, err
 			}
 			if isReceiveFriendRequest {
@@ -152,13 +143,13 @@ func (s *sUserInfo) GetManyUsers(
 	query *user_query.GetManyUserQuery,
 ) (result *user_query.UserQueryListResult, err error) {
 	result = &user_query.UserQueryListResult{}
+	result.Users = nil
+	result.PagingResponse = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
 	if err != nil {
-		result.Users = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 

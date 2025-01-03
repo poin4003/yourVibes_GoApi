@@ -35,12 +35,13 @@ func (s *sSuperAdmin) CreateAdmin(
 	command *admin_command.CreateAdminCommand,
 ) (result *admin_command.CreateAdminCommandResult, err error) {
 	result = &admin_command.CreateAdminCommandResult{}
+	result.Admin = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.CheckAdminExistByEmail(ctx, command.Email)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
+		return result, err
 	}
 
 	if adminFound {
@@ -53,9 +54,6 @@ func (s *sSuperAdmin) CreateAdmin(
 	// 2. Hash password
 	hashedPassword, err := crypto.HashPassword(command.Password)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
 		return result, err
 	}
 
@@ -71,23 +69,17 @@ func (s *sSuperAdmin) CreateAdmin(
 		command.Role,
 	)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	createdAdmin, err := s.adminRepo.CreateOne(ctx, newAdmin)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	// 4. Map to result
 	validateAdmin, err := admin_validator.NewValidateAdmin(createdAdmin)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -102,6 +94,9 @@ func (s *sSuperAdmin) UpdateAdmin(
 	command *admin_command.UpdateAdminForSuperAdminCommand,
 ) (result *admin_command.UpdateAdminForSuperAdminCommandResult, err error) {
 	result = &admin_command.UpdateAdminForSuperAdminCommandResult{}
+	result.Admin = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Update admin status or role
 	updateAdminEntity := &admin_entity.AdminUpdate{
 		Status: command.Status,
@@ -109,9 +104,6 @@ func (s *sSuperAdmin) UpdateAdmin(
 	}
 
 	if err = updateAdminEntity.ValidateAdminUpdate(); err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
 		return result, err
 	}
 
@@ -123,9 +115,6 @@ func (s *sSuperAdmin) UpdateAdmin(
 			result.Admin = nil
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.Admin = nil
 		return result, err
 	}
 
@@ -141,6 +130,9 @@ func (s *sSuperAdmin) GetOneAdmin(
 	query *query.GetOneAdminQuery,
 ) (result *query.AdminQueryResult, err error) {
 	result = &admin_query.AdminQueryResult{}
+	result.Admin = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get admin info
 	adminEntity, err := s.adminRepo.GetById(ctx, query.AdminId)
 	if err != nil {
@@ -150,9 +142,6 @@ func (s *sSuperAdmin) GetOneAdmin(
 			result.Admin = nil
 			return result, nil
 		}
-		result.Admin = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -168,13 +157,13 @@ func (s *sSuperAdmin) GetManyAdmin(
 	query *query.GetManyAdminQuery,
 ) (result *query.AdminQueryListResult, err error) {
 	result = &admin_query.AdminQueryListResult{}
+	result.Admins = nil
+	result.PagingResponse = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get list admin
 	adminEntities, paging, err := s.adminRepo.GetMany(ctx, query)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
-		result.Admins = nil
 		return result, err
 	}
 
