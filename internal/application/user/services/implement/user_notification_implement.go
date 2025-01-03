@@ -32,10 +32,11 @@ func (s *sUserNotification) GetNotificationByUserId(
 	ctx context.Context,
 	query *userQuery.GetManyNotificationQuery,
 ) (result *userQuery.GetManyNotificationQueryResult, err error) {
-	result = &userQuery.GetManyNotificationQueryResult{}
-	result.Notifications = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.GetManyNotificationQueryResult{
+		Notifications:  nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get notification
 	notificationEntities, paging, err := s.notificationRepo.GetMany(ctx, query)
 	if err != nil {
@@ -59,9 +60,10 @@ func (s *sUserNotification) UpdateOneStatusNotification(
 	ctx context.Context,
 	command *userCommand.UpdateOneStatusNotificationCommand,
 ) (result *userCommand.UpdateOneStatusNotificationCommandResult, err error) {
-	result = &userCommand.UpdateOneStatusNotificationCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.UpdateOneStatusNotificationCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	notificationUpdateEntity := &userEntity.NotificationUpdate{
 		Status: pointer.Ptr(false),
 	}
@@ -83,9 +85,10 @@ func (s *sUserNotification) UpdateManyStatusNotification(
 	ctx context.Context,
 	command *userCommand.UpdateManyStatusNotificationCommand,
 ) (result *userCommand.UpdateManyStatusNotificationCommandResult, err error) {
-	result = &userCommand.UpdateManyStatusNotificationCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.UpdateManyStatusNotificationCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	updateConditions := map[string]interface{}{
 		"status":  true,
 		"user_id": command.UserId,

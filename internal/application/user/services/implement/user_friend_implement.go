@@ -44,9 +44,10 @@ func (s *sUserFriend) SendAddFriendRequest(
 	ctx context.Context,
 	command *userCommand.SendAddFriendRequestCommand,
 ) (result *userCommand.SendAddFriendRequestCommandResult, err error) {
-	result = &userCommand.SendAddFriendRequestCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.SendAddFriendRequestCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist friend
 	friendEntity, err := userEntity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
@@ -177,11 +178,12 @@ func (s *sUserFriend) GetFriendRequests(
 	ctx context.Context,
 	query *userQuery.FriendRequestQuery,
 ) (result *userQuery.FriendRequestQueryResult, err error) {
-	result = &userQuery.FriendRequestQueryResult{}
-	result.Users = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.FriendRequestQueryResult{
+		Users:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get list of user request to add friend
 	userEntities, paging, err := s.friendRequestRepo.GetFriendRequests(ctx, query)
 	if err != nil {
@@ -205,9 +207,10 @@ func (s *sUserFriend) AcceptFriendRequest(
 	ctx context.Context,
 	command *userCommand.AcceptFriendRequestCommand,
 ) (result *userCommand.AcceptFriendRequestCommandResult, err error) {
-	result = &userCommand.AcceptFriendRequestCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.AcceptFriendRequestCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := userEntity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
@@ -358,9 +361,10 @@ func (s *sUserFriend) RemoveFriendRequest(
 	ctx context.Context,
 	command *userCommand.RemoveFriendRequestCommand,
 ) (result *userCommand.RemoveFriendRequestCommandResult, err error) {
-	result = &userCommand.RemoveFriendRequestCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.RemoveFriendRequestCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := userEntity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
@@ -399,9 +403,10 @@ func (s *sUserFriend) UnFriend(
 	ctx context.Context,
 	command *userCommand.UnFriendCommand,
 ) (result *userCommand.UnFriendCommandResult, err error) {
-	result = &userCommand.UnFriendCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.UnFriendCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check friend exist
 	friendEntity, err := userEntity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
@@ -487,11 +492,12 @@ func (s *sUserFriend) GetFriends(
 	ctx context.Context,
 	query *userQuery.FriendQuery,
 ) (result *userQuery.FriendQueryResult, err error) {
-	result = &userQuery.FriendQueryResult{}
-	result.Users = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.FriendQueryResult{
+		Users:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get list of friend
 	userEntities, paging, err := s.friendRepo.GetFriends(ctx, query)
 	if err != nil {

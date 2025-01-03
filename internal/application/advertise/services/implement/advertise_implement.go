@@ -3,6 +3,9 @@ package implement
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
+
 	advertiseCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/mapper"
@@ -12,8 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/payment"
 	"gorm.io/gorm"
-	"net/http"
-	"time"
 )
 
 type sAdvertise struct {
@@ -38,10 +39,11 @@ func (s *sAdvertise) CreateAdvertise(
 	ctx context.Context,
 	command *advertiseCommand.CreateAdvertiseCommand,
 ) (result *advertiseCommand.CreateAdvertiseResult, err error) {
-	result = &advertiseCommand.CreateAdvertiseResult{}
-	result.PayUrl = ""
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &advertiseCommand.CreateAdvertiseResult{
+		PayUrl:         "",
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check previous ad status
 	// 1.1. Check if the post has had any ads before by bill
 	billStatus, err := s.billRepo.CheckExists(ctx, command.PostId)
@@ -127,12 +129,12 @@ func (s *sAdvertise) GetManyAdvertise(
 	ctx context.Context,
 	query *advertiseQuery.GetManyAdvertiseQuery,
 ) (result *advertiseQuery.GetManyAdvertiseResults, err error) {
-	result = &advertiseQuery.GetManyAdvertiseResults{}
-	result.Advertises = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
-	result.PagingResponse = nil
-
+	result = &advertiseQuery.GetManyAdvertiseResults{
+		Advertises:     nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+		PagingResponse: nil,
+	}
 	advertiseEntities, paging, err := s.advertiseRepo.GetMany(ctx, query)
 	if err != nil {
 		return result, err
@@ -154,10 +156,11 @@ func (s *sAdvertise) GetAdvertise(
 	ctx context.Context,
 	query *advertiseQuery.GetOneAdvertiseQuery,
 ) (result *advertiseQuery.GetOneAdvertiseResult, err error) {
-	result = &advertiseQuery.GetOneAdvertiseResult{}
-	result.Advertise = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &advertiseQuery.GetOneAdvertiseResult{
+		Advertise:      nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get advertise detail
 	advertise, err := s.advertiseRepo.GetOne(ctx, query.AdvertiseId)
 	if err != nil {

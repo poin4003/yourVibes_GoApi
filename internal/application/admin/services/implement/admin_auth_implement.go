@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
@@ -15,8 +18,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
-	"time"
 )
 
 type sAdminAuth struct {
@@ -35,11 +36,12 @@ func (s *sAdminAuth) Login(
 	ctx context.Context,
 	command *adminCommand.LoginCommand,
 ) (result *adminCommand.LoginCommandResult, err error) {
-	result = &adminCommand.LoginCommandResult{}
-	result.Admin = nil
-	result.AccessToken = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.LoginCommandResult{
+		Admin:          nil,
+		AccessToken:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
@@ -52,7 +54,7 @@ func (s *sAdminAuth) Login(
 	}
 
 	// 2. Return if account is blocked by admin
-	if adminFound.Status == false {
+	if !adminFound.Status {
 		result.ResultCode = response.ErrCodeAccountBlockedBySuperAdmin
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("this account has been blocked by super admin")
@@ -90,9 +92,10 @@ func (s *sAdminAuth) ChangeAdminPassword(
 	ctx context.Context,
 	command *adminCommand.ChangeAdminPasswordCommand,
 ) (result *adminCommand.ChangeAdminPasswordCommandResult, err error) {
-	result = &adminCommand.ChangeAdminPasswordCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.ChangeAdminPasswordCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetById(ctx, command.AdminId)
 	if err != nil {
@@ -138,9 +141,10 @@ func (s *sAdminAuth) ForgotAdminPassword(
 	ctx context.Context,
 	command *adminCommand.ForgotAdminPasswordCommand,
 ) (result *adminCommand.ForgotAdminPasswordCommandResult, err error) {
-	result = &adminCommand.ForgotAdminPasswordCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.ForgotAdminPasswordCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {

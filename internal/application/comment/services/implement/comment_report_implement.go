@@ -36,10 +36,11 @@ func (s *sCommentReport) CreateCommentReport(
 	ctx context.Context,
 	command *commentCommand.CreateReportCommentCommand,
 ) (result *commentCommand.CreateReportCommentCommandResult, err error) {
-	result = &commentCommand.CreateReportCommentCommandResult{}
-	result.CommentReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.CreateReportCommentCommandResult{
+		CommentReport:  nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check report exist
 	commentReportCheck, err := s.commentReportRepo.CheckExist(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
@@ -79,9 +80,10 @@ func (s *sCommentReport) HandleCommentReport(
 	ctx context.Context,
 	command *commentCommand.HandleCommentReportCommand,
 ) (result *commentCommand.HandleCommentReportCommandResult, err error) {
-	result = &commentCommand.HandleCommentReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.HandleCommentReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	commentReportFound, err := s.commentReportRepo.GetById(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
@@ -138,9 +140,10 @@ func (s *sCommentReport) DeleteCommentReport(
 	ctx context.Context,
 	command *commentCommand.DeleteCommentReportCommand,
 ) (result *commentCommand.DeleteCommentReportCommandResult, err error) {
-	result = &commentCommand.DeleteCommentReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.DeleteCommentReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	commentReportFound, err := s.commentReportRepo.GetById(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
@@ -173,9 +176,10 @@ func (s *sCommentReport) ActivateComment(
 	ctx context.Context,
 	command *commentCommand.ActivateCommentCommand,
 ) (result *commentCommand.ActivateCommentCommandResult, err error) {
-	result = &commentCommand.ActivateCommentCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.ActivateCommentCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
@@ -227,10 +231,11 @@ func (s *sCommentReport) GetDetailCommentReport(
 	ctx context.Context,
 	query *commentQuery.GetOneCommentReportQuery,
 ) (result *commentQuery.CommentReportQueryResult, err error) {
-	result = &commentQuery.CommentReportQueryResult{}
-	result.CommentReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentQuery.CommentReportQueryResult{
+		CommentReport:  nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get post report detail
 	postReportEntity, err := s.commentReportRepo.GetById(ctx, query.UserId, query.ReportedCommentId)
 	if err != nil {
@@ -253,11 +258,12 @@ func (s *sCommentReport) GetManyCommentReport(
 	ctx context.Context,
 	query *commentQuery.GetManyCommentReportQuery,
 ) (result *commentQuery.CommentReportQueryListResult, err error) {
-	result = &commentQuery.CommentReportQueryListResult{}
-	result.CommentReports = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
-	result.PagingResponse = nil
+	result = &commentQuery.CommentReportQueryListResult{
+		CommentReports: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+		PagingResponse: nil,
+	}
 	// 1. Get list of comment report
 	commentReportEntities, paging, err := s.commentReportRepo.GetMany(ctx, query)
 	if err != nil {

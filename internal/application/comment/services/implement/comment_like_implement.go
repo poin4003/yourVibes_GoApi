@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
@@ -13,7 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sCommentLike struct {
@@ -38,10 +39,11 @@ func (s *sCommentLike) LikeComment(
 	ctx context.Context,
 	command *commentCommand.LikeCommentCommand,
 ) (result *commentCommand.LikeCommentResult, err error) {
-	result = &commentCommand.LikeCommentResult{}
-	result.Comment = nil
-	result.ResultCode = response.ErrDataNotFound
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.LikeCommentResult{
+		Comment:        nil,
+		ResultCode:     response.ErrDataNotFound,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get comment by id
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
@@ -126,13 +128,14 @@ func (s *sCommentLike) GetUsersOnLikeComment(
 	ctx context.Context,
 	query *commentQuery.GetCommentLikeQuery,
 ) (result *commentQuery.GetCommentLikeResult, err error) {
-	result = &commentQuery.GetCommentLikeResult{}
+	result = &commentQuery.GetCommentLikeResult{
+		Users:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	likeUserCommentEntites, paging, err := s.likeUserCommentRepo.GetLikeUserComment(ctx, query)
 	if err != nil {
-		result.Users = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 

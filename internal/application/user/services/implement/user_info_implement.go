@@ -44,10 +44,11 @@ func (s *sUserInfo) GetInfoByUserId(
 	ctx context.Context,
 	query *userQuery.GetOneUserQuery,
 ) (result *userQuery.UserQueryResult, err error) {
-	result = &userQuery.UserQueryResult{}
-	result.User = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.UserQueryResult{
+		User:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
@@ -142,11 +143,12 @@ func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
 	query *userQuery.GetManyUserQuery,
 ) (result *userQuery.UserQueryListResult, err error) {
-	result = &userQuery.UserQueryListResult{}
-	result.Users = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.UserQueryListResult{
+		Users:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
 	if err != nil {
@@ -169,10 +171,11 @@ func (s *sUserInfo) UpdateUser(
 	ctx context.Context,
 	command *userCommand.UpdateUserCommand,
 ) (result *userCommand.UpdateUserCommandResult, err error) {
-	result = &userCommand.UpdateUserCommandResult{}
-	result.User = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.UpdateUserCommandResult{
+		User:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. update setting language
 	if command.LanguageSetting != nil {
 		settingFound, err := s.settingRepo.GetSetting(ctx, "user_id=?", command.UserId)

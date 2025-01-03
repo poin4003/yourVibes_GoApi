@@ -3,6 +3,8 @@ package implement
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
@@ -10,7 +12,6 @@ import (
 	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sPostShare struct {
@@ -35,10 +36,11 @@ func (s *sPostShare) SharePost(
 	ctx context.Context,
 	command *postCommand.SharePostCommand,
 ) (result *postCommand.SharePostCommandResult, err error) {
-	result = &postCommand.SharePostCommandResult{}
-	result.Post = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.SharePostCommandResult{
+		Post:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find post by post_id
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {

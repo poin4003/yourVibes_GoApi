@@ -43,10 +43,11 @@ func (s *sUserReport) CreateUserReport(
 	ctx context.Context,
 	command *userCommand.CreateReportUserCommand,
 ) (result *userCommand.CreateReportUserCommandResult, err error) {
-	result = &userCommand.CreateReportUserCommandResult{}
-	result.UserReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.CreateReportUserCommandResult{
+		UserReport:     nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check report exist
 	userReportCheck, err := s.userReportRepo.CheckExist(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
@@ -86,9 +87,10 @@ func (s *sUserReport) HandleUserReport(
 	ctx context.Context,
 	command *userCommand.HandleUserReportCommand,
 ) (result *userCommand.HandleUserReportCommandResult, err error) {
-	result = &userCommand.HandleUserReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.HandleUserReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exists
 	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
@@ -104,7 +106,7 @@ func (s *sUserReport) HandleUserReport(
 	if userReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You don't need to handle this report again")
+		return result, fmt.Errorf("you don't need to handle this report again")
 	}
 
 	// 3. Update reported user status
@@ -174,9 +176,10 @@ func (s *sUserReport) DeleteUserReport(
 	ctx context.Context,
 	command *userCommand.DeleteUserReportCommand,
 ) (result *userCommand.DeleteUserReportCommandResult, err error) {
-	result = &userCommand.DeleteUserReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.DeleteUserReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exists
 	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
@@ -192,7 +195,7 @@ func (s *sUserReport) DeleteUserReport(
 	if userReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You can't delete this report, it's already handled")
+		return result, fmt.Errorf("you can't delete this report, it's already handled")
 	}
 
 	// 3. Delete report
@@ -209,9 +212,10 @@ func (s *sUserReport) ActivateUserAccount(
 	ctx context.Context,
 	command *userCommand.ActivateUserAccountCommand,
 ) (result *userCommand.ActivateUserAccountCommandResult, err error) {
-	result = &userCommand.ActivateUserAccountCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.ActivateUserAccountCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exists
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
@@ -227,7 +231,7 @@ func (s *sUserReport) ActivateUserAccount(
 	if userFound.Status {
 		result.ResultCode = response.ErrCodeUserIsAlreadyActivated
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You don't need to activate this user account")
+		return result, fmt.Errorf("you don't need to activate this user account")
 	}
 
 	// 3. Update reported user status
@@ -292,10 +296,11 @@ func (s *sUserReport) GetDetailUserReport(
 	ctx context.Context,
 	query *userQuery.GetOneUserReportQuery,
 ) (result *userQuery.UserReportQueryResult, err error) {
-	result = &userQuery.UserReportQueryResult{}
-	result.UserReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userQuery.UserReportQueryResult{
+		UserReport:     nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get user report detail
 	userReportEntity, err := s.userReportRepo.GetById(ctx, query.UserId, query.ReportedUserId)
 	if err != nil {
@@ -318,11 +323,12 @@ func (s *sUserReport) GetManyUserReport(
 	ctx context.Context,
 	query *userQuery.GetManyUserReportQuery,
 ) (result *userQuery.UserReportQueryListResult, err error) {
-	result = &userQuery.UserReportQueryListResult{}
-	result.UserReports = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
-	result.PagingResponse = nil
+	result = &userQuery.UserReportQueryListResult{
+		UserReports:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+		PagingResponse: nil,
+	}
 	// 1. Get list of user report
 	userReportEntities, paging, err := s.userReportRepo.GetMany(ctx, query)
 	if err != nil {

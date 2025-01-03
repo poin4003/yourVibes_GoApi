@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/poin4003/yourVibes_GoApi/global"
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
@@ -16,7 +18,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sPostLike struct {
@@ -44,10 +45,11 @@ func (s *sPostLike) LikePost(
 	ctx context.Context,
 	command *postCommand.LikePostCommand,
 ) (result *postCommand.LikePostCommandResult, err error) {
-	result = &postCommand.LikePostCommandResult{}
-	result.Post = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.LikePostCommandResult{
+		Post:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find exist post
 	postFound, err := s.postRepo.GetOne(ctx, command.PostId, command.UserId)
 	if err != nil {
@@ -188,11 +190,12 @@ func (s *sPostLike) GetUsersOnLikes(
 	ctx context.Context,
 	query *postQuery.GetPostLikeQuery,
 ) (result *postQuery.GetPostLikeQueryResult, err error) {
-	result = &postQuery.GetPostLikeQueryResult{}
-	result.Users = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postQuery.GetPostLikeQueryResult{
+		Users:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 
 	likeUserPostEntities, paging, err := s.postLikeRepo.GetLikeUserPost(ctx, query)
 	if err != nil {

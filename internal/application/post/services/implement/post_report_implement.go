@@ -36,10 +36,11 @@ func (s *sPostReport) CreatePostReport(
 	ctx context.Context,
 	command *postCommand.CreateReportPostCommand,
 ) (result *postCommand.CreateReportPostCommandResult, err error) {
-	result = &postCommand.CreateReportPostCommandResult{}
-	result.PostReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.CreateReportPostCommandResult{
+		PostReport:     nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check report exist
 	postReportCheck, err := s.postReportRepo.CheckExist(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
@@ -79,9 +80,10 @@ func (s *sPostReport) HandlePostReport(
 	ctx context.Context,
 	command *postCommand.HandlePostReportCommand,
 ) (result *postCommand.HandlePostReportCommandResult, err error) {
-	result = &postCommand.HandlePostReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.HandlePostReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
@@ -138,9 +140,10 @@ func (s *sPostReport) DeletePostReport(
 	ctx context.Context,
 	command *postCommand.DeletePostReportCommand,
 ) (result *postCommand.DeletePostReportCommandResult, err error) {
-	result = &postCommand.DeletePostReportCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.DeletePostReportCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
@@ -173,9 +176,10 @@ func (s *sPostReport) ActivatePost(
 	ctx context.Context,
 	command *postCommand.ActivatePostCommand,
 ) (result *postCommand.ActivatePostCommandResult, err error) {
-	result = &postCommand.ActivatePostCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.ActivatePostCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check exist
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
@@ -227,10 +231,11 @@ func (s *sPostReport) GetDetailPostReport(
 	ctx context.Context,
 	query *postQuery.GetOnePostReportQuery,
 ) (result *postQuery.PostReportQueryResult, err error) {
-	result = &postQuery.PostReportQueryResult{}
-	result.PostReport = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postQuery.PostReportQueryResult{
+		PostReport:     nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get post report detail
 	postReportEntity, err := s.postReportRepo.GetById(ctx, query.UserId, query.ReportedPostId)
 	if err != nil {
@@ -253,10 +258,11 @@ func (s *sPostReport) GetManyPostReport(
 	ctx context.Context,
 	query *postQuery.GetManyPostReportQuery,
 ) (result *postQuery.PostReportQueryListResult, err error) {
-	result = &postQuery.PostReportQueryListResult{}
-	result.PostReports = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postQuery.PostReportQueryListResult{
+		PostReports:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	result.PagingResponse = nil
 	// 1. Get list of post report
 	postReportEntities, paging, err := s.postReportRepo.GetMany(ctx, query)

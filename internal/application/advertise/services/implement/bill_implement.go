@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	billCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	billEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
@@ -11,7 +13,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sBill struct {
@@ -39,9 +40,10 @@ func (s *sBill) ConfirmPayment(
 	ctx context.Context,
 	command *billCommand.ConfirmPaymentCommand,
 ) (result *billCommand.ConfirmPaymentResult, err error) {
-	result = &billCommand.ConfirmPaymentResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &billCommand.ConfirmPaymentResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	if command == nil {
 		return result, fmt.Errorf("command confirm payment is nil")
 	}

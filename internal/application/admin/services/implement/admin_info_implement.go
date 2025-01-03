@@ -3,6 +3,8 @@ package implement
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/google/uuid"
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
@@ -10,7 +12,6 @@ import (
 	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sAdminInfo struct {
@@ -29,10 +30,11 @@ func (s *sAdminInfo) UpdateAdmin(
 	ctx context.Context,
 	command *adminCommand.UpdateAdminInfoCommand,
 ) (result *adminCommand.UpdateAdminInfoCommandResult, err error) {
-	result = &adminCommand.UpdateAdminInfoCommandResult{}
-	result.Admin = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.UpdateAdminInfoCommandResult{
+		Admin:          nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Update admin info
 	updateAdminEntity := &adminEntity.AdminUpdate{
 		FamilyName:  command.FamilyName,

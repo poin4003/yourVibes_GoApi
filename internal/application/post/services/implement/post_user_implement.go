@@ -62,10 +62,11 @@ func (s *sPostUser) CreatePost(
 	ctx context.Context,
 	command *postCommand.CreatePostCommand,
 ) (result *postCommand.CreatePostCommandResult, err error) {
-	result = &postCommand.CreatePostCommandResult{}
-	result.Post = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.CreatePostCommandResult{
+		Post:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. CreatePost
 	newPost, err := postEntity.NewPost(
 		command.UserId,
@@ -218,10 +219,11 @@ func (s *sPostUser) UpdatePost(
 	ctx context.Context,
 	command *postCommand.UpdatePostCommand,
 ) (result *postCommand.UpdatePostCommandResult, err error) {
-	result = &postCommand.UpdatePostCommandResult{}
-	result.Post = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.UpdatePostCommandResult{
+		Post:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. update post information
 	updateData := &postEntity.PostUpdate{
 		Content:  command.Content,
@@ -310,9 +312,10 @@ func (s *sPostUser) DeletePost(
 	ctx context.Context,
 	command *postCommand.DeletePostCommand,
 ) (result *postCommand.DeletePostCommandResult, err error) {
-	result = &postCommand.DeletePostCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postCommand.DeletePostCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get media array of post
 	medias, err := s.mediaRepo.GetMany(ctx, "post_id=?", command.PostId)
 	if err != nil {
@@ -411,10 +414,11 @@ func (s *sPostUser) GetPost(
 	ctx context.Context,
 	query *postQuery.GetOnePostQuery,
 ) (result *postQuery.GetOnePostQueryResult, err error) {
-	result = &postQuery.GetOnePostQueryResult{}
-	result.Post = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postQuery.GetOnePostQueryResult{
+		Post:           nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get post
 	postFound, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
 	if err != nil {
@@ -470,12 +474,12 @@ func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
 	query *postQuery.GetManyPostQuery,
 ) (result *postQuery.GetManyPostQueryResult, err error) {
-	result = &postQuery.GetManyPostQueryResult{}
-	result.Posts = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
-
+	result = &postQuery.GetManyPostQueryResult{
+		Posts:          nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	postEntities, paging, err := s.postRepo.GetMany(ctx, query)
 	if err != nil {
 		return result, err
@@ -498,10 +502,11 @@ func (s *sPostUser) CheckPostOwner(
 	ctx context.Context,
 	query *postQuery.CheckPostOwnerQuery,
 ) (result *postQuery.CheckPostOwnerQueryResult, err error) {
-	result = &postQuery.CheckPostOwnerQueryResult{}
-	result.IsOwner = false
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &postQuery.CheckPostOwnerQueryResult{
+		IsOwner:        false,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 
 	isOwner, err := s.postRepo.CheckPostOwner(ctx, query.PostId, query.UserId)
 	if err != nil {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	adminQuery "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	adminValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
@@ -15,7 +16,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type sSuperAdmin struct {
@@ -34,10 +34,11 @@ func (s *sSuperAdmin) CreateAdmin(
 	ctx context.Context,
 	command *adminCommand.CreateAdminCommand,
 ) (result *adminCommand.CreateAdminCommandResult, err error) {
-	result = &adminCommand.CreateAdminCommandResult{}
-	result.Admin = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.CreateAdminCommandResult{
+		Admin:          nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.CheckAdminExistByEmail(ctx, command.Email)
 	if err != nil {
@@ -93,10 +94,11 @@ func (s *sSuperAdmin) UpdateAdmin(
 	ctx context.Context,
 	command *adminCommand.UpdateAdminForSuperAdminCommand,
 ) (result *adminCommand.UpdateAdminForSuperAdminCommandResult, err error) {
-	result = &adminCommand.UpdateAdminForSuperAdminCommandResult{}
-	result.Admin = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &adminCommand.UpdateAdminForSuperAdminCommandResult{
+		Admin:          nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Update admin status or role
 	updateAdminEntity := &adminEntity.AdminUpdate{
 		Status: command.Status,
@@ -127,12 +129,13 @@ func (s *sSuperAdmin) UpdateAdmin(
 
 func (s *sSuperAdmin) GetOneAdmin(
 	ctx context.Context,
-	query *query.GetOneAdminQuery,
-) (result *query.AdminQueryResult, err error) {
-	result = &adminQuery.AdminQueryResult{}
-	result.Admin = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	query *adminQuery.GetOneAdminQuery,
+) (result *adminQuery.AdminQueryResult, err error) {
+	result = &adminQuery.AdminQueryResult{
+		Admin:          nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get admin info
 	adminFound, err := s.adminRepo.GetById(ctx, query.AdminId)
 	if err != nil {
@@ -154,13 +157,14 @@ func (s *sSuperAdmin) GetOneAdmin(
 
 func (s *sSuperAdmin) GetManyAdmin(
 	ctx context.Context,
-	query *query.GetManyAdminQuery,
-) (result *query.AdminQueryListResult, err error) {
-	result = &adminQuery.AdminQueryListResult{}
-	result.Admins = nil
-	result.PagingResponse = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	query *adminQuery.GetManyAdminQuery,
+) (result *adminQuery.AdminQueryListResult, err error) {
+	result = &adminQuery.AdminQueryListResult{
+		Admins:         nil,
+		PagingResponse: nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Get list admin
 	adminEntities, paging, err := s.adminRepo.GetMany(ctx, query)
 	if err != nil {

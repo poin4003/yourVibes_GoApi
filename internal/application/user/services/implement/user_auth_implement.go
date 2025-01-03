@@ -48,11 +48,12 @@ func (s *sUserAuth) Login(
 	ctx context.Context,
 	loginCommand *userCommand.LoginCommand,
 ) (result *userCommand.LoginCommandResult, err error) {
-	result = &userCommand.LoginCommandResult{}
-	result.User = nil
-	result.AccessToken = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.LoginCommandResult{
+		User:           nil,
+		AccessToken:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", loginCommand.Email)
 
@@ -110,11 +111,12 @@ func (s *sUserAuth) Register(
 	ctx context.Context,
 	registerCommand *userCommand.RegisterCommand,
 ) (result *userCommand.RegisterCommandResult, err error) {
-	result = &userCommand.RegisterCommandResult{}
+	result = &userCommand.RegisterCommandResult{
+		ResultCode: response.ErrServerFailed,
+	}
 	// 1. Check user exist in user table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
@@ -146,7 +148,6 @@ func (s *sUserAuth) Register(
 	// 4. Hash password
 	hashedPassword, err := crypto.HashPassword(registerCommand.Password)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
@@ -160,26 +161,22 @@ func (s *sUserAuth) Register(
 		registerCommand.Birthday,
 	)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
 	createdUser, err := s.userRepo.CreateOne(ctx, newUser)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
 	// 6. Create setting for user
 	newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
 	createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
@@ -188,7 +185,6 @@ func (s *sUserAuth) Register(
 	// 7. Validate user
 	validatedUser, err := userValidator.NewValidatedUser(createdUser)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
 		return result, err
 	}
 
@@ -256,9 +252,10 @@ func (s *sUserAuth) ChangePassword(
 	ctx context.Context,
 	command *userCommand.ChangePasswordCommand,
 ) (result *userCommand.ChangePasswordCommandResult, err error) {
-	result = &userCommand.ChangePasswordCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.ChangePasswordCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find user
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
@@ -311,9 +308,10 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 	ctx context.Context,
 	command *userCommand.GetOtpForgotUserPasswordCommand,
 ) (result *userCommand.GetOtpForgotUserPasswordCommandResult, err error) {
-	result = &userCommand.GetOtpForgotUserPasswordCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.GetOtpForgotUserPasswordCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Hash Email
 	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
 
@@ -379,9 +377,10 @@ func (s *sUserAuth) ForgotUserPassword(
 	ctx context.Context,
 	command *userCommand.ForgotUserPasswordCommand,
 ) (result *userCommand.ForgotUserPasswordCommandResult, err error) {
-	result = &userCommand.ForgotUserPasswordCommandResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.ForgotUserPasswordCommandResult{
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Check user exist
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
@@ -450,11 +449,12 @@ func (s *sUserAuth) AuthGoogle(
 	ctx context.Context,
 	command *userCommand.AuthGoogleCommand,
 ) (result *userCommand.AuthGoogleCommandResult, err error) {
-	result = &userCommand.AuthGoogleCommandResult{}
-	result.User = nil
-	result.AccessToken = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &userCommand.AuthGoogleCommandResult{
+		User:           nil,
+		AccessToken:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Call api google to get openid ODCI
 	idToken, err := third_party_authentication.GetGoogleIDToken(command.AuthorizationCode, command.Platform)
 	if err != nil {
