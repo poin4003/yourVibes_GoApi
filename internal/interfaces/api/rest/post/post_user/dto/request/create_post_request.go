@@ -7,7 +7,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 )
 
@@ -67,8 +67,8 @@ func validateMediaForCreate(value interface{}) error {
 func (req *CreatePostRequest) ToCreatePostCommand(
 	userId uuid.UUID,
 	media []multipart.FileHeader,
-) (*post_command.CreatePostCommand, error) {
-	return &post_command.CreatePostCommand{
+) (*postCommand.CreatePostCommand, error) {
+	return &postCommand.CreatePostCommand{
 		UserId:   userId,
 		Content:  req.Content,
 		Privacy:  req.Privacy,

@@ -2732,22 +2732,7 @@ const docTemplate = `{
         "request.AuthGoogleRequest": {
             "type": "object",
             "properties": {
-                "auth_google_id": {
-                    "type": "string"
-                },
-                "avatar_url": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "family_name": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "open_id": {
+                "authorization_code": {
                     "type": "string"
                 },
                 "platform": {

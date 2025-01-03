@@ -5,7 +5,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
+	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 )
 
 type AdvertiseQueryObject struct {
@@ -27,7 +27,7 @@ func ValidateAdvertiseQueryObject(input interface{}) error {
 	)
 }
 
-func (req *AdvertiseQueryObject) ToGetManyAdvertiseQuery() (*advertise_query.GetManyAdvertiseQuery, error) {
+func (req *AdvertiseQueryObject) ToGetManyAdvertiseQuery() (*advertiseQuery.GetManyAdvertiseQuery, error) {
 	var postId uuid.UUID
 	if req.PostId != "" {
 		parsePostId, err := uuid.Parse(req.PostId)
@@ -37,7 +37,7 @@ func (req *AdvertiseQueryObject) ToGetManyAdvertiseQuery() (*advertise_query.Get
 		postId = parsePostId
 	}
 
-	return &advertise_query.GetManyAdvertiseQuery{
+	return &advertiseQuery.GetManyAdvertiseQuery{
 		PostId:       postId,
 		SortBy:       "created_at",
 		IsDescending: true,

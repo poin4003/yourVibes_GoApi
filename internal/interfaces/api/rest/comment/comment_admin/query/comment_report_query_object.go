@@ -7,7 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
-	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
 
 type CommentReportQueryObject struct {
@@ -42,15 +42,15 @@ func ValidateCommentReportQueryObject(input interface{}) error {
 func ToGetOneCommentReportQuery(
 	userId uuid.UUID,
 	reportedCommentId uuid.UUID,
-) (*comment_query.GetOneCommentReportQuery, error) {
-	return &comment_query.GetOneCommentReportQuery{
+) (*commentQuery.GetOneCommentReportQuery, error) {
+	return &commentQuery.GetOneCommentReportQuery{
 		UserId:            userId,
 		ReportedCommentId: reportedCommentId,
 	}, nil
 }
 
-func (req *CommentReportQueryObject) ToGetManyCommentQuery() (*comment_query.GetManyCommentReportQuery, error) {
-	return &comment_query.GetManyCommentReportQuery{
+func (req *CommentReportQueryObject) ToGetManyCommentQuery() (*commentQuery.GetManyCommentReportQuery, error) {
+	return &commentQuery.GetManyCommentReportQuery{
 		Reason:       req.Reason,
 		UserEmail:    req.UserEmail,
 		AdminEmail:   req.AdminEmail,

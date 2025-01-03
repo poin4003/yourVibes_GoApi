@@ -5,7 +5,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
-	admin_query "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
+	adminQuery "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	"regexp"
 	"time"
 )
@@ -43,14 +43,14 @@ func ValidateAdminQueryObject(input interface{}) error {
 
 func (req *AdminQueryObject) ToGetOneAdminQuery(
 	adminID uuid.UUID,
-) (*admin_query.GetOneAdminQuery, error) {
-	return &admin_query.GetOneAdminQuery{
+) (*adminQuery.GetOneAdminQuery, error) {
+	return &adminQuery.GetOneAdminQuery{
 		AdminId: adminID,
 	}, nil
 }
 
-func (req *AdminQueryObject) ToGetManyAdminQuery() (*admin_query.GetManyAdminQuery, error) {
-	return &admin_query.GetManyAdminQuery{
+func (req *AdminQueryObject) ToGetManyAdminQuery() (*adminQuery.GetManyAdminQuery, error) {
+	return &adminQuery.GetManyAdminQuery{
 		Name:         req.Name,
 		Email:        req.Email,
 		PhoneNumber:  req.PhoneNumber,

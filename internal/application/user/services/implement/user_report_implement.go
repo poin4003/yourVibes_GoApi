@@ -6,30 +6,30 @@ import (
 	"fmt"
 	"net/http"
 
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	user_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 )
 
 type sUserReport struct {
-	userReportRepo user_report_repo.IUserReportRepository
-	userRepo       user_report_repo.IUserRepository
-	postRepo       user_report_repo.IPostRepository
-	commentRepo    user_report_repo.ICommentRepository
+	userReportRepo userReportRepo.IUserReportRepository
+	userRepo       userReportRepo.IUserRepository
+	postRepo       userReportRepo.IPostRepository
+	commentRepo    userReportRepo.ICommentRepository
 }
 
 func NewUserReportImplement(
-	userReportRepo user_report_repo.IUserReportRepository,
-	userRepo user_report_repo.IUserRepository,
-	postRepo user_report_repo.IPostRepository,
-	commentRepo user_report_repo.ICommentRepository,
+	userReportRepo userReportRepo.IUserReportRepository,
+	userRepo userReportRepo.IUserRepository,
+	postRepo userReportRepo.IPostRepository,
+	commentRepo userReportRepo.ICommentRepository,
 ) *sUserReport {
 	return &sUserReport{
 		userReportRepo: userReportRepo,
@@ -41,9 +41,9 @@ func NewUserReportImplement(
 
 func (s *sUserReport) CreateUserReport(
 	ctx context.Context,
-	command *user_command.CreateReportUserCommand,
-) (result *user_command.CreateReportUserCommandResult, err error) {
-	result = &user_command.CreateReportUserCommandResult{}
+	command *userCommand.CreateReportUserCommand,
+) (result *userCommand.CreateReportUserCommandResult, err error) {
+	result = &userCommand.CreateReportUserCommandResult{}
 	result.UserReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -61,7 +61,7 @@ func (s *sUserReport) CreateUserReport(
 	}
 
 	// 3. Create report
-	userReportEntity, err := user_entity.NewUserReport(
+	userReportEntity, err := userEntity.NewUserReport(
 		command.UserId,
 		command.ReportedUserId,
 		command.Reason,
@@ -84,9 +84,9 @@ func (s *sUserReport) CreateUserReport(
 
 func (s *sUserReport) HandleUserReport(
 	ctx context.Context,
-	command *user_command.HandleUserReportCommand,
-) (result *user_command.HandleUserReportCommandResult, err error) {
-	result = &user_command.HandleUserReportCommandResult{}
+	command *userCommand.HandleUserReportCommand,
+) (result *userCommand.HandleUserReportCommandResult, err error) {
+	result = &userCommand.HandleUserReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exists
@@ -108,7 +108,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	// 3. Update reported user status
-	reportedUserUpdateEntity := &user_entity.UserUpdate{
+	reportedUserUpdateEntity := &userEntity.UserUpdate{
 		Status: pointer.Ptr(false),
 	}
 
@@ -127,7 +127,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	// 4. Update reportedUser posts status
-	postUpdateEntity := &post_entity.PostUpdate{
+	postUpdateEntity := &postEntity.PostUpdate{
 		Status: pointer.Ptr(false),
 	}
 	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
@@ -156,7 +156,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	// 6. Update report status
-	userReportEntity := &user_entity.UserReportUpdate{
+	userReportEntity := &userEntity.UserReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
 		Status:  pointer.Ptr(true),
 	}
@@ -172,9 +172,9 @@ func (s *sUserReport) HandleUserReport(
 
 func (s *sUserReport) DeleteUserReport(
 	ctx context.Context,
-	command *user_command.DeleteUserReportCommand,
-) (result *user_command.DeleteUserReportCommandResult, err error) {
-	result = &user_command.DeleteUserReportCommandResult{}
+	command *userCommand.DeleteUserReportCommand,
+) (result *userCommand.DeleteUserReportCommandResult, err error) {
+	result = &userCommand.DeleteUserReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exists
@@ -207,9 +207,9 @@ func (s *sUserReport) DeleteUserReport(
 
 func (s *sUserReport) ActivateUserAccount(
 	ctx context.Context,
-	command *user_command.ActivateUserAccountCommand,
-) (result *user_command.ActivateUserAccountCommandResult, err error) {
-	result = &user_command.ActivateUserAccountCommandResult{}
+	command *userCommand.ActivateUserAccountCommand,
+) (result *userCommand.ActivateUserAccountCommandResult, err error) {
+	result = &userCommand.ActivateUserAccountCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exists
@@ -231,7 +231,7 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	// 3. Update reported user status
-	reportedUserUpdateEntity := &user_entity.UserUpdate{
+	reportedUserUpdateEntity := &userEntity.UserUpdate{
 		Status: pointer.Ptr(true),
 	}
 
@@ -250,7 +250,7 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	// 4. Update reportedUser posts status
-	postUpdateEntity := &post_entity.PostUpdate{
+	postUpdateEntity := &postEntity.PostUpdate{
 		Status: pointer.Ptr(true),
 	}
 	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
@@ -290,9 +290,9 @@ func (s *sUserReport) ActivateUserAccount(
 
 func (s *sUserReport) GetDetailUserReport(
 	ctx context.Context,
-	query *user_query.GetOneUserReportQuery,
-) (result *user_query.UserReportQueryResult, err error) {
-	result = &user_query.UserReportQueryResult{}
+	query *userQuery.GetOneUserReportQuery,
+) (result *userQuery.UserReportQueryResult, err error) {
+	result = &userQuery.UserReportQueryResult{}
 	result.UserReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -316,9 +316,9 @@ func (s *sUserReport) GetDetailUserReport(
 
 func (s *sUserReport) GetManyUserReport(
 	ctx context.Context,
-	query *user_query.GetManyUserReportQuery,
-) (result *user_query.UserReportQueryListResult, err error) {
-	result = &user_query.UserReportQueryListResult{}
+	query *userQuery.GetManyUserReportQuery,
+) (result *userQuery.UserReportQueryListResult, err error) {
+	result = &userQuery.UserReportQueryListResult{}
 	result.UserReports = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

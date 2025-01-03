@@ -5,7 +5,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 )
 
@@ -30,8 +30,8 @@ func ValidateSharePostRequest(req interface{}) error {
 func (req *SharePostRequest) ToSharePostCommand(
 	postId uuid.UUID,
 	userId uuid.UUID,
-) (*post_command.SharePostCommand, error) {
-	return &post_command.SharePostCommand{
+) (*postCommand.SharePostCommand, error) {
+	return &postCommand.SharePostCommand{
 		PostId:   postId,
 		UserId:   userId,
 		Content:  req.Content,

@@ -5,8 +5,8 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user"
-	advertise_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
-	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
+	advertiseRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
+	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
 )
 
 type AdvertiseRouter struct{}
@@ -19,7 +19,7 @@ func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 	billRouterPublic := Router.Group("/bill")
 	{
 		billRouterPublic.GET("/",
-			helpers.ValidateQuery(&advertise_request.ConfirmPaymentRequest{}, advertise_request.ValidateConfirmPaymentRequest),
+			helpers.ValidateQuery(&advertiseRequest.ConfirmPaymentRequest{}, advertiseRequest.ValidateConfirmPaymentRequest),
 			billController.ConfirmPayment,
 		)
 	}
@@ -29,12 +29,12 @@ func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 	advertiseRouterPrivate.Use(middlewares.UserAuthProtected())
 	{
 		advertiseRouterPrivate.POST("/",
-			helpers.ValidateJsonBody(&advertise_request.CreateAdvertiseRequest{}, advertise_request.ValidateCreateAdvertiseRequest),
+			helpers.ValidateJsonBody(&advertiseRequest.CreateAdvertiseRequest{}, advertiseRequest.ValidateCreateAdvertiseRequest),
 			advertiseController.CreateAdvertise,
 		)
 
 		advertiseRouterPrivate.GET("/",
-			helpers.ValidateQuery(&advertise_query.AdvertiseQueryObject{}, advertise_query.ValidateAdvertiseQueryObject),
+			helpers.ValidateQuery(&advertiseQuery.AdvertiseQueryObject{}, advertiseQuery.ValidateAdvertiseQueryObject),
 			advertiseController.GetManyAdvertise,
 		)
 	}

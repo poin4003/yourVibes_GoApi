@@ -6,25 +6,25 @@ import (
 	"fmt"
 	"net/http"
 
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	post_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 )
 
 type sPostReport struct {
-	postReportRepo post_report_repo.IPostReportRepository
-	postRepo       post_report_repo.IPostRepository
+	postReportRepo postReportRepo.IPostReportRepository
+	postRepo       postReportRepo.IPostRepository
 }
 
 func NewPostReportImplement(
-	postReportRepo post_report_repo.IPostReportRepository,
-	postRepo post_report_repo.IPostRepository,
+	postReportRepo postReportRepo.IPostReportRepository,
+	postRepo postReportRepo.IPostRepository,
 ) *sPostReport {
 	return &sPostReport{
 		postReportRepo: postReportRepo,
@@ -34,9 +34,9 @@ func NewPostReportImplement(
 
 func (s *sPostReport) CreatePostReport(
 	ctx context.Context,
-	command *post_command.CreateReportPostCommand,
-) (result *post_command.CreateReportPostCommandResult, err error) {
-	result = &post_command.CreateReportPostCommandResult{}
+	command *postCommand.CreateReportPostCommand,
+) (result *postCommand.CreateReportPostCommandResult, err error) {
+	result = &postCommand.CreateReportPostCommandResult{}
 	result.PostReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -54,7 +54,7 @@ func (s *sPostReport) CreatePostReport(
 	}
 
 	// 3. Create report
-	postReportEntity, err := post_entity.NewPostReport(
+	postReportEntity, err := postEntity.NewPostReport(
 		command.UserId,
 		command.ReportedPostId,
 		command.Reason,
@@ -77,9 +77,9 @@ func (s *sPostReport) CreatePostReport(
 
 func (s *sPostReport) HandlePostReport(
 	ctx context.Context,
-	command *post_command.HandlePostReportCommand,
-) (result *post_command.HandlePostReportCommandResult, err error) {
-	result = &post_command.HandlePostReportCommandResult{}
+	command *postCommand.HandlePostReportCommand,
+) (result *postCommand.HandlePostReportCommandResult, err error) {
+	result = &postCommand.HandlePostReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -97,11 +97,11 @@ func (s *sPostReport) HandlePostReport(
 	if postReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You don't need to handle this report again")
+		return result, fmt.Errorf("you don't need to handle this report again")
 	}
 
 	// 3. Update reported post status
-	reportedPostUpdateEntity := &post_entity.PostUpdate{
+	reportedPostUpdateEntity := &postEntity.PostUpdate{
 		Status: pointer.Ptr(false),
 	}
 
@@ -120,7 +120,7 @@ func (s *sPostReport) HandlePostReport(
 	}
 
 	// 4. Update report status
-	postReportEntity := &post_entity.PostReportUpdate{
+	postReportEntity := &postEntity.PostReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
 		Status:  pointer.Ptr(true),
 	}
@@ -136,9 +136,9 @@ func (s *sPostReport) HandlePostReport(
 
 func (s *sPostReport) DeletePostReport(
 	ctx context.Context,
-	command *post_command.DeletePostReportCommand,
-) (result *post_command.DeletePostReportCommandResult, err error) {
-	result = &post_command.DeletePostReportCommandResult{}
+	command *postCommand.DeletePostReportCommand,
+) (result *postCommand.DeletePostReportCommandResult, err error) {
+	result = &postCommand.DeletePostReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -156,7 +156,7 @@ func (s *sPostReport) DeletePostReport(
 	if postReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You can't delete this report, it's already handled")
+		return result, fmt.Errorf("you can't delete this report, it's already handled")
 	}
 
 	// 3. Delete report
@@ -171,9 +171,9 @@ func (s *sPostReport) DeletePostReport(
 
 func (s *sPostReport) ActivatePost(
 	ctx context.Context,
-	command *post_command.ActivatePostCommand,
-) (result *post_command.ActivatePostCommandResult, err error) {
-	result = &post_command.ActivatePostCommandResult{}
+	command *postCommand.ActivatePostCommand,
+) (result *postCommand.ActivatePostCommandResult, err error) {
+	result = &postCommand.ActivatePostCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -191,11 +191,11 @@ func (s *sPostReport) ActivatePost(
 	if postFound.Status {
 		result.ResultCode = response.ErrCodePostIsAlreadyActivated
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("You don't need to activate this post")
+		return result, fmt.Errorf("you don't need to activate this post")
 	}
 
 	// 3. Update reported post status
-	reportedPostUpdateEntity := &post_entity.PostUpdate{
+	reportedPostUpdateEntity := &postEntity.PostUpdate{
 		Status: pointer.Ptr(true),
 	}
 
@@ -225,9 +225,9 @@ func (s *sPostReport) ActivatePost(
 
 func (s *sPostReport) GetDetailPostReport(
 	ctx context.Context,
-	query *post_query.GetOnePostReportQuery,
-) (result *post_query.PostReportQueryResult, err error) {
-	result = &post_query.PostReportQueryResult{}
+	query *postQuery.GetOnePostReportQuery,
+) (result *postQuery.PostReportQueryResult, err error) {
+	result = &postQuery.PostReportQueryResult{}
 	result.PostReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -251,9 +251,9 @@ func (s *sPostReport) GetDetailPostReport(
 
 func (s *sPostReport) GetManyPostReport(
 	ctx context.Context,
-	query *post_query.GetManyPostReportQuery,
-) (result *post_query.PostReportQueryListResult, err error) {
-	result = &post_query.PostReportQueryListResult{}
+	query *postQuery.GetManyPostReportQuery,
+) (result *postQuery.PostReportQueryListResult, err error) {
+	result = &postQuery.PostReportQueryListResult{}
 	result.PostReports = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

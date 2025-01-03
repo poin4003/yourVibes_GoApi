@@ -40,13 +40,8 @@ type ForgotUserPasswordCommand struct {
 }
 
 type AuthGoogleCommand struct {
-	OpenId       string
-	AuthGoogleId string
-	Platform     consts.Platform
-	FamilyName   string
-	Name         string
-	Email        string
-	AvatarUrl    string
+	AuthorizationCode string
+	Platform          consts.Platform
 }
 
 type RegisterCommandResult struct {

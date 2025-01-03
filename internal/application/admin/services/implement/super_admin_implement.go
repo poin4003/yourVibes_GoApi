@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
-	admin_query "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
-	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
-	admin_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
-	admin_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	adminQuery "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
+	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
+	adminValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
+	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
 	"gorm.io/gorm"
@@ -19,11 +19,11 @@ import (
 )
 
 type sSuperAdmin struct {
-	adminRepo admin_repo.IAdminRepository
+	adminRepo adminRepo.IAdminRepository
 }
 
 func NewSuperAdminImplement(
-	adminRepo admin_repo.IAdminRepository,
+	adminRepo adminRepo.IAdminRepository,
 ) *sSuperAdmin {
 	return &sSuperAdmin{
 		adminRepo: adminRepo,
@@ -32,9 +32,9 @@ func NewSuperAdminImplement(
 
 func (s *sSuperAdmin) CreateAdmin(
 	ctx context.Context,
-	command *admin_command.CreateAdminCommand,
-) (result *admin_command.CreateAdminCommandResult, err error) {
-	result = &admin_command.CreateAdminCommandResult{}
+	command *adminCommand.CreateAdminCommand,
+) (result *adminCommand.CreateAdminCommandResult, err error) {
+	result = &adminCommand.CreateAdminCommandResult{}
 	result.Admin = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -58,7 +58,7 @@ func (s *sSuperAdmin) CreateAdmin(
 	}
 
 	// 3. Create new admin
-	newAdmin, err := admin_entity.NewAdmin(
+	newAdmin, err := adminEntity.NewAdmin(
 		command.FamilyName,
 		command.Name,
 		command.Email,
@@ -78,7 +78,7 @@ func (s *sSuperAdmin) CreateAdmin(
 	}
 
 	// 4. Map to result
-	validateAdmin, err := admin_validator.NewValidateAdmin(createdAdmin)
+	validateAdmin, err := adminValidator.NewValidateAdmin(createdAdmin)
 	if err != nil {
 		return result, err
 	}
@@ -91,14 +91,14 @@ func (s *sSuperAdmin) CreateAdmin(
 
 func (s *sSuperAdmin) UpdateAdmin(
 	ctx context.Context,
-	command *admin_command.UpdateAdminForSuperAdminCommand,
-) (result *admin_command.UpdateAdminForSuperAdminCommandResult, err error) {
-	result = &admin_command.UpdateAdminForSuperAdminCommandResult{}
+	command *adminCommand.UpdateAdminForSuperAdminCommand,
+) (result *adminCommand.UpdateAdminForSuperAdminCommandResult, err error) {
+	result = &adminCommand.UpdateAdminForSuperAdminCommandResult{}
 	result.Admin = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Update admin status or role
-	updateAdminEntity := &admin_entity.AdminUpdate{
+	updateAdminEntity := &adminEntity.AdminUpdate{
 		Status: command.Status,
 		Role:   command.Role,
 	}
@@ -129,12 +129,12 @@ func (s *sSuperAdmin) GetOneAdmin(
 	ctx context.Context,
 	query *query.GetOneAdminQuery,
 ) (result *query.AdminQueryResult, err error) {
-	result = &admin_query.AdminQueryResult{}
+	result = &adminQuery.AdminQueryResult{}
 	result.Admin = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get admin info
-	adminEntity, err := s.adminRepo.GetById(ctx, query.AdminId)
+	adminFound, err := s.adminRepo.GetById(ctx, query.AdminId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -146,7 +146,7 @@ func (s *sSuperAdmin) GetOneAdmin(
 	}
 
 	// 2. Map to result
-	result.Admin = mapper.NewAdminResult(adminEntity)
+	result.Admin = mapper.NewAdminResult(adminFound)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
@@ -156,7 +156,7 @@ func (s *sSuperAdmin) GetManyAdmin(
 	ctx context.Context,
 	query *query.GetManyAdminQuery,
 ) (result *query.AdminQueryListResult, err error) {
-	result = &admin_query.AdminQueryListResult{}
+	result = &adminQuery.AdminQueryListResult{}
 	result.Admins = nil
 	result.PagingResponse = nil
 	result.ResultCode = response.ErrServerFailed
@@ -168,8 +168,8 @@ func (s *sSuperAdmin) GetManyAdmin(
 	}
 
 	var adminResults []*common.AdminResult
-	for _, adminEntity := range adminEntities {
-		adminResult := mapper.NewAdminResult(adminEntity)
+	for _, admin := range adminEntities {
+		adminResult := mapper.NewAdminResult(admin)
 		adminResults = append(adminResults, adminResult)
 	}
 

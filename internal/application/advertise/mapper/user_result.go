@@ -2,11 +2,11 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
-	advertise_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
+	advertiseEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 )
 
 func NewUserForAdvertiseResult(
-	user *advertise_entity.UserForAdvertise,
+	user *advertiseEntity.UserForAdvertise,
 ) *common.UserForAdvertiseResult {
 	if user == nil {
 		return nil

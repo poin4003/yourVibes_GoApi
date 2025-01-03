@@ -8,7 +8,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -34,14 +34,14 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 	userIdStr := ctx.Param("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 2. Get userId from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -50,14 +50,14 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 
 	result, err := services.UserInfo().GetInfoByUserId(ctx, getOneUserQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Map to dto
 	userDto := response.ToUserWithoutSettingDto(result.User)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
 }
 
 // GetManyUsers documentation
@@ -81,14 +81,14 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	userQueryObject, ok := queryInput.(*query.UserQueryObject)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -96,7 +96,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 	getManyUserQuery, err := userQueryObject.ToGetManyUserQuery()
 	result, err := services.UserInfo().GetManyUsers(ctx, getManyUserQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
@@ -106,7 +106,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
 	}
 
-	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, userDtos, *result.PagingResponse)
 }
 
 // UpdateUser godoc
@@ -130,21 +130,21 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	updateUserRequest, ok := body.(*request.UpdateUserRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -152,11 +152,11 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	updateUserCommand, err := updateUserRequest.ToUpdateUserCommand(userIdClaim, &updateUserRequest.Avatar, &updateUserRequest.Capwall)
 	result, err := services.UserInfo().UpdateUser(ctx, updateUserCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 	}
 
 	// 6. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
 }

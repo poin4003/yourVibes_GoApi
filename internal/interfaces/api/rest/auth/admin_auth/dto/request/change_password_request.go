@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 )
 
 type ChangeAdminPasswordRequest struct {
@@ -26,8 +26,8 @@ func ValidateChangePasswordRequest(req interface{}) error {
 
 func (req *ChangeAdminPasswordRequest) ToChangeAdminPasswordCommand(
 	adminId uuid.UUID,
-) (*admin_command.ChangeAdminPasswordCommand, error) {
-	return &admin_command.ChangeAdminPasswordCommand{
+) (*adminCommand.ChangeAdminPasswordCommand, error) {
+	return &adminCommand.ChangeAdminPasswordCommand{
 		AdminId:     adminId,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,

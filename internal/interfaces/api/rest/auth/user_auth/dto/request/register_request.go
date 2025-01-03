@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"regexp"
 	"time"
 )
@@ -36,8 +36,8 @@ func ValidateRegisterRequest(req interface{}) error {
 	)
 }
 
-func (req *RegisterRequest) ToRegisterCommand() (*user_command.RegisterCommand, error) {
-	return &user_command.RegisterCommand{
+func (req *RegisterRequest) ToRegisterCommand() (*userCommand.RegisterCommand, error) {
+	return &userCommand.RegisterCommand{
 		FamilyName:  req.FamilyName,
 		Name:        req.Name,
 		Email:       req.Email,

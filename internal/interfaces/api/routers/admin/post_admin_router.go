@@ -5,7 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin"
-	admin_post_report_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/query"
+	adminPostReportQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_admin/query"
 )
 
 type PostAdminRouter struct{}
@@ -23,7 +23,7 @@ func (par *PostAdminRouter) InitPostAdminRouter(Router *gin.RouterGroup) {
 		)
 
 		adminRouterPrivate.GET("/report",
-			helpers.ValidateQuery(&admin_post_report_query.PostReportQueryObject{}, admin_post_report_query.ValidatePostReportQueryObject),
+			helpers.ValidateQuery(&adminPostReportQuery.PostReportQueryObject{}, adminPostReportQuery.ValidatePostReportQueryObject),
 			adminPostReportController.GetManyPostReports,
 		)
 

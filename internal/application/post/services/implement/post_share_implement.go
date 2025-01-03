@@ -3,26 +3,26 @@ package implement
 import (
 	"context"
 	"errors"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	post_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
+	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"net/http"
 )
 
 type sPostShare struct {
-	userRepo  post_repo.IUserRepository
-	postRepo  post_repo.IPostRepository
-	mediaRepo post_repo.IMediaRepository
+	userRepo  postRepo.IUserRepository
+	postRepo  postRepo.IPostRepository
+	mediaRepo postRepo.IMediaRepository
 }
 
 func NewPostShareImplement(
-	userRepo post_repo.IUserRepository,
-	postRepo post_repo.IPostRepository,
-	mediaRepo post_repo.IMediaRepository,
+	userRepo postRepo.IUserRepository,
+	postRepo postRepo.IPostRepository,
+	mediaRepo postRepo.IMediaRepository,
 ) *sPostShare {
 	return &sPostShare{
 		userRepo:  userRepo,
@@ -33,14 +33,14 @@ func NewPostShareImplement(
 
 func (s *sPostShare) SharePost(
 	ctx context.Context,
-	command *post_command.SharePostCommand,
-) (result *post_command.SharePostCommandResult, err error) {
-	result = &post_command.SharePostCommandResult{}
+	command *postCommand.SharePostCommand,
+) (result *postCommand.SharePostCommandResult, err error) {
+	result = &postCommand.SharePostCommandResult{}
 	result.Post = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find post by post_id
-	postEntity, err := s.postRepo.GetById(ctx, command.PostId)
+	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil
@@ -52,9 +52,9 @@ func (s *sPostShare) SharePost(
 	}
 
 	// 2. Create new post (parent_id = post_id, user_id = userId)
-	if postEntity.ParentId == nil {
+	if postFound.ParentId == nil {
 		// 2.1. Copy post info from root post
-		newPost, err := post_entity.NewPostForShare(
+		newPost, err := postEntity.NewPostForShare(
 			command.UserId,
 			command.Content,
 			command.Privacy,
@@ -71,7 +71,7 @@ func (s *sPostShare) SharePost(
 			return result, err
 		}
 
-		validatePost, err := post_validator.NewValidatedPost(newSharePost)
+		validatePost, err := postValidator.NewValidatedPost(newSharePost)
 		if err != nil {
 			return result, err
 		}
@@ -82,7 +82,7 @@ func (s *sPostShare) SharePost(
 		return result, nil
 	} else {
 		// 3. Find actually root post
-		rootPost, err := s.postRepo.GetById(ctx, *postEntity.ParentId)
+		rootPost, err := s.postRepo.GetById(ctx, *postFound.ParentId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				result.Post = nil
@@ -94,7 +94,7 @@ func (s *sPostShare) SharePost(
 		}
 
 		// 3.1. Copy post info from root post
-		newPost, err := post_entity.NewPostForShare(
+		newPost, err := postEntity.NewPostForShare(
 			command.UserId,
 			command.Content,
 			command.Privacy,
@@ -110,7 +110,7 @@ func (s *sPostShare) SharePost(
 			return result, err
 		}
 
-		validatePost, err := post_validator.NewValidatedPost(newSharePost)
+		validatePost, err := postValidator.NewValidatedPost(newSharePost)
 		if err != nil {
 			return result, err
 		}

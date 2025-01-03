@@ -6,7 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/response"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -28,34 +28,34 @@ func (c *cAdminAuth) Login(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to loginRequest
 	loginRequest, ok := body.(*request.AdminLoginRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid login request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid login request type")
 		return
 	}
 
 	// 3. Call service to handle login
 	loginCommand, err := loginRequest.ToLoginCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.AdminAuth().Login(ctx, loginCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Convert to dto
 	adminDto := response.ToAdminDto(result.Admin)
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, gin.H{
 		"access_token": result.AccessToken,
 		"admin":        adminDto,
 	})
@@ -74,36 +74,36 @@ func (c *cAdminAuth) ChangeAdminPassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to change admin password request
 	changeAdminPasswordRequest, ok := body.(*request.ChangeAdminPasswordRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Get admin id from token
 	adminIdClaim, err := extensions.GetAdminID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// 4. Call service to handle change password
 	changeAdminPasswordCommand, err := changeAdminPasswordRequest.ToChangeAdminPasswordCommand(adminIdClaim)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.AdminAuth().ChangeAdminPassword(ctx, changeAdminPasswordCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, nil)
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, nil)
 }

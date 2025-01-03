@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	comment_command "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
+	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
-	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
-	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
-	comment_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	commentRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
@@ -17,15 +17,15 @@ import (
 )
 
 type sCommentLike struct {
-	userRepo            comment_repo.IUserRepository
-	commentRepo         comment_repo.ICommentRepository
-	likeUserCommentRepo comment_repo.ILikeUserCommentRepository
+	userRepo            commentRepo.IUserRepository
+	commentRepo         commentRepo.ICommentRepository
+	likeUserCommentRepo commentRepo.ILikeUserCommentRepository
 }
 
 func NewCommentLikeImplement(
-	userRepo comment_repo.IUserRepository,
-	commentRepo comment_repo.ICommentRepository,
-	likeUserCommentRepo comment_repo.ILikeUserCommentRepository,
+	userRepo commentRepo.IUserRepository,
+	commentRepo commentRepo.ICommentRepository,
+	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
 ) *sCommentLike {
 	return &sCommentLike{
 		userRepo:            userRepo,
@@ -36,9 +36,9 @@ func NewCommentLikeImplement(
 
 func (s *sCommentLike) LikeComment(
 	ctx context.Context,
-	command *comment_command.LikeCommentCommand,
-) (result *comment_command.LikeCommentResult, err error) {
-	result = &comment_command.LikeCommentResult{}
+	command *commentCommand.LikeCommentCommand,
+) (result *commentCommand.LikeCommentResult, err error) {
+	result = &commentCommand.LikeCommentResult{}
 	result.Comment = nil
 	result.ResultCode = response.ErrDataNotFound
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -50,11 +50,11 @@ func (s *sCommentLike) LikeComment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		return result, fmt.Errorf("Error when find comment %w", err.Error())
+		return result, fmt.Errorf("error when find comment %v", err.Error())
 	}
 
 	// 2. Check status of like
-	likeUserCommentEntity, err := comment_entity.NewLikeUserCommentEntity(command.UserId, command.CommentId)
+	likeUserCommentEntity, err := commentEntity.NewLikeUserCommentEntity(command.UserId, command.CommentId)
 	if err != nil {
 		return result, err
 	}
@@ -71,7 +71,7 @@ func (s *sCommentLike) LikeComment(
 		}
 
 		// 2.2. Plus 1 to like count of comment
-		updateCommentData := comment_entity.CommentUpdate{
+		updateCommentData := commentEntity.CommentUpdate{
 			LikeCount: pointer.Ptr(commentFound.LikeCount + 1),
 		}
 
@@ -101,7 +101,7 @@ func (s *sCommentLike) LikeComment(
 		}
 
 		// 3.2. Minus 1 of comment like count
-		updateCommentData := comment_entity.CommentUpdate{
+		updateCommentData := commentEntity.CommentUpdate{
 			LikeCount: pointer.Ptr(commentFound.LikeCount - 1),
 		}
 
@@ -124,9 +124,9 @@ func (s *sCommentLike) LikeComment(
 
 func (s *sCommentLike) GetUsersOnLikeComment(
 	ctx context.Context,
-	query *comment_query.GetCommentLikeQuery,
-) (result *comment_query.GetCommentLikeResult, err error) {
-	result = &comment_query.GetCommentLikeResult{}
+	query *commentQuery.GetCommentLikeQuery,
+) (result *commentQuery.GetCommentLikeResult, err error) {
+	result = &commentQuery.GetCommentLikeResult{}
 	likeUserCommentEntites, paging, err := s.likeUserCommentRepo.GetLikeUserComment(ctx, query)
 	if err != nil {
 		result.Users = nil

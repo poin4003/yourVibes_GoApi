@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	query_service "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
+	advertiseServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_admin/dto/response"
-	query_interface "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_admin/query"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_admin/query"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cAdvertiseAdmin struct{}
@@ -32,24 +32,24 @@ func (c *cAdvertiseAdmin) GetAdvertiseDetail(ctx *gin.Context) {
 	advertiseIdStr := ctx.Param("advertise_id")
 	advertiseId, err := uuid.Parse(advertiseIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 2. Call service to get detail
-	getOneAdvertiseQuery := query_service.GetOneAdvertiseQuery{
+	getOneAdvertiseQuery := advertiseServiceQuery.GetOneAdvertiseQuery{
 		AdvertiseId: advertiseId,
 	}
 	result, err := services.Advertise().GetAdvertise(ctx, &getOneAdvertiseQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 3. Map to dto
 	advertiseDto := response.ToAdvertiseDetail(result.Advertise)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDto)
 }
 
 // GetManyAdvertise godoc
@@ -75,27 +75,27 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
 	// 2. Convert to userQueryObject
-	advertiseQueryObject, ok := queryInput.(*query_interface.AdvertiseQueryObject)
+	advertiseQueryObject, ok := queryInput.(*advertiseQuery.AdvertiseQueryObject)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle get many
 	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	result, err := services.Advertise().GetManyAdvertise(ctx, getManyAdvertiseQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
@@ -105,5 +105,5 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(advertiseResult))
 	}
 
-	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDtos, *result.PagingResponse)
+	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDtos, *result.PagingResponse)
 }

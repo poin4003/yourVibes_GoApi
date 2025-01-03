@@ -7,7 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 )
 
 type UserReportQueryObject struct {
@@ -43,15 +43,15 @@ func ValidateUserReportQueryObject(input interface{}) error {
 func ToGetOneUserReportQuery(
 	userId uuid.UUID,
 	reportedUserId uuid.UUID,
-) (*user_query.GetOneUserReportQuery, error) {
-	return &user_query.GetOneUserReportQuery{
+) (*userQuery.GetOneUserReportQuery, error) {
+	return &userQuery.GetOneUserReportQuery{
 		UserId:         userId,
 		ReportedUserId: reportedUserId,
 	}, nil
 }
 
-func (req *UserReportQueryObject) ToGetManyUserQuery() (*user_query.GetManyUserReportQuery, error) {
-	return &user_query.GetManyUserReportQuery{
+func (req *UserReportQueryObject) ToGetManyUserQuery() (*userQuery.GetManyUserReportQuery, error) {
+	return &userQuery.GetManyUserReportQuery{
 		Reason:            req.Reason,
 		UserEmail:         req.UserEmail,
 		ReportedUserEmail: req.ReportedUserEmail,

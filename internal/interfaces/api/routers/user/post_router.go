@@ -6,8 +6,8 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user"
-	post_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
+	postRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 )
 
 type PostRouter struct{}
@@ -26,19 +26,19 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	{
 		// post_user
 		postRouterPrivate.POST("/",
-			helpers.ValidateFormBody(&post_request.CreatePostRequest{}, post_request.ValidateCreatePostRequest),
+			helpers.ValidateFormBody(&postRequest.CreatePostRequest{}, postRequest.ValidateCreatePostRequest),
 			postUserController.CreatePost,
 		)
 
 		postRouterPrivate.GET("/",
-			helpers.ValidateQuery(&post_query.PostQueryObject{}, post_query.ValidatePostQueryObject),
+			helpers.ValidateQuery(&postQuery.PostQueryObject{}, postQuery.ValidatePostQueryObject),
 			postUserController.GetManyPost,
 		)
 
 		postRouterPrivate.GET("/:post_id", postUserController.GetPostById)
 
 		postRouterPrivate.PATCH("/:post_id",
-			helpers.ValidateFormBody(&post_request.UpdatePostRequest{}, post_request.ValidateUpdatePostRequest),
+			helpers.ValidateFormBody(&postRequest.UpdatePostRequest{}, postRequest.ValidateUpdatePostRequest),
 			postUserController.UpdatePost,
 		)
 
@@ -48,13 +48,13 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		postRouterPrivate.POST("/like_post/:post_id", postLikeController.LikePost)
 
 		postRouterPrivate.GET("/like_post/:post_id",
-			helpers.ValidateQuery(&post_query.PostLikeQueryObject{}, post_query.ValidatePostLikeQueryObject),
+			helpers.ValidateQuery(&postQuery.PostLikeQueryObject{}, postQuery.ValidatePostLikeQueryObject),
 			postLikeController.GetUserLikePost,
 		)
 
 		// post_share
 		postRouterPrivate.POST("/share_post/:post_id",
-			helpers.ValidateFormBody(&post_request.SharePostRequest{}, post_request.ValidateSharePostRequest),
+			helpers.ValidateFormBody(&postRequest.SharePostRequest{}, postRequest.ValidateSharePostRequest),
 			postShareController.SharePost,
 		)
 
@@ -62,13 +62,13 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		postRouterPrivate.DELETE("/new_feeds/:post_id", postNewFeedController.DeleteNewFeed)
 
 		postRouterPrivate.GET("/new_feeds/",
-			helpers.ValidateQuery(&post_query.NewFeedQueryObject{}, post_query.ValidateNewFeedQueryObject),
+			helpers.ValidateQuery(&postQuery.NewFeedQueryObject{}, postQuery.ValidateNewFeedQueryObject),
 			postNewFeedController.GetNewFeeds,
 		)
 
 		// post report
 		postRouterPrivate.POST("/report",
-			helpers.ValidateJsonBody(&post_request.ReportPostRequest{}, post_request.ValidateReportPostRequest),
+			helpers.ValidateJsonBody(&postRequest.ReportPostRequest{}, postRequest.ValidateReportPostRequest),
 			postReportController.ReportPost,
 		)
 	}

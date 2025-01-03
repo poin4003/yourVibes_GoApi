@@ -4,21 +4,21 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
-	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
-	admin_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
+	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"gorm.io/gorm"
 	"net/http"
 )
 
 type sAdminInfo struct {
-	adminRepo admin_repo.IAdminRepository
+	adminRepo adminRepo.IAdminRepository
 }
 
 func NewAdminInfoImplement(
-	adminRepo admin_repo.IAdminRepository,
+	adminRepo adminRepo.IAdminRepository,
 ) *sAdminInfo {
 	return &sAdminInfo{
 		adminRepo: adminRepo,
@@ -27,14 +27,14 @@ func NewAdminInfoImplement(
 
 func (s *sAdminInfo) UpdateAdmin(
 	ctx context.Context,
-	command *admin_command.UpdateAdminInfoCommand,
-) (result *admin_command.UpdateAdminInfoCommandResult, err error) {
-	result = &admin_command.UpdateAdminInfoCommandResult{}
+	command *adminCommand.UpdateAdminInfoCommand,
+) (result *adminCommand.UpdateAdminInfoCommandResult, err error) {
+	result = &adminCommand.UpdateAdminInfoCommandResult{}
 	result.Admin = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Update admin info
-	updateAdminEntity := &admin_entity.AdminUpdate{
+	updateAdminEntity := &adminEntity.AdminUpdate{
 		FamilyName:  command.FamilyName,
 		Name:        command.Name,
 		PhoneNumber: command.PhoneNumber,

@@ -5,10 +5,10 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth"
-	auth_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
+	authRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user"
-	user_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
+	userRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 )
 
 type UserRouter struct{}
@@ -26,32 +26,32 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	{
 		// user_auth
 		userRouterPublic.POST("/register",
-			helpers.ValidateJsonBody(&auth_request.RegisterRequest{}, auth_request.ValidateRegisterRequest),
+			helpers.ValidateJsonBody(&authRequest.RegisterRequest{}, authRequest.ValidateRegisterRequest),
 			UserAuthController.Register,
 		)
 
 		userRouterPublic.POST("/verifyemail",
-			helpers.ValidateJsonBody(&auth_request.VerifyEmailRequest{}, auth_request.ValidateVerifyEmailRequest),
+			helpers.ValidateJsonBody(&authRequest.VerifyEmailRequest{}, authRequest.ValidateVerifyEmailRequest),
 			UserAuthController.VerifyEmail,
 		)
 
 		userRouterPublic.POST("/login",
-			helpers.ValidateJsonBody(&auth_request.LoginRequest{}, auth_request.ValidateLoginRequest),
+			helpers.ValidateJsonBody(&authRequest.LoginRequest{}, authRequest.ValidateLoginRequest),
 			UserAuthController.Login,
 		)
 
 		userRouterPublic.POST("/auth_google",
-			helpers.ValidateJsonBody(&auth_request.AuthGoogleRequest{}, auth_request.ValidateAuthGoogleRequest),
+			helpers.ValidateJsonBody(&authRequest.AuthGoogleRequest{}, authRequest.ValidateAuthGoogleRequest),
 			UserAuthController.AuthGoogle,
 		)
 
 		userRouterPublic.POST("/get_otp_forgot_user_password",
-			helpers.ValidateJsonBody(&auth_request.GetOtpForgotUserPasswordRequest{}, auth_request.ValidateGetOtpForgotUserPasswordRequest),
+			helpers.ValidateJsonBody(&authRequest.GetOtpForgotUserPasswordRequest{}, authRequest.ValidateGetOtpForgotUserPasswordRequest),
 			UserAuthController.GetOtpForgotUserPassword,
 		)
 
 		userRouterPublic.POST("/forgot_user_password",
-			helpers.ValidateJsonBody(&auth_request.ForgotUserPasswordRequest{}, auth_request.ValidateForgotUserPasswordRequest),
+			helpers.ValidateJsonBody(&authRequest.ForgotUserPasswordRequest{}, authRequest.ValidateForgotUserPasswordRequest),
 			UserAuthController.ForgotUserPassword,
 		)
 
@@ -65,7 +65,7 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	{
 		// user authentication
 		userRouterPrivate.PATCH("/change_password",
-			helpers.ValidateJsonBody(&auth_request.ChangePasswordRequest{}, auth_request.ValidateChangePasswordRequest),
+			helpers.ValidateJsonBody(&authRequest.ChangePasswordRequest{}, authRequest.ValidateChangePasswordRequest),
 			UserAuthController.ChangePassword,
 		)
 
@@ -73,18 +73,18 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.GET("/:userId", UserInfoController.GetInfoByUserId)
 
 		userRouterPrivate.GET("/",
-			helpers.ValidateQuery(&user_query.UserQueryObject{}, user_query.ValidateUserQueryObject),
+			helpers.ValidateQuery(&userQuery.UserQueryObject{}, userQuery.ValidateUserQueryObject),
 			UserInfoController.GetManyUsers,
 		)
 
 		userRouterPrivate.PATCH("/",
-			helpers.ValidateFormBody(&user_request.UpdateUserRequest{}, user_request.ValidateUpdateUserRequest),
+			helpers.ValidateFormBody(&userRequest.UpdateUserRequest{}, userRequest.ValidateUpdateUserRequest),
 			UserInfoController.UpdateUser,
 		)
 
 		// user_notification
 		userRouterPrivate.GET("/notifications",
-			helpers.ValidateQuery(&user_query.NotificationQueryObject{}, user_query.ValidateNotificationQueryObject),
+			helpers.ValidateQuery(&userQuery.NotificationQueryObject{}, userQuery.ValidateNotificationQueryObject),
 			UserNotificationController.GetNotification,
 		)
 
@@ -96,7 +96,7 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.DELETE("/friends/friend_request/:friend_id", UserFriendController.UndoFriendRequest)
 
 		userRouterPrivate.GET("/friends/friend_request",
-			helpers.ValidateQuery(&user_query.FriendRequestQueryObject{}, user_query.ValidateFriendRequestQueryObject),
+			helpers.ValidateQuery(&userQuery.FriendRequestQueryObject{}, userQuery.ValidateFriendRequestQueryObject),
 			UserFriendController.GetFriendRequests,
 		)
 
@@ -105,13 +105,13 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.DELETE("/friends/:friend_id", UserFriendController.UnFriend)
 
 		userRouterPrivate.GET("/friends/:user_id",
-			helpers.ValidateQuery(&user_query.FriendQueryObject{}, user_query.ValidateFriendQueryObject),
+			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
 			UserFriendController.GetFriends,
 		)
 
 		// user report
 		userRouterPrivate.POST("/report",
-			helpers.ValidateJsonBody(&user_request.ReportUserRequest{}, user_request.ValidateReportUserRequest),
+			helpers.ValidateJsonBody(&userRequest.ReportUserRequest{}, userRequest.ValidateReportUserRequest),
 			UserReportController.ReportUser,
 		)
 	}

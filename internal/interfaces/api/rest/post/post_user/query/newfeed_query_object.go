@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 )
 
 type NewFeedQueryObject struct {
@@ -26,8 +26,8 @@ func ValidateNewFeedQueryObject(input interface{}) error {
 
 func (req *NewFeedQueryObject) ToGetNewFeedQuery(
 	userId uuid.UUID,
-) (*post_query.GetNewFeedQuery, error) {
-	return &post_query.GetNewFeedQuery{
+) (*postQuery.GetNewFeedQuery, error) {
+	return &postQuery.GetNewFeedQuery{
 		UserId: userId,
 		Limit:  req.Limit,
 		Page:   req.Page,

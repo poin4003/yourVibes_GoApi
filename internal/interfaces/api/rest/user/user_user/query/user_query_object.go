@@ -5,7 +5,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"regexp"
 	"time"
 )
@@ -40,15 +40,15 @@ func ValidateUserQueryObject(input interface{}) error {
 func (req *UserQueryObject) ToGetOneUserQuery(
 	userId uuid.UUID,
 	authenticatedUserId uuid.UUID,
-) (*user_query.GetOneUserQuery, error) {
-	return &user_query.GetOneUserQuery{
+) (*userQuery.GetOneUserQuery, error) {
+	return &userQuery.GetOneUserQuery{
 		UserId:              userId,
 		AuthenticatedUserId: authenticatedUserId,
 	}, nil
 }
 
-func (req *UserQueryObject) ToGetManyUserQuery() (*user_query.GetManyUserQuery, error) {
-	return &user_query.GetManyUserQuery{
+func (req *UserQueryObject) ToGetManyUserQuery() (*userQuery.GetManyUserQuery, error) {
+	return &userQuery.GetManyUserQuery{
 		Name:         req.Name,
 		Email:        req.Email,
 		PhoneNumber:  req.PhoneNumber,

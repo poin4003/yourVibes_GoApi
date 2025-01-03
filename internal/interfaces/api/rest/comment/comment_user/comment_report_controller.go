@@ -6,7 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -29,38 +29,38 @@ func (c *cCommentReport) ReportComment(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to registerRequest
 	reportCommentRequest, ok := body.(*request.ReportCommentRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// 4. Call service to handle report post
 	commentReportCommand, err := reportCommentRequest.ToCreateCommentReportCommand(userIdClaim)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 	result, err := services.CommentReport().CreateCommentReport(ctx, commentReportCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 5. Map result to dto
 	commentReportDto := response.ToCommentReportDto(result.CommentReport)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, commentReportDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, commentReportDto)
 }

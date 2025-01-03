@@ -38,6 +38,7 @@ const (
 	ErrCodeUserIsAlreadyActivated       = 50022
 	ErrCodePostIsAlreadyActivated       = 50023
 	ErrCodeCommentIsAlreadyActivated    = 50024
+	ErrCodeGoogleAuth                   = 50025
 
 	// Err Login
 	ErrCodeLoginFailed        = 60001
@@ -93,6 +94,7 @@ var msg = map[int]string{
 	ErrCodeUserIsAlreadyActivated:       "User account is already activated",
 	ErrCodePostIsAlreadyActivated:       "Post is already activated",
 	ErrCodeCommentIsAlreadyActivated:    "Comment is already activated",
+	ErrCodeGoogleAuth:                   "Failed to login with Google",
 
 	ErrCodeLoginFailed:        "Account or Password is not correct",
 	ErrCodeValidateParamLogin: "Validate param login",

@@ -2,11 +2,11 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 )
 
 func NewPostReportResult(
-	postReport *post_entity.PostReport,
+	postReport *postEntity.PostReport,
 ) *common.PostReportResult {
 	var user = &common.UserForReportResult{
 		ID:          postReport.User.ID,
@@ -121,7 +121,7 @@ func NewPostReportResult(
 }
 
 func NewPostReportShortVerResult(
-	postReport *post_entity.PostReport,
+	postReport *postEntity.PostReport,
 ) *common.PostReportShortVerResult {
 	if postReport == nil {
 		return nil

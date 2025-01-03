@@ -2,12 +2,12 @@ package user_auth
 
 import (
 	"github.com/gin-gonic/gin"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/response"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -30,25 +30,25 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to verify email request
 	verifyEmailRequest, ok := body.(*request.VerifyEmailRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle verify email
 	code, err := services.UserAuth().VerifyEmail(ctx, verifyEmailRequest.Email)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, code, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, code, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, code, http.StatusOK, nil)
+	pkgResponse.SuccessResponse(ctx, code, http.StatusOK, nil)
 }
 
 // Register documentation
@@ -63,31 +63,31 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to registerRequest
 	registerRequest, ok := body.(*request.RegisterRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle register
 	registerCommand, err := registerRequest.ToRegisterCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.UserAuth().Register(ctx, registerCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, nil)
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, nil)
 }
 
 // Login documentation
@@ -102,34 +102,34 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to loginRequest
 	loginRequest, ok := body.(*request.LoginRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid login request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid login request type")
 		return
 	}
 
 	// 3. Call service to handle login
 	loginCommand, err := loginRequest.ToLoginCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.UserAuth().Login(ctx, loginCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Convert to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, gin.H{
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})
@@ -147,34 +147,34 @@ func (c *cUserAuth) AuthGoogle(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to authGoogleRequest
 	authGoogleRequest, ok := body.(*request.AuthGoogleRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle auth google
 	authGoogleCommand, err := authGoogleRequest.ToAuthGoogleCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.UserAuth().AuthGoogle(ctx, authGoogleCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 4. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, gin.H{
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, gin.H{
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})
@@ -193,38 +193,38 @@ func (c *cUserAuth) ChangePassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to change password request
 	changePasswordRequest, ok := body.(*request.ChangePasswordRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// 4. Call service to handle change password
 	changePasswordCommand, err := changePasswordRequest.ToChangePasswordCommand(userIdClaim)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.UserAuth().ChangePassword(ctx, changePasswordCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, nil)
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, nil)
 }
 
 // GetOtpForgotUserPassword documentation
@@ -239,29 +239,29 @@ func (c *cUserAuth) GetOtpForgotUserPassword(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to get otp forgot user password request
 	getOtpForgotUserPasswordRequest, ok := body.(*request.GetOtpForgotUserPasswordRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to get otp forgot user password request
-	getOtpForgotUserPasswordCommand := &user_command.GetOtpForgotUserPasswordCommand{
+	getOtpForgotUserPasswordCommand := &userCommand.GetOtpForgotUserPasswordCommand{
 		Email: getOtpForgotUserPasswordRequest.Email,
 	}
 
 	result, err := services.UserAuth().GetOtpForgotUserPassword(ctx, getOtpForgotUserPasswordCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
 
 // ForgotUserPassword documentation
@@ -276,29 +276,29 @@ func (c *cUserAuth) ForgotUserPassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to forgot user password request
 	forgotUserPasswordRequest, ok := body.(*request.ForgotUserPasswordRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle forgot user password
 	forgotUserPasswordCommand, err := forgotUserPasswordRequest.ToForgotUserPasswordCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.UserAuth().ForgotUserPassword(ctx, forgotUserPasswordCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

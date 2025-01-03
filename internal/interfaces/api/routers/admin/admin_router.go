@@ -5,12 +5,12 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin"
-	admin_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/request"
+	adminRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin"
-	super_admin_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
-	super_admin_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/query"
+	superAdminRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
+	superAdminQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth"
-	auth_request "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/request"
+	authRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/request"
 )
 
 type AdminRouter struct{}
@@ -25,7 +25,7 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 	{
 		// admin auth
 		adminRouterPublic.POST("/login",
-			helpers.ValidateJsonBody(&auth_request.AdminLoginRequest{}, auth_request.ValidateLoginRequest),
+			helpers.ValidateJsonBody(&authRequest.AdminLoginRequest{}, authRequest.ValidateLoginRequest),
 			AdminAuthController.Login,
 		)
 	}
@@ -36,27 +36,27 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 	{
 		// admin auth
 		adminRouterPrivate.PATCH("/change_password",
-			helpers.ValidateJsonBody(&auth_request.ChangeAdminPasswordRequest{}, auth_request.ValidateChangePasswordRequest),
+			helpers.ValidateJsonBody(&authRequest.ChangeAdminPasswordRequest{}, authRequest.ValidateChangePasswordRequest),
 			AdminAuthController.ChangeAdminPassword,
 		)
 
 		// admin info
 		adminRouterPrivate.PATCH("/",
-			helpers.ValidateJsonBody(&admin_request.UpdateAdminInfoRequest{}, admin_request.ValidateUpdateAdminInfoRequest),
+			helpers.ValidateJsonBody(&adminRequest.UpdateAdminInfoRequest{}, adminRequest.ValidateUpdateAdminInfoRequest),
 			AdminController.UpdateAdminInfo,
 		)
 
 		// super admin
 		adminRouterPrivate.POST("/super_admin",
 			middlewares.CheckSuperAdminRole(),
-			helpers.ValidateJsonBody(&super_admin_request.CreateAdminRequest{}, super_admin_request.ValidateCreateAdminRequest),
+			helpers.ValidateJsonBody(&superAdminRequest.CreateAdminRequest{}, superAdminRequest.ValidateCreateAdminRequest),
 			SuperAdminController.CreateAdmin,
 		)
 
 		// Change admin password
 		adminRouterPrivate.POST("/super_admin/forgot_admin_password",
 			middlewares.CheckSuperAdminRole(),
-			helpers.ValidateJsonBody(&super_admin_request.ForgotAdminPasswordRequest{}, super_admin_request.ValidateForgotAdminPasswordRequest),
+			helpers.ValidateJsonBody(&superAdminRequest.ForgotAdminPasswordRequest{}, superAdminRequest.ValidateForgotAdminPasswordRequest),
 			SuperAdminController.ForgotAdminPassword,
 		)
 
@@ -67,13 +67,13 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 
 		adminRouterPrivate.GET("/",
 			middlewares.CheckSuperAdminRole(),
-			helpers.ValidateQuery(&super_admin_query.AdminQueryObject{}, super_admin_query.ValidateAdminQueryObject),
+			helpers.ValidateQuery(&superAdminQuery.AdminQueryObject{}, superAdminQuery.ValidateAdminQueryObject),
 			SuperAdminController.GetManyAdmins,
 		)
 
 		adminRouterPrivate.PATCH("/super_admin",
 			middlewares.CheckSuperAdminRole(),
-			helpers.ValidateJsonBody(&super_admin_request.UpdateAdminForSuperAdminRequest{}, super_admin_request.ValidateUpdateAdminForSuperAdminRequest),
+			helpers.ValidateJsonBody(&superAdminRequest.UpdateAdminForSuperAdminRequest{}, superAdminRequest.ValidateUpdateAdminForSuperAdminRequest),
 			SuperAdminController.UpdateAdmin,
 		)
 	}

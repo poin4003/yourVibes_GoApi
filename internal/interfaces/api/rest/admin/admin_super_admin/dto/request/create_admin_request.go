@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"regexp"
 	"time"
 )
@@ -37,8 +37,8 @@ func ValidateCreateAdminRequest(req interface{}) error {
 	)
 }
 
-func (req *CreateAdminRequest) ToCreateAdminCommand() (*admin_command.CreateAdminCommand, error) {
-	return &admin_command.CreateAdminCommand{
+func (req *CreateAdminRequest) ToCreateAdminCommand() (*adminCommand.CreateAdminCommand, error) {
+	return &adminCommand.CreateAdminCommand{
 		FamilyName:  req.FamilyName,
 		Name:        req.Name,
 		Email:       req.Email,

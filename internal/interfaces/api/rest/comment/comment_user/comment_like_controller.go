@@ -9,7 +9,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -33,14 +33,14 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -48,14 +48,14 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 	likeCommentCommand := &command.LikeCommentCommand{CommentId: commentId, UserId: userIdClaim}
 	result, err := services.CommentLike().LikeComment(ctx, likeCommentCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Map to dto
 	commentDto := response.ToCommentWithLikedDto(result.Comment)
 
-	pkg_response.SuccessResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, commentDto)
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, commentDto)
 }
 
 // GetUserLikeComment documentation
@@ -73,14 +73,14 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
 	// 2. Convert to CommentLikeQueryObject
 	commentLikeQueryObject, ok := queryInput.(*query.CommentLikeQueryObject)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -88,20 +88,20 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, fmt.Sprintf("invalid comment id: %s", commentIdStr))
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, fmt.Sprintf("invalid comment id: %s", commentIdStr))
 		return
 	}
 
 	// 4. Call service to handle get user like comment
 	getUserLikeCommentQuery, err := commentLikeQueryObject.ToGetCommentLikeQuery(commentId)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.CommentLike().GetUsersOnLikeComment(ctx, getUserLikeCommentQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
@@ -111,5 +111,5 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserDto(userResult))
 	}
 
-	pkg_response.SuccessPagingResponse(ctx, pkg_response.ErrCodeSuccess, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.SuccessPagingResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, userDtos, *result.PagingResponse)
 }

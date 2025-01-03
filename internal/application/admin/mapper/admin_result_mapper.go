@@ -2,18 +2,18 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
-	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
-	admin_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
+	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
+	adminValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
 )
 
 func NewAdminResultFromValidateEntity(
-	admin *admin_validator.ValidateAdmin,
+	admin *adminValidator.ValidateAdmin,
 ) *common.AdminResult {
 	return NewAdminResult(&admin.Admin)
 }
 
 func NewAdminResult(
-	admin *admin_entity.Admin,
+	admin *adminEntity.Admin,
 ) *common.AdminResult {
 	if admin == nil {
 		return nil

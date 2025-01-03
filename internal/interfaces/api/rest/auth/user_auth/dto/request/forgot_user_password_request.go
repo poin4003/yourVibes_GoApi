@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"regexp"
 )
 
@@ -27,8 +27,8 @@ func ValidateForgotUserPasswordRequest(req interface{}) error {
 	)
 }
 
-func (req *ForgotUserPasswordRequest) ToForgotUserPasswordCommand() (*user_command.ForgotUserPasswordCommand, error) {
-	return &user_command.ForgotUserPasswordCommand{
+func (req *ForgotUserPasswordRequest) ToForgotUserPasswordCommand() (*userCommand.ForgotUserPasswordCommand, error) {
+	return &userCommand.ForgotUserPasswordCommand{
 		Email:       req.Email,
 		Otp:         req.Otp,
 		NewPassword: req.NewPassword,

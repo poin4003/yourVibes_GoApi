@@ -2,11 +2,11 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
-	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 )
 
 func NewCommentReportResult(
-	commentReport *comment_entity.CommentReport,
+	commentReport *commentEntity.CommentReport,
 ) *common.CommentReportResult {
 	var user = &common.UserForReportResult{
 		ID:          commentReport.User.ID,
@@ -136,7 +136,7 @@ func NewCommentReportResult(
 }
 
 func NewCommentReportShortVerResult(
-	commentReport *comment_entity.CommentReport,
+	commentReport *commentEntity.CommentReport,
 ) *common.CommentReportShortVerResult {
 	if commentReport == nil {
 		return nil

@@ -9,12 +9,12 @@ import (
 func GetUserID(ctx *gin.Context) (uuid.UUID, error) {
 	userId, exists := ctx.Get("userId")
 	if !exists {
-		return uuid.Nil, fmt.Errorf("Unauthorized: user ID not found in context")
+		return uuid.Nil, fmt.Errorf("unauthorized: user ID not found in context")
 	}
 
 	userUUID, ok := userId.(uuid.UUID)
 	if !ok {
-		return uuid.Nil, fmt.Errorf("Invalid user id format")
+		return uuid.Nil, fmt.Errorf("invalid user id format")
 	}
 
 	return userUUID, nil
@@ -23,12 +23,12 @@ func GetUserID(ctx *gin.Context) (uuid.UUID, error) {
 func GetAdminID(ctx *gin.Context) (uuid.UUID, error) {
 	adminId, exists := ctx.Get("adminId")
 	if !exists {
-		return uuid.Nil, fmt.Errorf("Unauthorized: admin ID not found in context")
+		return uuid.Nil, fmt.Errorf("unauthorized: admin ID not found in context")
 	}
 
 	userUUID, ok := adminId.(uuid.UUID)
 	if !ok {
-		return uuid.Nil, fmt.Errorf("Invalid admin id format")
+		return uuid.Nil, fmt.Errorf("invalid admin id format")
 	}
 
 	return userUUID, nil

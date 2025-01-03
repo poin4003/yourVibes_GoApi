@@ -7,7 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/query"
-	pkg_response "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
@@ -30,34 +30,34 @@ func (c *cSuperAdmin) CreateAdmin(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to registerRequest
 	createAdminRequest, ok := body.(*request.CreateAdminRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle create admin
 	createAdminCommand, err := createAdminRequest.ToCreateAdminCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.SuperAdmin().CreateAdmin(ctx, createAdminCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Map result to dto
 	adminDto := response.ToAdminDto(result.Admin)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, adminDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, adminDto)
 }
 
 // UpdateAdmin godoc
@@ -73,34 +73,34 @@ func (c *cSuperAdmin) UpdateAdmin(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to registerRequest
 	updateAdminForSuperAdminRequest, ok := body.(*request.UpdateAdminForSuperAdminRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle update admin
 	updateAdminForSuperAdminCommand, err := updateAdminForSuperAdminRequest.ToUpdateAdminForSuperAdminCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.SuperAdmin().UpdateAdmin(ctx, updateAdminForSuperAdminCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Map result to dto
 	adminDto := response.ToAdminDto(result.Admin)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, adminDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, adminDto)
 }
 
 // GetAdminById documentation
@@ -119,26 +119,26 @@ func (c *cSuperAdmin) GetAdminById(ctx *gin.Context) {
 	adminIdStr := ctx.Param("admin_id")
 	adminId, err := uuid.Parse(adminIdStr)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 3. Call service to handle get one
 	getOneAdminQuery, err := adminRequest.ToGetOneAdminQuery(adminId)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 	result, err := services.SuperAdmin().GetOneAdmin(ctx, getOneAdminQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
 	// 4. Map to Dto
 	adminDto := response.ToAdminDto(result.Admin)
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, http.StatusOK, adminDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, adminDto)
 }
 
 // GetManyAdmins godoc
@@ -165,14 +165,14 @@ func (c *cSuperAdmin) GetManyAdmins(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
 		return
 	}
 
 	// 2. Convert to AdminQueryObject
 	adminQueryObject, ok := queryInput.(*query.AdminQueryObject)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
@@ -181,7 +181,7 @@ func (c *cSuperAdmin) GetManyAdmins(ctx *gin.Context) {
 
 	result, err := services.SuperAdmin().GetManyAdmin(ctx, getManyAdminQuery)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
@@ -191,7 +191,7 @@ func (c *cSuperAdmin) GetManyAdmins(ctx *gin.Context) {
 		adminDtos = append(adminDtos, response.ToAdminDto(adminResult))
 	}
 
-	pkg_response.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, adminDtos, *result.PagingResponse)
+	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, adminDtos, *result.PagingResponse)
 }
 
 // ForgotAdminPassword documentation
@@ -207,29 +207,29 @@ func (c *cSuperAdmin) ForgotAdminPassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
 		return
 	}
 
 	// 2. Convert to forgot admin password request
 	forgotAdminPasswordRequest, ok := body.(*request.ForgotAdminPasswordRequest)
 	if !ok {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
 		return
 	}
 
 	// 3. Call service to handle forgot  password
 	forgotAdminPasswordCommand, err := forgotAdminPasswordRequest.ToForgotAdminPasswordCommand()
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, pkg_response.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := services.AdminAuth().ForgotAdminPassword(ctx, forgotAdminPasswordCommand)
 	if err != nil {
-		pkg_response.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
 		return
 	}
 
-	pkg_response.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"time"
 )
 
@@ -36,8 +36,8 @@ func ValidatePostQueryObject(input interface{}) error {
 func (req *PostQueryObject) ToGetOnePostQuery(
 	postId uuid.UUID,
 	authenticatedUserId uuid.UUID,
-) (*post_query.GetOnePostQuery, error) {
-	return &post_query.GetOnePostQuery{
+) (*postQuery.GetOnePostQuery, error) {
+	return &postQuery.GetOnePostQuery{
 		PostId:              postId,
 		AuthenticatedUserId: authenticatedUserId,
 	}, nil
@@ -45,7 +45,7 @@ func (req *PostQueryObject) ToGetOnePostQuery(
 
 func (req *PostQueryObject) ToGetManyPostQuery(
 	authenticatedUserId uuid.UUID,
-) (*post_query.GetManyPostQuery, error) {
+) (*postQuery.GetManyPostQuery, error) {
 	var userId uuid.UUID
 	if req.UserID != "" {
 		parseUserId, err := uuid.Parse(req.UserID)
@@ -55,7 +55,7 @@ func (req *PostQueryObject) ToGetManyPostQuery(
 		userId = parseUserId
 	}
 
-	return &post_query.GetManyPostQuery{
+	return &postQuery.GetManyPostQuery{
 		AuthenticatedUserId: authenticatedUserId,
 		UserID:              userId,
 		Content:             req.Content,

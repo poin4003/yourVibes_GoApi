@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 )
 
 type AdminLoginRequest struct {
@@ -24,8 +24,8 @@ func ValidateLoginRequest(req interface{}) error {
 	)
 }
 
-func (req *AdminLoginRequest) ToLoginCommand() (*admin_command.LoginCommand, error) {
-	return &admin_command.LoginCommand{
+func (req *AdminLoginRequest) ToLoginCommand() (*adminCommand.LoginCommand, error) {
+	return &adminCommand.LoginCommand{
 		Email:    req.Email,
 		Password: req.Password,
 	}, nil

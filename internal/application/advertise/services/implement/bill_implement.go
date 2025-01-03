@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	bill_command "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
-	bill_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	bill_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	billCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
+	billEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	billRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
@@ -15,17 +15,17 @@ import (
 )
 
 type sBill struct {
-	advertiseRepo    bill_repo.IAdvertiseRepository
-	billRepo         bill_repo.IBillRepository
-	postRepo         bill_repo.IPostRepository
-	notificationRepo bill_repo.INotificationRepository
+	advertiseRepo    billRepo.IAdvertiseRepository
+	billRepo         billRepo.IBillRepository
+	postRepo         billRepo.IPostRepository
+	notificationRepo billRepo.INotificationRepository
 }
 
 func NewBillImplement(
-	advertiseRepo bill_repo.IAdvertiseRepository,
-	billRepo bill_repo.IBillRepository,
-	postRepo bill_repo.IPostRepository,
-	notificationRepo bill_repo.INotificationRepository,
+	advertiseRepo billRepo.IAdvertiseRepository,
+	billRepo billRepo.IBillRepository,
+	postRepo billRepo.IPostRepository,
+	notificationRepo billRepo.INotificationRepository,
 ) *sBill {
 	return &sBill{
 		advertiseRepo:    advertiseRepo,
@@ -37,9 +37,9 @@ func NewBillImplement(
 
 func (s *sBill) ConfirmPayment(
 	ctx context.Context,
-	command *bill_command.ConfirmPaymentCommand,
-) (result *bill_command.ConfirmPaymentResult, err error) {
-	result = &bill_command.ConfirmPaymentResult{}
+	command *billCommand.ConfirmPaymentCommand,
+) (result *billCommand.ConfirmPaymentResult, err error) {
+	result = &billCommand.ConfirmPaymentResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	if command == nil {
@@ -58,7 +58,7 @@ func (s *sBill) ConfirmPayment(
 	}
 
 	// 2. Update status bill to paid
-	updateBillData := &bill_entity.BillUpdate{
+	updateBillData := &billEntity.BillUpdate{
 		Status: pointer.Ptr(true),
 	}
 
@@ -90,7 +90,7 @@ func (s *sBill) ConfirmPayment(
 	}
 
 	// 3.2. Update isAdvertisement
-	updatePostData := &post_entity.PostUpdate{
+	updatePostData := &postEntity.PostUpdate{
 		IsAdvertisement: pointer.Ptr(true),
 	}
 

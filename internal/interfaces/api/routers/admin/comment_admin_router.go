@@ -5,7 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin"
-	admin_comment_report_query "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/query"
+	adminCommentReportQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/query"
 )
 
 type CommentAdminRouter struct{}
@@ -23,7 +23,7 @@ func (car *CommentAdminRouter) InitCommentAdminRouter(Router *gin.RouterGroup) {
 		)
 
 		adminRouterPrivate.GET("/report",
-			helpers.ValidateQuery(&admin_comment_report_query.CommentReportQueryObject{}, admin_comment_report_query.ValidateCommentReportQueryObject),
+			helpers.ValidateQuery(&adminCommentReportQuery.CommentReportQueryObject{}, adminCommentReportQuery.ValidateCommentReportQueryObject),
 			adminCommentReportController.GetManyCommentReports,
 		)
 

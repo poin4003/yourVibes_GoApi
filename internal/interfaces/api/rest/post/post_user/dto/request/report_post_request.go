@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 )
 
 type ReportPostRequest struct {
@@ -26,8 +26,8 @@ func ValidateReportPostRequest(req interface{}) error {
 
 func (req *ReportPostRequest) ToCreatePostReportCommand(
 	userId uuid.UUID,
-) (*post_command.CreateReportPostCommand, error) {
-	return &post_command.CreateReportPostCommand{
+) (*postCommand.CreateReportPostCommand, error) {
+	return &postCommand.CreateReportPostCommand{
 		UserId:         userId,
 		ReportedPostId: req.ReportPostId,
 		Reason:         req.Reason,

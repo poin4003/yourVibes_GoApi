@@ -2,11 +2,11 @@ package mapper
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 )
 
 func NewMediaResultsFromEntity(
-	media []*post_entity.Media,
+	media []*postEntity.Media,
 ) []*common.MediaResult {
 	if media == nil {
 		return nil

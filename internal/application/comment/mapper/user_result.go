@@ -3,7 +3,7 @@ package mapper
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
-	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 )
 
 func NewUserResultFromEntity(
@@ -22,7 +22,7 @@ func NewUserResultFromEntity(
 }
 
 func NewUserForReportResult(
-	user *comment_entity.UserForReport,
+	user *commentEntity.UserForReport,
 ) *common.UserForReportResult {
 	if user == nil {
 		return nil

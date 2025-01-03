@@ -2,16 +2,14 @@ package implement
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/third_party_authentication"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -221,7 +219,7 @@ func (s *sUserAuth) VerifyEmail(
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	switch {
-	case err == redis.Nil:
+	case errors.Is(err, redis.Nil):
 		fmt.Println("Key does not exist")
 	case err != nil:
 		fmt.Println("Get failed::", err)
@@ -342,7 +340,7 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	switch {
-	case err == redis.Nil:
+	case errors.Is(err, redis.Nil):
 		fmt.Println("Key does not exist")
 	case err != nil:
 		fmt.Println("Get failed::", err)
@@ -457,66 +455,31 @@ func (s *sUserAuth) AuthGoogle(
 	result.AccessToken = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
-
-	// 1. Verify Google access token
-	var googleTokenInfoUrl = global.Config.GoogleSetting.GoogleTokensInfoUrl
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s?id_token=%s", googleTokenInfoUrl, command.OpenId), nil)
+	// 1. Call api google to get openid ODCI
+	idToken, err := third_party_authentication.GetGoogleIDToken(command.AuthorizationCode, command.Platform)
 	if err != nil {
-		return result, fmt.Errorf("failed to create request: %w", err)
+		result.ResultCode = response.ErrCodeGoogleAuth
+		result.HttpStatusCode = http.StatusForbidden
+		return result, err
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	// 2. Get claims from openid
+	claims, err := jwtutil.DecodeGoogleIDToken(idToken)
 	if err != nil {
-		result.ResultCode = response.ErrInvalidToken
-		result.HttpStatusCode = http.StatusForbidden
-		return result, fmt.Errorf("failed to verify openid: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		result.ResultCode = response.ErrInvalidToken
-		result.HttpStatusCode = http.StatusForbidden
-		return result, fmt.Errorf("invalid open id")
-	}
-
-	var tokenInfo common.TokenInfo
-	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
-		return result, fmt.Errorf("failed to decode token info: %w", err)
-	}
-
-	validClientIds := []string{
-		global.Config.GoogleSetting.WebClientId,
-		global.Config.GoogleSetting.AndroidClientId,
-		global.Config.GoogleSetting.IosClientId,
-	}
-
-	clientIdValid := false
-	for _, validID := range validClientIds {
-		if tokenInfo.Aud == validID {
-			clientIdValid = true
-			break
-		}
-	}
-
-	if !clientIdValid {
-		result.ResultCode = response.ErrInvalidToken
-		result.HttpStatusCode = http.StatusForbidden
-		return result, fmt.Errorf("invalid client id")
+		return result, err
 	}
 
 	// 3. Get user by email
-	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", claims.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 2.1. Create new user
 			newUser, err := userEntity.NewUserGoogle(
-				command.FamilyName,
-				command.Name,
-				command.Email,
-				command.AuthGoogleId,
-				command.AvatarUrl,
+				claims.FamilyName,
+				claims.GivenName,
+				claims.Email,
+				claims.Sub,
+				claims.Picture,
 			)
 			if err != nil {
 				return result, err

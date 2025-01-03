@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	notification_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
@@ -20,17 +20,17 @@ import (
 )
 
 type sPostLike struct {
-	userRepo         post_repo.IUserRepository
-	postRepo         post_repo.IPostRepository
-	postLikeRepo     post_repo.ILikeUserPostRepository
-	notificationRepo post_repo.INotificationRepository
+	userRepo         postRepo.IUserRepository
+	postRepo         postRepo.IPostRepository
+	postLikeRepo     postRepo.ILikeUserPostRepository
+	notificationRepo postRepo.INotificationRepository
 }
 
 func NewPostLikeImplement(
-	userRepo post_repo.IUserRepository,
-	postRepo post_repo.IPostRepository,
-	postLikeRepo post_repo.ILikeUserPostRepository,
-	notificationRepo post_repo.INotificationRepository,
+	userRepo postRepo.IUserRepository,
+	postRepo postRepo.IPostRepository,
+	postLikeRepo postRepo.ILikeUserPostRepository,
+	notificationRepo postRepo.INotificationRepository,
 ) *sPostLike {
 	return &sPostLike{
 		userRepo:         userRepo,
@@ -42,9 +42,9 @@ func NewPostLikeImplement(
 
 func (s *sPostLike) LikePost(
 	ctx context.Context,
-	command *post_command.LikePostCommand,
-) (result *post_command.LikePostCommandResult, err error) {
-	result = &post_command.LikePostCommandResult{}
+	command *postCommand.LikePostCommand,
+) (result *postCommand.LikePostCommandResult, err error) {
+	result = &postCommand.LikePostCommandResult{}
 	result.Post = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -57,7 +57,7 @@ func (s *sPostLike) LikePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		return result, fmt.Errorf("Error when find post %w", err.Error())
+		return result, fmt.Errorf("error when find post %v", err.Error())
 	}
 
 	// 2. Find exist user
@@ -69,11 +69,11 @@ func (s *sPostLike) LikePost(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		return result, fmt.Errorf("Error when find user %w", err.Error())
+		return result, fmt.Errorf("error when find user %v", err.Error())
 	}
 
 	// 3. Check like status (like or dislike)
-	likeUserPostEntity, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
+	likeUserPostEntity, err := postEntity.NewLikeUserPostEntity(command.UserId, command.PostId)
 	if err != nil {
 		return result, err
 	}
@@ -91,7 +91,7 @@ func (s *sPostLike) LikePost(
 		}
 
 		// 4.1.2. Plus 1 to likeCount of post
-		updateData := &post_entity.PostUpdate{
+		updateData := &postEntity.PostUpdate{
 			LikeCount: pointer.Ptr(postFound.LikeCount + 1),
 		}
 
@@ -103,12 +103,12 @@ func (s *sPostLike) LikePost(
 		postUpdated, err := s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.1.3. Check like to response
-		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
+		checkLikedToResponse, err := postEntity.NewLikeUserPostEntity(command.UserId, command.PostId)
 
 		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, checkLikedToResponse)
 
 		// 4.1.4. Push notification to owner of the post
-		notificationEntity, err := notification_entity.NewNotification(
+		notification, err := notificationEntity.NewNotification(
 			userLike.FamilyName+" "+userLike.Name,
 			userLike.AvatarUrl,
 			postFound.UserId,
@@ -117,7 +117,7 @@ func (s *sPostLike) LikePost(
 			postFound.Content,
 		)
 
-		_, err = s.notificationRepo.CreateOne(ctx, notificationEntity)
+		_, err = s.notificationRepo.CreateOne(ctx, notification)
 		if err != nil {
 			return result, fmt.Errorf("failed to create notification: %w", err)
 		}
@@ -156,7 +156,7 @@ func (s *sPostLike) LikePost(
 		}
 
 		// 4.2.2. Update -1 likeCount
-		updateData := &post_entity.PostUpdate{
+		updateData := &postEntity.PostUpdate{
 			LikeCount: pointer.Ptr(postFound.LikeCount - 1),
 		}
 
@@ -168,7 +168,7 @@ func (s *sPostLike) LikePost(
 		postUpdated, err := s.postRepo.UpdateOne(ctx, postFound.ID, updateData)
 
 		// 4.2.3. Check like to response
-		checkLikedToResponse, err := post_entity.NewLikeUserPostEntity(command.UserId, command.PostId)
+		checkLikedToResponse, err := postEntity.NewLikeUserPostEntity(command.UserId, command.PostId)
 		if err != nil {
 			return result, fmt.Errorf("failed to create post: %w", err)
 		}
@@ -186,9 +186,9 @@ func (s *sPostLike) LikePost(
 
 func (s *sPostLike) GetUsersOnLikes(
 	ctx context.Context,
-	query *post_query.GetPostLikeQuery,
-) (result *post_query.GetPostLikeQueryResult, err error) {
-	result = &post_query.GetPostLikeQueryResult{}
+	query *postQuery.GetPostLikeQuery,
+) (result *postQuery.GetPostLikeQueryResult, err error) {
+	result = &postQuery.GetPostLikeQueryResult{}
 	result.Users = nil
 	result.PagingResponse = nil
 	result.ResultCode = response.ErrServerFailed

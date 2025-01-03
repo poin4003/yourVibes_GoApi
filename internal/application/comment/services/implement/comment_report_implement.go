@@ -6,25 +6,25 @@ import (
 	"fmt"
 	"net/http"
 
-	comment_command "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
+	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
-	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
-	comment_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
-	comment_report_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
+	commentReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"gorm.io/gorm"
 )
 
 type sCommentReport struct {
-	commentReportRepo comment_report_repo.ICommentReportRepository
-	commentRepo       comment_report_repo.ICommentRepository
+	commentReportRepo commentReportRepo.ICommentReportRepository
+	commentRepo       commentReportRepo.ICommentRepository
 }
 
 func NewCommentReportImplement(
-	commentReportRepo comment_report_repo.ICommentReportRepository,
-	commentRepo comment_report_repo.ICommentRepository,
+	commentReportRepo commentReportRepo.ICommentReportRepository,
+	commentRepo commentReportRepo.ICommentRepository,
 ) *sCommentReport {
 	return &sCommentReport{
 		commentReportRepo: commentReportRepo,
@@ -34,9 +34,9 @@ func NewCommentReportImplement(
 
 func (s *sCommentReport) CreateCommentReport(
 	ctx context.Context,
-	command *comment_command.CreateReportCommentCommand,
-) (result *comment_command.CreateReportCommentCommandResult, err error) {
-	result = &comment_command.CreateReportCommentCommandResult{}
+	command *commentCommand.CreateReportCommentCommand,
+) (result *commentCommand.CreateReportCommentCommandResult, err error) {
+	result = &commentCommand.CreateReportCommentCommandResult{}
 	result.CommentReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -54,7 +54,7 @@ func (s *sCommentReport) CreateCommentReport(
 	}
 
 	// 3. Create report
-	commentReportEntity, err := comment_entity.NewCommentReport(
+	commentReportEntity, err := commentEntity.NewCommentReport(
 		command.UserId,
 		command.ReportedCommentId,
 		command.Reason,
@@ -77,9 +77,9 @@ func (s *sCommentReport) CreateCommentReport(
 
 func (s *sCommentReport) HandleCommentReport(
 	ctx context.Context,
-	command *comment_command.HandleCommentReportCommand,
-) (result *comment_command.HandleCommentReportCommandResult, err error) {
-	result = &comment_command.HandleCommentReportCommandResult{}
+	command *commentCommand.HandleCommentReportCommand,
+) (result *commentCommand.HandleCommentReportCommandResult, err error) {
+	result = &commentCommand.HandleCommentReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -97,11 +97,11 @@ func (s *sCommentReport) HandleCommentReport(
 	if commentReportFound.Status {
 		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("Your dont't need to handle this report again")
+		return result, fmt.Errorf("you dont't need to handle this report again")
 	}
 
 	// 3. Update reported comment status
-	reportedCommentUpdateEntity := &comment_entity.CommentUpdate{
+	reportedCommentUpdateEntity := &commentEntity.CommentUpdate{
 		Status: pointer.Ptr(false),
 	}
 
@@ -120,7 +120,7 @@ func (s *sCommentReport) HandleCommentReport(
 	}
 
 	// 4. Update report status
-	commentReportEntity := &comment_entity.CommentReportUpdate{
+	commentReportEntity := &commentEntity.CommentReportUpdate{
 		AdminId: pointer.Ptr(command.AdminId),
 		Status:  pointer.Ptr(true),
 	}
@@ -136,9 +136,9 @@ func (s *sCommentReport) HandleCommentReport(
 
 func (s *sCommentReport) DeleteCommentReport(
 	ctx context.Context,
-	command *comment_command.DeleteCommentReportCommand,
-) (result *comment_command.DeleteCommentReportCommandResult, err error) {
-	result = &comment_command.DeleteCommentReportCommandResult{}
+	command *commentCommand.DeleteCommentReportCommand,
+) (result *commentCommand.DeleteCommentReportCommandResult, err error) {
+	result = &commentCommand.DeleteCommentReportCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -171,9 +171,9 @@ func (s *sCommentReport) DeleteCommentReport(
 
 func (s *sCommentReport) ActivateComment(
 	ctx context.Context,
-	command *comment_command.ActivateCommentCommand,
-) (result *comment_command.ActivateCommentCommandResult, err error) {
-	result = &comment_command.ActivateCommentCommandResult{}
+	command *commentCommand.ActivateCommentCommand,
+) (result *commentCommand.ActivateCommentCommandResult, err error) {
+	result = &commentCommand.ActivateCommentCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check exist
@@ -191,11 +191,11 @@ func (s *sCommentReport) ActivateComment(
 	if commentFound.Status {
 		result.ResultCode = response.ErrCodeCommentIsAlreadyActivated
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("Your dont't need to activate this comment again")
+		return result, fmt.Errorf("you dont't need to activate this comment again")
 	}
 
 	// 3. Update reported comment status
-	reportedCommentUpdateEntity := &comment_entity.CommentUpdate{
+	reportedCommentUpdateEntity := &commentEntity.CommentUpdate{
 		Status: pointer.Ptr(true),
 	}
 
@@ -225,9 +225,9 @@ func (s *sCommentReport) ActivateComment(
 
 func (s *sCommentReport) GetDetailCommentReport(
 	ctx context.Context,
-	query *comment_query.GetOneCommentReportQuery,
-) (result *comment_query.CommentReportQueryResult, err error) {
-	result = &comment_query.CommentReportQueryResult{}
+	query *commentQuery.GetOneCommentReportQuery,
+) (result *commentQuery.CommentReportQueryResult, err error) {
+	result = &commentQuery.CommentReportQueryResult{}
 	result.CommentReport = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -251,9 +251,9 @@ func (s *sCommentReport) GetDetailCommentReport(
 
 func (s *sCommentReport) GetManyCommentReport(
 	ctx context.Context,
-	query *comment_query.GetManyCommentReportQuery,
-) (result *comment_query.CommentReportQueryListResult, err error) {
-	result = &comment_query.CommentReportQueryListResult{}
+	query *commentQuery.GetManyCommentReportQuery,
+) (result *commentQuery.CommentReportQueryListResult, err error) {
+	result = &commentQuery.CommentReportQueryListResult{}
 	result.CommentReports = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

@@ -9,7 +9,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 )
 
@@ -73,8 +73,8 @@ func (req *UpdateUserRequest) ToUpdateUserCommand(
 	userId uuid.UUID,
 	avatar *multipart.FileHeader,
 	capwall *multipart.FileHeader,
-) (*user_command.UpdateUserCommand, error) {
-	return &user_command.UpdateUserCommand{
+) (*userCommand.UpdateUserCommand, error) {
+	return &userCommand.UpdateUserCommand{
 		UserId:          &userId,
 		FamilyName:      req.FamilyName,
 		Name:            req.Name,

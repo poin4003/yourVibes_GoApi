@@ -2,22 +2,22 @@ package implement
 
 import (
 	"context"
-	revenue_query "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
-	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	revenueQuery "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
+	advertiseRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
 type sRevenue struct {
-	billRepo advertise_repo.IBillRepository
-	userRepo advertise_repo.IUserRepository
-	postRepo advertise_repo.IPostRepository
+	billRepo advertiseRepo.IBillRepository
+	userRepo advertiseRepo.IUserRepository
+	postRepo advertiseRepo.IPostRepository
 }
 
 func NewRevenueImplement(
-	billRepo advertise_repo.IBillRepository,
-	userRepo advertise_repo.IUserRepository,
-	postRepo advertise_repo.IPostRepository,
+	billRepo advertiseRepo.IBillRepository,
+	userRepo advertiseRepo.IUserRepository,
+	postRepo advertiseRepo.IPostRepository,
 ) *sRevenue {
 	return &sRevenue{
 		billRepo: billRepo,
@@ -28,9 +28,9 @@ func NewRevenueImplement(
 
 func (s *sRevenue) GetMonthlyRevenue(
 	ctx context.Context,
-	query *revenue_query.GetMonthlyRevenueQuery,
-) (result *revenue_query.GetMonthlyRevenueQueryResult, err error) {
-	result = &revenue_query.GetMonthlyRevenueQueryResult{}
+	query *revenueQuery.GetMonthlyRevenueQuery,
+) (result *revenueQuery.GetMonthlyRevenueQueryResult, err error) {
+	result = &revenueQuery.GetMonthlyRevenueQueryResult{}
 	result.RevenueList = nil
 	result.MonthList = nil
 	result.ResultCode = response.ErrServerFailed
@@ -50,9 +50,9 @@ func (s *sRevenue) GetMonthlyRevenue(
 
 func (s *sRevenue) GetSystemStats(
 	ctx context.Context,
-	query *revenue_query.GetSystemStatsQuery,
-) (result *revenue_query.GetSystemStatsQueryResult, err error) {
-	result = &revenue_query.GetSystemStatsQueryResult{}
+	query *revenueQuery.GetSystemStatsQuery,
+) (result *revenueQuery.GetSystemStatsQueryResult, err error) {
+	result = &revenueQuery.GetSystemStatsQueryResult{}
 	result.PreviousMonthsRevenue = 0
 	result.PreviousDaysRevenue = 0
 	result.TotalCountOfUsers = 0

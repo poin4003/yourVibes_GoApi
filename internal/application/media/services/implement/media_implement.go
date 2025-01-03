@@ -2,7 +2,7 @@ package implement
 
 import (
 	"context"
-	media_query "github.com/poin4003/yourVibes_GoApi/internal/application/media/query"
+	mediaQuery "github.com/poin4003/yourVibes_GoApi/internal/application/media/query"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"net/http"
@@ -16,9 +16,9 @@ func NewMediaImplement() *sMedia {
 
 func (s *sMedia) GetMedia(
 	ctx context.Context,
-	query *media_query.MediaQuery,
-) (result *media_query.MediaQueryResult, err error) {
-	result = &media_query.MediaQueryResult{}
+	query *mediaQuery.MediaQuery,
+) (result *mediaQuery.MediaQueryResult, err error) {
+	result = &mediaQuery.MediaQueryResult{}
 	result.FilePath = ""
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

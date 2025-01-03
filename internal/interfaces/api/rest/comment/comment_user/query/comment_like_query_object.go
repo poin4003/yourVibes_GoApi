@@ -4,7 +4,7 @@ import (
 	"errors"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
 
 type CommentLikeQueryObject struct {
@@ -26,8 +26,8 @@ func ValidateCommentLikeQueryObject(input interface{}) error {
 
 func (req *CommentLikeQueryObject) ToGetCommentLikeQuery(
 	commentId uuid.UUID,
-) (*comment_query.GetCommentLikeQuery, error) {
-	return &comment_query.GetCommentLikeQuery{
+) (*commentQuery.GetCommentLikeQuery, error) {
+	return &commentQuery.GetCommentLikeQuery{
 		CommentId: commentId,
 		Limit:     req.Limit,
 		Page:      req.Page,

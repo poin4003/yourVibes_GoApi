@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	comment_query "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
+	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
 
 type CommentQueryObject struct {
@@ -29,7 +29,7 @@ func ValidateCommentQueryObject(input interface{}) error {
 
 func (req *CommentQueryObject) ToGetManyCommentQuery(
 	userId uuid.UUID,
-) (*comment_query.GetManyCommentQuery, error) {
+) (*commentQuery.GetManyCommentQuery, error) {
 	var postId uuid.UUID
 	var parentId uuid.UUID
 
@@ -51,7 +51,7 @@ func (req *CommentQueryObject) ToGetManyCommentQuery(
 		parentId = parseParentId
 	}
 
-	return &comment_query.GetManyCommentQuery{
+	return &commentQuery.GetManyCommentQuery{
 		PostId:              postId,
 		ParentId:            parentId,
 		AuthenticatedUserId: userId,

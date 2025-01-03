@@ -3,13 +3,12 @@ package implement
 import (
 	"context"
 	"errors"
-	"fmt"
-	advertise_command "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
+	advertiseCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/mapper"
-	advertise_query "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
-	advertise_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
+	advertiseEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
+	advertiseRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/payment"
 	"gorm.io/gorm"
@@ -18,15 +17,15 @@ import (
 )
 
 type sAdvertise struct {
-	advertiseRepo    advertise_repo.IAdvertiseRepository
-	billRepo         advertise_repo.IBillRepository
-	notificationRepo advertise_repo.INotificationRepository
+	advertiseRepo    advertiseRepo.IAdvertiseRepository
+	billRepo         advertiseRepo.IBillRepository
+	notificationRepo advertiseRepo.INotificationRepository
 }
 
 func NewAdvertiseImplement(
-	advertiseRepo advertise_repo.IAdvertiseRepository,
-	billRepo advertise_repo.IBillRepository,
-	notificationRepo advertise_repo.INotificationRepository,
+	advertiseRepo advertiseRepo.IAdvertiseRepository,
+	billRepo advertiseRepo.IBillRepository,
+	notificationRepo advertiseRepo.INotificationRepository,
 ) *sAdvertise {
 	return &sAdvertise{
 		advertiseRepo:    advertiseRepo,
@@ -37,16 +36,16 @@ func NewAdvertiseImplement(
 
 func (s *sAdvertise) CreateAdvertise(
 	ctx context.Context,
-	command *advertise_command.CreateAdvertiseCommand,
-) (result *advertise_command.CreateAdvertiseResult, err error) {
-	result = &advertise_command.CreateAdvertiseResult{}
+	command *advertiseCommand.CreateAdvertiseCommand,
+) (result *advertiseCommand.CreateAdvertiseResult, err error) {
+	result = &advertiseCommand.CreateAdvertiseResult{}
+	result.PayUrl = ""
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check previous ad status
 	// 1.1. Check if the post has had any ads before by bill
 	billStatus, err := s.billRepo.CheckExists(ctx, command.PostId)
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -55,9 +54,6 @@ func (s *sAdvertise) CreateAdvertise(
 		// 1.2.1. Get latest ad
 		latestAds, err := s.advertiseRepo.GetLatestAdsByPostId(ctx, command.PostId)
 		if err != nil {
-			result.PayUrl = ""
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, err
 		}
 
@@ -75,23 +71,17 @@ func (s *sAdvertise) CreateAdvertise(
 	}
 
 	// 2. Create advertise
-	advertiseEntity, err := advertise_entity.NewAdvertise(
+	newAdvertise, err := advertiseEntity.NewAdvertise(
 		command.PostId,
 		command.StartDate,
 		command.EndDate,
 	)
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
-	newAdvertise, err := s.advertiseRepo.CreateOne(ctx, advertiseEntity)
+	advertiseCreated, err := s.advertiseRepo.CreateOne(ctx, newAdvertise)
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -100,24 +90,16 @@ func (s *sAdvertise) CreateAdvertise(
 	durationDate := int(duration.Seconds() / 86400)
 	price := durationDate*30000 + int(float64(durationDate)*30000*0.1)
 
-	fmt.Println(price)
-
-	billEntity, err := advertise_entity.NewBill(
-		newAdvertise.ID,
+	billEntity, err := advertiseEntity.NewBill(
+		advertiseCreated.ID,
 		price,
 	)
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
 	newBill, err := s.billRepo.CreateOne(ctx, billEntity)
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -132,9 +114,6 @@ func (s *sAdvertise) CreateAdvertise(
 	)
 
 	if err != nil {
-		result.PayUrl = ""
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, err
 	}
 
@@ -146,22 +125,22 @@ func (s *sAdvertise) CreateAdvertise(
 
 func (s *sAdvertise) GetManyAdvertise(
 	ctx context.Context,
-	query *advertise_query.GetManyAdvertiseQuery,
-) (result *advertise_query.GetManyAdvertiseResults, err error) {
-	result = &advertise_query.GetManyAdvertiseResults{}
+	query *advertiseQuery.GetManyAdvertiseQuery,
+) (result *advertiseQuery.GetManyAdvertiseResults, err error) {
+	result = &advertiseQuery.GetManyAdvertiseResults{}
+	result.Advertises = nil
+	result.ResultCode = response.ErrServerFailed
+	result.HttpStatusCode = http.StatusInternalServerError
+	result.PagingResponse = nil
 
 	advertiseEntities, paging, err := s.advertiseRepo.GetMany(ctx, query)
 	if err != nil {
-		result.Advertises = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
-		result.PagingResponse = nil
 		return result, err
 	}
 
 	var advertiseResults []*common.AdvertiseWithBillResult
-	for _, advertiseEntity := range advertiseEntities {
-		advertiseResults = append(advertiseResults, mapper.NewAdvertiseWithBillResultFromEntity(advertiseEntity))
+	for _, advertise := range advertiseEntities {
+		advertiseResults = append(advertiseResults, mapper.NewAdvertiseWithBillResultFromEntity(advertise))
 	}
 
 	result.Advertises = advertiseResults
@@ -173,9 +152,9 @@ func (s *sAdvertise) GetManyAdvertise(
 
 func (s *sAdvertise) GetAdvertise(
 	ctx context.Context,
-	query *advertise_query.GetOneAdvertiseQuery,
-) (result *advertise_query.GetOneAdvertiseResult, err error) {
-	result = &advertise_query.GetOneAdvertiseResult{}
+	query *advertiseQuery.GetOneAdvertiseQuery,
+) (result *advertiseQuery.GetOneAdvertiseResult, err error) {
+	result = &advertiseQuery.GetOneAdvertiseResult{}
 	result.Advertise = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

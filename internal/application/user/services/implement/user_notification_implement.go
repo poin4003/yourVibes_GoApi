@@ -2,25 +2,25 @@ package implement
 
 import (
 	"context"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
-	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"net/http"
 )
 
 type sUserNotification struct {
-	userRepo         user_repo.IUserRepository
-	notificationRepo user_repo.INotificationRepository
+	userRepo         userRepo.IUserRepository
+	notificationRepo userRepo.INotificationRepository
 }
 
 func NewUserNotificationImplement(
-	userRepo user_repo.IUserRepository,
-	notificationRepo user_repo.INotificationRepository,
+	userRepo userRepo.IUserRepository,
+	notificationRepo userRepo.INotificationRepository,
 ) *sUserNotification {
 	return &sUserNotification{
 		userRepo:         userRepo,
@@ -30,9 +30,9 @@ func NewUserNotificationImplement(
 
 func (s *sUserNotification) GetNotificationByUserId(
 	ctx context.Context,
-	query *user_query.GetManyNotificationQuery,
-) (result *user_query.GetManyNotificationQueryResult, err error) {
-	result = &user_query.GetManyNotificationQueryResult{}
+	query *userQuery.GetManyNotificationQuery,
+) (result *userQuery.GetManyNotificationQueryResult, err error) {
+	result = &userQuery.GetManyNotificationQueryResult{}
 	result.Notifications = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -57,16 +57,16 @@ func (s *sUserNotification) GetNotificationByUserId(
 
 func (s *sUserNotification) UpdateOneStatusNotification(
 	ctx context.Context,
-	command *user_command.UpdateOneStatusNotificationCommand,
-) (result *user_command.UpdateOneStatusNotificationCommandResult, err error) {
-	result = &user_command.UpdateOneStatusNotificationCommandResult{}
+	command *userCommand.UpdateOneStatusNotificationCommand,
+) (result *userCommand.UpdateOneStatusNotificationCommandResult, err error) {
+	result = &userCommand.UpdateOneStatusNotificationCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
-	notificationUpdateEntity := &user_entity.NotificationUpdate{
+	notificationUpdateEntity := &userEntity.NotificationUpdate{
 		Status: pointer.Ptr(false),
 	}
 
-	newNotificationUpdateEntity, err := user_entity.NewNotificationUpdate(notificationUpdateEntity)
+	newNotificationUpdateEntity, err := userEntity.NewNotificationUpdate(notificationUpdateEntity)
 
 	_, err = s.notificationRepo.UpdateOne(ctx, command.NotificationId, newNotificationUpdateEntity)
 
@@ -81,20 +81,20 @@ func (s *sUserNotification) UpdateOneStatusNotification(
 
 func (s *sUserNotification) UpdateManyStatusNotification(
 	ctx context.Context,
-	command *user_command.UpdateManyStatusNotificationCommand,
-) (result *user_command.UpdateManyStatusNotificationCommandResult, err error) {
-	result = &user_command.UpdateManyStatusNotificationCommandResult{}
+	command *userCommand.UpdateManyStatusNotificationCommand,
+) (result *userCommand.UpdateManyStatusNotificationCommandResult, err error) {
+	result = &userCommand.UpdateManyStatusNotificationCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
-	update_conditions := map[string]interface{}{
+	updateConditions := map[string]interface{}{
 		"status":  true,
 		"user_id": command.UserId,
 	}
-	update_data := map[string]interface{}{
+	updateData := map[string]interface{}{
 		"status": false,
 	}
 
-	err = s.notificationRepo.UpdateMany(ctx, update_conditions, update_data)
+	err = s.notificationRepo.UpdateMany(ctx, updateConditions, updateData)
 	if err != nil {
 		return result, err
 	}

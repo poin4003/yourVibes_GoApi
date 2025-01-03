@@ -7,30 +7,30 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	user_command "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
+	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
-	user_mapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
-	user_query "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	userMapper "github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
+	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	user_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 	"gorm.io/gorm"
 )
 
 type sUserInfo struct {
-	userRepo          user_repo.IUserRepository
-	settingRepo       user_repo.ISettingRepository
-	friendRepo        user_repo.IFriendRepository
-	friendRequestRepo user_repo.IFriendRequestRepository
+	userRepo          userRepo.IUserRepository
+	settingRepo       userRepo.ISettingRepository
+	friendRepo        userRepo.IFriendRepository
+	friendRequestRepo userRepo.IFriendRequestRepository
 }
 
 func NewUserInfoImplement(
-	userRepo user_repo.IUserRepository,
-	settingRepo user_repo.ISettingRepository,
-	friendRepo user_repo.IFriendRepository,
-	friendRequestRepo user_repo.IFriendRequestRepository,
+	userRepo userRepo.IUserRepository,
+	settingRepo userRepo.ISettingRepository,
+	friendRepo userRepo.IFriendRepository,
+	friendRequestRepo userRepo.IFriendRequestRepository,
 ) *sUserInfo {
 	return &sUserInfo{
 		userRepo:          userRepo,
@@ -42,9 +42,9 @@ func NewUserInfoImplement(
 
 func (s *sUserInfo) GetInfoByUserId(
 	ctx context.Context,
-	query *user_query.GetOneUserQuery,
-) (result *user_query.UserQueryResult, err error) {
-	result = &user_query.UserQueryResult{}
+	query *userQuery.GetOneUserQuery,
+) (result *userQuery.UserQueryResult, err error) {
+	result = &userQuery.UserQueryResult{}
 	result.User = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -62,7 +62,7 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	// 2. Return if user fetches his own information
 	if query.AuthenticatedUserId == query.UserId {
-		result.User = user_mapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
+		result.User = userMapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
@@ -70,7 +70,7 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	// 3. Check friend status
 	var friendStatus consts.FriendStatus
-	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
+	isFriend, err := s.friendRepo.CheckFriendExist(ctx, &userEntity.Friend{
 		UserId:   query.AuthenticatedUserId,
 		FriendId: query.UserId,
 	})
@@ -83,7 +83,7 @@ func (s *sUserInfo) GetInfoByUserId(
 		friendStatus = consts.IS_FRIEND
 	} else {
 		// 3.2. Check if user are send add friend request
-		isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
+		isSendFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &userEntity.FriendRequest{
 			UserId:   query.AuthenticatedUserId,
 			FriendId: query.UserId,
 		})
@@ -94,7 +94,7 @@ func (s *sUserInfo) GetInfoByUserId(
 			friendStatus = consts.SEND_FRIEND_REQUEST
 		} else {
 			// 3.3. Check if user are receive add friend request
-			isReceiveFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &user_entity.FriendRequest{
+			isReceiveFriendRequest, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, &userEntity.FriendRequest{
 				UserId:   query.UserId,
 				FriendId: query.AuthenticatedUserId,
 			})
@@ -114,21 +114,21 @@ func (s *sUserInfo) GetInfoByUserId(
 	var userResult *common.UserWithoutSettingResult
 	switch userFound.Privacy {
 	case consts.PUBLIC:
-		userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+		userResult = userMapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
 		resultCode = response.ErrCodeSuccess
 	case consts.FRIEND_ONLY:
 		if friendStatus == consts.IS_FRIEND {
-			userResult = user_mapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
+			userResult = userMapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
 			resultCode = response.ErrCodeSuccess
 		} else {
-			userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+			userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
 			resultCode = response.ErrUserFriendAccess
 		}
 	case consts.PRIVATE:
-		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+		userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
 		resultCode = response.ErrUserPrivateAccess
 	default:
-		userResult = user_mapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
+		userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
 		resultCode = response.ErrUserPrivateAccess
 	}
 
@@ -140,9 +140,9 @@ func (s *sUserInfo) GetInfoByUserId(
 
 func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
-	query *user_query.GetManyUserQuery,
-) (result *user_query.UserQueryListResult, err error) {
-	result = &user_query.UserQueryListResult{}
+	query *userQuery.GetManyUserQuery,
+) (result *userQuery.UserQueryListResult, err error) {
+	result = &userQuery.UserQueryListResult{}
 	result.Users = nil
 	result.PagingResponse = nil
 	result.ResultCode = response.ErrServerFailed
@@ -154,8 +154,8 @@ func (s *sUserInfo) GetManyUsers(
 	}
 
 	var userResultList []*common.UserShortVerResult
-	for _, userEntity := range userEntities {
-		userResultList = append(userResultList, user_mapper.NewUserShortVerEntity(userEntity))
+	for _, user := range userEntities {
+		userResultList = append(userResultList, userMapper.NewUserShortVerEntity(user))
 	}
 
 	result.Users = userResultList
@@ -167,9 +167,9 @@ func (s *sUserInfo) GetManyUsers(
 
 func (s *sUserInfo) UpdateUser(
 	ctx context.Context,
-	command *user_command.UpdateUserCommand,
-) (result *user_command.UpdateUserCommandResult, err error) {
-	result = &user_command.UpdateUserCommandResult{}
+	command *userCommand.UpdateUserCommand,
+) (result *userCommand.UpdateUserCommandResult, err error) {
+	result = &userCommand.UpdateUserCommandResult{}
 	result.User = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
@@ -182,15 +182,15 @@ func (s *sUserInfo) UpdateUser(
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			return result, fmt.Errorf("Failed to get setting for user %v: %w", command.UserId, err)
+			return result, fmt.Errorf("failed to get setting for user %v: %w", command.UserId, err)
 		}
 		_, err = s.settingRepo.UpdateOne(ctx, settingFound.ID,
-			&user_entity.SettingUpdate{Language: command.LanguageSetting},
+			&userEntity.SettingUpdate{Language: command.LanguageSetting},
 		)
 	}
 
 	// 2. update user information
-	updateUserEntity := &user_entity.UserUpdate{
+	updateUserEntity := &userEntity.UserUpdate{
 		FamilyName:  command.FamilyName,
 		Name:        command.Name,
 		PhoneNumber: command.PhoneNumber,
@@ -211,7 +211,7 @@ func (s *sUserInfo) UpdateUser(
 			return result, fmt.Errorf("failed to upload Avatar: %w", err)
 		}
 
-		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &user_entity.UserUpdate{
+		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			AvatarUrl: &avatarUrl,
 		})
 		if err != nil {
@@ -231,7 +231,7 @@ func (s *sUserInfo) UpdateUser(
 			return result, fmt.Errorf("failed to upload Capwall: %w", err)
 		}
 
-		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &user_entity.UserUpdate{
+		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			CapwallUrl: &capwallUrl,
 		})
 		if err != nil {
@@ -254,7 +254,7 @@ func (s *sUserInfo) UpdateUser(
 		return result, err
 	}
 
-	result.User = user_mapper.NewUserResultFromEntity(userFound)
+	result.User = userMapper.NewUserResultFromEntity(userFound)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil

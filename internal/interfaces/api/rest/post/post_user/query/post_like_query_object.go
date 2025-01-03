@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 )
 
 type PostLikeQueryObject struct {
@@ -26,8 +26,8 @@ func ValidatePostLikeQueryObject(input interface{}) error {
 
 func (req *PostLikeQueryObject) ToGetPostLikeQuery(
 	postId uuid.UUID,
-) (*post_query.GetPostLikeQuery, error) {
-	return &post_query.GetPostLikeQuery{
+) (*postQuery.GetPostLikeQuery, error) {
+	return &postQuery.GetPostLikeQuery{
 		PostId: postId,
 		Limit:  req.Limit,
 		Page:   req.Page,

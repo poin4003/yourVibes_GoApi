@@ -9,16 +9,16 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	notification_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
-	post_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	post_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
-	user_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
+	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
+	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
+	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
@@ -26,25 +26,25 @@ import (
 )
 
 type sPostUser struct {
-	userRepo         post_repo.IUserRepository
-	friendRepo       post_repo.IFriendRepository
-	newFeedRepo      post_repo.INewFeedRepository
-	postRepo         post_repo.IPostRepository
-	mediaRepo        post_repo.IMediaRepository
-	likeUserPostRepo post_repo.ILikeUserPostRepository
-	notificationRepo post_repo.INotificationRepository
-	advertiseRepo    post_repo.IAdvertiseRepository
+	userRepo         postRepo.IUserRepository
+	friendRepo       postRepo.IFriendRepository
+	newFeedRepo      postRepo.INewFeedRepository
+	postRepo         postRepo.IPostRepository
+	mediaRepo        postRepo.IMediaRepository
+	likeUserPostRepo postRepo.ILikeUserPostRepository
+	notificationRepo postRepo.INotificationRepository
+	advertiseRepo    postRepo.IAdvertiseRepository
 }
 
 func NewPostUserImplement(
-	userRepo post_repo.IUserRepository,
-	friendRepo post_repo.IFriendRepository,
-	newFeedRepo post_repo.INewFeedRepository,
-	postRepo post_repo.IPostRepository,
-	mediaRepo post_repo.IMediaRepository,
-	likeUserPostRepo post_repo.ILikeUserPostRepository,
-	notificationRepo post_repo.INotificationRepository,
-	advertiseRepo post_repo.IAdvertiseRepository,
+	userRepo postRepo.IUserRepository,
+	friendRepo postRepo.IFriendRepository,
+	newFeedRepo postRepo.INewFeedRepository,
+	postRepo postRepo.IPostRepository,
+	mediaRepo postRepo.IMediaRepository,
+	likeUserPostRepo postRepo.ILikeUserPostRepository,
+	notificationRepo postRepo.INotificationRepository,
+	advertiseRepo postRepo.IAdvertiseRepository,
 ) *sPostUser {
 	return &sPostUser{
 		userRepo:         userRepo,
@@ -60,14 +60,14 @@ func NewPostUserImplement(
 
 func (s *sPostUser) CreatePost(
 	ctx context.Context,
-	command *post_command.CreatePostCommand,
-) (result *post_command.CreatePostCommandResult, err error) {
-	result = &post_command.CreatePostCommandResult{}
+	command *postCommand.CreatePostCommand,
+) (result *postCommand.CreatePostCommandResult, err error) {
+	result = &postCommand.CreatePostCommandResult{}
 	result.Post = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. CreatePost
-	newPost, err := post_entity.NewPost(
+	newPost, err := postEntity.NewPost(
 		command.UserId,
 		command.Content,
 		command.Privacy,
@@ -78,7 +78,7 @@ func (s *sPostUser) CreatePost(
 		return result, err
 	}
 
-	postEntity, err := s.postRepo.CreateOne(ctx, newPost)
+	postCreated, err := s.postRepo.CreateOne(ctx, newPost)
 	if err != nil {
 		return result, err
 	}
@@ -94,7 +94,7 @@ func (s *sPostUser) CreatePost(
 			}
 
 			// 2.2. create Media model and save to database
-			mediaEntity, err := post_entity.NewMedia(postEntity.ID, mediaUrl)
+			mediaEntity, err := postEntity.NewMedia(postCreated.ID, mediaUrl)
 			if err != nil {
 				return result, err
 			}
@@ -119,7 +119,7 @@ func (s *sPostUser) CreatePost(
 
 	// 4. Update post count for user
 	userFound.PostCount++
-	userUpdate := &user_entity.UserUpdate{
+	userUpdate := &userEntity.UserUpdate{
 		PostCount: &userFound.PostCount,
 	}
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdate)
@@ -133,8 +133,8 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 5. Check privacy of post
-	if postEntity.Privacy == consts.PRIVATE {
-		result.Post = mapper.NewPostResultFromEntity(postEntity)
+	if postCreated.Privacy == consts.PRIVATE {
+		result.Post = mapper.NewPostResultFromEntity(postCreated)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
@@ -149,7 +149,7 @@ func (s *sPostUser) CreatePost(
 
 	// 6.2. If user don't have friend, return
 	if len(friendIds) == 0 {
-		result.Post = mapper.NewPostResultFromEntity(postEntity)
+		result.Post = mapper.NewPostResultFromEntity(postCreated)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 		return result, nil
@@ -162,10 +162,10 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 6.4. Create notification for friend
-	var notificationEntities []*notification_entity.Notification
+	var notificationEntities []*notificationEntity.Notification
 	for _, friendId := range friendIds {
 		content := truncate.TruncateContent(newPost.Content, 20)
-		notificationEntity, err := notification_entity.NewNotification(
+		notification, err := notificationEntity.NewNotification(
 			userFound.FamilyName+" "+userFound.Name,
 			userFound.AvatarUrl,
 			friendId,
@@ -178,7 +178,7 @@ func (s *sPostUser) CreatePost(
 			return result, err
 		}
 
-		notificationEntities = append(notificationEntities, notificationEntity)
+		notificationEntities = append(notificationEntities, notification)
 	}
 
 	_, err = s.notificationRepo.CreateMany(ctx, notificationEntities)
@@ -193,7 +193,7 @@ func (s *sPostUser) CreatePost(
 			FromUrl:          userFound.AvatarUrl,
 			UserId:           friendId,
 			NotificationType: consts.NEW_POST,
-			ContentId:        (postEntity.ID).String(),
+			ContentId:        (postCreated.ID).String(),
 		}
 
 		err = global.SocketHub.SendNotification(friendId.String(), notificationSocketResponse)
@@ -203,7 +203,7 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 7. Validate post after create
-	validatePost, err := post_validator.NewValidatedPost(postEntity)
+	validatePost, err := postValidator.NewValidatedPost(postCreated)
 	if err != nil {
 		return result, fmt.Errorf("failed to validate post: %w", err)
 	}
@@ -216,14 +216,14 @@ func (s *sPostUser) CreatePost(
 
 func (s *sPostUser) UpdatePost(
 	ctx context.Context,
-	command *post_command.UpdatePostCommand,
-) (result *post_command.UpdatePostCommandResult, err error) {
-	result = &post_command.UpdatePostCommandResult{}
+	command *postCommand.UpdatePostCommand,
+) (result *postCommand.UpdatePostCommandResult, err error) {
+	result = &postCommand.UpdatePostCommandResult{}
 	result.Post = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. update post information
-	updateData := &post_entity.PostUpdate{
+	updateData := &postEntity.PostUpdate{
 		Content:  command.Content,
 		Privacy:  command.Privacy,
 		Location: command.Location,
@@ -234,7 +234,7 @@ func (s *sPostUser) UpdatePost(
 		return result, err
 	}
 
-	postEntity, err := s.postRepo.UpdateOne(ctx, *command.PostId, updateData)
+	postUpdated, err := s.postRepo.UpdateOne(ctx, *command.PostId, updateData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -288,7 +288,7 @@ func (s *sPostUser) UpdatePost(
 			}
 
 			// 3.2. create Media model and save to database
-			mediaEntity, err := post_entity.NewMedia(postEntity.ID, mediaUrl)
+			mediaEntity, err := postEntity.NewMedia(postUpdated.ID, mediaUrl)
 			if err != nil {
 				return result, err
 			}
@@ -300,7 +300,7 @@ func (s *sPostUser) UpdatePost(
 		}
 	}
 
-	result.Post = mapper.NewPostResultFromEntity(postEntity)
+	result.Post = mapper.NewPostResultFromEntity(postUpdated)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
@@ -308,9 +308,9 @@ func (s *sPostUser) UpdatePost(
 
 func (s *sPostUser) DeletePost(
 	ctx context.Context,
-	command *post_command.DeletePostCommand,
-) (result *post_command.DeletePostCommandResult, err error) {
-	result = &post_command.DeletePostCommandResult{}
+	command *postCommand.DeletePostCommand,
+) (result *postCommand.DeletePostCommandResult, err error) {
+	result = &postCommand.DeletePostCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get media array of post
@@ -361,7 +361,7 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 5. Delete post
-	postEntity, err := s.postRepo.DeleteOne(ctx, *command.PostId)
+	post, err := s.postRepo.DeleteOne(ctx, *command.PostId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -372,7 +372,7 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 6. Find user
-	userFound, err := s.userRepo.GetOne(ctx, "id=?", postEntity.UserId)
+	userFound, err := s.userRepo.GetOne(ctx, "id=?", post.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -385,7 +385,7 @@ func (s *sPostUser) DeletePost(
 	// 7. Update post count of user
 	userFound.PostCount--
 
-	userUpdateEntity := &user_entity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}
+	userUpdateEntity := &userEntity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}
 
 	err = userUpdateEntity.ValidateUserUpdate()
 	if err != nil {
@@ -409,14 +409,14 @@ func (s *sPostUser) DeletePost(
 
 func (s *sPostUser) GetPost(
 	ctx context.Context,
-	query *post_query.GetOnePostQuery,
-) (result *post_query.GetOnePostQueryResult, err error) {
-	result = &post_query.GetOnePostQueryResult{}
+	query *postQuery.GetOnePostQuery,
+) (result *postQuery.GetOnePostQueryResult, err error) {
+	result = &postQuery.GetOnePostQueryResult{}
 	result.Post = nil
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Get post
-	postEntity, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
+	postFound, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.Post = nil
@@ -428,13 +428,13 @@ func (s *sPostUser) GetPost(
 	}
 
 	// 2. Check privacy
-	isOwner := postEntity.UserId == query.AuthenticatedUserId
+	isOwner := postFound.UserId == query.AuthenticatedUserId
 	if !isOwner {
-		switch postEntity.Privacy {
+		switch postFound.Privacy {
 		case consts.PUBLIC:
 		case consts.FRIEND_ONLY:
-			isFriend, err := s.friendRepo.CheckFriendExist(ctx, &user_entity.Friend{
-				UserId:   postEntity.UserId,
+			isFriend, err := s.friendRepo.CheckFriendExist(ctx, &userEntity.Friend{
+				UserId:   postFound.UserId,
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
@@ -460,7 +460,7 @@ func (s *sPostUser) GetPost(
 	}
 
 	// 4. Return
-	result.Post = mapper.NewPostWithLikedResultFromEntity(postEntity)
+	result.Post = mapper.NewPostWithLikedResultFromEntity(postFound)
 	result.ResultCode = response.ErrCodeSuccess
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
@@ -468,9 +468,9 @@ func (s *sPostUser) GetPost(
 
 func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
-	query *post_query.GetManyPostQuery,
-) (result *post_query.GetManyPostQueryResult, err error) {
-	result = &post_query.GetManyPostQueryResult{}
+	query *postQuery.GetManyPostQuery,
+) (result *postQuery.GetManyPostQueryResult, err error) {
+	result = &postQuery.GetManyPostQueryResult{}
 	result.Posts = nil
 	result.PagingResponse = nil
 	result.ResultCode = response.ErrServerFailed
@@ -482,8 +482,8 @@ func (s *sPostUser) GetManyPosts(
 	}
 
 	var postResults []*common.PostResultWithLiked
-	for _, postEntity := range postEntities {
-		postResult := mapper.NewPostWithLikedResultFromEntity(postEntity)
+	for _, post := range postEntities {
+		postResult := mapper.NewPostWithLikedResultFromEntity(post)
 		postResults = append(postResults, postResult)
 	}
 
@@ -496,9 +496,9 @@ func (s *sPostUser) GetManyPosts(
 
 func (s *sPostUser) CheckPostOwner(
 	ctx context.Context,
-	query *post_query.CheckPostOwnerQuery,
-) (result *post_query.CheckPostOwnerQueryResult, err error) {
-	result = &post_query.CheckPostOwnerQueryResult{}
+	query *postQuery.CheckPostOwnerQuery,
+) (result *postQuery.CheckPostOwnerQueryResult, err error) {
+	result = &postQuery.CheckPostOwnerQueryResult{}
 	result.IsOwner = false
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError

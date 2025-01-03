@@ -2,27 +2,27 @@ package implement
 
 import (
 	"context"
-	post_command "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
+	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
-	post_query "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
-	post_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
+	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"net/http"
 )
 
 type sPostNewFeed struct {
-	userRepo         post_repo.IUserRepository
-	postRepo         post_repo.IPostRepository
-	likeUserPostRepo post_repo.ILikeUserPostRepository
-	newFeedRepo      post_repo.INewFeedRepository
+	userRepo         postRepo.IUserRepository
+	postRepo         postRepo.IPostRepository
+	likeUserPostRepo postRepo.ILikeUserPostRepository
+	newFeedRepo      postRepo.INewFeedRepository
 }
 
 func NewPostNewFeedImplement(
-	userRepo post_repo.IUserRepository,
-	postRepo post_repo.IPostRepository,
-	likeUserPostRepo post_repo.ILikeUserPostRepository,
-	newFeedRepo post_repo.INewFeedRepository,
+	userRepo postRepo.IUserRepository,
+	postRepo postRepo.IPostRepository,
+	likeUserPostRepo postRepo.ILikeUserPostRepository,
+	newFeedRepo postRepo.INewFeedRepository,
 ) *sPostNewFeed {
 	return &sPostNewFeed{
 		userRepo:         userRepo,
@@ -34,9 +34,9 @@ func NewPostNewFeedImplement(
 
 func (s *sPostNewFeed) DeleteNewFeed(
 	ctx context.Context,
-	command *post_command.DeleteNewFeedCommand,
-) (result *post_command.DeleteNewFeedCommandResult, err error) {
-	result = &post_command.DeleteNewFeedCommandResult{}
+	command *postCommand.DeleteNewFeedCommand,
+) (result *postCommand.DeleteNewFeedCommandResult, err error) {
+	result = &postCommand.DeleteNewFeedCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 
@@ -52,9 +52,9 @@ func (s *sPostNewFeed) DeleteNewFeed(
 
 func (s *sPostNewFeed) GetNewFeeds(
 	ctx context.Context,
-	query *post_query.GetNewFeedQuery,
-) (result *post_query.GetNewFeedResult, err error) {
-	result = &post_query.GetNewFeedResult{}
+	query *postQuery.GetNewFeedQuery,
+) (result *postQuery.GetNewFeedResult, err error) {
+	result = &postQuery.GetNewFeedResult{}
 	result.Posts = nil
 	result.PagingResponse = nil
 	result.ResultCode = response.ErrServerFailed

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
-	admin_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
-	admin_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
+	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
@@ -20,11 +20,11 @@ import (
 )
 
 type sAdminAuth struct {
-	adminRepo admin_repo.IAdminRepository
+	adminRepo adminRepo.IAdminRepository
 }
 
 func NewAdminAuthImplement(
-	adminRepo admin_repo.IAdminRepository,
+	adminRepo adminRepo.IAdminRepository,
 ) *sAdminAuth {
 	return &sAdminAuth{
 		adminRepo: adminRepo,
@@ -33,9 +33,9 @@ func NewAdminAuthImplement(
 
 func (s *sAdminAuth) Login(
 	ctx context.Context,
-	command *admin_command.LoginCommand,
-) (result *admin_command.LoginCommandResult, err error) {
-	result = &admin_command.LoginCommandResult{}
+	command *adminCommand.LoginCommand,
+) (result *adminCommand.LoginCommandResult, err error) {
+	result = &adminCommand.LoginCommandResult{}
 	result.Admin = nil
 	result.AccessToken = nil
 	result.ResultCode = response.ErrServerFailed
@@ -55,7 +55,7 @@ func (s *sAdminAuth) Login(
 	if adminFound.Status == false {
 		result.ResultCode = response.ErrCodeAccountBlockedBySuperAdmin
 		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("This account has been blocked by super admin")
+		return result, fmt.Errorf("this account has been blocked by super admin")
 	}
 
 	// 3. Check hash password
@@ -88,9 +88,9 @@ func (s *sAdminAuth) Login(
 
 func (s *sAdminAuth) ChangeAdminPassword(
 	ctx context.Context,
-	command *admin_command.ChangeAdminPasswordCommand,
-) (result *admin_command.ChangeAdminPasswordCommandResult, err error) {
-	result = &admin_command.ChangeAdminPasswordCommandResult{}
+	command *adminCommand.ChangeAdminPasswordCommand,
+) (result *adminCommand.ChangeAdminPasswordCommandResult, err error) {
+	result = &adminCommand.ChangeAdminPasswordCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Find admin
@@ -117,7 +117,7 @@ func (s *sAdminAuth) ChangeAdminPassword(
 		return result, err
 	}
 
-	updateAdminData := &admin_entity.AdminUpdate{
+	updateAdminData := &adminEntity.AdminUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 	if err := updateAdminData.ValidateAdminUpdate(); err != nil {
@@ -136,9 +136,9 @@ func (s *sAdminAuth) ChangeAdminPassword(
 
 func (s *sAdminAuth) ForgotAdminPassword(
 	ctx context.Context,
-	command *admin_command.ForgotAdminPasswordCommand,
-) (result *admin_command.ForgotAdminPasswordCommandResult, err error) {
-	result = &admin_command.ForgotAdminPasswordCommandResult{}
+	command *adminCommand.ForgotAdminPasswordCommand,
+) (result *adminCommand.ForgotAdminPasswordCommandResult, err error) {
+	result = &adminCommand.ForgotAdminPasswordCommandResult{}
 	result.ResultCode = response.ErrServerFailed
 	result.HttpStatusCode = http.StatusInternalServerError
 	// 1. Check admin exist
@@ -158,7 +158,7 @@ func (s *sAdminAuth) ForgotAdminPassword(
 		return result, err
 	}
 
-	updateAdminData := &admin_entity.AdminUpdate{
+	updateAdminData := &adminEntity.AdminUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 

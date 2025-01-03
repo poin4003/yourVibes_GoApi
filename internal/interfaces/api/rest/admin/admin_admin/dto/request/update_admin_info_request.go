@@ -4,7 +4,7 @@ import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	admin_command "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
+	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"regexp"
 	"time"
 )
@@ -33,8 +33,8 @@ func ValidateUpdateAdminInfoRequest(req interface{}) error {
 
 func (req *UpdateAdminInfoRequest) ToUpdateAdminInfoCommand(
 	adminId uuid.UUID,
-) (*admin_command.UpdateAdminInfoCommand, error) {
-	return &admin_command.UpdateAdminInfoCommand{
+) (*adminCommand.UpdateAdminInfoCommand, error) {
+	return &adminCommand.UpdateAdminInfoCommand{
 		AdminID:     &adminId,
 		FamilyName:  &req.FamilyName,
 		Name:        &req.Name,

@@ -5,11 +5,11 @@ import (
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	advertise_validator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/validator"
+	advertiseValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/validator"
 )
 
 func NewAdvertiseWithBillResultFromValidateEntity(
-	advertise *advertise_validator.ValidateAdvertise,
+	advertise *advertiseValidator.ValidateAdvertise,
 ) *common.AdvertiseWithBillResult {
 	return NewAdvertiseWithBillResultFromEntity(&advertise.Advertise)
 }
