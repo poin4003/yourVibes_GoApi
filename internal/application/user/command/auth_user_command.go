@@ -1,9 +1,10 @@
 package command
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 )
@@ -42,6 +43,7 @@ type ForgotUserPasswordCommand struct {
 type AuthGoogleCommand struct {
 	AuthorizationCode string
 	Platform          consts.Platform
+	RedirectUrl       string
 }
 
 type RegisterCommandResult struct {

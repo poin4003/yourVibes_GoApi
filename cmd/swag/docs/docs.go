@@ -2737,6 +2737,9 @@ const docTemplate = `{
                 },
                 "platform": {
                     "$ref": "#/definitions/consts.Platform"
+                },
+                "redirect_url": {
+                    "type": "string"
                 }
             }
         },

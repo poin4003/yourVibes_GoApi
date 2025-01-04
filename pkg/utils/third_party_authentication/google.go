@@ -25,6 +25,7 @@ type GoogleTokenResponse struct {
 func GetGoogleIDToken(
 	authorizationCode string,
 	platform consts.Platform,
+	redirectUrl string,
 ) (idToken string, err error) {
 	// 1. Determine client_id based on platform
 	var clientId string
@@ -44,7 +45,7 @@ func GetGoogleIDToken(
 	payload.Set("code", authorizationCode)
 	payload.Set("client_id", clientId)
 	payload.Set("client_secret", global.Config.GoogleSetting.SecretId)
-	payload.Set("redirect_uri", global.Config.GoogleSetting.RedirectUrl)
+	payload.Set("redirect_uri", redirectUrl)
 	payload.Set("grant_type", "authorization_code")
 
 	// 3. Create HTTP request

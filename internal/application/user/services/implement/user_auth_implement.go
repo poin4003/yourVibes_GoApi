@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/third_party_authentication"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/third_party_authentication"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -456,7 +457,7 @@ func (s *sUserAuth) AuthGoogle(
 		HttpStatusCode: http.StatusInternalServerError,
 	}
 	// 1. Call api google to get openid ODCI
-	idToken, err := third_party_authentication.GetGoogleIDToken(command.AuthorizationCode, command.Platform)
+	idToken, err := third_party_authentication.GetGoogleIDToken(command.AuthorizationCode, command.Platform, command.RedirectUrl)
 	if err != nil {
 		result.ResultCode = response.ErrCodeGoogleAuth
 		result.HttpStatusCode = http.StatusForbidden

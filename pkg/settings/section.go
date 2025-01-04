@@ -78,5 +78,4 @@ type GoogleSetting struct {
 	WebClientId     string `mapstructure:"web_client_id"`
 	AndroidClientId string `mapstructure:"android_client_id"`
 	IosClientId     string `mapstructure:"ios_client_id"`
-	RedirectUrl     string `mapstructure:"redirect_url"`
 }

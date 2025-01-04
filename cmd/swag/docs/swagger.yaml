@@ -26,6 +26,8 @@ definitions:
         type: string
       platform:
         $ref: '#/definitions/consts.Platform'
+      redirect_url:
+        type: string
     type: object
   request.ChangeAdminPasswordRequest:
     properties:
