@@ -44,7 +44,11 @@ func (s *sCommentUser) CreateComment(
 	ctx context.Context,
 	command *commentCommand.CreateCommentCommand,
 ) (result *commentCommand.CreateCommentResult, err error) {
-	result = &commentCommand.CreateCommentResult{}
+	result = &commentCommand.CreateCommentResult{
+		Comment: nil,
+		ResultCode: response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find post
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
@@ -54,9 +58,6 @@ func (s *sCommentUser) CreateComment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when find post %v", err.Error())
 	}
 
@@ -73,9 +74,6 @@ func (s *sCommentUser) CreateComment(
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("error when find parent comment %v", err.Error())
 		}
 
@@ -91,9 +89,6 @@ func (s *sCommentUser) CreateComment(
 		}
 		err = s.commentRepo.UpdateMany(ctx, conditions, updateRight)
 		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("error when update comment %v", err.Error())
 		}
 
@@ -107,9 +102,6 @@ func (s *sCommentUser) CreateComment(
 		}
 		err = s.commentRepo.UpdateMany(ctx, conditions, updateLeft)
 		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("error when update comment %v", err.Error())
 		}
 
@@ -118,11 +110,8 @@ func (s *sCommentUser) CreateComment(
 			RepCommentCount: pointer.Ptr(parentComment.RepCommentCount + 1),
 		}
 
-		err = updateComment.ValidateCommentUpdate()
-		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
+		if err = updateComment.ValidateCommentUpdate(); err != nil {
+			return result, err
 		}
 
 		_, err = s.commentRepo.UpdateOne(ctx, parentComment.ID, updateComment)
@@ -134,9 +123,6 @@ func (s *sCommentUser) CreateComment(
 				result.HttpStatusCode = http.StatusBadRequest
 				return result, err
 			}
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("error when update comment %v", err.Error())
 		}
 
@@ -146,9 +132,6 @@ func (s *sCommentUser) CreateComment(
 		// 3. Create comment if it don't have a parent id (root comment)
 		maxRightValue, err := s.commentRepo.GetMaxCommentRightByPostId(ctx, command.PostId)
 		if err != nil {
-			result.Comment = nil
-			result.ResultCode = response.ErrServerFailed
-			result.HttpStatusCode = http.StatusInternalServerError
 			return result, fmt.Errorf("error when find max comment right: %v", err.Error())
 		}
 
@@ -175,9 +158,6 @@ func (s *sCommentUser) CreateComment(
 
 	commentCreated, err := s.commentRepo.CreateOne(ctx, newComment)
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when create comment %v", err.Error())
 	}
 
@@ -188,26 +168,17 @@ func (s *sCommentUser) CreateComment(
 
 	err = updatePost.ValidatePostUpdate()
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update post %v", err.Error())
 	}
 
 	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePost)
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update post %v", err.Error())
 	}
 
 	// 6. Validate comment after create
 	validateComment, err := commentValidator.NewValidatedComment(commentCreated)
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("failed to validate comment: %w", err)
 	}
 
@@ -221,16 +192,17 @@ func (s *sCommentUser) UpdateComment(
 	ctx context.Context,
 	command *commentCommand.UpdateCommentCommand,
 ) (result *commentCommand.UpdateCommentResult, err error) {
-	result = &commentCommand.UpdateCommentResult{}
+	result = &commentCommand.UpdateCommentResult{
+		Comment: nil,
+		ResultCode: response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	updateData := &commentEntity.CommentUpdate{
 		Content: command.Content,
 	}
 
 	err = updateData.ValidateCommentUpdate()
 	if err != nil {
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
 
@@ -242,9 +214,6 @@ func (s *sCommentUser) UpdateComment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.Comment = nil
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
 
@@ -258,11 +227,11 @@ func (s *sCommentUser) DeleteComment(
 	ctx context.Context,
 	command *commentCommand.DeleteCommentCommand,
 ) (result *commentCommand.DeleteCommentResult, err error) {
-	result = &commentCommand.DeleteCommentResult{}
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
+	result = &commentCommand.DeleteCommentResult{
+		ResultCode: response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
 	// 1. Find comment
-	fmt.Println(command.CommentId)
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -298,8 +267,6 @@ func (s *sCommentUser) DeleteComment(
 
 	err = s.commentRepo.DeleteMany(ctx, deleteConditions)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
 
@@ -313,8 +280,6 @@ func (s *sCommentUser) DeleteComment(
 	}
 	err = s.commentRepo.UpdateMany(ctx, updateConditions, updateLeft)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
 
@@ -327,8 +292,6 @@ func (s *sCommentUser) DeleteComment(
 	}
 	err = s.commentRepo.UpdateMany(ctx, updateConditions, updateRight)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
 
@@ -338,15 +301,11 @@ func (s *sCommentUser) DeleteComment(
 
 	err = updatePost.ValidatePostUpdate()
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update post %v", err.Error())
 	}
 
 	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePost)
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update post %v", err.Error())
 	}
 
@@ -364,8 +323,6 @@ func (s *sCommentUser) DeleteComment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when find parent comment %v", err.Error())
 	}
 
@@ -375,8 +332,6 @@ func (s *sCommentUser) DeleteComment(
 
 	err = updateParentCommentData.ValidateCommentUpdate()
 	if err != nil {
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update parent comment %v", err.Error())
 	}
 
@@ -388,8 +343,6 @@ func (s *sCommentUser) DeleteComment(
 			result.HttpStatusCode = http.StatusBadRequest
 			return result, err
 		}
-		result.ResultCode = response.ErrServerFailed
-		result.HttpStatusCode = http.StatusInternalServerError
 		return result, fmt.Errorf("error when update parent comment %v", err.Error())
 	}
 
@@ -402,11 +355,12 @@ func (s *sCommentUser) GetManyComments(
 	ctx context.Context,
 	query *commentQuery.GetManyCommentQuery,
 ) (result *commentQuery.GetManyCommentsResult, err error) {
-	result = &commentQuery.GetManyCommentsResult{}
-	result.Comments = nil
-	result.ResultCode = response.ErrServerFailed
-	result.HttpStatusCode = http.StatusInternalServerError
-	result.PagingResponse = nil
+	result = &commentQuery.GetManyCommentsResult{
+		Comments: nil,
+		ResultCode: response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+		PagingResponse: nil,
+	}
 
 	// Get next layer of comment by root comment
 	if query.ParentId != uuid.Nil {
