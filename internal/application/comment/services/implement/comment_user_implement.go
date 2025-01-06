@@ -45,8 +45,8 @@ func (s *sCommentUser) CreateComment(
 	command *commentCommand.CreateCommentCommand,
 ) (result *commentCommand.CreateCommentResult, err error) {
 	result = &commentCommand.CreateCommentResult{
-		Comment: nil,
-		ResultCode: response.ErrServerFailed,
+		Comment:        nil,
+		ResultCode:     response.ErrServerFailed,
 		HttpStatusCode: http.StatusInternalServerError,
 	}
 	// 1. Find post
@@ -193,8 +193,8 @@ func (s *sCommentUser) UpdateComment(
 	command *commentCommand.UpdateCommentCommand,
 ) (result *commentCommand.UpdateCommentResult, err error) {
 	result = &commentCommand.UpdateCommentResult{
-		Comment: nil,
-		ResultCode: response.ErrServerFailed,
+		Comment:        nil,
+		ResultCode:     response.ErrServerFailed,
 		HttpStatusCode: http.StatusInternalServerError,
 	}
 	updateData := &commentEntity.CommentUpdate{
@@ -228,7 +228,7 @@ func (s *sCommentUser) DeleteComment(
 	command *commentCommand.DeleteCommentCommand,
 ) (result *commentCommand.DeleteCommentResult, err error) {
 	result = &commentCommand.DeleteCommentResult{
-		ResultCode: response.ErrServerFailed,
+		ResultCode:     response.ErrServerFailed,
 		HttpStatusCode: http.StatusInternalServerError,
 	}
 	// 1. Find comment
@@ -265,7 +265,7 @@ func (s *sCommentUser) DeleteComment(
 		"comment_left <=": rightValue,
 	}
 
-	err = s.commentRepo.DeleteMany(ctx, deleteConditions)
+	deletedCommentCount, err := s.commentRepo.DeleteMany(ctx, deleteConditions)
 	if err != nil {
 		return result, fmt.Errorf("error when update comment %v", err.Error())
 	}
@@ -296,7 +296,7 @@ func (s *sCommentUser) DeleteComment(
 	}
 
 	updatePost := &postEntity.PostUpdate{
-		CommentCount: pointer.Ptr(postFound.CommentCount - 1),
+		CommentCount: pointer.Ptr(postFound.CommentCount - int(deletedCommentCount)),
 	}
 
 	err = updatePost.ValidatePostUpdate()
@@ -356,8 +356,8 @@ func (s *sCommentUser) GetManyComments(
 	query *commentQuery.GetManyCommentQuery,
 ) (result *commentQuery.GetManyCommentsResult, err error) {
 	result = &commentQuery.GetManyCommentsResult{
-		Comments: nil,
-		ResultCode: response.ErrServerFailed,
+		Comments:       nil,
+		ResultCode:     response.ErrServerFailed,
 		HttpStatusCode: http.StatusInternalServerError,
 		PagingResponse: nil,
 	}

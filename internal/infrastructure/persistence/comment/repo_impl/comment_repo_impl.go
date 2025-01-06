@@ -135,7 +135,7 @@ func (r *rComment) DeleteOne(
 func (r *rComment) DeleteMany(
 	ctx context.Context,
 	condition map[string]interface{},
-) error {
+) (int64, error) {
 	db := r.db.WithContext(ctx).Model(&models.Comment{})
 
 	for key, value := range condition {
@@ -152,11 +152,12 @@ func (r *rComment) DeleteMany(
 		}
 	}
 
-	if err := db.Delete(condition).Error; err != nil {
-		return err
+	result := db.Delete(condition)
+	if result.Error != nil {
+		return 0, result.Error
 	}
 
-	return nil
+	return result.RowsAffected, nil
 }
 
 func (r *rComment) GetOne(
