@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"net/http"
 
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
@@ -20,15 +23,18 @@ import (
 type sCommentReport struct {
 	commentReportRepo commentReportRepo.ICommentReportRepository
 	commentRepo       commentReportRepo.ICommentRepository
+	notificationRepo  commentReportRepo.INotificationRepository
 }
 
 func NewCommentReportImplement(
 	commentReportRepo commentReportRepo.ICommentReportRepository,
 	commentRepo commentReportRepo.ICommentRepository,
+	notificationRepo commentReportRepo.INotificationRepository,
 ) *sCommentReport {
 	return &sCommentReport{
 		commentReportRepo: commentReportRepo,
 		commentRepo:       commentRepo,
+		notificationRepo:  notificationRepo,
 	}
 }
 
@@ -111,7 +117,7 @@ func (s *sCommentReport) HandleCommentReport(
 		return result, err
 	}
 
-	_, err = s.commentRepo.UpdateOne(ctx, command.ReportedCommentId, reportedCommentUpdateEntity)
+	commentUpdated, err := s.commentRepo.UpdateOne(ctx, command.ReportedCommentId, reportedCommentUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -128,6 +134,25 @@ func (s *sCommentReport) HandleCommentReport(
 	}
 
 	if err = s.commentReportRepo.UpdateMany(ctx, command.ReportedCommentId, commentReportEntity); err != nil {
+		return result, err
+	}
+
+	// 5. Create notification for user
+	content := "Your comment has been blocked for violating our policies: " + truncate.TruncateContent(commentUpdated.Content, 20)
+	notification, err := notificationEntity.NewNotification(
+		commentUpdated.User.FamilyName+" "+commentUpdated.User.Name,
+		commentUpdated.User.AvatarUrl,
+		commentUpdated.User.ID,
+		consts.DEACTIVATE_COMMENT,
+		commentUpdated.ID.String(),
+		content,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	_, err = s.notificationRepo.CreateOne(ctx, notification)
+	if err != nil {
 		return result, err
 	}
 
@@ -207,7 +232,7 @@ func (s *sCommentReport) ActivateComment(
 		return result, err
 	}
 
-	_, err = s.commentRepo.UpdateOne(ctx, command.CommentId, reportedCommentUpdateEntity)
+	commentUpdated, err := s.commentRepo.UpdateOne(ctx, command.CommentId, reportedCommentUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -219,6 +244,25 @@ func (s *sCommentReport) ActivateComment(
 
 	// 4. Delete report
 	if err = s.commentReportRepo.DeleteByCommentId(ctx, command.CommentId); err != nil {
+		return result, err
+	}
+
+	// 5. Create notification for user
+	content := "Your comment is activated: " + truncate.TruncateContent(commentUpdated.Content, 20)
+	notification, err := notificationEntity.NewNotification(
+		commentUpdated.User.FamilyName+" "+commentUpdated.User.Name,
+		commentUpdated.User.AvatarUrl,
+		commentUpdated.User.ID,
+		consts.DEACTIVATE_COMMENT,
+		commentUpdated.ID.String(),
+		content,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	_, err = s.notificationRepo.CreateOne(ctx, notification)
+	if err != nil {
 		return result, err
 	}
 

@@ -82,8 +82,8 @@ func InitServiceInterface() {
 	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo)
 	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo)
 	userReportServiceInit := userServiceImpl.NewUserReportImplement(userReportRepo, userRepo, postRepo, commentRepo)
-	postReportServiceInit := postServiceImpl.NewPostReportImplement(postReportRepo, postRepo)
-	commentReportServiceInit := commentServiceImpl.NewCommentReportImplement(commentReportRepo, commentRepo)
+	postReportServiceInit := postServiceImpl.NewPostReportImplement(postReportRepo, postRepo, notificationRepo)
+	commentReportServiceInit := commentServiceImpl.NewCommentReportImplement(commentReportRepo, commentRepo, notificationRepo)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 

@@ -110,56 +110,56 @@ func (s *sUserAuth) Login(
 
 func (s *sUserAuth) Register(
 	ctx context.Context,
-	registerCommand *userCommand.RegisterCommand,
+	command *userCommand.RegisterCommand,
 ) (result *userCommand.RegisterCommandResult, err error) {
 	result = &userCommand.RegisterCommandResult{
 		ResultCode: response.ErrServerFailed,
 	}
 	// 1. Check user exist in user table
-	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, registerCommand.Email)
+	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, command.Email)
 	if err != nil {
 		return result, err
 	}
 
 	if userFound {
 		result.ResultCode = response.ErrCodeUserHasExists
-		return result, fmt.Errorf("user %s already exists", registerCommand.Email)
+		return result, fmt.Errorf("user %s already exists", command.Email)
 	}
 
 	// 3. Get Otp from Redis
-	hashEmail := crypto.GetHash(strings.ToLower(registerCommand.Email))
+	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
 	userKey := utils.GetUserKey(hashEmail)
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			result.ResultCode = response.ErrCodeOtpNotExists
-			return result, fmt.Errorf("no OTP found for %s", registerCommand.Email)
+			return result, fmt.Errorf("no OTP found for %s", command.Email)
 		}
 		result.ResultCode = response.ErrCodeOtpNotExists
 		return result, err
 	}
 
 	// 3. Compare Otp
-	if otpFound != registerCommand.Otp {
+	if otpFound != command.Otp {
 		result.ResultCode = response.ErrInvalidOTP
-		return result, fmt.Errorf("otp does not match for %s", registerCommand.Email)
+		return result, fmt.Errorf("otp does not match for %s", command.Email)
 	}
 
 	// 4. Hash password
-	hashedPassword, err := crypto.HashPassword(registerCommand.Password)
+	hashedPassword, err := crypto.HashPassword(command.Password)
 	if err != nil {
 		return result, err
 	}
 
 	// 5. Create new user
 	newUser, err := userEntity.NewUserLocal(
-		registerCommand.FamilyName,
-		registerCommand.Name,
-		registerCommand.Email,
+		command.FamilyName,
+		command.Name,
+		command.Email,
 		hashedPassword,
-		registerCommand.PhoneNumber,
-		registerCommand.Birthday,
+		command.PhoneNumber,
+		command.Birthday,
 	)
 	if err != nil {
 		return result, err
@@ -186,6 +186,17 @@ func (s *sUserAuth) Register(
 	// 7. Validate user
 	validatedUser, err := userValidator.NewValidatedUser(createdUser)
 	if err != nil {
+		return result, err
+	}
+
+	// 8. Send success email for user
+	if err = sendto.SendTemplateEmailOtp(
+		[]string{command.Email},
+		consts.HOST_EMAIL,
+		"sign_up_success.html",
+		map[string]interface{}{"email": command.Email},
+	); err != nil {
+		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
 	}
 
@@ -507,6 +518,17 @@ func (s *sUserAuth) AuthGoogle(
 			// 2.3. Validate user
 			validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
 			if err != nil {
+				return result, err
+			}
+
+			// 2.4. Send success email to user
+			if err = sendto.SendTemplateEmailOtp(
+				[]string{claims.Email},
+				consts.HOST_EMAIL,
+				"sign_up_success.html",
+				map[string]interface{}{"email": claims.Email},
+			); err != nil {
+				result.ResultCode = response.ErrSendEmailOTP
 				return result, err
 			}
 

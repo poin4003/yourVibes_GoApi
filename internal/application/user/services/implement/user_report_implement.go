@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
 	"net/http"
 
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -118,7 +120,7 @@ func (s *sUserReport) HandleUserReport(
 		return result, err
 	}
 
-	_, err = s.userRepo.UpdateOne(ctx, command.ReportedUserId, reportedUserUpdateEntity)
+	userUpdated, err := s.userRepo.UpdateOne(ctx, command.ReportedUserId, reportedUserUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -164,6 +166,17 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	if err = s.userReportRepo.UpdateMany(ctx, command.ReportedUserId, userReportEntity); err != nil {
+		return result, err
+	}
+
+	// 3. Send mail deactivate user account
+	if err = sendto.SendTemplateEmailOtp(
+		[]string{userUpdated.Email},
+		consts.HOST_EMAIL,
+		"deactivate_account.html",
+		map[string]interface{}{"email": userUpdated.Email},
+	); err != nil {
+		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
 	}
 
@@ -284,6 +297,17 @@ func (s *sUserReport) ActivateUserAccount(
 
 	// 6. Delete report
 	if err = s.userReportRepo.DeleteByUserId(ctx, command.UserId); err != nil {
+		return result, err
+	}
+
+	// 4. Send email to user
+	if err = sendto.SendTemplateEmailOtp(
+		[]string{userFound.Email},
+		consts.HOST_EMAIL,
+		"activate_account.html",
+		map[string]interface{}{"email": userFound.Email},
+	); err != nil {
+		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
 	}
 

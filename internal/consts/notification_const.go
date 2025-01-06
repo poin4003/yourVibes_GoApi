@@ -15,6 +15,10 @@ const (
 	NEW_SHARE             NotificationType = "new_share"
 	FRIEND_REQUEST        NotificationType = "friend_request"
 	ACCEPT_FRIEND_REQUEST NotificationType = "accept_friend_request"
+	DEACTIVATE_POST       NotificationType = "deactivate_post"
+	ACTIVATE_POST         NotificationType = "activate_post"
+	DEACTIVATE_COMMENT    NotificationType = "deactivate_comment"
+	ACTICATE_COMMENT      NotificationType = "activate_comment"
 )
 
 type NotificationSocketResponse struct {

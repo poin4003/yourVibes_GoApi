@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"net/http"
 
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -18,17 +21,20 @@ import (
 )
 
 type sPostReport struct {
-	postReportRepo postReportRepo.IPostReportRepository
-	postRepo       postReportRepo.IPostRepository
+	postReportRepo   postReportRepo.IPostReportRepository
+	postRepo         postReportRepo.IPostRepository
+	notificationRepo postReportRepo.INotificationRepository
 }
 
 func NewPostReportImplement(
 	postReportRepo postReportRepo.IPostReportRepository,
 	postRepo postReportRepo.IPostRepository,
+	notificationRepo postReportRepo.INotificationRepository,
 ) *sPostReport {
 	return &sPostReport{
-		postReportRepo: postReportRepo,
-		postRepo:       postRepo,
+		postReportRepo:   postReportRepo,
+		postRepo:         postRepo,
+		notificationRepo: notificationRepo,
 	}
 }
 
@@ -111,7 +117,7 @@ func (s *sPostReport) HandlePostReport(
 		return result, err
 	}
 
-	_, err = s.postRepo.UpdateOne(ctx, command.ReportedPostId, reportedPostUpdateEntity)
+	postUpdated, err := s.postRepo.UpdateOne(ctx, command.ReportedPostId, reportedPostUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -128,6 +134,25 @@ func (s *sPostReport) HandlePostReport(
 	}
 
 	if err = s.postReportRepo.UpdateMany(ctx, command.ReportedPostId, postReportEntity); err != nil {
+		return result, err
+	}
+
+	// 5. Create notification for user
+	content := "Your post has been blocked for violating our policies: " + truncate.TruncateContent(postUpdated.Content, 20)
+	notification, err := notificationEntity.NewNotification(
+		postUpdated.User.FamilyName+" "+postUpdated.User.Name,
+		postUpdated.User.AvatarUrl,
+		postUpdated.User.ID,
+		consts.DEACTIVATE_POST,
+		postUpdated.ID.String(),
+		content,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	_, err = s.notificationRepo.CreateOne(ctx, notification)
+	if err != nil {
 		return result, err
 	}
 
@@ -207,7 +232,7 @@ func (s *sPostReport) ActivatePost(
 		return result, err
 	}
 
-	_, err = s.postRepo.UpdateOne(ctx, command.PostId, reportedPostUpdateEntity)
+	postUpdated, err := s.postRepo.UpdateOne(ctx, command.PostId, reportedPostUpdateEntity)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			result.ResultCode = response.ErrDataNotFound
@@ -219,6 +244,25 @@ func (s *sPostReport) ActivatePost(
 
 	// 4. Delete report
 	if err = s.postReportRepo.DeleteByPostId(ctx, command.PostId); err != nil {
+		return result, err
+	}
+
+	// 5. Create notification for user
+	content := "Your post is activated: " + truncate.TruncateContent(postUpdated.Content, 20)
+	notification, err := notificationEntity.NewNotification(
+		postUpdated.User.FamilyName+" "+postUpdated.User.Name,
+		postUpdated.User.AvatarUrl,
+		postUpdated.User.ID,
+		consts.ACTIVATE_POST,
+		postUpdated.ID.String(),
+		content,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	_, err = s.notificationRepo.CreateOne(ctx, notification)
+	if err != nil {
 		return result, err
 	}
 
