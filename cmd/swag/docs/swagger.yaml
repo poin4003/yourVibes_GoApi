@@ -236,7 +236,7 @@ definitions:
         - $ref: '#/definitions/response.PagingResponse'
         description: Paging (optional)
     type: object
-host: localhost:8080
+host: yourvibesapi.duckdns.org:8080
 info:
   contact:
     email: pchuy4003@gmail.com
