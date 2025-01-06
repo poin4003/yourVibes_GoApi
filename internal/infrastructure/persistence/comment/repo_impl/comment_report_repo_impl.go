@@ -34,6 +34,7 @@ func (r *rCommentReport) GetById(
 		Preload("User").
 		Preload("ReportedComment.Post.User").
 		Preload("ReportedComment.Post.ParentPost.Media").
+		Preload("ReportedComment.Post.ParentPost.User").
 		Preload("ReportedComment.User").
 		Preload("Admin").
 		First(&commentReportModel).
