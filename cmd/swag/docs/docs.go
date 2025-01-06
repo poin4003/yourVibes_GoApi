@@ -1851,6 +1851,33 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/app_auth_google/": {
+            "post": {
+                "description": "When user need google login on mobile app",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_auth"
+                ],
+                "summary": "User app auth google",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AppAuthGoogleRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/auth_google/": {
             "post": {
                 "description": "When user need google login",
@@ -2725,6 +2752,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.AppAuthGoogleRequest": {
+            "type": "object",
+            "properties": {
+                "open_id": {
+                    "type": "string"
+                },
+                "platform": {
+                    "$ref": "#/definitions/consts.Platform"
+                },
+                "redirect_url": {
                     "type": "string"
                 }
             }

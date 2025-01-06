@@ -20,6 +20,15 @@ definitions:
     - email
     - password
     type: object
+  request.AppAuthGoogleRequest:
+    properties:
+      open_id:
+        type: string
+      platform:
+        $ref: '#/definitions/consts.Platform'
+      redirect_url:
+        type: string
+    type: object
   request.AuthGoogleRequest:
     properties:
       authorization_code:
@@ -1447,6 +1456,24 @@ paths:
       summary: Get user by ID
       tags:
       - user_info
+  /users/app_auth_google/:
+    post:
+      consumes:
+      - application/json
+      description: When user need google login on mobile app
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.AppAuthGoogleRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: User app auth google
+      tags:
+      - user_auth
   /users/auth_google/:
     post:
       consumes:

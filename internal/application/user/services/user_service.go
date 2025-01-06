@@ -16,6 +16,7 @@ type (
 		GetOtpForgotUserPassword(ctx context.Context, command *command.GetOtpForgotUserPasswordCommand) (result *command.GetOtpForgotUserPasswordCommandResult, err error)
 		ForgotUserPassword(ctx context.Context, command *command.ForgotUserPasswordCommand) (result *command.ForgotUserPasswordCommandResult, err error)
 		AuthGoogle(ctx context.Context, command *command.AuthGoogleCommand) (result *command.AuthGoogleCommandResult, err error)
+		AppAuthGoogle(ctx context.Context, command *command.AuthAppGoogleCommand) (result *command.AuthGoogleCommandResult, err error)
 	}
 	IUserInfo interface {
 		GetInfoByUserId(ctx context.Context, query *query.GetOneUserQuery) (result *query.UserQueryResult, err error)

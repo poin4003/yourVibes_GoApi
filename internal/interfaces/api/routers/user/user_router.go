@@ -40,6 +40,11 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			UserAuthController.Login,
 		)
 
+		userRouterPublic.POST("/app_auth_google",
+			helpers.ValidateJsonBody(&authRequest.AppAuthGoogleRequest{}, authRequest.ValidateAppAuthGoogleRequest),
+			UserAuthController.AppAuthGoogle,
+		)
+
 		userRouterPublic.POST("/auth_google",
 			helpers.ValidateJsonBody(&authRequest.AuthGoogleRequest{}, authRequest.ValidateAuthGoogleRequest),
 			UserAuthController.AuthGoogle,

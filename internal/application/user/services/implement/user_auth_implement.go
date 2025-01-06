@@ -578,3 +578,118 @@ func (s *sUserAuth) AuthGoogle(
 	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }
+
+func (s *sUserAuth) AppAuthGoogle(
+	ctx context.Context,
+	command *userCommand.AuthAppGoogleCommand,
+) (result *userCommand.AuthGoogleCommandResult, err error) {
+	result = &userCommand.AuthGoogleCommandResult{
+		User:           nil,
+		AccessToken:    nil,
+		ResultCode:     response.ErrServerFailed,
+		HttpStatusCode: http.StatusInternalServerError,
+	}
+
+	// 1. Get claims from openid
+	claims, err := jwtutil.DecodeGoogleIDToken(command.OpenId)
+	if err != nil {
+		return result, err
+	}
+
+	// 2. Get user by email
+	userFound, err := s.userRepo.GetOne(ctx, "email = ?", claims.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 2.1. Create new user
+			newUser, err := userEntity.NewUserGoogle(
+				claims.FamilyName,
+				claims.GivenName,
+				claims.Email,
+				claims.Sub,
+				claims.Picture,
+			)
+			if err != nil {
+				return result, err
+			}
+
+			createdUser, err := s.userRepo.CreateOne(ctx, newUser)
+			if err != nil {
+				return result, err
+			}
+
+			// 2.2. Create setting for user
+			newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
+			if err != nil {
+				return result, err
+			}
+
+			createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
+			if err != nil {
+				return result, err
+			}
+
+			createdUser.Setting = createdSetting
+
+			// 2.3. Validate user
+			validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
+			if err != nil {
+				return result, err
+			}
+
+			// 2.4. Send success email to user
+			if err = sendto.SendTemplateEmailOtp(
+				[]string{claims.Email},
+				consts.HOST_EMAIL,
+				"sign_up_success.html",
+				map[string]interface{}{"email": claims.Email},
+			); err != nil {
+				result.ResultCode = response.ErrSendEmailOTP
+				return result, err
+			}
+
+			accessClaims := jwt.MapClaims{
+				"id":  validatedUser.ID,
+				"exp": time.Now().Add(time.Hour * 720).Unix(),
+			}
+
+			// 2.4. Generate token
+			accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+			if err != nil {
+				return result, fmt.Errorf("cannot create access token: %w", err)
+			}
+			result.User = mapper.NewUserResultFromValidateEntity(validatedUser)
+			result.AccessToken = &accessTokenGen
+			result.ResultCode = response.ErrCodeSuccess
+			result.HttpStatusCode = http.StatusOK
+
+			return result, nil
+		}
+		return result, err
+	}
+
+	// 3. Check authType
+	// 3.1. Return if auth type is local
+	if userFound.AuthType == consts.LOCAL_AUTH {
+		result.ResultCode = response.ErrCodeInvalidLocalAuthType
+		result.HttpStatusCode = http.StatusBadRequest
+		return result, fmt.Errorf("you can't use local account to google login")
+	}
+
+	// 4. Check auth google id
+	accessClaims := jwt.MapClaims{
+		"id":  userFound.ID,
+		"exp": time.Now().Add(time.Hour * 720).Unix(),
+	}
+
+	// 4.1 Generate token
+	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+	if err != nil {
+		return result, fmt.Errorf("cannot create access token: %w", err)
+	}
+
+	result.User = mapper.NewUserResultFromEntity(userFound)
+	result.AccessToken = &accessTokenGen
+	result.ResultCode = response.ErrCodeSuccess
+	result.HttpStatusCode = http.StatusOK
+	return result, nil
+}

@@ -302,3 +302,48 @@ func (c *cUserAuth) ForgotUserPassword(ctx *gin.Context) {
 
 	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
 }
+
+// AppAuthGoogle documentation
+// @Summary User app auth google
+// @Description When user need google login on mobile app
+// @Tags user_auth
+// @Accept json
+// @Produce json
+// @Param input body request.AppAuthGoogleRequest true "input"
+// @Router /users/app_auth_google/ [post]
+func (c *cUserAuth) AppAuthGoogle(ctx *gin.Context) {
+	// 1. Get body
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		return
+	}
+
+	// 2. Convert to appAuthGoogleRequest
+	authGoogleRequest, ok := body.(*request.AppAuthGoogleRequest)
+	if !ok {
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		return
+	}
+
+	// 3. Call service to handle auth google
+	appAuthGoogleCommand, err := authGoogleRequest.ToAppAuthGoogleCommand()
+	if err != nil {
+		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result, err := services.UserAuth().AppAuthGoogle(ctx, appAuthGoogleCommand)
+	if err != nil {
+		pkgResponse.ErrorResponse(ctx, result.ResultCode, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 4. Map to dto
+	userDto := response.ToUserWithSettingDto(result.User)
+
+	pkgResponse.SuccessResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, gin.H{
+		"access_token": result.AccessToken,
+		"user":         userDto,
+	})
+}

@@ -46,6 +46,12 @@ type AuthGoogleCommand struct {
 	RedirectUrl       string
 }
 
+type AuthAppGoogleCommand struct {
+	OpenId      string
+	Platform    consts.Platform
+	RedirectUrl string
+}
+
 type RegisterCommandResult struct {
 	User       *common.UserWithSettingResult
 	ResultCode int
@@ -74,6 +80,13 @@ type ForgotUserPasswordCommandResult struct {
 }
 
 type AuthGoogleCommandResult struct {
+	User           *common.UserWithSettingResult
+	AccessToken    *string
+	ResultCode     int
+	HttpStatusCode int
+}
+
+type AuthAppGoogleCommandResult struct {
 	User           *common.UserWithSettingResult
 	AccessToken    *string
 	ResultCode     int
