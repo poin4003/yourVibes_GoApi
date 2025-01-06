@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
-	"net/http"
 
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
@@ -170,11 +171,12 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	// 3. Send mail deactivate user account
-	if err = sendto.SendTemplateEmailOtp(
+	if err = sendto.SendTemplateEmail(
 		[]string{userUpdated.Email},
 		consts.HOST_EMAIL,
 		"deactivate_account.html",
 		map[string]interface{}{"email": userUpdated.Email},
+		"Yourvibes deactivated account",
 	); err != nil {
 		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
@@ -301,11 +303,12 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	// 4. Send email to user
-	if err = sendto.SendTemplateEmailOtp(
+	if err = sendto.SendTemplateEmail(
 		[]string{userFound.Email},
 		consts.HOST_EMAIL,
 		"activate_account.html",
 		map[string]interface{}{"email": userFound.Email},
+		"Yourvibes activated account",
 	); err != nil {
 		result.ResultCode = response.ErrSendEmailOTP
 		return result, err

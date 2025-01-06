@@ -190,11 +190,12 @@ func (s *sUserAuth) Register(
 	}
 
 	// 8. Send success email for user
-	if err = sendto.SendTemplateEmailOtp(
+	if err = sendto.SendTemplateEmail(
 		[]string{command.Email},
 		consts.HOST_EMAIL,
 		"sign_up_success.html",
 		map[string]interface{}{"email": command.Email},
+		"Yourvibes sign up successful",
 	); err != nil {
 		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
@@ -246,11 +247,12 @@ func (s *sUserAuth) VerifyEmail(
 	}
 
 	// 6. send OTP
-	err = sendto.SendTemplateEmailOtp(
+	err = sendto.SendTemplateEmail(
 		[]string{email},
 		consts.HOST_EMAIL,
 		"otp_auth.html",
 		map[string]interface{}{"otp": strconv.Itoa(otpNew)},
+		"Yourvibes OTP Verification",
 	)
 
 	if err != nil {
@@ -370,11 +372,12 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 	}
 
 	// 7. Send OTP
-	if err = sendto.SendTemplateEmailOtp(
+	if err = sendto.SendTemplateEmail(
 		[]string{command.Email},
 		consts.HOST_EMAIL,
 		"otp_forgot_password.html",
 		map[string]interface{}{"otp": strconv.Itoa(otpNew)},
+		"Yourvibes OTP Verification",
 	); err != nil {
 		result.ResultCode = response.ErrSendEmailOTP
 		return result, err
@@ -522,11 +525,12 @@ func (s *sUserAuth) AuthGoogle(
 			}
 
 			// 2.4. Send success email to user
-			if err = sendto.SendTemplateEmailOtp(
+			if err = sendto.SendTemplateEmail(
 				[]string{claims.Email},
 				consts.HOST_EMAIL,
 				"sign_up_success.html",
 				map[string]interface{}{"email": claims.Email},
+				"Yourvibes sign up with Google account successfully",
 			); err != nil {
 				result.ResultCode = response.ErrSendEmailOTP
 				return result, err
@@ -637,11 +641,12 @@ func (s *sUserAuth) AppAuthGoogle(
 			}
 
 			// 2.4. Send success email to user
-			if err = sendto.SendTemplateEmailOtp(
+			if err = sendto.SendTemplateEmail(
 				[]string{claims.Email},
 				consts.HOST_EMAIL,
 				"sign_up_success.html",
 				map[string]interface{}{"email": claims.Email},
+				"Yourvibes sign up with Google Account successfully",
 			); err != nil {
 				result.ResultCode = response.ErrSendEmailOTP
 				return result, err

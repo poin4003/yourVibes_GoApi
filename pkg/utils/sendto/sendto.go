@@ -3,11 +3,12 @@ package sendto
 import (
 	"bytes"
 	"fmt"
-	"github.com/poin4003/yourVibes_GoApi/global"
-	"go.uber.org/zap"
 	"html/template"
 	"net/smtp"
 	"strings"
+
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"go.uber.org/zap"
 )
 
 type EmailAddress struct {
@@ -39,18 +40,19 @@ func BuildMessage(mail Mail) string {
 	return msg
 }
 
-func SendTemplateEmailOtp(
+func SendTemplateEmail(
 	to []string,
 	from string,
 	nameTemplate string,
 	dataTemplate map[string]interface{},
+	subject string,
 ) error {
 	htmlBody, err := getMailTemplate(nameTemplate, dataTemplate)
 	if err != nil {
 		return err
 	}
 
-	return send(to, from, htmlBody)
+	return send(to, from, htmlBody, subject)
 }
 
 func getMailTemplate(nameTemplate string, dataTemplate map[string]interface{}) (string, error) {
@@ -63,11 +65,11 @@ func getMailTemplate(nameTemplate string, dataTemplate map[string]interface{}) (
 	return htmlTemplate.String(), nil
 }
 
-func send(to []string, from string, htmlTemplate string) error {
+func send(to []string, from string, htmlTemplate string, subject string) error {
 	contentEmail := Mail{
 		From:    EmailAddress{Address: from, Name: "YourVibes"},
 		To:      to,
-		Subject: "OTP Verification",
+		Subject: subject,
 		Body:    htmlTemplate,
 	}
 
