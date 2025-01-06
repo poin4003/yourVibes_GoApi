@@ -2,11 +2,12 @@ package entities
 
 import (
 	"fmt"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type Notification struct {
@@ -69,7 +70,8 @@ func validateNotificationType(value interface{}) error {
 
 	switch notificationType {
 	case consts.NEW_POST, consts.NEW_COMMENT, consts.LIKE_POST, consts.LIKE_COMMENT,
-		consts.NEW_SHARE, consts.FRIEND_REQUEST, consts.ACCEPT_FRIEND_REQUEST:
+		consts.NEW_SHARE, consts.FRIEND_REQUEST, consts.ACCEPT_FRIEND_REQUEST, consts.DEACTIVATE_COMMENT,
+		consts.DEACTIVATE_POST, consts.ACTICATE_COMMENT, consts.ACTIVATE_POST:
 		return nil
 	default:
 		return fmt.Errorf("invalid notification type: %v", notificationType)

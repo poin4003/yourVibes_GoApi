@@ -1,13 +1,15 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
-	"time"
 )
 
 type AdminDto struct {
 	ID          uuid.UUID `json:"id"`
+	FamilyName  string    `json:"family_name"`
 	Name        string    `json:"name"`
 	Email       string    `json:"email"`
 	PhoneNumber string    `json:"phone_number"`
@@ -24,7 +26,8 @@ func ToAdminDto(
 ) *AdminDto {
 	return &AdminDto{
 		ID:          adminResult.ID,
-		Name:        adminResult.FamilyName + " " + adminResult.Name,
+		FamilyName:  adminResult.FamilyName,
+		Name:        adminResult.Name,
 		Email:       adminResult.Email,
 		PhoneNumber: adminResult.PhoneNumber,
 		IdentityId:  adminResult.IdentityId,
