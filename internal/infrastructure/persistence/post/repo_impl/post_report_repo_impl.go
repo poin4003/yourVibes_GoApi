@@ -33,6 +33,7 @@ func (r *rPostReport) GetById(
 		Where("user_id = ? AND reported_post_id = ?", userId, reportedPostId).
 		Preload("User").
 		Preload("ReportedPost.User").
+		Preload("ReportedPost.Media").
 		Preload("ReportedPost.ParentPost.Media").
 		Preload("ReportedPost.ParentPost.User").
 		Preload("Admin").

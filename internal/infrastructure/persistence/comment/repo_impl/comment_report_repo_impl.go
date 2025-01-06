@@ -33,6 +33,7 @@ func (r *rCommentReport) GetById(
 		Where("user_id = ? AND reported_comment_id = ?", userId, reportedCommentId).
 		Preload("User").
 		Preload("ReportedComment.Post.User").
+		Preload("ReportedComment.Post.Media").
 		Preload("ReportedComment.Post.ParentPost.Media").
 		Preload("ReportedComment.Post.ParentPost.User").
 		Preload("ReportedComment.User").
