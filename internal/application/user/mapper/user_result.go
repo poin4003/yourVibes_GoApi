@@ -78,7 +78,7 @@ func NewUserResultWithoutPrivateInfo(
 		Privacy:      user.Privacy,
 		Biography:    "",
 		PostCount:    0,
-		FriendCount:  0,
+		FriendCount:  user.FriendCount,
 		Status:       user.Status,
 		FriendStatus: friendStatus,
 		CreatedAt:    time.Time{},
