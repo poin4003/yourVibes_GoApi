@@ -210,7 +210,7 @@ func (r *rNotification) GetMany(
 		}
 	}
 
-	err := db.Count(&total).Error
+	err := db.Where("user_id = ?", query.UserId).Count(&total).Error
 	if err != nil {
 		return nil, nil, err
 	}
