@@ -37,6 +37,13 @@ func DecodeGoogleIDToken(
 		return nil, fmt.Errorf("invalid issuer: %s", claims.Iss)
 	}
 
+	if claims.FamilyName == "" {
+		claims.FamilyName = "  "
+	}
+	if claims.GivenName == "" {
+		claims.GivenName = "  "
+	}
+
 	if time.Now().Unix() > claims.Exp {
 		return nil, fmt.Errorf("ID token has expired")
 	}
