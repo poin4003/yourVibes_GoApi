@@ -3,6 +3,7 @@ package cronjob
 import (
 	"context"
 	"fmt"
+
 	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/robfig/cron/v3"
 )
@@ -44,13 +45,13 @@ func StartCheckExpiryCronJob(
 	cronJob := NewCheckExpiryCronJob(postRepo, newFeedRepo)
 	cronJob.Run()
 
-	//_, err := c.AddFunc("@every 1m", func() {
-	//	cronJob.Run()
-	//})
-
-	_, err := c.AddFunc("@daily", func() {
+	_, err := c.AddFunc("@every 1m", func() {
 		cronJob.Run()
 	})
+
+	// _, err := c.AddFunc("@daily", func() {
+	// 	cronJob.Run()
+	// })
 
 	if err != nil {
 		fmt.Println(err)

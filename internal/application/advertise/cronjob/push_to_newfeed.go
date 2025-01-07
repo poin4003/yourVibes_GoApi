@@ -34,15 +34,15 @@ func StartPushAdvertiseToNewFeedCronJob(
 ) {
 	c := cron.New()
 
-	//_, err := c.AddFunc("@every 1m", func() {
-	//	cronJob := NewPushToNewFeedCronJob(newFeedRepo)
-	//	cronJob.Run()
-	//})
-
-	_, err := c.AddFunc("@daily", func() {
+	_, err := c.AddFunc("@every 1m", func() {
 		cronJob := NewPushToNewFeedCronJob(newFeedRepo)
 		cronJob.Run()
 	})
+
+	// _, err := c.AddFunc("@daily", func() {
+	// 	cronJob := NewPushToNewFeedCronJob(newFeedRepo)
+	// 	cronJob.Run()
+	// })
 
 	if err != nil {
 		fmt.Println(err)
