@@ -21,7 +21,7 @@ func ValidateCreateCommentRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.PostId, validation.Required),
-		validation.Field(&dto.Content, validation.Required, validation.Length(2, 500)),
+		validation.Field(&dto.Content, validation.Required, validation.Length(1, 500)),
 	)
 }
 

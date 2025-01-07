@@ -18,7 +18,7 @@ func ValidateUpdateCommentRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Content, validation.Length(2, 500)),
+		validation.Field(&dto.Content, validation.Length(1, 500)),
 	)
 }
 

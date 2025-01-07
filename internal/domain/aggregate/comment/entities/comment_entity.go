@@ -51,14 +51,14 @@ func (c *Comment) ValidateComment() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.PostId, validation.Required),
 		validation.Field(&c.UserId, validation.Required),
-		validation.Field(&c.Content, validation.Required, validation.Length(2, 500)),
+		validation.Field(&c.Content, validation.Required, validation.Length(1, 500)),
 		validation.Field(&c.CreatedAt, validation.Min(c.CreatedAt)),
 	)
 }
 
 func (cu *CommentUpdate) ValidateCommentUpdate() error {
 	return validation.ValidateStruct(cu,
-		validation.Field(&cu.Content, validation.Length(2, 500)),
+		validation.Field(&cu.Content, validation.Length(1, 500)),
 	)
 }
 
