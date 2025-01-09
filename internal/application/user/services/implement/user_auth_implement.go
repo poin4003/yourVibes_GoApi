@@ -560,7 +560,7 @@ func (s *sUserAuth) AuthGoogle(
 	if !userFound.Status {
 		result.ResultCode = response.ErrCodeAccountBlockedByAdmin
 		result.HttpStatusCode = http.StatusForbidden
-		return result, nil
+		return result, fmt.Errorf("this account has been blocked for violating our community standards")
 	}
 
 	// 4. Return if auth type is local
