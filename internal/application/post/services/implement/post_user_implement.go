@@ -34,6 +34,7 @@ type sPostUser struct {
 	likeUserPostRepo postRepo.ILikeUserPostRepository
 	notificationRepo postRepo.INotificationRepository
 	advertiseRepo    postRepo.IAdvertiseRepository
+	postReportRepo   postRepo.IPostReportRepository
 }
 
 func NewPostUserImplement(
@@ -45,6 +46,7 @@ func NewPostUserImplement(
 	likeUserPostRepo postRepo.ILikeUserPostRepository,
 	notificationRepo postRepo.INotificationRepository,
 	advertiseRepo postRepo.IAdvertiseRepository,
+	postReportRepo postRepo.IPostReportRepository,
 ) *sPostUser {
 	return &sPostUser{
 		userRepo:         userRepo,
@@ -55,6 +57,7 @@ func NewPostUserImplement(
 		likeUserPostRepo: likeUserPostRepo,
 		notificationRepo: notificationRepo,
 		advertiseRepo:    advertiseRepo,
+		postReportRepo:   postReportRepo,
 	}
 }
 
@@ -403,6 +406,11 @@ func (s *sPostUser) DeletePost(
 			return result, err
 		}
 		return result, fmt.Errorf("failed to update media records: %w", err)
+	}
+
+	// 8. Delete post report
+	if err = s.postReportRepo.DeleteByPostId(ctx, *command.PostId); err != nil {
+		return result, err
 	}
 
 	result.ResultCode = response.ErrCodeSuccess

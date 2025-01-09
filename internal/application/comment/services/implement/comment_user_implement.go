@@ -24,6 +24,7 @@ type sCommentUser struct {
 	userRepo            commentRepo.IUserRepository
 	postRepo            commentRepo.IPostRepository
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository
+	commentReportRepor  commentRepo.ICommentReportRepository
 }
 
 func NewCommentUserImplement(
@@ -31,12 +32,14 @@ func NewCommentUserImplement(
 	userRepo commentRepo.IUserRepository,
 	postRepo commentRepo.IPostRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
+	commentReportRepo commentRepo.ICommentReportRepository,
 ) *sCommentUser {
 	return &sCommentUser{
 		commentRepo:         commentRepo,
 		userRepo:            userRepo,
 		postRepo:            postRepo,
 		likeUserCommentRepo: likeUserCommentRepo,
+		commentReportRepor:  commentReportRepo,
 	}
 }
 
@@ -344,6 +347,11 @@ func (s *sCommentUser) DeleteComment(
 			return result, err
 		}
 		return result, fmt.Errorf("error when update parent comment %v", err.Error())
+	}
+
+	// 6. Delete comment report
+	if err = s.commentReportRepor.DeleteByCommentId(ctx, command.CommentId); err != nil {
+		return result, err
 	}
 
 	result.ResultCode = response.ErrCodeSuccess

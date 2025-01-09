@@ -109,7 +109,16 @@ func (s *sPostLike) LikePost(
 
 		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, checkLikedToResponse)
 
-		// 4.1.4. Push notification to owner of the post
+		// 4.1.4. Return if owner like his posts
+		if userLike.ID == postFound.UserId {
+			result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
+			result.ResultCode = response.ErrCodeSuccess
+			result.HttpStatusCode = http.StatusOK
+
+			return result, nil
+		}
+
+		// 4.1.5. Push notification to owner of the post
 		notification, err := notificationEntity.NewNotification(
 			userLike.FamilyName+" "+userLike.Name,
 			userLike.AvatarUrl,
@@ -124,7 +133,7 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to create notification: %w", err)
 		}
 
-		// 4.1.5. Send realtime notification (websocket)
+		// 4.1.6. Send realtime notification (websocket)
 		notificationSocketResponse := &consts.NotificationSocketResponse{
 			From:             userLike.FamilyName + " " + userLike.Name,
 			FromUrl:          userLike.AvatarUrl,
@@ -138,12 +147,12 @@ func (s *sPostLike) LikePost(
 			return result, fmt.Errorf("failed to send notification: %w", err)
 		}
 
-		// 4.1.6. Map to result
+		// 4.1.7. Map to result
 		result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
 		result.ResultCode = response.ErrCodeSuccess
 		result.HttpStatusCode = http.StatusOK
 
-		// 4.1.7. Response for controller
+		// 4.1.8. Response for controller
 		return result, nil
 	} else {
 		// 4.2.1. Delete like if it exits

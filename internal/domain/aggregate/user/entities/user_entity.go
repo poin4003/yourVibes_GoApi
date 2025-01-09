@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"regexp"
 	"time"
 
@@ -175,6 +176,7 @@ func NewUserGoogle(
 		CapwallUrl:   consts.CAPWALL_URL,
 		Privacy:      consts.PUBLIC,
 		AuthType:     consts.GOOGLE_AUTH,
+		Birthday:     pointer.Ptr(time.Now()),
 		PostCount:    0,
 		FriendCount:  0,
 		Status:       true,

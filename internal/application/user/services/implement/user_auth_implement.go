@@ -556,21 +556,27 @@ func (s *sUserAuth) AuthGoogle(
 		return result, err
 	}
 
-	// 3. Check authType
-	// 3.1. Return if auth type is local
+	// 3. Return if account is blocked (status = false)
+	if !userFound.Status {
+		result.ResultCode = response.ErrCodeAccountBlockedByAdmin
+		result.HttpStatusCode = http.StatusForbidden
+		return result, nil
+	}
+
+	// 4. Return if auth type is local
 	if userFound.AuthType == consts.LOCAL_AUTH {
 		result.ResultCode = response.ErrCodeInvalidLocalAuthType
 		result.HttpStatusCode = http.StatusBadRequest
 		return result, fmt.Errorf("you can't use local account to google login")
 	}
 
-	// 4. Check auth google id
+	// 5. Check auth google id
 	accessClaims := jwt.MapClaims{
 		"id":  userFound.ID,
 		"exp": time.Now().Add(time.Hour * 720).Unix(),
 	}
 
-	// 4.1 Generate token
+	// 5.1 Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
 		return result, fmt.Errorf("cannot create access token: %w", err)

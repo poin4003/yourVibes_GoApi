@@ -46,6 +46,9 @@ func (r *rAdvertise) GetOne(
 		Model(&advertiseModel).
 		Preload("Bill").
 		Preload("Post.User").
+		Preload("Post.Media").
+		Preload("Post.ParentPost.Media").
+		Preload("Post.ParentPost.User").
 		First(&advertiseModel, id).
 		Error; err != nil {
 		return nil, err
