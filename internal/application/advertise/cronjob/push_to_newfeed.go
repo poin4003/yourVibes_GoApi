@@ -34,7 +34,7 @@ func StartPushAdvertiseToNewFeedCronJob(
 ) {
 	c := cron.New()
 
-	_, err := c.AddFunc("@every 30m", func() {
+	_, err := c.AddFunc("@every 15m", func() {
 		cronJob := NewPushToNewFeedCronJob(newFeedRepo)
 		cronJob.Run()
 	})
