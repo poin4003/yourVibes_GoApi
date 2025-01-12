@@ -4,24 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"net/http"
 
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
-
-	"github.com/poin4003/yourVibes_GoApi/global"
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
 	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
 	"gorm.io/gorm"
 )
 
@@ -77,7 +76,6 @@ func (s *sPostUser) CreatePost(
 		command.Privacy,
 		command.Location,
 	)
-
 	if err != nil {
 		return result, err
 	}

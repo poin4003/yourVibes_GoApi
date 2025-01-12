@@ -342,7 +342,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 		FromUrl:          friendFound.AvatarUrl,
 		UserId:           userFound.ID,
 		User:             *userSocketResponse,
-		NotificationType: consts.FRIEND_REQUEST,
+		NotificationType: consts.ACCEPT_FRIEND_REQUEST,
 		ContentId:        (friendFound.ID).String(),
 	}
 
