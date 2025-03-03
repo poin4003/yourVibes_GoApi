@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetManyNotificationQuery struct {
@@ -20,7 +21,5 @@ type GetManyNotificationQuery struct {
 
 type GetManyNotificationQueryResult struct {
 	Notifications  []*common.NotificationResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

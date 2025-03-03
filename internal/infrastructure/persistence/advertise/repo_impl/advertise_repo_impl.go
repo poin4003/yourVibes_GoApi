@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/advertise/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +32,9 @@ func (r *rAdvertise) GetById(
 		Preload("Bill").
 		First(&advertiseModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -51,6 +56,9 @@ func (r *rAdvertise) GetOne(
 		Preload("Post.ParentPost.User").
 		First(&advertiseModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -173,18 +181,9 @@ func (r *rAdvertise) UpdateOne(
 	id uuid.UUID,
 	updateData *entities.AdvertiseUpdate,
 ) (*entities.Advertise, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.StartDate != nil {
-		updates["start_date"] = *updateData.StartDate
-	}
-
-	if updateData.EndDate != nil {
-		updates["end_date"] = *updateData.EndDate
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -221,6 +220,9 @@ func (r *rAdvertise) GetLatestAdsByPostId(
 		Order("created_at desc").
 		First(&advertise).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

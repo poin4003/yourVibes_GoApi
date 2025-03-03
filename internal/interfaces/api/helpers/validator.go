@@ -1,10 +1,10 @@
 package helpers
 
 import (
+	"reflect"
+
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
-	"reflect"
 )
 
 func ValidateJsonBody(
@@ -15,14 +15,12 @@ func ValidateJsonBody(
 		dtoInstance := reflect.New(reflect.TypeOf(dto).Elem()).Interface()
 
 		if err := ctx.ShouldBindJSON(dtoInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 
 		if err := validateFunc(dtoInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 
@@ -39,14 +37,12 @@ func ValidateFormBody(
 		dtoInstance := reflect.New(reflect.TypeOf(dto).Elem()).Interface()
 
 		if err := ctx.ShouldBind(dtoInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 
 		if err := validateFunc(dtoInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 
@@ -63,14 +59,12 @@ func ValidateQuery(
 		queryInstance := reflect.New(reflect.TypeOf(query).Elem()).Interface()
 
 		if err := ctx.ShouldBindQuery(queryInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 
 		if err := validateFunc(queryInstance); err != nil {
-			response.ErrorResponse(ctx, response.ErrCodeValidate, http.StatusBadRequest, err.Error())
-			ctx.Abort()
+			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
 			return
 		}
 

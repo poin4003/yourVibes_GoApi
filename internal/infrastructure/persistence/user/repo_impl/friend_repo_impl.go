@@ -2,7 +2,9 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
@@ -100,12 +102,13 @@ func (r *rFriend) GetFriendIds(
 ) ([]uuid.UUID, error) {
 	friendIds := []uuid.UUID{}
 
-	err := r.db.WithContext(ctx).
+	if err := r.db.WithContext(ctx).
 		Model(&models.Friend{}).
 		Where("user_id = ?", userId).
-		Pluck("friend_id", &friendIds).Error
-
-	if err != nil {
+		Pluck("friend_id", &friendIds).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

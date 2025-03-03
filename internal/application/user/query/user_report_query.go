@@ -29,14 +29,10 @@ type GetManyUserReportQuery struct {
 }
 
 type UserReportQueryResult struct {
-	UserReport     *common.UserReportResult
-	ResultCode     int
-	HttpStatusCode int
+	UserReport *common.UserReportResult
 }
 
 type UserReportQueryListResult struct {
 	UserReports    []*common.UserReportShortVerResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

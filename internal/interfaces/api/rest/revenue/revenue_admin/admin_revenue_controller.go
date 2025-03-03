@@ -1,12 +1,13 @@
 package revenue_admin
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	revenueServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/revenue/revenue_admin/dto/response"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type cRevenueAdmin struct{}
@@ -31,14 +32,14 @@ func (c *cRevenueAdmin) GetMonthlyRevenue(ctx *gin.Context) {
 
 	result, err := services.Revenue().GetMonthlyRevenue(ctx, monthlyRevenueQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 2. Map to dto
 	monthlyRevenueDto := response.ToMonthlyRevenueDto(result)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, monthlyRevenueDto)
+	pkgResponse.OK(ctx, monthlyRevenueDto)
 }
 
 // GetSystemStats godoc
@@ -57,12 +58,12 @@ func (c *cRevenueAdmin) GetSystemStats(ctx *gin.Context) {
 
 	result, err := services.Revenue().GetSystemStats(ctx, systemStatsQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 2. Map to dto
 	systemStatsDto := response.ToSystemStatsDto(result)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, systemStatsDto)
+	pkgResponse.OK(ctx, systemStatsDto)
 }

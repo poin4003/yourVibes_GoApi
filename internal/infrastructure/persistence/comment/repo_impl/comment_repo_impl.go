@@ -2,15 +2,16 @@ package repo_impl
 
 import (
 	"context"
-	"fmt"
+	"errors"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type rComment struct {
@@ -32,6 +33,9 @@ func (r *rComment) GetById(
 		}).
 		First(&commentModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -58,26 +62,9 @@ func (r *rComment) UpdateOne(
 	id uuid.UUID,
 	updateData *entities.CommentUpdate,
 ) (*entities.Comment, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.Content != nil {
-		updates["content"] = *updateData.Content
-	}
-
-	if updateData.LikeCount != nil {
-		updates["like_count"] = *updateData.LikeCount
-	}
-
-	if updateData.RepCommentCount != nil {
-		updates["rep_comment_count"] = *updateData.RepCommentCount
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, nil
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -97,16 +84,6 @@ func (r *rComment) UpdateMany(
 	updateData map[string]interface{},
 ) error {
 	db := r.db.WithContext(ctx).Model(&models.Comment{})
-
-	for key, value := range condition {
-		if strings.Contains(key, ">=") {
-			db = db.Where(fmt.Sprintf("%s %s ?", key[:len(key)-2], ">="), value)
-		} else if strings.Contains(key, ">") {
-			db = db.Where(fmt.Sprintf("%s %s ?", key[:len(key)-1], ">"), value)
-		} else {
-			db = db.Where(fmt.Sprintf("%s = ?", key), value)
-		}
-	}
 
 	if err := db.Updates(updateData).Error; err != nil {
 		return err
@@ -138,20 +115,6 @@ func (r *rComment) DeleteMany(
 ) (int64, error) {
 	db := r.db.WithContext(ctx).Model(&models.Comment{})
 
-	for key, value := range condition {
-		if strings.Contains(key, ">=") {
-			db = db.Where(fmt.Sprintf("%s >= ?", key[:len(key)-3]), value)
-		} else if strings.Contains(key, ">") {
-			db = db.Where(fmt.Sprintf("%s > ?", key[:len(key)-2]), value)
-		} else if strings.Contains(key, "<=") {
-			db = db.Where(fmt.Sprintf("%s <= ?", key[:len(key)-3]), value)
-		} else if strings.Contains(key, "<") {
-			db = db.Where(fmt.Sprintf("%s < ?", key[:len(key)-2]), value)
-		} else {
-			db = db.Where(fmt.Sprintf("%s = ?", key), value)
-		}
-	}
-
 	result := db.Delete(condition)
 	if result.Error != nil {
 		return 0, result.Error
@@ -173,6 +136,9 @@ func (r *rComment) GetOne(
 		Where("status = true").
 		First(comment).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -200,8 +166,6 @@ func (r *rComment) GetMany(
 			return nil, nil, err
 		}
 
-		// 2.2. Find child comment by comment_left and comment_right of commentParent
-		//db = db.Where("comment_left > ? AND comment_right <= ? ", parentComment.CommentLeft, parentComment.CommentRight)
 		db = db.Where("parent_id = ?", parentComment.ID)
 	} else if query.PostId != uuid.Nil {
 		db = db.Where("post_id = ? AND parent_id IS NULL", query.PostId)
@@ -264,26 +228,4 @@ func (r *rComment) GetMany(
 	}
 
 	return commentEntities, pagingResponse, nil
-}
-
-func (r *rComment) GetMaxCommentRightByPostId(
-	ctx context.Context,
-	postId uuid.UUID,
-) (int, error) {
-	var maxRight *int
-	err := r.db.WithContext(ctx).
-		Model(&models.Comment{}).
-		Where("post_id = ?", postId).
-		Select("MAX(comment_right)").
-		Scan(&maxRight).Error
-
-	if err != nil {
-		return 0, err
-	}
-
-	if maxRight == nil {
-		return 0, nil
-	}
-
-	return *maxRight, nil
 }

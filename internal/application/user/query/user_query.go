@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOneUserQuery struct {
@@ -25,14 +26,11 @@ type GetManyUserQuery struct {
 }
 
 type UserQueryResult struct {
-	User           *common.UserWithoutSettingResult
-	ResultCode     int
-	HttpStatusCode int
+	User       *common.UserWithoutSettingResult
+	ResultCode int
 }
 
 type UserQueryListResult struct {
 	Users          []*common.UserShortVerResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

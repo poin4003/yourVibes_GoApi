@@ -7,7 +7,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/response"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cAdmin struct{}
@@ -29,39 +28,39 @@ func (c *cAdmin) UpdateAdminInfo(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to registerRequest
 	updateAdminInfoRequest, ok := body.(*request.UpdateAdminInfoRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get admin id from token
 	adminIdClaim, err := extensions.GetAdminID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle update admin
 	updateAdminInfoCommand, err := updateAdminInfoRequest.ToUpdateAdminInfoCommand(adminIdClaim)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.AdminInfo().UpdateAdmin(ctx, updateAdminInfoCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map result to dto
 	adminDto := response.ToAdminDto(result.Admin)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, adminDto)
+	pkgResponse.OK(ctx, adminDto)
 }

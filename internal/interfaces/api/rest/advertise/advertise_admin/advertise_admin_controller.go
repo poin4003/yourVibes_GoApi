@@ -1,8 +1,6 @@
 package advertise_admin
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	advertiseServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
@@ -32,7 +30,7 @@ func (c *cAdvertiseAdmin) GetAdvertiseDetail(ctx *gin.Context) {
 	advertiseIdStr := ctx.Param("advertise_id")
 	advertiseId, err := uuid.Parse(advertiseIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -42,14 +40,14 @@ func (c *cAdvertiseAdmin) GetAdvertiseDetail(ctx *gin.Context) {
 	}
 	result, err := services.Advertise().GetAdvertise(ctx, &getOneAdvertiseQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 3. Map to dto
 	advertiseDto := response.ToAdvertiseDetail(result.Advertise)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDto)
+	pkgResponse.OK(ctx, advertiseDto)
 }
 
 // GetManyAdvertise godoc
@@ -75,27 +73,27 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	advertiseQueryObject, ok := queryInput.(*advertiseQuery.AdvertiseQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle get many
 	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	result, err := services.Advertise().GetManyAdvertise(ctx, getManyAdvertiseQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -105,5 +103,5 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(advertiseResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, advertiseDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, advertiseDtos, *result.PagingResponse)
 }

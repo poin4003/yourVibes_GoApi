@@ -1,8 +1,6 @@
 package post_admin
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -35,7 +33,7 @@ func (c *cAdminPostReport) GetPostReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -43,27 +41,27 @@ func (c *cAdminPostReport) GetPostReport(ctx *gin.Context) {
 	reportedPostIdStr := ctx.Param("reported_post_id")
 	reportedPostId, err := uuid.Parse(reportedPostIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get post report
 	getOnePostReportQuery, err := query.ToGetOnePostReportQuery(userId, reportedPostId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.PostReport().GetDetailPostReport(ctx, getOnePostReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	postReportDto := response.ToPostReportDto(result.PostReport)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postReportDto)
+	pkgResponse.OK(ctx, postReportDto)
 }
 
 // GetManyPostReports godoc
@@ -89,22 +87,22 @@ func (c *cAdminPostReport) GetManyPostReports(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to postReportQueryObject
 	postReportQueryObject, ok := queryInput.(*query.PostReportQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3 Call service to handle get many
-	getManyPostReportQuery, err := postReportQueryObject.ToGetManyPostQuery()
+	getManyPostReportQuery, _ := postReportQueryObject.ToGetManyPostQuery()
 	result, err := services.PostReport().GetManyPostReport(ctx, getManyPostReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -114,7 +112,7 @@ func (c *cAdminPostReport) GetManyPostReports(ctx *gin.Context) {
 		postReportDtos = append(postReportDtos, response.ToPostReportShortVerDto(postReportResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, postReportDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, postReportDtos, *result.PagingResponse)
 }
 
 // HandlePostReport godoc
@@ -132,7 +130,7 @@ func (c *cAdminPostReport) HandlePostReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -140,32 +138,32 @@ func (c *cAdminPostReport) HandlePostReport(ctx *gin.Context) {
 	reportedPostIdStr := ctx.Param("reported_post_id")
 	reportedPostId, err := uuid.Parse(reportedPostIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Get admin id from token
 	adminIdClaim, err := extensions.GetAdminID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle post report
 	handlePostReportCommand, err := request.ToHandlePostReportCommand(adminIdClaim, userId, reportedPostId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.PostReport().HandlePostReport(ctx, handlePostReportCommand)
+	_, err = services.PostReport().HandlePostReport(ctx, handlePostReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // DeletePostReport godoc
@@ -183,7 +181,7 @@ func (c *cAdminPostReport) DeletePostReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -191,25 +189,25 @@ func (c *cAdminPostReport) DeletePostReport(ctx *gin.Context) {
 	reportedPostIdStr := ctx.Param("reported_post_id")
 	reportedPostId, err := uuid.Parse(reportedPostIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to delete post report
 	deletePostReportCommand, err := request.ToDeletePostReportCommand(userId, reportedPostId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.PostReport().DeletePostReport(ctx, deletePostReportCommand)
+	_, err = services.PostReport().DeletePostReport(ctx, deletePostReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // ActivatePost godoc
@@ -226,7 +224,7 @@ func (c *cAdminPostReport) ActivatePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -235,12 +233,12 @@ func (c *cAdminPostReport) ActivatePost(ctx *gin.Context) {
 		PostId: postId,
 	}
 
-	result, err := services.PostReport().ActivatePost(ctx, activatePostCommand)
+	_, err = services.PostReport().ActivatePost(ctx, activatePostCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 3. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }

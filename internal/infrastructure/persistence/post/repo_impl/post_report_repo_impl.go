@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -39,6 +41,9 @@ func (r *rPostReport) GetById(
 		Preload("Admin").
 		First(&postReportModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -66,14 +71,9 @@ func (r *rPostReport) UpdateOne(
 	reportedPostId uuid.UUID,
 	updateData *entities.PostReportUpdate,
 ) (*entities.PostReport, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.AdminId != nil {
-		updates["admin_id"] = *updateData.AdminId
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -92,14 +92,9 @@ func (r *rPostReport) UpdateMany(
 	reportedPostId uuid.UUID,
 	updateData *entities.PostReportUpdate,
 ) error {
-	updates := map[string]interface{}{}
-
-	if updateData.AdminId != nil {
-		updates["admin_id"] = *updateData.AdminId
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).

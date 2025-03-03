@@ -2,9 +2,12 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +27,9 @@ func (r *rMedia) GetById(
 	if err := r.db.WithContext(ctx).
 		First(&mediaModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -50,18 +56,9 @@ func (r *rMedia) UpdateOne(
 	mediaId uint,
 	updateData *entities.MediaUpdate,
 ) (*entities.Media, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.MediaUrl != nil {
-		updates["media_url"] = *updateData.MediaUrl
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -98,6 +95,9 @@ func (r *rMedia) GetOne(
 		Model(media).
 		Where(query, args...).
 		First(media); res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, res.Error
 	}
 

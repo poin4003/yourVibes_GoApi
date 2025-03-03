@@ -1,9 +1,10 @@
 package entities
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	"time"
 )
 
 type Comment struct {
@@ -15,8 +16,6 @@ type Comment struct {
 	Content         string
 	LikeCount       int
 	RepCommentCount int
-	CommentLeft     int
-	CommentRight    int
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Status          bool
@@ -40,8 +39,6 @@ type CommentForReport struct {
 	Content         string
 	LikeCount       int
 	RepCommentCount int
-	CommentLeft     int
-	CommentRight    int
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Status          bool
@@ -67,8 +64,6 @@ func NewComment(
 	userId uuid.UUID,
 	parentId *uuid.UUID,
 	content string,
-	commentLeft int,
-	commentRight int,
 ) (*Comment, error) {
 	comment := &Comment{
 		ID:              uuid.New(),
@@ -78,8 +73,6 @@ func NewComment(
 		Content:         content,
 		LikeCount:       0,
 		RepCommentCount: 0,
-		CommentLeft:     commentLeft,
-		CommentRight:    commentRight,
 		Status:          true,
 	}
 	if err := comment.ValidateComment(); err != nil {

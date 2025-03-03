@@ -10,7 +10,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cCommentUser struct {
@@ -33,41 +32,41 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to create comment request
 	createCommentRequest, ok := body.(*request.CreateCommentRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 2. Get userid from token
 	userIdClaims, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle create comment
 	createCommentCommand, err := createCommentRequest.ToCreateCommentCommand(userIdClaims)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.CommentUser().CreateComment(ctx, createCommentCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	commentDto := response.ToCommentDto(result.Comment)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, commentDto)
+	pkgResponse.OK(ctx, commentDto)
 }
 
 // GetComment documentation
@@ -86,34 +85,34 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to CommentQueryObject
 	commentQueryObject, ok := queryInput.(*query.CommentQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaims, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get many
 	getManyCommentQuery, err := commentQueryObject.ToGetManyCommentQuery(userIdClaims)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.CommentUser().GetManyComments(ctx, getManyCommentQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -123,7 +122,7 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		commentDtos = append(commentDtos, response.ToCommentWithLikedDto(commentResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, commentDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, commentDtos, *result.PagingResponse)
 }
 
 // DeleteComment documentation
@@ -140,19 +139,19 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Call service to handle delete comment
 	deleteCommentCommand := &command.DeleteCommentCommand{CommentId: commentId}
-	result, err := services.CommentUser().DeleteComment(ctx, deleteCommentCommand)
+	_, err = services.CommentUser().DeleteComment(ctx, deleteCommentCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // UpdateComment documentation
@@ -169,14 +168,14 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to update comment request
 	updateCommentRequest, ok := body.(*request.UpdateCommentRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -184,25 +183,25 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle update comment
 	updateCommentCommand, err := updateCommentRequest.ToUpdateCommentCommand(commentId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.CommentUser().UpdateComment(ctx, updateCommentCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	commentDto := response.ToCommentDto(result.Comment)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, commentDto)
+	pkgResponse.OK(ctx, commentDto)
 }

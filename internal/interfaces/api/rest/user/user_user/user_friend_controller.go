@@ -9,7 +9,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cUserFriend struct{}
@@ -30,20 +29,20 @@ func (c *cUserFriend) SendAddFriendRequest(ctx *gin.Context) {
 	friendIdStr := ctx.Param("friend_id")
 	friendId, err := uuid.Parse(friendIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Check user send add friend request for himself
 	if userIdClaim == friendId {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrMakeFriendWithYourSelf, http.StatusBadRequest, "You can not make friend with yourself")
+		ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrMakeFriendWithYourSelf))
 		return
 	}
 
@@ -53,13 +52,13 @@ func (c *cUserFriend) SendAddFriendRequest(ctx *gin.Context) {
 		FriendId: friendId,
 	}
 
-	result, err := services.UserFriend().SendAddFriendRequest(ctx, sendFriendRequestCommand)
+	err = services.UserFriend().SendAddFriendRequest(ctx, sendFriendRequestCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // UndoFriendRequest godoc
@@ -74,14 +73,14 @@ func (c *cUserFriend) UndoFriendRequest(ctx *gin.Context) {
 	friendIdStr := ctx.Param("friend_id")
 	friendId, err := uuid.Parse(friendIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -91,13 +90,13 @@ func (c *cUserFriend) UndoFriendRequest(ctx *gin.Context) {
 		FriendId: friendId,
 	}
 
-	result, err := services.UserFriend().RemoveFriendRequest(ctx, removeFriendRequestCommand)
+	err = services.UserFriend().RemoveFriendRequest(ctx, removeFriendRequestCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // GetFriendRequests godoc
@@ -112,29 +111,29 @@ func (c *cUserFriend) GetFriendRequests(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	friendRequestQueryObject, ok := queryInput.(*query.FriendRequestQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call services
-	friendRequestQuery, err := friendRequestQueryObject.ToFriendRequestQuery(userIdClaim)
+	friendRequestQuery, _ := friendRequestQueryObject.ToFriendRequestQuery(userIdClaim)
 	result, err := services.UserFriend().GetFriendRequests(ctx, friendRequestQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -144,7 +143,7 @@ func (c *cUserFriend) GetFriendRequests(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }
 
 // AcceptFriendRequest godoc
@@ -159,14 +158,14 @@ func (c *cUserFriend) AcceptFriendRequest(ctx *gin.Context) {
 	friendIdStr := ctx.Param("friend_id")
 	friendId, err := uuid.Parse(friendIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -176,13 +175,13 @@ func (c *cUserFriend) AcceptFriendRequest(ctx *gin.Context) {
 		FriendId: userIdClaim,
 	}
 
-	result, err := services.UserFriend().AcceptFriendRequest(ctx, friendRequestCommand)
+	err = services.UserFriend().AcceptFriendRequest(ctx, friendRequestCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // RejectFriendRequest godoc
@@ -197,14 +196,14 @@ func (c *cUserFriend) RejectFriendRequest(ctx *gin.Context) {
 	friendIdStr := ctx.Param("friend_id")
 	friendId, err := uuid.Parse(friendIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -213,13 +212,13 @@ func (c *cUserFriend) RejectFriendRequest(ctx *gin.Context) {
 		UserId:   friendId,
 		FriendId: userIdClaim,
 	}
-	result, err := services.UserFriend().RemoveFriendRequest(ctx, friendRequestCommand)
+	err = services.UserFriend().RemoveFriendRequest(ctx, friendRequestCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // UnFriend godoc
@@ -234,14 +233,14 @@ func (c *cUserFriend) UnFriend(ctx *gin.Context) {
 	friendIdStr := ctx.Param("friend_id")
 	friendId, err := uuid.Parse(friendIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id claim from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -250,13 +249,13 @@ func (c *cUserFriend) UnFriend(ctx *gin.Context) {
 		UserId:   friendId,
 		FriendId: userIdClaim,
 	}
-	result, err := services.UserFriend().UnFriend(ctx, unFriendCommand)
+	err = services.UserFriend().UnFriend(ctx, unFriendCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // GetFriends godoc
@@ -272,14 +271,14 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	friendQueryObject, ok := queryInput.(*query.FriendQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -287,16 +286,16 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 4. Call services
-	friendQuery, err := friendQueryObject.ToFriendQuery(userId)
+	friendQuery, _ := friendQueryObject.ToFriendQuery(userId)
 
 	result, err := services.UserFriend().GetFriends(ctx, friendQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -306,5 +305,5 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }

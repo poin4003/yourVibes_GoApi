@@ -9,7 +9,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cUserInfo struct{}
@@ -34,30 +33,30 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 	userIdStr := ctx.Param("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get userId from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call services
-	getOneUserQuery, err := userRequest.ToGetOneUserQuery(userId, userIdClaim)
+	getOneUserQuery, _ := userRequest.ToGetOneUserQuery(userId, userIdClaim)
 
 	result, err := services.UserInfo().GetInfoByUserId(ctx, getOneUserQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	userDto := response.ToUserWithoutSettingDto(result.User)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
+	pkgResponse.SuccessResponse(ctx, result.ResultCode, userDto)
 }
 
 // GetManyUsers documentation
@@ -81,22 +80,22 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	userQueryObject, ok := queryInput.(*query.UserQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle get many
-	getManyUserQuery, err := userQueryObject.ToGetManyUserQuery()
+	getManyUserQuery, _ := userQueryObject.ToGetManyUserQuery()
 	result, err := services.UserInfo().GetManyUsers(ctx, getManyUserQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -106,7 +105,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }
 
 // UpdateUser godoc
@@ -130,33 +129,34 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	updateUserRequest, ok := body.(*request.UpdateUserRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle update user
-	updateUserCommand, err := updateUserRequest.ToUpdateUserCommand(userIdClaim, &updateUserRequest.Avatar, &updateUserRequest.Capwall)
+	updateUserCommand, _ := updateUserRequest.ToUpdateUserCommand(userIdClaim, &updateUserRequest.Avatar, &updateUserRequest.Capwall)
 	result, err := services.UserInfo().UpdateUser(ctx, updateUserCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
+		return
 	}
 
 	// 6. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userDto)
+	pkgResponse.OK(ctx, userDto)
 }

@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -40,6 +42,9 @@ func (r *rCommentReport) GetById(
 		Preload("Admin").
 		First(&commentReportModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -67,14 +72,9 @@ func (r *rCommentReport) UpdateOne(
 	reportedCommentId uuid.UUID,
 	updateData *entities.CommentReportUpdate,
 ) (*entities.CommentReport, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.AdminId != nil {
-		updates["admin_id"] = *updateData.AdminId
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).

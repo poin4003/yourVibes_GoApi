@@ -7,7 +7,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cPostReport struct{}
@@ -29,38 +28,38 @@ func (c *cPostReport) ReportPost(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to registerRequest
 	reportPostRequest, ok := body.(*request.ReportPostRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle report post
 	postReportCommand, err := reportPostRequest.ToCreatePostReportCommand(userIdClaim)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 	result, err := services.PostReport().CreatePostReport(ctx, postReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 5. Map result to dto
 	postReportDto := response.ToPostReportDto(result.PostReport)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, postReportDto)
+	pkgResponse.OK(ctx, postReportDto)
 }

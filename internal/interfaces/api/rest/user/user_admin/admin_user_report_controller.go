@@ -1,8 +1,6 @@
 package user_admin
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -35,7 +33,7 @@ func (c *cAdminUserReport) GetUserReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -43,27 +41,27 @@ func (c *cAdminUserReport) GetUserReport(ctx *gin.Context) {
 	reportedUserIdStr := ctx.Param("reported_user_id")
 	reportedUserId, err := uuid.Parse(reportedUserIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get user report
 	getOneUserReportQuery, err := query.ToGetOneUserReportQuery(userId, reportedUserId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.UserReport().GetDetailUserReport(ctx, getOneUserReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	userReportDto := response.ToUserReportDto(result.UserReport)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, userReportDto)
+	pkgResponse.OK(ctx, userReportDto)
 }
 
 // GetManyUserReports godoc
@@ -90,22 +88,22 @@ func (c *cAdminUserReport) GetManyUserReports(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	userReportQueryObject, ok := queryInput.(*query.UserReportQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3 Call service to handle get many
-	getManyUserReportQuery, err := userReportQueryObject.ToGetManyUserQuery()
+	getManyUserReportQuery, _ := userReportQueryObject.ToGetManyUserQuery()
 	result, err := services.UserReport().GetManyUserReport(ctx, getManyUserReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -115,7 +113,7 @@ func (c *cAdminUserReport) GetManyUserReports(ctx *gin.Context) {
 		userReportDtos = append(userReportDtos, response.ToUserReportShortVerDto(userReportResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, userReportDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, userReportDtos, *result.PagingResponse)
 }
 
 // HandleUserReport godoc
@@ -133,7 +131,7 @@ func (c *cAdminUserReport) HandleUserReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -141,32 +139,32 @@ func (c *cAdminUserReport) HandleUserReport(ctx *gin.Context) {
 	reportedUserIdStr := ctx.Param("reported_user_id")
 	reportedUserId, err := uuid.Parse(reportedUserIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Get admin id from token
 	adminIdClaim, err := extensions.GetAdminID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle user report
 	handleUserReportCommand, err := request.ToHandleUserReportCommand(adminIdClaim, userId, reportedUserId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.UserReport().HandleUserReport(ctx, handleUserReportCommand)
+	err = services.UserReport().HandleUserReport(ctx, handleUserReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // DeleteUserReport godoc
@@ -184,7 +182,7 @@ func (c *cAdminUserReport) DeleteUserReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -192,25 +190,25 @@ func (c *cAdminUserReport) DeleteUserReport(ctx *gin.Context) {
 	reportedUserIdStr := ctx.Param("reported_user_id")
 	reportedUserId, err := uuid.Parse(reportedUserIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to delete user report
 	deleteUserReportCommand, err := request.ToDeleteUserReportCommand(userId, reportedUserId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.UserReport().DeleteUserReport(ctx, deleteUserReportCommand)
+	err = services.UserReport().DeleteUserReport(ctx, deleteUserReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // ActivateUserAccount godoc
@@ -227,7 +225,7 @@ func (c *cAdminUserReport) ActivateUserAccount(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -236,12 +234,12 @@ func (c *cAdminUserReport) ActivateUserAccount(ctx *gin.Context) {
 		UserId: userId,
 	}
 
-	result, err := services.UserReport().ActivateUserAccount(ctx, activateUserAccountCommand)
+	err = services.UserReport().ActivateUserAccount(ctx, activateUserAccountCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 3. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }

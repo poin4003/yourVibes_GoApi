@@ -9,13 +9,3 @@ type UpdateOneStatusNotificationCommand struct {
 type UpdateManyStatusNotificationCommand struct {
 	UserId uuid.UUID
 }
-
-type UpdateOneStatusNotificationCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}
-
-type UpdateManyStatusNotificationCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}

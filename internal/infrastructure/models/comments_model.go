@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Comment struct {
@@ -17,8 +18,6 @@ type Comment struct {
 	Content         string         `gorm:"type:text;not null"`
 	LikeCount       int            `gorm:"type:int;default:0"`
 	RepCommentCount int            `gorm:"type:int;default:0"`
-	CommentLeft     int            `gorm:"type:int;default:0"`
-	CommentRight    int            `gorm:"type:int;default:0"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt       gorm.DeletedAt `gorm:"index"`

@@ -2,13 +2,16 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rNotification struct {
@@ -30,6 +33,9 @@ func (r *rNotification) GetById(
 		}).
 		First(&notificationModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -78,34 +84,9 @@ func (r *rNotification) UpdateOne(
 	notificationId uint,
 	updateData *entities.NotificationUpdate,
 ) (*entities.Notification, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.From != nil {
-		updates["from"] = *updateData.From
-	}
-
-	if updateData.FromUrl != nil {
-		updates["from_url"] = *updateData.FromUrl
-	}
-
-	if updateData.NotificationType != nil {
-		updates["notification_type"] = *updateData.NotificationType
-	}
-
-	if updateData.ContentId != nil {
-		updates["content_id"] = *updateData.ContentId
-	}
-
-	if updateData.Content != nil {
-		updates["content"] = *updateData.Content
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -160,6 +141,9 @@ func (r *rNotification) GetOne(
 		Where(query, args...).
 		Preload("User").
 		First(&notificationModel); res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, res.Error
 	}
 

@@ -10,7 +10,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_admin/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
 )
 
 type cAdminCommentReport struct{}
@@ -34,7 +33,7 @@ func (c *cAdminCommentReport) GetCommentReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -42,27 +41,27 @@ func (c *cAdminCommentReport) GetCommentReport(ctx *gin.Context) {
 	reportedCommentIdStr := ctx.Param("reported_comment_id")
 	reportedCommentId, err := uuid.Parse(reportedCommentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get comment report
 	getOneCommentReportQuery, err := query.ToGetOneCommentReportQuery(userId, reportedCommentId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.CommentReport().GetDetailCommentReport(ctx, getOneCommentReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	commentReportDto := response.ToCommentReportDto(result.CommentReport)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, commentReportDto)
+	pkgResponse.OK(ctx, commentReportDto)
 }
 
 // GetManyCommentReports godoc
@@ -88,22 +87,22 @@ func (c *cAdminCommentReport) GetManyCommentReports(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	commentReportQueryObject, ok := queryInput.(*query.CommentReportQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3 Call service to handle get many
-	getManyCommentReportQuery, err := commentReportQueryObject.ToGetManyCommentQuery()
+	getManyCommentReportQuery, _ := commentReportQueryObject.ToGetManyCommentQuery()
 	result, err := services.CommentReport().GetManyCommentReport(ctx, getManyCommentReportQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -113,7 +112,7 @@ func (c *cAdminCommentReport) GetManyCommentReports(ctx *gin.Context) {
 		commentReportDtos = append(commentReportDtos, response.ToCommentReportShortVerDto(commentReportResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, commentReportDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, commentReportDtos, *result.PagingResponse)
 }
 
 // HandleCommentReport godoc
@@ -131,7 +130,7 @@ func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -139,32 +138,32 @@ func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
 	reportedCommentIdStr := ctx.Param("reported_comment_id")
 	reportedCommentId, err := uuid.Parse(reportedCommentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Get admin id from token
 	adminIdClaim, err := extensions.GetAdminID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle comment report
 	handleCommentReportCommand, err := request.ToHandleCommentReportCommand(adminIdClaim, userId, reportedCommentId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.CommentReport().HandleCommentReport(ctx, handleCommentReportCommand)
+	_, err = services.CommentReport().HandleCommentReport(ctx, handleCommentReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // DeleteCommentReport godoc
@@ -182,7 +181,7 @@ func (c *cAdminCommentReport) DeleteCommentReport(ctx *gin.Context) {
 	userIdStr := ctx.Param("user_id")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -190,25 +189,25 @@ func (c *cAdminCommentReport) DeleteCommentReport(ctx *gin.Context) {
 	reportedCommentIdStr := ctx.Param("reported_comment_id")
 	reportedCommentId, err := uuid.Parse(reportedCommentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to delete user report
 	deleteCommentReportCommand, err := request.ToDeleteCommentReportCommand(userId, reportedCommentId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	result, err := services.CommentReport().DeleteCommentReport(ctx, deleteCommentReportCommand)
+	_, err = services.CommentReport().DeleteCommentReport(ctx, deleteCommentReportCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // ActivateComment godoc
@@ -225,7 +224,7 @@ func (c *cAdminCommentReport) ActivateComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
@@ -234,12 +233,12 @@ func (c *cAdminCommentReport) ActivateComment(ctx *gin.Context) {
 		CommentId: commentId,
 	}
 
-	result, err := services.CommentReport().ActivateComment(ctx, activateComment)
+	_, err = services.CommentReport().ActivateComment(ctx, activateComment)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 3. response
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }

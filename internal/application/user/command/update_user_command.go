@@ -1,11 +1,12 @@
 package command
 
 import (
+	"mime/multipart"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"mime/multipart"
-	"time"
 )
 
 type UpdateUserCommand struct {
@@ -22,7 +23,5 @@ type UpdateUserCommand struct {
 }
 
 type UpdateUserCommandResult struct {
-	User           *common.UserWithSettingResult
-	ResultCode     int
-	HttpStatusCode int
+	User *common.UserWithSettingResult
 }

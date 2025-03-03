@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -11,8 +13,8 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rPost struct {
@@ -39,6 +41,9 @@ func (r *rPost) GetById(
 		Preload("ParentPost.Media").
 		First(&postModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -65,38 +70,9 @@ func (r *rPost) UpdateOne(
 	id uuid.UUID,
 	updateData *entities.PostUpdate,
 ) (*entities.Post, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.Content != nil {
-		updates["content"] = *updateData.Content
-	}
-
-	if updateData.LikeCount != nil {
-		updates["like_count"] = *updateData.LikeCount
-	}
-
-	if updateData.CommentCount != nil {
-		updates["comment_count"] = *updateData.CommentCount
-	}
-
-	if updateData.Privacy != nil {
-		updates["privacy"] = *updateData.Privacy
-	}
-
-	if updateData.Location != nil {
-		updates["location"] = *updateData.Location
-	}
-
-	if updateData.IsAdvertisement != nil {
-		updates["is_advertisement"] = *updateData.IsAdvertisement
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no fields to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -119,38 +95,9 @@ func (r *rPost) UpdateMany(
 		return errors.New("condition cannot be empty")
 	}
 
-	updates := map[string]interface{}{}
-
-	if updateData.Content != nil {
-		updates["content"] = *updateData.Content
-	}
-
-	if updateData.LikeCount != nil {
-		updates["like_count"] = *updateData.LikeCount
-	}
-
-	if updateData.CommentCount != nil {
-		updates["comment_count"] = *updateData.CommentCount
-	}
-
-	if updateData.Privacy != nil {
-		updates["privacy"] = *updateData.Privacy
-	}
-
-	if updateData.Location != nil {
-		updates["location"] = *updateData.Location
-	}
-
-	if updateData.IsAdvertisement != nil {
-		updates["is_advertisement"] = *updateData.IsAdvertisement
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return errors.New("no fields to update")
 	}
 
 	if len(updates) == 0 {
@@ -205,6 +152,9 @@ func (r *rPost) GetOne(
 		Preload("ParentPost.Media").
 		First(&postModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

@@ -2,9 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -16,7 +13,6 @@ import (
 	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/media"
-	"gorm.io/gorm"
 )
 
 type sUserInfo struct {
@@ -45,27 +41,22 @@ func (s *sUserInfo) GetInfoByUserId(
 	query *userQuery.GetOneUserQuery,
 ) (result *userQuery.UserQueryResult, err error) {
 	result = &userQuery.UserQueryResult{
-		User:           nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
+		User:       nil,
+		ResultCode: response.ErrServerFailed,
 	}
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.User = nil
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if userFound == nil {
+		return nil, response.NewDataNotFoundError("user not found")
 	}
 
 	// 2. Return if user fetches his own information
 	if query.AuthenticatedUserId == query.UserId {
 		result.User = userMapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
 		return result, nil
 	}
 
@@ -76,7 +67,7 @@ func (s *sUserInfo) GetInfoByUserId(
 		FriendId: query.UserId,
 	})
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 3.1. Check friend
@@ -89,7 +80,7 @@ func (s *sUserInfo) GetInfoByUserId(
 			FriendId: query.UserId,
 		})
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 		if isSendFriendRequest {
 			friendStatus = consts.SEND_FRIEND_REQUEST
@@ -100,7 +91,7 @@ func (s *sUserInfo) GetInfoByUserId(
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
-				return result, err
+				return nil, response.NewServerFailedError(err.Error())
 			}
 			if isReceiveFriendRequest {
 				friendStatus = consts.RECEIVE_FRIEND_REQUEST
@@ -135,7 +126,6 @@ func (s *sUserInfo) GetInfoByUserId(
 
 	result.User = userResult
 	result.ResultCode = resultCode
-	result.HttpStatusCode = http.StatusOK
 	return result, nil
 }
 
@@ -143,16 +133,10 @@ func (s *sUserInfo) GetManyUsers(
 	ctx context.Context,
 	query *userQuery.GetManyUserQuery,
 ) (result *userQuery.UserQueryListResult, err error) {
-	result = &userQuery.UserQueryListResult{
-		Users:          nil,
-		PagingResponse: nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	var userResultList []*common.UserShortVerResult
@@ -160,34 +144,38 @@ func (s *sUserInfo) GetManyUsers(
 		userResultList = append(userResultList, userMapper.NewUserShortVerEntity(user))
 	}
 
-	result.Users = userResultList
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	result.PagingResponse = paging
-	return result, nil
+	return &userQuery.UserQueryListResult{
+		Users:          userResultList,
+		PagingResponse: paging,
+	}, nil
 }
 
 func (s *sUserInfo) UpdateUser(
 	ctx context.Context,
 	command *userCommand.UpdateUserCommand,
 ) (result *userCommand.UpdateUserCommandResult, err error) {
-	result = &userCommand.UpdateUserCommandResult{
-		User:           nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
+	// 1. find user
+	userFound, err := s.userRepo.GetById(ctx, *command.UserId)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
 	}
+
+	if userFound == nil {
+		return nil, response.NewDataNotFoundError("user not found")
+	}
+
 	// 1. update setting language
 	if command.LanguageSetting != nil {
 		settingFound, err := s.settingRepo.GetSetting(ctx, "user_id=?", command.UserId)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.ResultCode = response.ErrDataNotFound
-				result.HttpStatusCode = http.StatusBadRequest
-				return result, err
-			}
-			return result, fmt.Errorf("failed to get setting for user %v: %w", command.UserId, err)
+			return nil, response.NewServerFailedError(err.Error())
 		}
-		_, err = s.settingRepo.UpdateOne(ctx, settingFound.ID,
+
+		if settingFound == nil {
+			return nil, response.NewDataNotFoundError("setting not found")
+		}
+
+		s.settingRepo.UpdateOne(ctx, settingFound.ID,
 			&userEntity.SettingUpdate{Language: command.LanguageSetting},
 		)
 	}
@@ -204,26 +192,21 @@ func (s *sUserInfo) UpdateUser(
 
 	err = updateUserEntity.ValidateUserUpdate()
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 3. update Avatar
 	if command.Avatar != nil && command.Avatar.Size > 0 && command.Avatar.Filename != "" {
 		avatarUrl, err := media.SaveMedia(command.Avatar)
 		if err != nil {
-			return result, fmt.Errorf("failed to upload Avatar: %w", err)
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			AvatarUrl: &avatarUrl,
 		})
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.ResultCode = response.ErrDataNotFound
-				result.HttpStatusCode = http.StatusBadRequest
-				return result, err
-			}
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 	}
 
@@ -231,36 +214,25 @@ func (s *sUserInfo) UpdateUser(
 	if command.Capwall != nil && command.Capwall.Size > 0 && command.Capwall.Filename != "" {
 		capwallUrl, err := media.SaveMedia(command.Capwall)
 		if err != nil {
-			return result, fmt.Errorf("failed to upload Capwall: %w", err)
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			CapwallUrl: &capwallUrl,
 		})
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.ResultCode = response.ErrDataNotFound
-				result.HttpStatusCode = http.StatusBadRequest
-				return result, err
-			}
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 	}
 
-	userFound, err := s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
+	userFound, err = s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	result.User = userMapper.NewUserResultFromEntity(userFound)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &userCommand.UpdateUserCommandResult{
+		User: userMapper.NewUserResultFromEntity(userFound),
+	}, nil
 }
 
 func (s *sUserInfo) GetUserStatusById(
@@ -269,7 +241,7 @@ func (s *sUserInfo) GetUserStatusById(
 ) (status bool, err error) {
 	userStatus, err := s.userRepo.GetStatusById(ctx, id)
 	if err != nil {
-		return false, err
+		return false, response.NewServerFailedError(err.Error())
 	}
-	return userStatus, err
+	return userStatus, nil
 }

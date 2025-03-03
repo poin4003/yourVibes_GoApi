@@ -2,14 +2,17 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rUser struct {
@@ -45,9 +48,12 @@ func (r *rUser) GetById(
 		Preload("Setting").
 		First(&userModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
-	//fmt.Println(mapper.FromUserModel(&userModel))
+
 	return mapper.FromUserModel(&userModel), nil
 }
 
@@ -61,6 +67,9 @@ func (r *rUser) GetStatusById(
 		Select("status").
 		First(&userStatus, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
 	return userStatus, nil
@@ -86,66 +95,9 @@ func (r *rUser) UpdateOne(
 	id uuid.UUID,
 	updateData *entities.UserUpdate,
 ) (*entities.User, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.FamilyName != nil {
-		updates["family_name"] = *updateData.FamilyName
-	}
-
-	if updateData.Name != nil {
-		updates["name"] = *updateData.Name
-	}
-
-	if updateData.PhoneNumber != nil {
-		updates["phone_number"] = *updateData.PhoneNumber
-	}
-
-	if updateData.Birthday != nil {
-		updates["birthday"] = *updateData.Birthday
-	}
-
-	if updateData.AvatarUrl != nil {
-		updates["avatar_url"] = *updateData.AvatarUrl
-	}
-
-	if updateData.CapwallUrl != nil {
-		updates["capwall_url"] = *updateData.CapwallUrl
-	}
-
-	if updateData.Privacy != nil {
-		updates["privacy"] = *updateData.Privacy
-	}
-
-	if updateData.Biography != nil {
-		updates["biography"] = *updateData.Biography
-	}
-
-	if updateData.AuthType != nil {
-		updates["auth_type"] = *updateData.AuthType
-	}
-
-	if updateData.AuthGoogleId != nil {
-		updates["auth_google_id"] = *updateData.AuthGoogleId
-	}
-
-	if updateData.PostCount != nil {
-		updates["post_count"] = *updateData.PostCount
-	}
-
-	if updateData.FriendCount != nil {
-		updates["friend_count"] = *updateData.FriendCount
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
-	}
-
-	if updateData.Password != nil {
-		updates["password"] = *updateData.Password
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no fields to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -172,6 +124,9 @@ func (r *rUser) GetOne(
 		Preload("Setting").
 		First(&userModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

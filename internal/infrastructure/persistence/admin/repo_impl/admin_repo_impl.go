@@ -2,14 +2,17 @@ package repo_impl
 
 import (
 	"context"
+	"errors"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/admin/mapper"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rAdmin struct {
@@ -28,6 +31,9 @@ func (r *rAdmin) GetById(
 	if err := r.db.WithContext(ctx).
 		First(&adminModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -44,6 +50,9 @@ func (r *rAdmin) GetStatusById(
 		Select("status").
 		First(&adminStatus, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
 	return adminStatus, nil
@@ -69,38 +78,9 @@ func (r *rAdmin) UpdateOne(
 	id uuid.UUID,
 	updateData *entities.AdminUpdate,
 ) (*entities.Admin, error) {
-	updates := map[string]interface{}{}
-
-	if updateData.FamilyName != nil {
-		updates["family_name"] = *updateData.FamilyName
-	}
-
-	if updateData.Name != nil {
-		updates["name"] = *updateData.Name
-	}
-
-	if updateData.PhoneNumber != nil {
-		updates["phone_number"] = *updateData.PhoneNumber
-	}
-
-	if updateData.IdentityId != nil {
-		updates["identity_id"] = *updateData.IdentityId
-	}
-
-	if updateData.Birthday != nil {
-		updates["birthday"] = *updateData.Birthday
-	}
-
-	if updateData.Status != nil {
-		updates["status"] = *updateData.Status
-	}
-
-	if updateData.Role != nil {
-		updates["role"] = *updateData.Role
-	}
-
-	if updateData.Password != nil {
-		updates["password"] = *updateData.Password
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -126,6 +106,9 @@ func (r *rAdmin) GetOne(
 		Where(query, args...).
 		First(&adminModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

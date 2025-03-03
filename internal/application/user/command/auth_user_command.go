@@ -53,42 +53,20 @@ type AuthAppGoogleCommand struct {
 }
 
 type RegisterCommandResult struct {
-	User       *common.UserWithSettingResult
-	ResultCode int
+	User *common.UserWithSettingResult
 }
 
 type LoginCommandResult struct {
-	User           *common.UserWithSettingResult
-	AccessToken    *string
-	ResultCode     int
-	HttpStatusCode int
-}
-
-type ChangePasswordCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}
-
-type GetOtpForgotUserPasswordCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}
-
-type ForgotUserPasswordCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
+	User        *common.UserWithSettingResult
+	AccessToken *string
 }
 
 type AuthGoogleCommandResult struct {
-	User           *common.UserWithSettingResult
-	AccessToken    *string
-	ResultCode     int
-	HttpStatusCode int
+	User        *common.UserWithSettingResult
+	AccessToken *string
 }
 
 type AuthAppGoogleCommandResult struct {
-	User           *common.UserWithSettingResult
-	AccessToken    *string
-	ResultCode     int
-	HttpStatusCode int
+	User        *common.UserWithSettingResult
+	AccessToken *string
 }

@@ -2,7 +2,7 @@ package post_user
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
@@ -15,7 +15,6 @@ import (
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/redis/go-redis/v9"
-	"net/http"
 )
 
 type cPostUser struct {
@@ -46,41 +45,41 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	createPostRequest, ok := body.(*request.CreatePostRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle create post
 	createPostCommand, err := createPostRequest.ToCreatePostCommand(userIdClaim, createPostRequest.Media)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.PostUser().CreatePost(context.Background(), createPostCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 5. Map result to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
+	pkgResponse.OK(ctx, postDto)
 }
 
 // UpdatePost documentation
@@ -102,14 +101,14 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated request")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	updatePostRequest, ok := body.(*request.UpdatePostRequest)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -117,62 +116,62 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 4. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 5. Call service to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	// 6. Get post to check owner
 	queryResult, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, queryResult.ResultCode, queryResult.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 7. Check post advertise privacy
 	if queryResult.Post.IsAdvertisement {
 		if updatePostRequest.Privacy != pointer.Ptr(consts.PUBLIC) {
-			pkgResponse.ErrorResponse(ctx, pkgResponse.ErrAdMustBePublic, http.StatusBadRequest, "You can't update privacy of advertise")
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrAdMustBePublic, "You can't update privacy of advertise"))
 			return
 		}
 	}
 
 	// 7. Get user id from token
 	if userIdClaim != queryResult.Post.UserId {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not edit this post"))
+		ctx.Error(pkgResponse.NewInvalidTokenError("You can not edit this post"))
 		return
 	}
 
 	// 8. Call service to handle update post
 	updatePostCommand, err := updatePostRequest.ToUpdatePostCommand(&postId, updatePostRequest.Media)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.PostUser().UpdatePost(ctx, updatePostCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 9. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
+	pkgResponse.OK(ctx, postDto)
 }
 
 // GetManyPost documentation
@@ -196,30 +195,30 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to PostQueryObject
 	postQueryObject, ok := queryInput.(*query.PostQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle get many
-	getManyPostQuery, err := postQueryObject.ToGetManyPostQuery(userIdClaim)
+	getManyPostQuery, _ := postQueryObject.ToGetManyPostQuery(userIdClaim)
 
 	result, err := services.PostUser().GetManyPosts(ctx, getManyPostQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -229,7 +228,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, http.StatusOK, postDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, postDtos, *result.PagingResponse)
 }
 
 // GetPostById documentation
@@ -248,33 +247,33 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get one
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to Dto
 	postDto := response.ToPostWithLikedDto(*result.Post)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postDto)
+	pkgResponse.OK(ctx, postDto)
 }
 
 // DeletePost documentation
@@ -293,44 +292,44 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Get post to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	query_result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, query_result.ResultCode, query_result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Check owner
 	if userIdClaim != query_result.Post.UserId {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusForbidden, fmt.Sprintf("You can not delete this post"))
+		ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrInvalidToken, "you can not delete this post"))
 		return
 	}
 
 	// 4. Call service delete
 	deletePostCommand := &command.DeletePostCommand{PostId: &postId}
 
-	result, err := services.PostUser().DeletePost(ctx, deletePostCommand)
+	_, err = services.PostUser().DeletePost(ctx, deletePostCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, http.StatusOK, postId)
+	pkgResponse.OK(ctx, postId)
 }

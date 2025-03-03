@@ -2,6 +2,9 @@ package user_user
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -12,8 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"net/http"
-	"strconv"
 )
 
 type cNotification struct{}
@@ -40,13 +41,13 @@ func NewNotificationController() *cNotification {
 func (c *cNotification) SendNotification(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	userId := ctx.Param("user_id")
 	if _, err := uuid.Parse(userId); err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		conn.Close()
 		return
 	}
@@ -93,29 +94,29 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	notificationQueryObject, ok := queryInput.(*query.NotificationQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from param
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle get many
-	getManyNotificationQuery, err := notificationQueryObject.ToGetManyNotificationQuery(userIdClaim)
+	getManyNotificationQuery, _ := notificationQueryObject.ToGetManyNotificationQuery(userIdClaim)
 	result, err := services.UserNotification().GetNotificationByUserId(ctx, getManyNotificationQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -125,7 +126,7 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 		notificationDtos = append(notificationDtos, response.ToNotificationDto(notificationResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, result.ResultCode, result.HttpStatusCode, notificationDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, notificationDtos, *result.PagingResponse)
 }
 
 // UpdateOneStatusNotifications Update status of notification to false
@@ -143,7 +144,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	notificationIdStr := ctx.Param("notification_id")
 	notificationID, err := strconv.ParseUint(notificationIdStr, 10, 32)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, "Invalid notification id")
+		ctx.Error(pkgResponse.NewValidateError("Invalid notification id"))
 		return
 	}
 
@@ -151,13 +152,13 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	updateOneStatusNotificationCommand := &command.UpdateOneStatusNotificationCommand{
 		NotificationId: uint(notificationID),
 	}
-	result, err := services.UserNotification().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
+	err = services.UserNotification().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }
 
 // UpdateManyStatusNotifications Update all status of notification to false
@@ -173,7 +174,7 @@ func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	// 1. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -181,11 +182,11 @@ func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	updateManyStatusNotificationCommand := &command.UpdateManyStatusNotificationCommand{
 		UserId: userIdClaim,
 	}
-	result, err := services.UserNotification().UpdateManyStatusNotification(ctx, updateManyStatusNotificationCommand)
+	err = services.UserNotification().UpdateManyStatusNotification(ctx, updateManyStatusNotificationCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, nil)
+	pkgResponse.OK(ctx, nil)
 }

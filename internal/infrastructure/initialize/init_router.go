@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/routers"
 )
 
@@ -28,6 +29,9 @@ func InitRouter() *gin.Engine {
 	}))
 	//r.Use() // logging
 	//r.Use() // limiter global
+
+	r.Use(middlewares.ErrorHandlerMiddleware())
+
 	adminRouter := routers.RouterGroupApp.Admin
 	userRouter := routers.RouterGroupApp.User
 

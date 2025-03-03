@@ -1,8 +1,21 @@
 # Name app
 APP_NAME = server
 
+# Config by OS
+ifeq ($(OS),Windows_NT)
+	SET_ENV = set
+else
+	SET_ENV = export
+endif
+
+# Config command
 dev:
-	go run ./cmd/$(APP_NAME)
+	@echo "Running in development mode"
+	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=dev&&go run ./cmd/$(APP_NAME)
+
+prod:
+	@echo "Running in production mode"
+	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=prod&&go run ./cmd/$(APP_NAME)
 
 migrate:
 	go run ./cmd/cli/postgresql/migrate.go

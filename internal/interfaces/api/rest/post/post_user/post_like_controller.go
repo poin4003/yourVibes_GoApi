@@ -10,7 +10,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/redis/go-redis/v9"
-	"net/http"
 )
 
 type PostLikeController struct {
@@ -39,14 +38,14 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, err.Error())
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrInvalidToken, http.StatusUnauthorized, err.Error())
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -55,14 +54,14 @@ func (p *PostLikeController) LikePost(ctx *gin.Context) {
 
 	result, err := services.LikeUserPost().LikePost(ctx, likePostCommand)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
 	// 4. Map to dto
 	postDto := response.ToPostWithLikedDto(*result.Post)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, result.HttpStatusCode, postDto)
+	pkgResponse.OK(ctx, postDto)
 }
 
 // GetUserLikePost documentation
@@ -80,14 +79,14 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Missing validated query")
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	postLikeQueryObject, ok := queryInput.(*query.PostLikeQueryObject)
 	if !ok {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, "Invalid register request type")
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -95,20 +94,20 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrCodeValidate, http.StatusBadRequest, "Invalid postId format")
+		ctx.Error(pkgResponse.NewValidateError("Invalid postId format"))
 		return
 	}
 
 	// 4. Call service to get list user
 	getPostLikeQuery, err := postLikeQueryObject.ToGetPostLikeQuery(postId)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, http.StatusInternalServerError, err.Error())
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
 	result, err := services.LikeUserPost().GetUsersOnLikes(ctx, getPostLikeQuery)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 
@@ -118,5 +117,5 @@ func (p *PostLikeController) GetUserLikePost(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserDto(userResult))
 	}
 
-	pkgResponse.SuccessPagingResponse(ctx, pkgResponse.ErrCodeSuccess, http.StatusOK, userDtos, *result.PagingResponse)
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }

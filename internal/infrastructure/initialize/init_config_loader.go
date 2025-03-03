@@ -8,9 +8,10 @@ import (
 
 func LoadConfig() {
 	viper := viper.New()
+	viper.AutomaticEnv()
 
 	viper.AddConfigPath("./config/")
-	viper.SetConfigName("local")
+	viper.SetConfigName(viper.GetString("YOURVIBES_SERVER_CONFIG_FILE"))
 	viper.SetConfigType("yaml")
 
 	err := viper.ReadInConfig()

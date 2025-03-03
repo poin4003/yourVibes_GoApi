@@ -14,7 +14,5 @@ type FriendRequestQuery struct {
 
 type FriendRequestQueryResult struct {
 	Users          []*common.UserShortVerResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

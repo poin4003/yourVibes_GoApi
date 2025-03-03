@@ -2,9 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
@@ -18,7 +15,6 @@ import (
 	userReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"gorm.io/gorm"
 )
 
 type sUserReport struct {
@@ -46,22 +42,15 @@ func (s *sUserReport) CreateUserReport(
 	ctx context.Context,
 	command *userCommand.CreateReportUserCommand,
 ) (result *userCommand.CreateReportUserCommandResult, err error) {
-	result = &userCommand.CreateReportUserCommandResult{
-		UserReport:     nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Check report exist
 	userReportCheck, err := s.userReportRepo.CheckExist(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
-		return result, err
+		return nil, response.NewCustomError(response.ErrDataNotFound)
 	}
 
 	// 2. Return if report has already exist
 	if userReportCheck {
-		result.ResultCode = response.ErrCodeUserReportHasAlreadyExist
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("user report already exist")
+		return nil, response.NewCustomError(response.ErrCodeUserReportHasAlreadyExist)
 	}
 
 	// 3. Create report
@@ -71,45 +60,37 @@ func (s *sUserReport) CreateUserReport(
 		command.Reason,
 	)
 	if err != nil {
-		return result, err
+		return nil, response.NewCustomError(response.ErrServerFailed)
 	}
 
 	userReport, err := s.userReportRepo.CreateOne(ctx, userReportEntity)
 	if err != nil {
-		return result, err
+		return nil, response.NewCustomError(response.ErrServerFailed)
 	}
 
 	// 4. Map to result
-	result.UserReport = mapper.NewUserReportResult(userReport)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &userCommand.CreateReportUserCommandResult{
+		UserReport: mapper.NewUserReportResult(userReport),
+	}, nil
 }
 
 func (s *sUserReport) HandleUserReport(
 	ctx context.Context,
 	command *userCommand.HandleUserReportCommand,
-) (result *userCommand.HandleUserReportCommandResult, err error) {
-	result = &userCommand.HandleUserReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exists
 	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if userReportFound == nil {
+		return response.NewDataNotFoundError("user report not found")
 	}
 
 	// 2. Check if report is already handled
 	if userReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you don't need to handle this report again")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Update reported user status
@@ -118,17 +99,12 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	if err = reportedUserUpdateEntity.ValidateUserUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	userUpdated, err := s.userRepo.UpdateOne(ctx, command.ReportedUserId, reportedUserUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Update reportedUser posts status
@@ -136,7 +112,7 @@ func (s *sUserReport) HandleUserReport(
 		Status: pointer.Ptr(false),
 	}
 	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	conditions := map[string]interface{}{
@@ -144,7 +120,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	if err = s.postRepo.UpdateMany(ctx, conditions, postUpdateEntity); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Update reportedUser comment status
@@ -157,7 +133,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	if err = s.commentRepo.UpdateMany(ctx, conditions, updateData); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 6. Update report status
@@ -167,7 +143,7 @@ func (s *sUserReport) HandleUserReport(
 	}
 
 	if err = s.userReportRepo.UpdateMany(ctx, command.ReportedUserId, userReportEntity); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 3. Send mail deactivate user account
@@ -178,75 +154,56 @@ func (s *sUserReport) HandleUserReport(
 		map[string]interface{}{"email": userUpdated.Email},
 		"Yourvibes deactivated account",
 	); err != nil {
-		result.ResultCode = response.ErrSendEmailOTP
-		return result, err
+		return response.NewCustomError(response.ErrSendEmailOTP)
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sUserReport) DeleteUserReport(
 	ctx context.Context,
 	command *userCommand.DeleteUserReportCommand,
-) (result *userCommand.DeleteUserReportCommandResult, err error) {
-	result = &userCommand.DeleteUserReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exists
 	userReportFound, err := s.userReportRepo.GetById(ctx, command.UserId, command.ReportedUserId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if userReportFound == nil {
+		return response.NewDataNotFoundError("user report not found")
 	}
 
 	// 2. Check if report is already handled
 	if userReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you can't delete this report, it's already handled")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Delete report
 	if err = s.userReportRepo.DeleteOne(ctx, command.UserId, command.ReportedUserId); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sUserReport) ActivateUserAccount(
 	ctx context.Context,
 	command *userCommand.ActivateUserAccountCommand,
-) (result *userCommand.ActivateUserAccountCommandResult, err error) {
-	result = &userCommand.ActivateUserAccountCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exists
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if userFound == nil {
+		return response.NewDataNotFoundError("user not found")
 	}
 
 	// 2. Check if user is already activate
 	if userFound.Status {
-		result.ResultCode = response.ErrCodeUserIsAlreadyActivated
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you don't need to activate this user account")
+		return response.NewCustomError(response.ErrCodeUserIsAlreadyActivated)
 	}
 
 	// 3. Update reported user status
@@ -255,17 +212,12 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	if err = reportedUserUpdateEntity.ValidateUserUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, command.UserId, reportedUserUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Update reportedUser posts status
@@ -273,7 +225,7 @@ func (s *sUserReport) ActivateUserAccount(
 		Status: pointer.Ptr(true),
 	}
 	if err = postUpdateEntity.ValidatePostUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	conditions := map[string]interface{}{
@@ -281,7 +233,7 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	if err = s.postRepo.UpdateMany(ctx, conditions, postUpdateEntity); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Update reportedUser comment status
@@ -294,12 +246,12 @@ func (s *sUserReport) ActivateUserAccount(
 	}
 
 	if err = s.commentRepo.UpdateMany(ctx, conditions, updateData); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 6. Delete report
 	if err = s.userReportRepo.DeleteByUserId(ctx, command.UserId); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Send email to user
@@ -310,52 +262,36 @@ func (s *sUserReport) ActivateUserAccount(
 		map[string]interface{}{"email": userFound.Email},
 		"Yourvibes activated account",
 	); err != nil {
-		result.ResultCode = response.ErrSendEmailOTP
-		return result, err
+		return response.NewCustomError(response.ErrSendEmailOTP)
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sUserReport) GetDetailUserReport(
 	ctx context.Context,
 	query *userQuery.GetOneUserReportQuery,
 ) (result *userQuery.UserReportQueryResult, err error) {
-	result = &userQuery.UserReportQueryResult{
-		UserReport:     nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get user report detail
 	userReportEntity, err := s.userReportRepo.GetById(ctx, query.UserId, query.ReportedUserId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if userReportEntity == nil {
+		return nil, response.NewDataNotFoundError("user report not found")
 	}
 
 	// 2. Map to result
-	result.UserReport = mapper.NewUserReportResult(userReportEntity)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &userQuery.UserReportQueryResult{
+		UserReport: mapper.NewUserReportResult(userReportEntity),
+	}, nil
 }
 
 func (s *sUserReport) GetManyUserReport(
 	ctx context.Context,
 	query *userQuery.GetManyUserReportQuery,
 ) (result *userQuery.UserReportQueryListResult, err error) {
-	result = &userQuery.UserReportQueryListResult{
-		UserReports:    nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-		PagingResponse: nil,
-	}
 	// 1. Get list of user report
 	userReportEntities, paging, err := s.userReportRepo.GetMany(ctx, query)
 	if err != nil {
@@ -369,9 +305,8 @@ func (s *sUserReport) GetManyUserReport(
 		userReportResults = append(userReportResults, userReportResult)
 	}
 
-	result.UserReports = userReportResults
-	result.PagingResponse = paging
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &userQuery.UserReportQueryListResult{
+		UserReports:    userReportResults,
+		PagingResponse: paging,
+	}, nil
 }

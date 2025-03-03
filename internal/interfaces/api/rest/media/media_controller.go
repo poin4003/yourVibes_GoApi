@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	mediaServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/media/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/media/services"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cMedia struct{}
@@ -23,7 +22,7 @@ func (c *cMedia) GetMedia(ctx *gin.Context) {
 	}
 	result, err := services.Media().GetMedia(ctx, query)
 	if err != nil {
-		pkgResponse.ErrorResponse(ctx, result.ResultCode, result.HttpStatusCode, err.Error())
+		ctx.Error(err)
 		return
 	}
 

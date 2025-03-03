@@ -2,10 +2,12 @@ package repo_impl
 
 import (
 	"context"
-	"fmt"
+	"errors"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -25,6 +27,9 @@ func (r *rSetting) GetById(
 	if err := r.db.WithContext(ctx).
 		First(&settingModel, id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -51,14 +56,10 @@ func (r *rSetting) UpdateOne(
 	id uint,
 	updateData *entities.SettingUpdate,
 ) (*entities.Setting, error) {
-	updates := map[string]interface{}{}
+	updates := converter.StructToMap(updateData)
 
-	if updateData.Language != nil {
-		updates["language"] = *updateData.Language
-	}
-
-	if updateData.UpdatedAt != nil {
-		updates["updated_at"] = *updateData.UpdatedAt
+	if len(updates) == 0 {
+		return nil, errors.New("no fields to update")
 	}
 
 	if err := r.db.WithContext(ctx).
@@ -88,13 +89,14 @@ func (r *rSetting) GetSetting(
 ) (*entities.Setting, error) {
 	var settingModel models.Setting
 
-	fmt.Println(args)
-
 	if err := r.db.WithContext(ctx).
 		Model(&settingModel).
 		Where(query, args).
 		First(&settingModel).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

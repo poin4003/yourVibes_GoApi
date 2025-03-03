@@ -53,36 +53,6 @@ pipeline {
             }
         }
 
-//         stage('Deploy Golang to DEV') {
-//             steps {
-//                 script {
-//                     echo 'Clearing server_golang-related images and containers...'
-//                     sh '''
-//                         docker container stop yourvibes_api_server || echo "No container named yourvibes_api_server to stop"
-//                         docker container rm yourvibes_api_server || echo "No container named yourvibes_api_server to remove"
-//                         docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "No image ${DOCKER_IMAGE}:${DOCKER_TAG} to remove"
-//                     '''
-//
-//                     echo 'Setting up volume for configuration...'
-//                     sh '''
-//                         ls -l $WORKSPACE/config
-//                         cat $WORKSPACE/config/local.yaml
-//                         docker volume create yourvibes_config || echo "Volume yourvibes_config already exists"
-//                         docker run --rm -v yourvibes_config:/config --name helper busybox sh -c "mkdir -p /config"
-//                         docker cp $WORKSPACE/config/local.yaml helper:/config
-//                     '''
-//
-//                     echo 'Deploying to DEV environment...'
-//                     sh '''
-//                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-//                         docker run -d --name yourvibes_api_server -p 8080:8080 \
-//                         -v yourvibes_config:/config \
-//                         ${DOCKER_IMAGE}:${DOCKER_TAG}
-//                     '''
-//                 }
-//             }
-//         }
-
         stage('Deploy to Production on Acer Archlinux server') {
             steps {
                 script {
