@@ -1,8 +1,9 @@
 package command
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type CreateAdvertiseCommand struct {
@@ -13,7 +14,5 @@ type CreateAdvertiseCommand struct {
 }
 
 type CreateAdvertiseResult struct {
-	PayUrl         string
-	ResultCode     int
-	HttpStatusCode int
+	PayUrl string
 }

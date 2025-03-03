@@ -28,14 +28,10 @@ type GetManyPostReportQuery struct {
 }
 
 type PostReportQueryResult struct {
-	PostReport     *common.PostReportResult
-	ResultCode     int
-	HttpStatusCode int
+	PostReport *common.PostReportResult
 }
 
 type PostReportQueryListResult struct {
 	PostReports    []*common.PostReportShortVerResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

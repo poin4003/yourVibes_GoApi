@@ -12,7 +12,5 @@ type CreateReportCommentCommand struct {
 }
 
 type CreateReportCommentCommandResult struct {
-	CommentReport  *common.CommentReportResult
-	ResultCode     int
-	HttpStatusCode int
+	CommentReport *common.CommentReportResult
 }

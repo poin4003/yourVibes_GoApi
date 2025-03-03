@@ -14,7 +14,5 @@ type GetCommentLikeQuery struct {
 
 type GetCommentLikeResult struct {
 	Users          []*common.UserResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

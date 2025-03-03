@@ -2,9 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	billCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	billEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
@@ -12,7 +9,6 @@ import (
 	billRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"gorm.io/gorm"
 )
 
 type sBill struct {
@@ -39,24 +35,19 @@ func NewBillImplement(
 func (s *sBill) ConfirmPayment(
 	ctx context.Context,
 	command *billCommand.ConfirmPaymentCommand,
-) (result *billCommand.ConfirmPaymentResult, err error) {
-	result = &billCommand.ConfirmPaymentResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	if command == nil {
-		return result, fmt.Errorf("command confirm payment is nil")
+		return response.NewServerFailedError("command confirm payment not found")
 	}
 
 	// 1. Find bill
 	billFound, err := s.billRepo.GetById(ctx, *command.BillId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if billFound == nil {
+		return response.NewDataNotFoundError("bill not found")
 	}
 
 	// 2. Update status bill to paid
@@ -66,29 +57,23 @@ func (s *sBill) ConfirmPayment(
 
 	err = updateBillData.ValidateUpdateBill()
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.billRepo.UpdateOne(ctx, billFound.ID, updateBillData)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 3. Update post to isAdvertisement
 	// 3.1. Find post
 	postFound, err := s.postRepo.GetById(ctx, billFound.Advertise.PostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if postFound == nil {
+		return response.NewDataNotFoundError("post not found")
 	}
 
 	// 3.2. Update isAdvertisement
@@ -98,20 +83,13 @@ func (s *sBill) ConfirmPayment(
 
 	err = updatePostData.ValidatePostUpdate()
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePostData)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }

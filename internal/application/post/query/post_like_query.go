@@ -14,7 +14,5 @@ type GetPostLikeQuery struct {
 
 type GetPostLikeQueryResult struct {
 	Users          []*common.UserResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

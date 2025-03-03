@@ -12,7 +12,5 @@ type CreateReportPostCommand struct {
 }
 
 type CreateReportPostCommandResult struct {
-	PostReport     *common.PostReportResult
-	ResultCode     int
-	HttpStatusCode int
+	PostReport *common.PostReportResult
 }

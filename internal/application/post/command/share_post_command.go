@@ -15,7 +15,5 @@ type SharePostCommand struct {
 }
 
 type SharePostCommandResult struct {
-	Post           *common.PostResult
-	ResultCode     int
-	HttpStatusCode int
+	Post *common.PostResult
 }

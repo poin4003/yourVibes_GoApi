@@ -8,8 +8,6 @@ type LoginCommand struct {
 }
 
 type LoginCommandResult struct {
-	Admin          *common.AdminResult
-	AccessToken    *string
-	ResultCode     int
-	HttpStatusCode int
+	Admin       *common.AdminResult
+	AccessToken *string
 }

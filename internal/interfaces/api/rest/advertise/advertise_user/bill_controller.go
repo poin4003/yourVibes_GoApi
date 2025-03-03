@@ -2,11 +2,12 @@ package advertise_user
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
-	"net/http"
-	"strings"
 )
 
 type cBill struct {
@@ -51,7 +52,7 @@ func (c *cBill) ConfirmPayment(ctx *gin.Context) {
 		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
 	}
 
-	_, err = services.Bill().ConfirmPayment(ctx, confirmPaymentCommand)
+	err = services.Bill().ConfirmPayment(ctx, confirmPaymentCommand)
 	if err != nil {
 		ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
 	}
@@ -78,5 +79,4 @@ func (c *cBill) ConfirmPayment(ctx *gin.Context) {
 	}
 
 	ctx.Redirect(http.StatusMovedPermanently, redirectUrl)
-	return
 }

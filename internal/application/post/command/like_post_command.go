@@ -11,7 +11,5 @@ type LikePostCommand struct {
 }
 
 type LikePostCommandResult struct {
-	Post           *common.PostResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
+	Post *common.PostResultWithLiked
 }

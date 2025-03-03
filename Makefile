@@ -18,7 +18,8 @@ prod:
 	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=prod&&go run ./cmd/$(APP_NAME)
 
 migrate:
-	go run ./cmd/cli/postgresql/migrate.go
+	@echo "Running migrations with config: $(CONFIG_FILE)"
+	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=$(CONFIG_FILE)&&go run ./cmd/cli/postgresql/migrate.go
 
 swag:
 	swag init -g ./cmd/server/main.go -o ./cmd/swag/docs

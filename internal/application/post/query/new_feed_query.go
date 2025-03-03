@@ -14,7 +14,5 @@ type GetNewFeedQuery struct {
 
 type GetNewFeedResult struct {
 	Posts          []*common.PostResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

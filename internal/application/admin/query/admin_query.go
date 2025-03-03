@@ -1,10 +1,11 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"time"
 )
 
 type GetOneAdminQuery struct {
@@ -27,14 +28,10 @@ type GetManyAdminQuery struct {
 }
 
 type AdminQueryResult struct {
-	Admin          *common.AdminResult
-	ResultCode     int
-	HttpStatusCode int
+	Admin *common.AdminResult
 }
 
 type AdminQueryListResult struct {
 	Admins         []*common.AdminResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

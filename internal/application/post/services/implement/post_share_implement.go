@@ -2,8 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"net/http"
 
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
@@ -11,7 +9,6 @@ import (
 	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"gorm.io/gorm"
 )
 
 type sPostShare struct {
@@ -37,20 +34,16 @@ func (s *sPostShare) SharePost(
 	command *postCommand.SharePostCommand,
 ) (result *postCommand.SharePostCommandResult, err error) {
 	result = &postCommand.SharePostCommandResult{
-		Post:           nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
+		Post: nil,
 	}
 	// 1. Find post by post_id
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.Post = nil
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if postFound == nil {
+		return nil, response.NewDataNotFoundError("post not found")
 	}
 
 	// 2. Create new post (parent_id = post_id, user_id = userId)
@@ -64,35 +57,32 @@ func (s *sPostShare) SharePost(
 			&command.PostId,
 		)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		// 2.2. Create new post
 		newSharePost, err := s.postRepo.CreateOne(ctx, newPost)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		validatePost, err := postValidator.NewValidatedPost(newSharePost)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
+
 		return result, nil
 	} else {
 		// 3. Find actually root post
 		rootPost, err := s.postRepo.GetById(ctx, *postFound.ParentId)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				result.Post = nil
-				result.ResultCode = response.ErrDataNotFound
-				result.HttpStatusCode = http.StatusBadRequest
-				return result, err
-			}
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
+		}
+
+		if rootPost == nil {
+			return nil, response.NewDataNotFoundError("root post not found")
 		}
 
 		// 3.1. Copy post info from root post
@@ -104,22 +94,21 @@ func (s *sPostShare) SharePost(
 			&rootPost.ID,
 		)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 		// 3.2. Create new post
 		newSharePost, err := s.postRepo.CreateOne(ctx, newPost)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		validatePost, err := postValidator.NewValidatedPost(newSharePost)
 		if err != nil {
-			return result, err
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
-		result.ResultCode = response.ErrCodeSuccess
-		result.HttpStatusCode = http.StatusOK
+
 		return result, nil
 	}
 }

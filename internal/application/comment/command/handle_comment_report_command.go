@@ -9,8 +9,3 @@ type HandleCommentReportCommand struct {
 	UserId            uuid.UUID
 	ReportedCommentId uuid.UUID
 }
-
-type HandleCommentReportCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}

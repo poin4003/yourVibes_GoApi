@@ -11,7 +11,7 @@ type (
 	IPostUser interface {
 		CreatePost(ctx context.Context, command *command.CreatePostCommand) (result *command.CreatePostCommandResult, err error)
 		UpdatePost(ctx context.Context, command *command.UpdatePostCommand) (result *command.UpdatePostCommandResult, err error)
-		DeletePost(ctx context.Context, command *command.DeletePostCommand) (result *command.DeletePostCommandResult, err error)
+		DeletePost(ctx context.Context, command *command.DeletePostCommand) (err error)
 		GetPost(ctx context.Context, query *query.GetOnePostQuery) (result *query.GetOnePostQueryResult, err error)
 		GetManyPosts(ctx context.Context, query *query.GetManyPostQuery) (result *query.GetManyPostQueryResult, err error)
 		CheckPostOwner(ctx context.Context, query *query.CheckPostOwnerQuery) (result *query.CheckPostOwnerQueryResult, err error)
@@ -24,14 +24,14 @@ type (
 		SharePost(ctx context.Context, command *command.SharePostCommand) (result *command.SharePostCommandResult, err error)
 	}
 	IPostNewFeed interface {
-		DeleteNewFeed(ctx context.Context, command *command.DeleteNewFeedCommand) (result *command.DeleteNewFeedCommandResult, err error)
+		DeleteNewFeed(ctx context.Context, command *command.DeleteNewFeedCommand) (err error)
 		GetNewFeeds(ctx context.Context, query *query.GetNewFeedQuery) (result *query.GetNewFeedResult, err error)
 	}
 	IPostReport interface {
 		CreatePostReport(ctx context.Context, command *command.CreateReportPostCommand) (result *command.CreateReportPostCommandResult, err error)
-		HandlePostReport(ctx context.Context, command *command.HandlePostReportCommand) (result *command.HandlePostReportCommandResult, err error)
-		DeletePostReport(ctx context.Context, command *command.DeletePostReportCommand) (result *command.DeletePostReportCommandResult, err error)
-		ActivatePost(ctx context.Context, command *command.ActivatePostCommand) (result *command.ActivatePostCommandResult, err error)
+		HandlePostReport(ctx context.Context, command *command.HandlePostReportCommand) (err error)
+		DeletePostReport(ctx context.Context, command *command.DeletePostReportCommand) (err error)
+		ActivatePost(ctx context.Context, command *command.ActivatePostCommand) (err error)
 		GetDetailPostReport(ctx context.Context, query *query.GetOnePostReportQuery) (result *query.PostReportQueryResult, err error)
 		GetManyPostReport(ctx context.Context, query *query.GetManyPostReportQuery) (result *query.PostReportQueryListResult, err error)
 	}

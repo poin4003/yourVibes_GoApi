@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
@@ -18,7 +19,7 @@ type (
 		DeleteMany(ctx context.Context, condition map[string]interface{}) (int64, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Comment, error)
 		GetMany(ctx context.Context, query *query.GetManyCommentQuery) ([]*entities.Comment, *response.PagingResponse, error)
-		GetMaxCommentRightByPostId(ctx context.Context, postId uuid.UUID) (int, error)
+		DeleteCommentAndChildComment(ctx context.Context, commentId uuid.UUID) (int64, error)
 	}
 	ILikeUserCommentRepository interface {
 		CreateLikeUserComment(ctx context.Context, entity *entities.LikeUserComment) error

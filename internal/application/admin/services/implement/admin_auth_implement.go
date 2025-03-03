@@ -2,9 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -17,7 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"gorm.io/gorm"
 )
 
 type sAdminAuth struct {
@@ -36,35 +32,24 @@ func (s *sAdminAuth) Login(
 	ctx context.Context,
 	command *adminCommand.LoginCommand,
 ) (result *adminCommand.LoginCommandResult, err error) {
-	result = &adminCommand.LoginCommandResult{
-		Admin:          nil,
-		AccessToken:    nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if adminFound == nil {
+		return nil, response.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Return if account is blocked by admin
 	if !adminFound.Status {
-		result.ResultCode = response.ErrCodeAccountBlockedBySuperAdmin
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("this account has been blocked by super admin")
+		return nil, response.NewCustomError(response.ErrCodeAccountBlockedBySuperAdmin)
 	}
 
 	// 3. Check hash password
 	if !crypto.CheckPasswordHash(command.Password, adminFound.Password) {
-		result.ResultCode = response.ErrCodeEmailOrPasswordIsWrong
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("invalid credentials")
+		return nil, response.NewCustomError(response.ErrCodeEmailOrPasswordIsWrong)
 	}
 
 	// 4. Put claims into token
@@ -77,89 +62,74 @@ func (s *sAdminAuth) Login(
 	// 5. Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtAdminSecretKey)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 6. Map to result
-	result.AccessToken = &accessTokenGen
-	result.Admin = mapper.NewAdminResult(adminFound)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &adminCommand.LoginCommandResult{
+		Admin:       mapper.NewAdminResult(adminFound),
+		AccessToken: &accessTokenGen,
+	}, nil
 }
 
 func (s *sAdminAuth) ChangeAdminPassword(
 	ctx context.Context,
 	command *adminCommand.ChangeAdminPasswordCommand,
-) (result *adminCommand.ChangeAdminPasswordCommandResult, err error) {
-	result = &adminCommand.ChangeAdminPasswordCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetById(ctx, command.AdminId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if adminFound == nil {
+		return response.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Check old password
 	if !crypto.CheckPasswordHash(command.OldPassword, adminFound.Password) {
-		result.ResultCode = response.ErrCodeOldPasswordIsWrong
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("old password is wrong")
+		return response.NewCustomError(response.ErrCodeOldPasswordIsWrong)
 	}
 
 	// 3. Update new password
 	hashedPassword, err := crypto.HashPassword(command.NewPassword)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	updateAdminData := &adminEntity.AdminUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 	if err := updateAdminData.ValidateAdminUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.adminRepo.UpdateOne(ctx, command.AdminId, updateAdminData)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sAdminAuth) ForgotAdminPassword(
 	ctx context.Context,
 	command *adminCommand.ForgotAdminPasswordCommand,
-) (result *adminCommand.ForgotAdminPasswordCommandResult, err error) {
-	result = &adminCommand.ForgotAdminPasswordCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, fmt.Errorf("admin %s doesn't exists", command.Email)
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if adminFound == nil {
+		return response.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Update new password
 	hashedPassword, err := crypto.HashPassword(command.NewPassword)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	updateAdminData := &adminEntity.AdminUpdate{
@@ -167,15 +137,13 @@ func (s *sAdminAuth) ForgotAdminPassword(
 	}
 
 	if err = updateAdminData.ValidateAdminUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.adminRepo.UpdateOne(ctx, adminFound.ID, updateAdminData)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }

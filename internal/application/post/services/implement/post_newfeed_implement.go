@@ -2,7 +2,6 @@ package implement
 
 import (
 	"context"
-	"net/http"
 
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
@@ -36,33 +35,19 @@ func NewPostNewFeedImplement(
 func (s *sPostNewFeed) DeleteNewFeed(
 	ctx context.Context,
 	command *postCommand.DeleteNewFeedCommand,
-) (result *postCommand.DeleteNewFeedCommandResult, err error) {
-	result = &postCommand.DeleteNewFeedCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
-
+) (err error) {
 	err = s.newFeedRepo.DeleteOne(ctx, command.UserId, command.PostId)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sPostNewFeed) GetNewFeeds(
 	ctx context.Context,
 	query *postQuery.GetNewFeedQuery,
 ) (result *postQuery.GetNewFeedResult, err error) {
-	result = &postQuery.GetNewFeedResult{
-		Posts:          nil,
-		PagingResponse: nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
-
 	postEntities, paging, err := s.newFeedRepo.GetMany(ctx, query)
 	if err != nil {
 		return result, err
@@ -73,9 +58,8 @@ func (s *sPostNewFeed) GetNewFeeds(
 		postResults = append(postResults, mapper.NewPostWithLikedResultFromEntity(postEntity))
 	}
 
-	result.Posts = postResults
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	result.PagingResponse = paging
-	return result, nil
+	return &postQuery.GetNewFeedResult{
+		Posts:          postResults,
+		PagingResponse: paging,
+	}, nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"go.uber.org/zap"
 )
 
@@ -19,6 +20,7 @@ func Run() *gin.Engine {
 	InitSocketHub()
 	InitServiceInterface()
 	InitCronJob()
+	response.InitCustomCode()
 
 	r := InitRouter()
 

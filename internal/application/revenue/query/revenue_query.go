@@ -11,10 +11,8 @@ type GetSystemStatsQuery struct {
 }
 
 type GetMonthlyRevenueQueryResult struct {
-	MonthList      []string
-	RevenueList    []int64
-	ResultCode     int
-	HttpStatusCode int
+	MonthList   []string
+	RevenueList []int64
 }
 
 type GetSystemStatsQueryResult struct {
@@ -22,6 +20,4 @@ type GetSystemStatsQueryResult struct {
 	PreviousDaysRevenue   int64
 	TotalCountOfUsers     int
 	TotalCountOfPosts     int
-	ResultCode            int
-	HttpStatusCode        int
 }

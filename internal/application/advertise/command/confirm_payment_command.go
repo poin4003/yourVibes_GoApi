@@ -7,8 +7,3 @@ import (
 type ConfirmPaymentCommand struct {
 	BillId *uuid.UUID
 }
-
-type ConfirmPaymentResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}

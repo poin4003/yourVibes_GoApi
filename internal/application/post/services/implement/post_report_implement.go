@@ -2,12 +2,10 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
-	"net/http"
 
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
@@ -17,7 +15,6 @@ import (
 	postReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"gorm.io/gorm"
 )
 
 type sPostReport struct {
@@ -42,22 +39,15 @@ func (s *sPostReport) CreatePostReport(
 	ctx context.Context,
 	command *postCommand.CreateReportPostCommand,
 ) (result *postCommand.CreateReportPostCommandResult, err error) {
-	result = &postCommand.CreateReportPostCommandResult{
-		PostReport:     nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Check report exist
 	postReportCheck, err := s.postReportRepo.CheckExist(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 2. Return if report has already exists
 	if postReportCheck {
-		result.ResultCode = response.ErrCodePostReportHasAlreadyExist
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("post report already exist")
+		return nil, response.NewCustomError(response.ErrCodePostReportHasAlreadyExist)
 	}
 
 	// 3. Create report
@@ -67,45 +57,37 @@ func (s *sPostReport) CreatePostReport(
 		command.Reason,
 	)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	userReport, err := s.postReportRepo.CreateOne(ctx, postReportEntity)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Map to result
-	result.PostReport = mapper.NewPostReportResult(userReport)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &postCommand.CreateReportPostCommandResult{
+		PostReport: mapper.NewPostReportResult(userReport),
+	}, nil
 }
 
 func (s *sPostReport) HandlePostReport(
 	ctx context.Context,
 	command *postCommand.HandlePostReportCommand,
-) (result *postCommand.HandlePostReportCommandResult, err error) {
-	result = &postCommand.HandlePostReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exist
 	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if postReportFound == nil {
+		return response.NewDataNotFoundError("post report not found")
 	}
 
 	// 2. Check if report is already handled
 	if postReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you don't need to handle this report again")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Update reported post status
@@ -114,17 +96,12 @@ func (s *sPostReport) HandlePostReport(
 	}
 
 	if err = reportedPostUpdateEntity.ValidatePostUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	postUpdated, err := s.postRepo.UpdateOne(ctx, command.ReportedPostId, reportedPostUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, fmt.Errorf("post report not found")
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Update report status
@@ -134,7 +111,7 @@ func (s *sPostReport) HandlePostReport(
 	}
 
 	if err = s.postReportRepo.UpdateMany(ctx, command.ReportedPostId, postReportEntity); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Create notification for user
@@ -148,79 +125,61 @@ func (s *sPostReport) HandlePostReport(
 		content,
 	)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sPostReport) DeletePostReport(
 	ctx context.Context,
 	command *postCommand.DeletePostReportCommand,
-) (result *postCommand.DeletePostReportCommandResult, err error) {
-	result = &postCommand.DeletePostReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exist
 	postReportFound, err := s.postReportRepo.GetById(ctx, command.UserId, command.ReportedPostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if postReportFound == nil {
+		return response.NewDataNotFoundError("post report not found")
 	}
 
 	// 2. Check if report is already handled
 	if postReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you can't delete this report, it's already handled")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Delete report
 	if err = s.postReportRepo.DeleteOne(ctx, command.UserId, command.ReportedPostId); err != nil {
-		return result, err
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sPostReport) ActivatePost(
 	ctx context.Context,
 	command *postCommand.ActivatePostCommand,
-) (result *postCommand.ActivatePostCommandResult, err error) {
-	result = &postCommand.ActivatePostCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) (err error) {
 	// 1. Check exist
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if postFound == nil {
+		return response.NewDataNotFoundError("post not found")
 	}
 
 	// 2. Check if post already activate
 	if postFound.Status {
-		result.ResultCode = response.ErrCodePostIsAlreadyActivated
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you don't need to activate this post")
+		return response.NewCustomError(response.ErrCodePostIsAlreadyActivated)
 	}
 
 	// 3. Update reported post status
@@ -229,22 +188,17 @@ func (s *sPostReport) ActivatePost(
 	}
 
 	if err = reportedPostUpdateEntity.ValidatePostUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	postUpdated, err := s.postRepo.UpdateOne(ctx, command.PostId, reportedPostUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, fmt.Errorf("post report not found")
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Delete report
 	if err = s.postReportRepo.DeleteByPostId(ctx, command.PostId); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Create notification for user
@@ -258,56 +212,42 @@ func (s *sPostReport) ActivatePost(
 		content,
 	)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sPostReport) GetDetailPostReport(
 	ctx context.Context,
 	query *postQuery.GetOnePostReportQuery,
 ) (result *postQuery.PostReportQueryResult, err error) {
-	result = &postQuery.PostReportQueryResult{
-		PostReport:     nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get post report detail
 	postReportEntity, err := s.postReportRepo.GetById(ctx, query.UserId, query.ReportedPostId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if postReportEntity == nil {
+		return nil, response.NewDataNotFoundError("post report not found")
 	}
 
 	// 2. Map to result
-	result.PostReport = mapper.NewPostReportResult(postReportEntity)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+
+	return &postQuery.PostReportQueryResult{
+		PostReport: mapper.NewPostReportResult(postReportEntity),
+	}, nil
 }
 
 func (s *sPostReport) GetManyPostReport(
 	ctx context.Context,
 	query *postQuery.GetManyPostReportQuery,
 ) (result *postQuery.PostReportQueryListResult, err error) {
-	result = &postQuery.PostReportQueryListResult{
-		PostReports:    nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
-	result.PagingResponse = nil
 	// 1. Get list of post report
 	postReportEntities, paging, err := s.postReportRepo.GetMany(ctx, query)
 	if err != nil {
@@ -321,9 +261,8 @@ func (s *sPostReport) GetManyPostReport(
 		postReportResults = append(postReportResults, postReportResult)
 	}
 
-	result.PostReports = postReportResults
-	result.PagingResponse = paging
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &postQuery.PostReportQueryListResult{
+		PostReports:    postReportResults,
+		PagingResponse: paging,
+	}, nil
 }

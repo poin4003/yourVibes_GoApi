@@ -2,12 +2,10 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/truncate"
-	"net/http"
 
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
@@ -17,7 +15,6 @@ import (
 	commentReportRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"gorm.io/gorm"
 )
 
 type sCommentReport struct {
@@ -42,11 +39,6 @@ func (s *sCommentReport) CreateCommentReport(
 	ctx context.Context,
 	command *commentCommand.CreateReportCommentCommand,
 ) (result *commentCommand.CreateReportCommentCommandResult, err error) {
-	result = &commentCommand.CreateReportCommentCommandResult{
-		CommentReport:  nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Check report exist
 	commentReportCheck, err := s.commentReportRepo.CheckExist(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
@@ -55,9 +47,7 @@ func (s *sCommentReport) CreateCommentReport(
 
 	// 2. Return if report has already exists
 	if commentReportCheck {
-		result.ResultCode = response.ErrCodeCommentReportHasAlreadyExist
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("comment report has already exist")
+		return nil, response.NewCustomError(response.ErrCodeCommentReportHasAlreadyExist)
 	}
 
 	// 3. Create report
@@ -67,45 +57,37 @@ func (s *sCommentReport) CreateCommentReport(
 		command.Reason,
 	)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	commentReport, err := s.commentReportRepo.CreateOne(ctx, commentReportEntity)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Map to result
-	result.CommentReport = mapper.NewCommentReportResult(commentReport)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &commentCommand.CreateReportCommentCommandResult{
+		CommentReport: mapper.NewCommentReportResult(commentReport),
+	}, nil
 }
 
 func (s *sCommentReport) HandleCommentReport(
 	ctx context.Context,
 	command *commentCommand.HandleCommentReportCommand,
-) (result *commentCommand.HandleCommentReportCommandResult, err error) {
-	result = &commentCommand.HandleCommentReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	// 1. Check exist
 	commentReportFound, err := s.commentReportRepo.GetById(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if commentReportFound == nil {
+		return response.NewDataNotFoundError("comment report not found")
 	}
 
 	// 2. Check if report is already handled
 	if commentReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you dont't need to handle this report again")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Update reported comment status
@@ -114,17 +96,12 @@ func (s *sCommentReport) HandleCommentReport(
 	}
 
 	if err = reportedCommentUpdateEntity.ValidateCommentUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	commentUpdated, err := s.commentRepo.UpdateOne(ctx, command.ReportedCommentId, reportedCommentUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, fmt.Errorf("comment report not found")
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Update report status
@@ -134,7 +111,7 @@ func (s *sCommentReport) HandleCommentReport(
 	}
 
 	if err = s.commentReportRepo.UpdateMany(ctx, command.ReportedCommentId, commentReportEntity); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Create notification for user
@@ -148,79 +125,61 @@ func (s *sCommentReport) HandleCommentReport(
 		content,
 	)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sCommentReport) DeleteCommentReport(
 	ctx context.Context,
 	command *commentCommand.DeleteCommentReportCommand,
-) (result *commentCommand.DeleteCommentReportCommandResult, err error) {
-	result = &commentCommand.DeleteCommentReportCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	// 1. Check exist
 	commentReportFound, err := s.commentReportRepo.GetById(ctx, command.UserId, command.ReportedCommentId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if commentReportFound == nil {
+		return response.NewDataNotFoundError("comment report not found")
 	}
 
 	// 2. Check if report is already handled
 	if commentReportFound.Status {
-		result.ResultCode = response.ErrCodeReportIsAlreadyHandled
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you can't delete this report, it's already handled")
+		return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 	}
 
 	// 3. Delete report
 	if err = s.commentReportRepo.DeleteOne(ctx, command.UserId, command.ReportedCommentId); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sCommentReport) ActivateComment(
 	ctx context.Context,
 	command *commentCommand.ActivateCommentCommand,
-) (result *commentCommand.ActivateCommentCommandResult, err error) {
-	result = &commentCommand.ActivateCommentCommandResult{
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
+) error {
 	// 1. Check exist
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if commentFound == nil {
+		return response.NewDataNotFoundError("comment report not found")
 	}
 
 	// 2. Check if comment is already activate
 	if commentFound.Status {
-		result.ResultCode = response.ErrCodeCommentIsAlreadyActivated
-		result.HttpStatusCode = http.StatusBadRequest
-		return result, fmt.Errorf("you dont't need to activate this comment again")
+		return response.NewCustomError(response.ErrCodeCommentIsAlreadyActivated)
 	}
 
 	// 3. Update reported comment status
@@ -229,22 +188,17 @@ func (s *sCommentReport) ActivateComment(
 	}
 
 	if err = reportedCommentUpdateEntity.ValidateCommentUpdate(); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	commentUpdated, err := s.commentRepo.UpdateOne(ctx, command.CommentId, reportedCommentUpdateEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, fmt.Errorf("comment report not found")
-		}
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Delete report
 	if err = s.commentReportRepo.DeleteByCommentId(ctx, command.CommentId); err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Create notification for user
@@ -258,60 +212,45 @@ func (s *sCommentReport) ActivateComment(
 		content,
 	)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return result, err
+		return response.NewServerFailedError(err.Error())
 	}
 
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return nil
 }
 
 func (s *sCommentReport) GetDetailCommentReport(
 	ctx context.Context,
 	query *commentQuery.GetOneCommentReportQuery,
 ) (result *commentQuery.CommentReportQueryResult, err error) {
-	result = &commentQuery.CommentReportQueryResult{
-		CommentReport:  nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get post report detail
 	postReportEntity, err := s.commentReportRepo.GetById(ctx, query.UserId, query.ReportedCommentId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if postReportEntity == nil {
+		return nil, response.NewDataNotFoundError("post report not found")
 	}
 
 	// 2. Map to result
-	result.CommentReport = mapper.NewCommentReportResult(postReportEntity)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &commentQuery.CommentReportQueryResult{
+		CommentReport: mapper.NewCommentReportResult(postReportEntity),
+	}, nil
 }
 
 func (s *sCommentReport) GetManyCommentReport(
 	ctx context.Context,
 	query *commentQuery.GetManyCommentReportQuery,
 ) (result *commentQuery.CommentReportQueryListResult, err error) {
-	result = &commentQuery.CommentReportQueryListResult{
-		CommentReports: nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-		PagingResponse: nil,
-	}
 	// 1. Get list of comment report
 	commentReportEntities, paging, err := s.commentReportRepo.GetMany(ctx, query)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 2. Map to result
@@ -321,9 +260,8 @@ func (s *sCommentReport) GetManyCommentReport(
 		commentReportResults = append(commentReportResults, commentReportResult)
 	}
 
-	result.CommentReports = commentReportResults
-	result.PagingResponse = paging
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &commentQuery.CommentReportQueryListResult{
+		CommentReports: commentReportResults,
+		PagingResponse: paging,
+	}, nil
 }

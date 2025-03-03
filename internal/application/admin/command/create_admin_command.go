@@ -1,8 +1,9 @@
 package command
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
 )
 
 type CreateAdminCommand struct {
@@ -17,7 +18,5 @@ type CreateAdminCommand struct {
 }
 
 type CreateAdminCommandResult struct {
-	Admin          *common.AdminResult
-	ResultCode     int
-	HttpStatusCode int
+	Admin *common.AdminResult
 }

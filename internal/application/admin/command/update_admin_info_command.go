@@ -1,9 +1,10 @@
 package command
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
-	"time"
 )
 
 type UpdateAdminInfoCommand struct {
@@ -16,7 +17,5 @@ type UpdateAdminInfoCommand struct {
 }
 
 type UpdateAdminInfoCommandResult struct {
-	Admin          *common.AdminResult
-	ResultCode     int
-	HttpStatusCode int
+	Admin *common.AdminResult
 }

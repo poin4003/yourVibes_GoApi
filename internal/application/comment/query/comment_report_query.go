@@ -28,14 +28,10 @@ type GetManyCommentReportQuery struct {
 }
 
 type CommentReportQueryResult struct {
-	CommentReport  *common.CommentReportResult
-	ResultCode     int
-	HttpStatusCode int
+	CommentReport *common.CommentReportResult
 }
 
 type CommentReportQueryListResult struct {
 	CommentReports []*common.CommentReportShortVerResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

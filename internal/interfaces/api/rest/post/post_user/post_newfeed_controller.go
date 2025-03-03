@@ -43,7 +43,7 @@ func (c *cPostNewFeed) DeleteNewFeed(ctx *gin.Context) {
 	// 3. Call service
 	deleteNewFeedCommand := &postCommand.DeleteNewFeedCommand{PostId: postId, UserId: userIdClaim}
 
-	_, err = services.PostNewFeed().DeleteNewFeed(ctx, deleteNewFeedCommand)
+	err = services.PostNewFeed().DeleteNewFeed(ctx, deleteNewFeedCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

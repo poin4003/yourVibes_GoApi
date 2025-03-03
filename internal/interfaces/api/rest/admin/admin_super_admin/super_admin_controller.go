@@ -224,7 +224,7 @@ func (c *cSuperAdmin) ForgotAdminPassword(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.AdminAuth().ForgotAdminPassword(ctx, forgotAdminPasswordCommand)
+	err = services.AdminAuth().ForgotAdminPassword(ctx, forgotAdminPasswordCommand)
 	if err != nil {
 		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return

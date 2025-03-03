@@ -6,8 +6,3 @@ type DeleteCommentReportCommand struct {
 	UserId            uuid.UUID
 	ReportedCommentId uuid.UUID
 }
-
-type DeleteCommentReportCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}

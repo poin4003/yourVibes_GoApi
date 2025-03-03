@@ -2,7 +2,6 @@ package implement
 
 import (
 	"context"
-	"net/http"
 
 	revenueQuery "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
 	advertiseRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
@@ -31,37 +30,22 @@ func (s *sRevenue) GetMonthlyRevenue(
 	ctx context.Context,
 	query *revenueQuery.GetMonthlyRevenueQuery,
 ) (result *revenueQuery.GetMonthlyRevenueQueryResult, err error) {
-	result = &revenueQuery.GetMonthlyRevenueQueryResult{
-		RevenueList:    nil,
-		MonthList:      nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get list of monthly revenue
 	monthList, revenueList, err := s.billRepo.GetMonthlyRevenue(ctx, query.Date)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	result.MonthList = monthList
-	result.RevenueList = revenueList
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &revenueQuery.GetMonthlyRevenueQueryResult{
+		RevenueList: revenueList,
+		MonthList:   monthList,
+	}, nil
 }
 
 func (s *sRevenue) GetSystemStats(
 	ctx context.Context,
 	query *revenueQuery.GetSystemStatsQuery,
 ) (result *revenueQuery.GetSystemStatsQueryResult, err error) {
-	result = &revenueQuery.GetSystemStatsQueryResult{
-		PreviousMonthsRevenue: 0,
-		PreviousDaysRevenue:   0,
-		TotalCountOfUsers:     0,
-		TotalCountOfPosts:     0,
-		ResultCode:            response.ErrServerFailed,
-		HttpStatusCode:        http.StatusInternalServerError,
-	}
 	// 1. Get previous month revenue
 	previousMonthDate := query.Date.AddDate(0, -1, 0)
 	previousMonthsRevenue, err := s.billRepo.GetRevenueForMonth(ctx, previousMonthDate)
@@ -88,11 +72,10 @@ func (s *sRevenue) GetSystemStats(
 		return result, err
 	}
 
-	result.PreviousMonthsRevenue = previousMonthsRevenue
-	result.PreviousDaysRevenue = previousDaysRevenue
-	result.TotalCountOfUsers = totalCountOfUser
-	result.TotalCountOfPosts = totalCountOfPost
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &revenueQuery.GetSystemStatsQueryResult{
+		PreviousMonthsRevenue: previousMonthsRevenue,
+		PreviousDaysRevenue:   previousDaysRevenue,
+		TotalCountOfUsers:     totalCountOfUser,
+		TotalCountOfPosts:     totalCountOfPost,
+	}, nil
 }

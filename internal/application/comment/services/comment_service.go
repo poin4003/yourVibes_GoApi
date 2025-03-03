@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 )
@@ -10,7 +11,7 @@ type (
 	ICommentUser interface {
 		CreateComment(ctx context.Context, command *command.CreateCommentCommand) (result *command.CreateCommentResult, err error)
 		UpdateComment(ctx context.Context, command *command.UpdateCommentCommand) (result *command.UpdateCommentResult, err error)
-		DeleteComment(ctx context.Context, command *command.DeleteCommentCommand) (result *command.DeleteCommentResult, err error)
+		DeleteComment(ctx context.Context, command *command.DeleteCommentCommand) error
 		GetManyComments(ctx context.Context, query *query.GetManyCommentQuery) (result *query.GetManyCommentsResult, err error)
 	}
 	ICommentLike interface {
@@ -19,9 +20,9 @@ type (
 	}
 	ICommentReport interface {
 		CreateCommentReport(ctx context.Context, command *command.CreateReportCommentCommand) (result *command.CreateReportCommentCommandResult, err error)
-		HandleCommentReport(ctx context.Context, command *command.HandleCommentReportCommand) (result *command.HandleCommentReportCommandResult, err error)
-		DeleteCommentReport(ctx context.Context, command *command.DeleteCommentReportCommand) (result *command.DeleteCommentReportCommandResult, err error)
-		ActivateComment(ctx context.Context, command *command.ActivateCommentCommand) (result *command.ActivateCommentCommandResult, err error)
+		HandleCommentReport(ctx context.Context, command *command.HandleCommentReportCommand) error
+		DeleteCommentReport(ctx context.Context, command *command.DeleteCommentReportCommand) error
+		ActivateComment(ctx context.Context, command *command.ActivateCommentCommand) error
 		GetDetailCommentReport(ctx context.Context, query *query.GetOneCommentReportQuery) (result *query.CommentReportQueryResult, err error)
 		GetManyCommentReport(ctx context.Context, query *query.GetManyCommentReportQuery) (result *query.CommentReportQueryListResult, err error)
 	}

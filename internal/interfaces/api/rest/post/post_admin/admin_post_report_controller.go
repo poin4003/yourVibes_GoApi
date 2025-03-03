@@ -156,7 +156,7 @@ func (c *cAdminPostReport) HandlePostReport(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.PostReport().HandlePostReport(ctx, handlePostReportCommand)
+	err = services.PostReport().HandlePostReport(ctx, handlePostReportCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -200,7 +200,7 @@ func (c *cAdminPostReport) DeletePostReport(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.PostReport().DeletePostReport(ctx, deletePostReportCommand)
+	err = services.PostReport().DeletePostReport(ctx, deletePostReportCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -233,7 +233,7 @@ func (c *cAdminPostReport) ActivatePost(ctx *gin.Context) {
 		PostId: postId,
 	}
 
-	_, err = services.PostReport().ActivatePost(ctx, activatePostCommand)
+	err = services.PostReport().ActivatePost(ctx, activatePostCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

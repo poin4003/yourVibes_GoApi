@@ -12,7 +12,5 @@ type UpdateAdminForSuperAdminCommand struct {
 }
 
 type UpdateAdminForSuperAdminCommandResult struct {
-	Admin          *common.AdminResult
-	ResultCode     int
-	HttpStatusCode int
+	Admin *common.AdminResult
 }

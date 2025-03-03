@@ -156,7 +156,7 @@ func (c *cAdminCommentReport) HandleCommentReport(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.CommentReport().HandleCommentReport(ctx, handleCommentReportCommand)
+	err = services.CommentReport().HandleCommentReport(ctx, handleCommentReportCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -200,7 +200,7 @@ func (c *cAdminCommentReport) DeleteCommentReport(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.CommentReport().DeleteCommentReport(ctx, deleteCommentReportCommand)
+	err = services.CommentReport().DeleteCommentReport(ctx, deleteCommentReportCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -233,7 +233,7 @@ func (c *cAdminCommentReport) ActivateComment(ctx *gin.Context) {
 		CommentId: commentId,
 	}
 
-	_, err = services.CommentReport().ActivateComment(ctx, activateComment)
+	err = services.CommentReport().ActivateComment(ctx, activateComment)
 	if err != nil {
 		ctx.Error(err)
 		return

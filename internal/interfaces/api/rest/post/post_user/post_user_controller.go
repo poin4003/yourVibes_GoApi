@@ -325,7 +325,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	// 4. Call service delete
 	deletePostCommand := &command.DeletePostCommand{PostId: &postId}
 
-	_, err = services.PostUser().DeletePost(ctx, deletePostCommand)
+	err = services.PostUser().DeletePost(ctx, deletePostCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

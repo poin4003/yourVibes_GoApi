@@ -16,7 +16,5 @@ type GetManyCommentQuery struct {
 
 type GetManyCommentsResult struct {
 	Comments       []*common.CommentResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

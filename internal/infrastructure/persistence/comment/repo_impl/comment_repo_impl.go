@@ -229,3 +229,32 @@ func (r *rComment) GetMany(
 
 	return commentEntities, pagingResponse, nil
 }
+
+func (r *rComment) DeleteCommentAndChildComment(
+	ctx context.Context,
+	commentId uuid.UUID,
+) (int64, error) {
+	var deleteCount int64
+
+	tx := r.db.WithContext(ctx).Exec(`
+		WITH RECURSIVE cte AS (
+			SELECT id FROM comments WHERE id = ?
+			UNION ALL
+			SELECT c.id FROM comments c INNER JOIN cte ON c.parent_id = cte.id
+		)
+		UPDATE comments 
+		SET deleted_at = NOW() 
+		WHERE id IN (SELECT id FROM cte) AND deleted_at IS NULL;
+	`, commentId)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	deleteCount = tx.RowsAffected
+	if deleteCount == 0 {
+		return 0, errors.New("no comments found to delete")
+	}
+
+	return deleteCount, nil
+}

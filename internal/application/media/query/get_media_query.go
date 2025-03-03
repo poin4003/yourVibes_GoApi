@@ -5,7 +5,5 @@ type MediaQuery struct {
 }
 
 type MediaQueryResult struct {
-	FilePath       string
-	ResultCode     int
-	HttpStatusCode int
+	FilePath string
 }

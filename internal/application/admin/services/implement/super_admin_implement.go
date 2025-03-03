@@ -2,9 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/common"
@@ -15,7 +12,6 @@ import (
 	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
-	"gorm.io/gorm"
 )
 
 type sSuperAdmin struct {
@@ -34,28 +30,23 @@ func (s *sSuperAdmin) CreateAdmin(
 	ctx context.Context,
 	command *adminCommand.CreateAdminCommand,
 ) (result *adminCommand.CreateAdminCommandResult, err error) {
-	result = &adminCommand.CreateAdminCommandResult{
-		Admin:          nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.CheckAdminExistByEmail(ctx, command.Email)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if adminFound {
-		result.ResultCode = response.ErrCodeAdminHasExist
-		result.HttpStatusCode = http.StatusBadRequest
-		result.Admin = nil
-		return result, fmt.Errorf("admin %s already exists", command.Email)
+		return nil, response.NewCustomError(
+			response.ErrDataHasAlreadyExist,
+			"admin already exist",
+		)
 	}
 
 	// 2. Hash password
 	hashedPassword, err := crypto.HashPassword(command.Password)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 3. Create new admin
@@ -70,35 +61,38 @@ func (s *sSuperAdmin) CreateAdmin(
 		command.Role,
 	)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	createdAdmin, err := s.adminRepo.CreateOne(ctx, newAdmin)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Map to result
 	validateAdmin, err := adminValidator.NewValidateAdmin(createdAdmin)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	result.Admin = mapper.NewAdminResultFromValidateEntity(validateAdmin)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &adminCommand.CreateAdminCommandResult{
+		Admin: mapper.NewAdminResultFromValidateEntity(validateAdmin),
+	}, nil
 }
 
 func (s *sSuperAdmin) UpdateAdmin(
 	ctx context.Context,
 	command *adminCommand.UpdateAdminForSuperAdminCommand,
 ) (result *adminCommand.UpdateAdminForSuperAdminCommandResult, err error) {
-	result = &adminCommand.UpdateAdminForSuperAdminCommandResult{
-		Admin:          nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
+	adminFound, err := s.adminRepo.GetById(ctx, *command.AdminId)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
 	}
+
+	if adminFound == nil {
+		return nil, response.NewDataNotFoundError("admin not found")
+	}
+
 	// 1. Update admin status or role
 	updateAdminEntity := &adminEntity.AdminUpdate{
 		Status: command.Status,
@@ -106,69 +100,48 @@ func (s *sSuperAdmin) UpdateAdmin(
 	}
 
 	if err = updateAdminEntity.ValidateAdminUpdate(); err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	adminFound, err := s.adminRepo.UpdateOne(ctx, *command.AdminId, updateAdminEntity)
+	adminEntity, err := s.adminRepo.UpdateOne(ctx, *command.AdminId, updateAdminEntity)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			result.Admin = nil
-			return result, err
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 2. Map to result
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	result.Admin = mapper.NewAdminResult(adminFound)
-	return result, nil
+	return &adminCommand.UpdateAdminForSuperAdminCommandResult{
+		Admin: mapper.NewAdminResult(adminEntity),
+	}, nil
 }
 
 func (s *sSuperAdmin) GetOneAdmin(
 	ctx context.Context,
 	query *adminQuery.GetOneAdminQuery,
 ) (result *adminQuery.AdminQueryResult, err error) {
-	result = &adminQuery.AdminQueryResult{
-		Admin:          nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get admin info
 	adminFound, err := s.adminRepo.GetById(ctx, query.AdminId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.ResultCode = response.ErrDataNotFound
-			result.HttpStatusCode = http.StatusBadRequest
-			result.Admin = nil
-			return result, nil
-		}
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if adminFound == nil {
+		return nil, response.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Map to result
-	result.Admin = mapper.NewAdminResult(adminFound)
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	return result, nil
+	return &adminQuery.AdminQueryResult{
+		Admin: mapper.NewAdminResult(adminFound),
+	}, nil
 }
 
 func (s *sSuperAdmin) GetManyAdmin(
 	ctx context.Context,
 	query *adminQuery.GetManyAdminQuery,
 ) (result *adminQuery.AdminQueryListResult, err error) {
-	result = &adminQuery.AdminQueryListResult{
-		Admins:         nil,
-		PagingResponse: nil,
-		ResultCode:     response.ErrServerFailed,
-		HttpStatusCode: http.StatusInternalServerError,
-	}
 	// 1. Get list admin
 	adminEntities, paging, err := s.adminRepo.GetMany(ctx, query)
 	if err != nil {
-		return result, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	var adminResults []*common.AdminResult
@@ -177,9 +150,8 @@ func (s *sSuperAdmin) GetManyAdmin(
 		adminResults = append(adminResults, adminResult)
 	}
 
-	result.Admins = adminResults
-	result.ResultCode = response.ErrCodeSuccess
-	result.HttpStatusCode = http.StatusOK
-	result.PagingResponse = paging
-	return result, nil
+	return &adminQuery.AdminQueryListResult{
+		Admins:         adminResults,
+		PagingResponse: paging,
+	}, nil
 }

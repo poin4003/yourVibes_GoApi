@@ -145,7 +145,7 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 
 	// 2. Call service to handle delete comment
 	deleteCommentCommand := &command.DeleteCommentCommand{CommentId: commentId}
-	_, err = services.CommentUser().DeleteComment(ctx, deleteCommentCommand)
+	err = services.CommentUser().DeleteComment(ctx, deleteCommentCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

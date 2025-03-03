@@ -7,8 +7,3 @@ type ChangeAdminPasswordCommand struct {
 	OldPassword string
 	NewPassword string
 }
-
-type ChangeAdminPasswordCommandResult struct {
-	ResultCode     int
-	HttpStatusCode int
-}

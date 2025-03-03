@@ -32,20 +32,14 @@ type CheckPostOwnerQuery struct {
 }
 
 type GetOnePostQueryResult struct {
-	Post           *common.PostResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
+	Post *common.PostResultWithLiked
 }
 
 type GetManyPostQueryResult struct {
 	Posts          []*common.PostResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }
 
 type CheckPostOwnerQueryResult struct {
-	IsOwner        bool
-	ResultCode     int
-	HttpStatusCode int
+	IsOwner bool
 }

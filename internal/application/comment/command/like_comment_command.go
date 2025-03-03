@@ -11,7 +11,5 @@ type LikeCommentCommand struct {
 }
 
 type LikeCommentResult struct {
-	Comment        *common.CommentResultWithLiked
-	ResultCode     int
-	HttpStatusCode int
+	Comment *common.CommentResultWithLiked
 }

@@ -98,7 +98,7 @@ func (c *cAdminAuth) ChangeAdminPassword(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.AdminAuth().ChangeAdminPassword(ctx, changeAdminPasswordCommand)
+	err = services.AdminAuth().ChangeAdminPassword(ctx, changeAdminPasswordCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

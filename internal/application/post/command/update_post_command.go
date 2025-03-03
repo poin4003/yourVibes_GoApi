@@ -1,10 +1,11 @@
 package command
 
 import (
+	"mime/multipart"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"mime/multipart"
 )
 
 type UpdatePostCommand struct {
@@ -17,7 +18,5 @@ type UpdatePostCommand struct {
 }
 
 type UpdatePostCommandResult struct {
-	Post           *common.PostResult
-	ResultCode     int
-	HttpStatusCode int
+	Post *common.PostResult
 }

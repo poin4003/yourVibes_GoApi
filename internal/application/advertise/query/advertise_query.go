@@ -27,14 +27,10 @@ type GetManyAdvertiseQuery struct {
 }
 
 type GetOneAdvertiseResult struct {
-	Advertise      *common.AdvertiseDetail
-	ResultCode     int
-	HttpStatusCode int
+	Advertise *common.AdvertiseDetail
 }
 
 type GetManyAdvertiseResults struct {
 	Advertises     []*common.AdvertiseWithBillResult
-	ResultCode     int
-	HttpStatusCode int
 	PagingResponse *response.PagingResponse
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
@@ -10,8 +11,8 @@ import (
 type (
 	IAdminAuth interface {
 		Login(ctx context.Context, command *command.LoginCommand) (result *command.LoginCommandResult, err error)
-		ChangeAdminPassword(ctx context.Context, command *command.ChangeAdminPasswordCommand) (result *command.ChangeAdminPasswordCommandResult, err error)
-		ForgotAdminPassword(ctx context.Context, command *command.ForgotAdminPasswordCommand) (result *command.ForgotAdminPasswordCommandResult, err error)
+		ChangeAdminPassword(ctx context.Context, command *command.ChangeAdminPasswordCommand) error
+		ForgotAdminPassword(ctx context.Context, command *command.ForgotAdminPasswordCommand) error
 	}
 	IAdminInfo interface {
 		UpdateAdmin(ctx context.Context, command *command.UpdateAdminInfoCommand) (result *command.UpdateAdminInfoCommandResult, err error)
