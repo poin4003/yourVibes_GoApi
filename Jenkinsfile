@@ -94,6 +94,7 @@ pipeline {
                             docker pull 400034/yourvibes_api_server:latest && \
                             docker network connect yourvibes_goapi_default yourvibes_api_server || echo 'Network already connected' && \
                             docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -e YOURVIBES_SERVER_CONFIG_FILE='/config/prod.yaml' \
                             -v yourvibes_config:/config \
                             -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt \
                             -v yourvibes_goapi_yourvibes_storage:/storages \
