@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/spf13/viper"
 )
@@ -11,7 +12,8 @@ func LoadConfig() {
 	viper.AutomaticEnv()
 
 	viper.AddConfigPath("./config/")
-	viper.SetConfigName(viper.GetString("YOURVIBES_SERVER_CONFIG_FILE"))
+	//viper.SetConfigName(viper.GetString("YOURVIBES_SERVER_CONFIG_FILE"))
+	viper.SetConfigName("dev")
 	viper.SetConfigType("yaml")
 
 	err := viper.ReadInConfig()
