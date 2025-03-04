@@ -74,9 +74,9 @@ pipeline {
                     '''
 
                     sh '''
-                        echo 'Copying local.yaml to production server...'
+                        echo 'Copying prod.yaml to production server...'
                         sshpass -p "${PROD_PASSWORD}" scp -P "${PROD_SERVER_PORT}" \
-                        ${WORKSPACE}/config/local.yaml \
+                        ${WORKSPACE}/config/prod.yaml \
                         "${PROD_USER}"@${PROD_SERVER_NAME}:/home/pchuy/documents/yourVibes_GoApi/config/
                     '''
 
@@ -84,7 +84,7 @@ pipeline {
                         echo 'Setting up Docker volume for production configuration...'
                         sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
                             docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
-                            docker run --rm -v yourvibes_config:/config -v /home/pchuy/documents/yourVibes_GoApi/config:/host busybox sh -c 'cp /host/local.yaml /config/local.yaml'
+                            docker run --rm -v yourvibes_config:/config -v /home/pchuy/documents/yourVibes_GoApi/config:/host busybox sh -c 'cp /host/prod.yaml /config/prod.yaml'
                         "
                     '''
 
@@ -94,6 +94,7 @@ pipeline {
                             docker pull 400034/yourvibes_api_server:latest && \
                             docker network connect yourvibes_goapi_default yourvibes_api_server || echo 'Network already connected' && \
                             docker run -d --name yourvibes_api_server -p 8080:8080 \
+                            -e YOURVIBES_SERVER_CONFIG_FILE=prod \
                             -v yourvibes_config:/config \
                             -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt \
                             -v yourvibes_goapi_yourvibes_storage:/storages \
