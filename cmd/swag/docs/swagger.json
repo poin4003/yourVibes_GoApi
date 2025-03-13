@@ -730,6 +730,236 @@
                 "responses": {}
             }
         },
+        "/conversation_details/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user create conversationDetail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "ConversationDetail create ConversationDatail",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateConversationDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/conversation_details/get_by_id/{userId}/{conversationId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a conversationDetail by its unique ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Get conversationDetail by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/conversation_details/get_by_user_id": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a conversationDetail by its unique User ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Get conversationDetail by User ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/conversations/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user get many conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversation"
+                ],
+                "summary": "Get many conversation",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit of conversation per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user create conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversation"
+                ],
+                "summary": "Conversation create Conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the conversation",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image of the conversation",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/conversations/{conversation_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a conversation by its unique ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversation"
+                ],
+                "summary": "Get conversation by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "when user want to delete conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversation"
+                ],
+                "summary": "delete conversation by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "conversation ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/posts/": {
             "get": {
                 "security": [
@@ -1384,9 +1614,7 @@
                     }
                 ],
                 "responses": {}
-            }
-        },
-        "/report/{reported_id}": {
+            },
             "delete": {
                 "security": [
                     {
@@ -1407,8 +1635,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Reported id",
-                        "name": "reported_id",
+                        "description": "Report id",
+                        "name": "report_id",
                         "in": "path",
                         "required": true
                     }
@@ -2334,6 +2562,17 @@
                     "type": "string"
                 },
                 "post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateConversationDetailRequest": {
+            "type": "object",
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

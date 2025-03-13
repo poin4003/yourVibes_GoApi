@@ -12,7 +12,8 @@ import (
 
 	mediaService "github.com/poin4003/yourVibes_GoApi/internal/application/media/services"
 	mediaServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/media/services/implement"
-
+	messageService "github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
+	messageServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/messages/services/implement"
 	postService "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	postServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
 
@@ -31,7 +32,7 @@ import (
 	advertiseRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/advertise/repo_impl"
 
 	commentRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
-
+	messageRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/repo_impl"
 	notificationRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
 
 	postRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
@@ -59,6 +60,9 @@ func InitServiceInterface() {
 	advertiseRepo := advertiseRepoImpl.NewAdvertiseRepositoryImplement(db)
 	billRepo := advertiseRepoImpl.NewBillRepositoryImplement(db)
 	adminRepo := adminRepoImpl.NewAdminRepositoryImplement(db)
+	conversationRepo := messageRepoImpl.NewConversationRepositoryImplement(db)
+	messageRepo := messageRepoImpl.NewMessageRepositoryImplement(db)
+	conversationDetailRepo := messageRepoImpl.NewConversationDetailRepositoryImplement(db)
 	reportRepo := reportRepoImpl.NewReportRepositoryImplement(db)
 
 	repository.InitUserRepository(userRepo)
@@ -75,6 +79,9 @@ func InitServiceInterface() {
 	repository.InitAdvertiseRepository(advertiseRepo)
 	repository.InitBillRepository(billRepo)
 	repository.InitAdminRepository(adminRepo)
+	repository.InitConversationRepository(conversationRepo)
+	repository.InitMessageRepository(messageRepo)
+	repository.InitConversationDetailRepository(conversationDetailRepo)
 	repository.InitReportRepository(reportRepo)
 
 	// 2. Initialize Service
@@ -96,6 +103,9 @@ func InitServiceInterface() {
 	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
+	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
+	messagerServiceInit := messageServiceImpl.NewMessageImplement(conversationRepo, messageRepo)
+	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)
 
 	userService.InitUserAuth(userAuthServiceInit)
 	userService.InitUserInfo(userInfoServiceInit)
@@ -115,4 +125,8 @@ func InitServiceInterface() {
 	reportService.InitReport(reportServiceInit)
 	revenueService.InitRevenue(revenueServiceInit)
 	mediaService.InitMedia(mediaServiceInit)
+	messageService.InitConversation(conversationServiceInit)
+	messageService.InitMessage(messagerServiceInit)
+	messageService.InitConversationDetail(conversationDetailServiceInit)
+
 }

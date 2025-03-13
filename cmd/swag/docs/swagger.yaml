@@ -111,6 +111,13 @@ definitions:
       post_id:
         type: string
     type: object
+  request.CreateConversationDetailRequest:
+    properties:
+      conversation_id:
+        type: string
+      user_id:
+        type: string
+    type: object
   request.ForgotAdminPasswordRequest:
     properties:
       email:
@@ -685,6 +692,152 @@ paths:
       summary: Like comment
       tags:
       - like_comment
+  /conversation_details/:
+    post:
+      consumes:
+      - application/json
+      description: When user create conversationDetail
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateConversationDetailRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: ConversationDetail create ConversationDatail
+      tags:
+      - conversationDetail
+  /conversation_details/get_by_id/{userId}/{conversationId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a conversationDetail by its unique ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Conversation ID
+        in: path
+        name: conversationId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get conversationDetail by ID
+      tags:
+      - conversationDetail
+  /conversation_details/get_by_user_id:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a conversationDetail by its unique User ID
+      parameters:
+      - description: Limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get conversationDetail by User ID
+      tags:
+      - conversationDetail
+  /conversations/:
+    get:
+      consumes:
+      - application/json
+      description: When user get many conversation
+      parameters:
+      - description: Limit of conversation per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get many conversation
+      tags:
+      - conversation
+    post:
+      consumes:
+      - application/json
+      description: When user create conversation
+      parameters:
+      - description: Name of the conversation
+        in: formData
+        name: name
+        type: string
+      - description: Image of the conversation
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Conversation create Conversation
+      tags:
+      - conversation
+  /conversations/{conversation_id}:
+    delete:
+      consumes:
+      - application/json
+      description: when user want to delete conversation
+      parameters:
+      - description: conversation ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: delete conversation by ID
+      tags:
+      - conversation
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a conversation by its unique ID
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get conversation by ID
+      tags:
+      - conversation
   /posts/:
     get:
       consumes:
@@ -1035,6 +1188,24 @@ paths:
       tags:
       - report
   /report/{report_id}:
+    delete:
+      consumes:
+      - application/json
+      description: When admin need to delete report
+      parameters:
+      - description: Report id
+        in: path
+        name: report_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: delete report
+      tags:
+      - admin_report
     get:
       consumes:
       - application/json
@@ -1056,25 +1227,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get report detail
-      tags:
-      - admin_report
-  /report/{reported_id}:
-    delete:
-      consumes:
-      - application/json
-      description: When admin need to delete report
-      parameters:
-      - description: Reported id
-        in: path
-        name: reported_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: delete report
       tags:
       - admin_report
   /report/activate/{report_id}:
