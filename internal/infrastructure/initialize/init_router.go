@@ -49,6 +49,7 @@ func InitRouter() *gin.Engine {
 		userRouter.InitCommentRouter(MainGroup)
 		userRouter.InitAdvertiseRouter(MainGroup)
 		userRouter.InitMediaRouter(MainGroup)
+		userRouter.InitMessagesRouter(MainGroup)
 	}
 	{
 		adminRouter.InitAdminRouter(MainGroup)
