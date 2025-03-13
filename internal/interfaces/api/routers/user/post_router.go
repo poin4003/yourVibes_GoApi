@@ -18,7 +18,6 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	postShareController := post_user.NewPostShareController()
 	postLikeController := post_user.NewPostLikeController(global.Rdb)
 	postNewFeedController := post_user.NewPostNewFeedController()
-	postReportController := post_user.NewPostReportController()
 
 	// 2. Private router
 	postRouterPrivate := Router.Group("/posts")
@@ -64,12 +63,6 @@ func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 		postRouterPrivate.GET("/new_feeds/",
 			helpers.ValidateQuery(&postQuery.NewFeedQueryObject{}, postQuery.ValidateNewFeedQueryObject),
 			postNewFeedController.GetNewFeeds,
-		)
-
-		// post report
-		postRouterPrivate.POST("/report",
-			helpers.ValidateJsonBody(&postRequest.ReportPostRequest{}, postRequest.ValidateReportPostRequest),
-			postReportController.ReportPost,
 		)
 	}
 }

@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"regexp"
 	"time"
 
@@ -51,27 +51,6 @@ type UserUpdate struct {
 	UpdatedAt    *time.Time
 }
 
-type UserForReport struct {
-	ID           uuid.UUID
-	FamilyName   string
-	Name         string
-	Email        string
-	Password     *string
-	PhoneNumber  *string
-	Birthday     *time.Time
-	AvatarUrl    string
-	CapwallUrl   string
-	Privacy      consts.PrivacyLevel
-	Biography    string
-	AuthType     consts.AuthType
-	AuthGoogleId *string
-	PostCount    int
-	FriendCount  int
-	Status       bool
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-}
-
 func (u *User) ValidateUser() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
@@ -82,9 +61,9 @@ func (u *User) ValidateUser() error {
 		validation.Field(&u.Birthday, validation.Required),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
-		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&u.Biography, validation.Length(0, 500)),
-		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),
+		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),
 		validation.Field(&u.Status, validation.Required),
@@ -100,9 +79,9 @@ func (u *User) ValidateUserForGoogleAuth() error {
 		validation.Field(&u.Email, validation.Required, is.Email),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
-		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&u.Biography, validation.Length(0, 500)),
-		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),
+		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),
 		validation.Field(&u.Status, validation.Required),
@@ -118,9 +97,9 @@ func (u *UserUpdate) ValidateUserUpdate() error {
 		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
-		validation.Field(&u.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&u.Biography, validation.Length(0, 500)),
-		validation.Field(&u.AuthType, validation.In(consts.LOCAL_AUTH, consts.GOOGLE_AUTH)),
+		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),
 	)

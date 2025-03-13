@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 )
@@ -22,8 +21,6 @@ func NewLikeUserCommentEntity(
 	userId uuid.UUID,
 	commentId uuid.UUID,
 ) (*LikeUserComment, error) {
-	fmt.Println(userId)
-	fmt.Println(commentId)
 	newLikeUserComment := &LikeUserComment{
 		UserId:    userId,
 		CommentId: commentId,

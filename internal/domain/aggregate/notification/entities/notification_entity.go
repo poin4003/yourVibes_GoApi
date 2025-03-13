@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -39,7 +38,7 @@ func (n *Notification) ValidateNotification() error {
 		validation.Field(&n.From, validation.Required, validation.Length(2, 255)),
 		validation.Field(&n.FromUrl, validation.Required, is.URL),
 		validation.Field(&n.UserId, validation.Required),
-		validation.Field(&n.NotificationType, validation.Required, validation.By(validateNotificationType)),
+		validation.Field(&n.NotificationType, validation.Required, validation.In(consts.NotificationTypes...)),
 		validation.Field(&n.ContentId, validation.Required, validation.Length(2, 255)),
 		validation.Field(&n.Content, validation.Length(2, 255)),
 		validation.Field(&n.Status, validation.Required),
@@ -52,30 +51,10 @@ func (n *NotificationUpdate) ValidateNotificationUpdate() error {
 	return validation.ValidateStruct(n,
 		validation.Field(&n.From, validation.Length(2, 0)),
 		validation.Field(&n.FromUrl, is.URL),
-		validation.Field(&n.NotificationType, validation.By(validateNotificationType)),
+		validation.Field(&n.NotificationType, validation.In(consts.NotificationTypes...)),
 		validation.Field(&n.ContentId, validation.Length(2, 0)),
 		validation.Field(&n.Content, validation.Length(2, 0)),
 	)
-}
-
-func validateNotificationType(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-
-	notificationType, ok := value.(consts.NotificationType)
-	if !ok {
-		return nil
-	}
-
-	switch notificationType {
-	case consts.NEW_POST, consts.NEW_COMMENT, consts.LIKE_POST, consts.LIKE_COMMENT,
-		consts.NEW_SHARE, consts.FRIEND_REQUEST, consts.ACCEPT_FRIEND_REQUEST, consts.DEACTIVATE_COMMENT,
-		consts.DEACTIVATE_POST, consts.ACTICATE_COMMENT, consts.ACTIVATE_POST:
-		return nil
-	default:
-		return fmt.Errorf("invalid notification type: %v", notificationType)
-	}
 }
 
 func NewNotification(

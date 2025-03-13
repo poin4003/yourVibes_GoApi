@@ -7,11 +7,11 @@ import (
 	postServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	postServices "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/response"
 	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cAdvertise struct {
@@ -34,21 +34,21 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to createAdvertiseRequest
 	createAdvertiseRequest, ok := body.(*request.CreateAdvertiseRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -60,26 +60,26 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 
 	queryResult, err := postServices.PostUser().GetPost(ctx, getOnePostQuery)
 	if err != nil {
-		ctx.Error(pkgResponse.NewDataNotFoundError(err.Error()))
+		ctx.Error(response2.NewDataNotFoundError(err.Error()))
 		return
 	}
 
 	// 5. Check owner
 	if userIdClaim != queryResult.Post.UserId {
-		ctx.Error(pkgResponse.NewInvalidTokenError("You can't not promote other people's posts"))
+		ctx.Error(response2.NewInvalidTokenError("You can't not promote other people's posts"))
 		return
 	}
 
 	// 6. Check privacy
 	if queryResult.Post.Privacy != consts.PUBLIC {
-		ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrAdMustBePublic, "post privacy is not public"))
+		ctx.Error(response2.NewCustomError(response2.ErrAdMustBePublic, "post privacy is not public"))
 		return
 	}
 
 	// 7. Call service to handle create advertise
 	createAdvertiseCommand, err := createAdvertiseRequest.ToCreateAdvertiseCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -89,7 +89,7 @@ func (c *cAdvertise) CreateAdvertise(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, result.PayUrl)
+	response2.OK(ctx, result.PayUrl)
 }
 
 // GetManyAdvertise godoc
@@ -107,27 +107,27 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to AdvertiseQueryObject
 	advertiseQueryObject, ok := queryInput.(*advertiseQuery.AdvertiseQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	postId, err := uuid.Parse(advertiseQueryObject.PostId)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -143,14 +143,14 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 	}
 
 	if !checkOwnerResult.IsOwner {
-		ctx.Error(pkgResponse.NewInvalidTokenError("You can't access this advertise, only for owner"))
+		ctx.Error(response2.NewInvalidTokenError("You can't access this advertise, only for owner"))
 		return
 	}
 
 	// 5. Call service to handle get many
 	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -166,5 +166,5 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(*advertiseResult))
 	}
 
-	pkgResponse.OK(ctx, advertiseDtos)
+	response2.OK(ctx, advertiseDtos)
 }

@@ -76,6 +76,7 @@ func DBMigrator(db *gorm.DB) error {
 		&models.Advertise{},
 		&models.Bill{},
 		&models.Admin{},
+		&models.Report{},
 		&models.UserReport{},
 		&models.PostReport{},
 		&models.CommentReport{},

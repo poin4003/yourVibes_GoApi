@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
 
 type (

@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -21,7 +22,7 @@ func ValidateAppAuthGoogleRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.OpenId, validation.Required),
-		validation.Field(&dto.Platform, validation.Required, validation.In(consts.WEB, consts.ANDROID, consts.IOS)),
+		validation.Field(&dto.Platform, validation.Required, validation.In(consts.Platforms...)),
 		validation.Field(&dto.RedirectUrl, validation.Required),
 	)
 }

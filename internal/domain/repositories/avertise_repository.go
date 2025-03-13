@@ -2,12 +2,12 @@ package repositories
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (

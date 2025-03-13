@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 func UserAuthProtected() gin.HandlerFunc {
@@ -19,6 +20,7 @@ func UserAuthProtected() gin.HandlerFunc {
 		// 1. Check authHeader
 		if authHeader == "" {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -26,6 +28,7 @@ func UserAuthProtected() gin.HandlerFunc {
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -42,6 +45,7 @@ func UserAuthProtected() gin.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -49,12 +53,14 @@ func UserAuthProtected() gin.HandlerFunc {
 		userIdStr, ok := token.Claims.(jwt.MapClaims)["id"].(string)
 		if !ok {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
 		userId, err := uuid.Parse(userIdStr)
 		if err != nil {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -62,12 +68,14 @@ func UserAuthProtected() gin.HandlerFunc {
 		userStatus, err := services.UserInfo().GetUserStatusById(ctx, userId)
 		if err != nil {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
 		// 6. Check user status
 		if !userStatus {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 

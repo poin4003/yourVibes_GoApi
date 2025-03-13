@@ -2,11 +2,11 @@ package repositories
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -27,22 +27,11 @@ type (
 		GetLikeUserComment(ctx context.Context, query *query.GetCommentLikeQuery) ([]*entities.User, *response.PagingResponse, error)
 		CheckUserLikeComment(ctx context.Context, entity *entities.LikeUserComment) (bool, error)
 	}
-	ICommentReportRepository interface {
-		GetById(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) (*entities.CommentReport, error)
-		CreateOne(ctx context.Context, entity *entities.CommentReport) (*entities.CommentReport, error)
-		UpdateOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID, updateData *entities.CommentReportUpdate) (*entities.CommentReport, error)
-		UpdateMany(ctx context.Context, reportedCommentId uuid.UUID, updateData *entities.CommentReportUpdate) error
-		DeleteOne(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) error
-		DeleteByCommentId(ctx context.Context, commentId uuid.UUID) error
-		GetMany(ctx context.Context, query *query.GetManyCommentReportQuery) ([]*entities.CommentReport, *response.PagingResponse, error)
-		CheckExist(ctx context.Context, userId uuid.UUID, reportedCommentId uuid.UUID) (bool, error)
-	}
 )
 
 var (
 	localComment         ICommentRepository
 	localLikeUserComment ILikeUserCommentRepository
-	localCommentReport   ICommentReportRepository
 )
 
 func Comment() ICommentRepository {
@@ -61,22 +50,10 @@ func LikeUserComment() ILikeUserCommentRepository {
 	return localLikeUserComment
 }
 
-func CommentReport() ICommentReportRepository {
-	if localCommentReport == nil {
-		panic("repository_implement localCommentReport not found for interface ICommentReport")
-	}
-
-	return localCommentReport
-}
-
 func InitCommentRepository(i ICommentRepository) {
 	localComment = i
 }
 
 func InitLikeUserCommentRepository(i ILikeUserCommentRepository) {
 	localLikeUserComment = i
-}
-
-func InitCommentReportRepository(i ICommentReportRepository) {
-	localCommentReport = i
 }

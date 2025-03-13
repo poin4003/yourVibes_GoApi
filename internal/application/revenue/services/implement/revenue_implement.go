@@ -2,10 +2,10 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	revenueQuery "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
 	advertiseRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type sRevenue struct {

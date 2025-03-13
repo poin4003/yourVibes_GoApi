@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cPostShare struct {
@@ -33,14 +33,14 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	sharePostRequest, ok := body.(*request.SharePostRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -48,21 +48,21 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle sharing
 	sharePostCommand, err := sharePostRequest.ToSharePostCommand(postId, userIdClaim)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -75,5 +75,5 @@ func (p *cPostShare) SharePost(ctx *gin.Context) {
 	// 5. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	pkgResponse.OK(ctx, postDto)
+	response2.OK(ctx, postDto)
 }

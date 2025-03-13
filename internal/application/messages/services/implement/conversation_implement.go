@@ -10,7 +10,7 @@ import (
 	conversationQuery "github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
 	conversationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	conversationRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
 
 type sConversation struct {

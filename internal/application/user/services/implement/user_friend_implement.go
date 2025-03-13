@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -12,8 +14,6 @@ import (
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 )
 
 type sUserFriend struct {
@@ -44,18 +44,18 @@ func (s *sUserFriend) SendAddFriendRequest(
 	// 1. Check exist friend
 	friendEntity, err := userEntity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendCheck, err := s.friendRepo.CheckFriendExist(ctx, friendEntity)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Return if friend has already exist
 	if friendCheck {
-		return response.NewCustomError(
-			response.ErrFriendHasAlreadyExists,
+		return response2.NewCustomError(
+			response2.ErrFriendHasAlreadyExists,
 			"friend has already exist, you don't need to request more",
 		)
 	}
@@ -63,17 +63,17 @@ func (s *sUserFriend) SendAddFriendRequest(
 	// 3. Find exist friends request
 	friendRequestEntityFromUserFound, err := userEntity.NewFriendRequest(command.FriendId, command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendRequestFromUserFound, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, friendRequestEntityFromUserFound)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if friendRequestFromUserFound {
-		return response.NewCustomError(
-			response.ErrFriendHasAlreadyExists,
+		return response2.NewCustomError(
+			response2.ErrFriendHasAlreadyExists,
 			"your friend has already send add friend request, you don't need to request more",
 		)
 	}
@@ -82,13 +82,13 @@ func (s *sUserFriend) SendAddFriendRequest(
 
 	friendRequestFound, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, friendRequestEntityFound)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 4. Return if friend request has already exist
 	if friendRequestFound {
-		return response.NewCustomError(
-			response.ErrFriendHasAlreadyExists,
+		return response2.NewCustomError(
+			response2.ErrFriendHasAlreadyExists,
 			"friend request already exists, you don't need to request more",
 		)
 	}
@@ -96,20 +96,20 @@ func (s *sUserFriend) SendAddFriendRequest(
 	// 5. Find user and friend
 	userFound, err := s.userRepo.GetOne(ctx, "id=?", command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewCustomError(response.UserNotFound)
+		return response2.NewCustomError(response2.UserNotFound)
 	}
 
 	friendFound, err := s.userRepo.GetOne(ctx, "id=?", command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if friendFound == nil {
-		return response.NewCustomError(response.UserNotFound)
+		return response2.NewCustomError(response2.UserNotFound)
 	}
 
 	// 6. Create friend request
@@ -118,7 +118,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 		FriendId: command.FriendId,
 	})
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 7. Push notification to user
@@ -133,7 +133,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 8. Send realtime notification (websocket)
@@ -155,7 +155,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 
 	err = global.SocketHub.SendNotification(friendFound.ID.String(), notificationSocketResponse)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 9. Response success
@@ -169,7 +169,7 @@ func (s *sUserFriend) GetFriendRequests(
 	// 1. Get list of user request to add friend
 	userEntities, paging, err := s.friendRequestRepo.GetFriendRequests(ctx, query)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Map userEntity to userDtoShortVer
@@ -191,57 +191,57 @@ func (s *sUserFriend) AcceptFriendRequest(
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := userEntity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendRequestFound, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, friendRequestEntityFound)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Return if friend request is not exist
 	if !friendRequestFound {
-		return response.NewCustomError(response.ErrFriendNotExist)
+		return response2.NewCustomError(response2.ErrFriendNotExist)
 	}
 
 	// 3. Find user and friend
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewDataNotFoundError("user not found")
+		return response2.NewDataNotFoundError("user not found")
 	}
 
 	friendFound, err := s.userRepo.GetById(ctx, command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if friendFound == nil {
-		return response.NewDataNotFoundError("friend not found")
+		return response2.NewDataNotFoundError("friend not found")
 	}
 
 	// 4. Create friend
 	friendEntityForUser, err := userEntity.NewFriend(userFound.ID, friendFound.ID)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendEntityForFriend, err := userEntity.NewFriend(friendFound.ID, userFound.ID)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	err = s.friendRepo.CreateOne(ctx, friendEntityForUser)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	err = s.friendRepo.CreateOne(ctx, friendEntityForFriend)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 5. Delete friendRequest
@@ -250,7 +250,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 		FriendId: command.FriendId,
 	})
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 6. Plus +1 to friend count for user and friend
@@ -264,22 +264,22 @@ func (s *sUserFriend) AcceptFriendRequest(
 
 	err = updateUserData.ValidateUserUpdate()
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	err = updateFriendData.ValidateUserUpdate()
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, friendFound.ID, updateFriendData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 7. Push notification to user
@@ -293,7 +293,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 
 	_, err = s.notificationRepo.CreateOne(ctx, notification)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 8. Send realtime notification (websocket)
@@ -315,7 +315,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 
 	err = global.SocketHub.SendNotification(userFound.ID.String(), notificationSocketResponse)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 9. Response success
@@ -329,17 +329,17 @@ func (s *sUserFriend) RemoveFriendRequest(
 	// 1. Find exist friends request
 	friendRequestEntityFound, err := userEntity.NewFriendRequest(command.UserId, command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendRequestFound, err := s.friendRequestRepo.CheckFriendRequestExist(ctx, friendRequestEntityFound)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Return if friend request is not exist
 	if !friendRequestFound {
-		return response.NewCustomError(response.ErrFriendRequestNotExists)
+		return response2.NewCustomError(response2.ErrFriendRequestNotExists)
 	}
 
 	// 3. Delete friend request
@@ -347,7 +347,7 @@ func (s *sUserFriend) RemoveFriendRequest(
 
 	err = s.friendRequestRepo.DeleteOne(ctx, friendRequestEntity)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 4. Response success
@@ -361,51 +361,51 @@ func (s *sUserFriend) UnFriend(
 	// 1. Check friend exist
 	friendEntity, err := userEntity.NewFriend(command.UserId, command.FriendId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendCheck, err := s.friendRepo.CheckFriendExist(ctx, friendEntity)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if !friendCheck {
-		return response.NewCustomError(response.ErrFriendNotExist)
+		return response2.NewCustomError(response2.ErrFriendNotExist)
 	}
 
 	// 2. Remove friend
 	err = s.friendRepo.DeleteOne(ctx, friendEntity)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	friendEntityForFriend, err := userEntity.NewFriend(command.FriendId, command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	err = s.friendRepo.DeleteOne(ctx, friendEntityForFriend)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 3. Minus -1 to friend count of user and friend
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewDataNotFoundError("can not found user")
+		return response2.NewDataNotFoundError("can not found user")
 	}
 
 	friendFound, err := s.userRepo.GetById(ctx, friendEntityForFriend.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if friendFound == nil {
-		return response.NewDataNotFoundError("can not found friend")
+		return response2.NewDataNotFoundError("can not found friend")
 	}
 
 	updateUserData := &userEntity.UserUpdate{
@@ -418,22 +418,22 @@ func (s *sUserFriend) UnFriend(
 
 	err = updateUserData.ValidateUserUpdate()
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	err = updateFriendData.ValidateUserUpdate()
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, friendFound.ID, updateFriendData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -446,7 +446,7 @@ func (s *sUserFriend) GetFriends(
 	// 1. Get list of friend
 	userEntities, paging, err := s.friendRepo.GetFriends(ctx, query)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Map userModel to userResultShortVer

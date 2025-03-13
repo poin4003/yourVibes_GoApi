@@ -47,88 +47,90 @@ func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
 }
 
 func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Advertise {
-	var parentPost *entities.PostForAdvertise
-	if a.Post.ParentPost != nil {
-		var medias []*entities.Media
-		for _, media := range a.Post.ParentPost.Media {
-			medias = append(medias, &entities.Media{
-				ID:        media.ID,
-				MediaUrl:  media.MediaUrl,
-				PostId:    media.PostId,
-				Status:    media.Status,
-				CreatedAt: media.CreatedAt,
-				UpdatedAt: media.UpdatedAt,
-			})
-		}
-		parentPost = &entities.PostForAdvertise{
-			ID:              a.Post.ParentPost.ID,
-			UserId:          a.Post.ParentPost.UserId,
-			User:            ToUserForAdvertiseEntity(&a.Post.ParentPost.User),
-			ParentId:        a.Post.ParentPost.ParentId,
-			Content:         a.Post.ParentPost.Content,
-			LikeCount:       a.Post.ParentPost.LikeCount,
-			CommentCount:    a.Post.ParentPost.CommentCount,
-			Privacy:         a.Post.ParentPost.Privacy,
-			Location:        a.Post.ParentPost.Location,
-			IsAdvertisement: a.Post.ParentPost.IsAdvertisement,
-			Status:          a.Post.ParentPost.Status,
-			CreatedAt:       a.Post.ParentPost.CreatedAt,
-			UpdatedAt:       a.Post.ParentPost.UpdatedAt,
-			Media:           medias,
-		}
-	}
+	// var parentPost *entities.PostForAdvertise
+	// if a.Post.ParentPost != nil {
+	// 	var medias []*entities.Media
+	// 	for _, media := range a.Post.ParentPost.Media {
+	// 		medias = append(medias, &entities.Media{
+	// 			ID:        media.ID,
+	// 			MediaUrl:  media.MediaUrl,
+	// 			PostId:    media.PostId,
+	// 			Status:    media.Status,
+	// 			CreatedAt: media.CreatedAt,
+	// 			UpdatedAt: media.UpdatedAt,
+	// 		})
+	// 	}
+	// 	parentPost = &entities.PostForAdvertise{
+	// 		ID:              a.Post.ParentPost.ID,
+	// 		UserId:          a.Post.ParentPost.UserId,
+	// 		User:            ToUserForAdvertiseEntity(&a.Post.ParentPost.User),
+	// 		ParentId:        a.Post.ParentPost.ParentId,
+	// 		Content:         a.Post.ParentPost.Content,
+	// 		LikeCount:       a.Post.ParentPost.LikeCount,
+	// 		CommentCount:    a.Post.ParentPost.CommentCount,
+	// 		Privacy:         a.Post.ParentPost.Privacy,
+	// 		Location:        a.Post.ParentPost.Location,
+	// 		IsAdvertisement: a.Post.ParentPost.IsAdvertisement,
+	// 		Status:          a.Post.ParentPost.Status,
+	// 		CreatedAt:       a.Post.ParentPost.CreatedAt,
+	// 		UpdatedAt:       a.Post.ParentPost.UpdatedAt,
+	// 		Media:           medias,
+	// 	}
+	// }
 
-	var medias []*entities.Media
-	for _, media := range a.Post.Media {
-		medias = append(medias, &entities.Media{
-			ID:        media.ID,
-			MediaUrl:  media.MediaUrl,
-			PostId:    media.PostId,
-			Status:    media.Status,
-			CreatedAt: media.CreatedAt,
-			UpdatedAt: media.UpdatedAt,
-		})
-	}
+	// var medias []*entities.Media
+	// for _, media := range a.Post.Media {
+	// 	medias = append(medias, &entities.Media{
+	// 		ID:        media.ID,
+	// 		MediaUrl:  media.MediaUrl,
+	// 		PostId:    media.PostId,
+	// 		Status:    media.Status,
+	// 		CreatedAt: media.CreatedAt,
+	// 		UpdatedAt: media.UpdatedAt,
+	// 	})
+	// }
 
-	post := &entities.PostForAdvertise{
-		ID:              a.Post.ID,
-		UserId:          a.Post.UserId,
-		User:            ToUserForAdvertiseEntity(&a.Post.User),
-		ParentId:        a.Post.ParentId,
-		ParentPost:      parentPost,
-		Content:         a.Post.Content,
-		LikeCount:       a.Post.LikeCount,
-		CommentCount:    a.Post.CommentCount,
-		Privacy:         a.Post.Privacy,
-		Location:        a.Post.Location,
-		IsAdvertisement: a.Post.IsAdvertisement,
-		Status:          a.Post.Status,
-		CreatedAt:       a.Post.CreatedAt,
-		UpdatedAt:       a.Post.UpdatedAt,
-		Media:           medias,
-	}
+	// post := &entities.PostForAdvertise{
+	// 	ID:              a.Post.ID,
+	// 	UserId:          a.Post.UserId,
+	// 	User:            ToUserForAdvertiseEntity(&a.Post.User),
+	// 	ParentId:        a.Post.ParentId,
+	// 	ParentPost:      parentPost,
+	// 	Content:         a.Post.Content,
+	// 	LikeCount:       a.Post.LikeCount,
+	// 	CommentCount:    a.Post.CommentCount,
+	// 	Privacy:         a.Post.Privacy,
+	// 	Location:        a.Post.Location,
+	// 	IsAdvertisement: a.Post.IsAdvertisement,
+	// 	Status:          a.Post.Status,
+	// 	CreatedAt:       a.Post.CreatedAt,
+	// 	UpdatedAt:       a.Post.UpdatedAt,
+	// 	Media:           medias,
+	// }
 
-	var bill = &entities.Bill{
-		ID:          a.Bill.ID,
-		AdvertiseId: a.Bill.AdvertiseId,
-		Price:       a.Bill.Price,
-		CreatedAt:   a.Bill.CreatedAt,
-		UpdateAt:    a.Bill.UpdatedAt,
-		Status:      a.Bill.Status,
-	}
+	// var bill = &entities.Bill{
+	// 	ID:          a.Bill.ID,
+	// 	AdvertiseId: a.Bill.AdvertiseId,
+	// 	Price:       a.Bill.Price,
+	// 	CreatedAt:   a.Bill.CreatedAt,
+	// 	UpdateAt:    a.Bill.UpdatedAt,
+	// 	Status:      a.Bill.Status,
+	// }
 
-	var advertise = &entities.Advertise{
-		PostId:    a.PostId,
-		Post:      post,
-		StartDate: a.StartDate,
-		EndDate:   a.EndDate,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
-		Bill:      bill,
-	}
-	advertise.ID = a.ID
+	// var advertise = &entities.Advertise{
+	// 	PostId:    a.PostId,
+	// 	Post:      post,
+	// 	StartDate: a.StartDate,
+	// 	EndDate:   a.EndDate,
+	// 	CreatedAt: a.CreatedAt,
+	// 	UpdatedAt: a.UpdatedAt,
+	// 	Bill:      bill,
+	// }
+	// advertise.ID = a.ID
 
-	return advertise
+	// return advertiseS
+
+	return nil
 }
 
 func ToUserForAdvertiseEntity(

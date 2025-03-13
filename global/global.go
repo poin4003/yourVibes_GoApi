@@ -1,9 +1,9 @@
 package global
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/pkg/logger"
-	"github.com/poin4003/yourVibes_GoApi/pkg/settings"
-	"github.com/poin4003/yourVibes_GoApi/pkg/socket_hub"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/logger"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/settings"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )

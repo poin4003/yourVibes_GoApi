@@ -55,24 +55,6 @@ type UserWithoutSettingResult struct {
 	UpdatedAt    time.Time
 }
 
-type UserForReportResult struct {
-	ID          uuid.UUID
-	FamilyName  string
-	Name        string
-	Email       string
-	PhoneNumber *string
-	Birthday    *time.Time
-	AvatarUrl   string
-	CapwallUrl  string
-	Privacy     consts.PrivacyLevel
-	Biography   string
-	PostCount   int
-	FriendCount int
-	Status      bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-}
-
 type UserShortVerResult struct {
 	ID         uuid.UUID
 	FamilyName string

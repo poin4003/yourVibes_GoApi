@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	"github.com/google/uuid"
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
@@ -12,8 +14,6 @@ import (
 	commentValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/validator"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	commentRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 )
 
 type sCommentUser struct {
@@ -21,7 +21,6 @@ type sCommentUser struct {
 	userRepo            commentRepo.IUserRepository
 	postRepo            commentRepo.IPostRepository
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository
-	commentReportRepor  commentRepo.ICommentReportRepository
 }
 
 func NewCommentUserImplement(
@@ -29,14 +28,12 @@ func NewCommentUserImplement(
 	userRepo commentRepo.IUserRepository,
 	postRepo commentRepo.IPostRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
-	commentReportRepo commentRepo.ICommentReportRepository,
 ) *sCommentUser {
 	return &sCommentUser{
 		commentRepo:         commentRepo,
 		userRepo:            userRepo,
 		postRepo:            postRepo,
 		likeUserCommentRepo: likeUserCommentRepo,
-		commentReportRepor:  commentReportRepo,
 	}
 }
 
@@ -225,9 +222,9 @@ func (s *sCommentUser) DeleteComment(
 	}
 
 	// 6. Delete comment report
-	if err = s.commentReportRepor.DeleteByCommentId(ctx, command.CommentId); err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
+	// if err = s.commentReportRepor.DeleteByCommentId(ctx, command.CommentId); err != nil {
+	// 	return response.NewServerFailedError(err.Error())
+	// }
 
 	return nil
 }

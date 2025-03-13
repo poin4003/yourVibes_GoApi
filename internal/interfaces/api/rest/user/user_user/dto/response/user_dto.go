@@ -1,10 +1,11 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type UserWithoutSettingDto struct {
@@ -131,17 +132,6 @@ func ToUserShortVerDto(
 	userResult *common.UserShortVerResult,
 ) *UserShortVerDto {
 	return &UserShortVerDto{
-		ID:         userResult.ID,
-		FamilyName: userResult.FamilyName,
-		Name:       userResult.Name,
-		AvatarUrl:  userResult.AvatarUrl,
-	}
-}
-
-func ToUserForReportDto(
-	userResult *common.UserForReportResult,
-) *UserForReportDto {
-	return &UserForReportDto{
 		ID:         userResult.ID,
 		FamilyName: userResult.FamilyName,
 		Name:       userResult.Name,

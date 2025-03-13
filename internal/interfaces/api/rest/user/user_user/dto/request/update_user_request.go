@@ -37,9 +37,9 @@ func ValidateUpdateUserRequest(req interface{}) error {
 		validation.Field(&dto.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Avatar, validation.By(validateImage)),
 		validation.Field(&dto.Capwall, validation.By(validateImage)),
-		validation.Field(&dto.Privacy, validation.In(consts.PUBLIC, consts.PRIVATE, consts.FRIEND_ONLY)),
+		validation.Field(&dto.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&dto.Biography, validation.Length(0, 500)),
-		validation.Field(&dto.LanguageSetting, validation.In(consts.VI, consts.EN)),
+		validation.Field(&dto.LanguageSetting, validation.In(consts.Languages...)),
 	)
 }
 

@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 	advertiseServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_admin/dto/response"
 	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_admin/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cAdvertiseAdmin struct{}
@@ -30,7 +30,7 @@ func (c *cAdvertiseAdmin) GetAdvertiseDetail(ctx *gin.Context) {
 	advertiseIdStr := ctx.Param("advertise_id")
 	advertiseId, err := uuid.Parse(advertiseIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
@@ -47,7 +47,7 @@ func (c *cAdvertiseAdmin) GetAdvertiseDetail(ctx *gin.Context) {
 	// 3. Map to dto
 	advertiseDto := response.ToAdvertiseDetail(result.Advertise)
 
-	pkgResponse.OK(ctx, advertiseDto)
+	response2.OK(ctx, advertiseDto)
 }
 
 // GetManyAdvertise godoc
@@ -73,21 +73,21 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	advertiseQueryObject, ok := queryInput.(*advertiseQuery.AdvertiseQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle get many
 	getManyAdvertiseQuery, err := advertiseQueryObject.ToGetManyAdvertiseQuery()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -103,5 +103,5 @@ func (c *cAdvertiseAdmin) GetManyAdvertise(ctx *gin.Context) {
 		advertiseDtos = append(advertiseDtos, response.ToAdvertiseWithBillDto(advertiseResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, advertiseDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, advertiseDtos, *result.PagingResponse)
 }

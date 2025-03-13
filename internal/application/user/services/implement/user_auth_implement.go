@@ -4,12 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils"
+	crypto2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/crypto"
+	jwtutil2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/jwtutil"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/random"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/sendto"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/third_party_authentication"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/third_party_authentication"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -19,12 +24,6 @@ import (
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	userValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/validator"
 	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/random"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/sendto"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -50,26 +49,26 @@ func (s *sUserAuth) Login(
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", loginCommand.Email)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return nil, response.NewCustomError(response.ErrCodeEmailOrPasswordIsWrong)
+		return nil, response2.NewCustomError(response2.ErrCodeEmailOrPasswordIsWrong)
 	}
 
 	// 2. Return if account is blocked by admin
 	if !userFound.Status {
-		return nil, response.NewCustomError(response.ErrCodeAccountBlockedByAdmin)
+		return nil, response2.NewCustomError(response2.ErrCodeAccountBlockedByAdmin)
 	}
 
 	// 3. Check auth type
 	if userFound.AuthType != consts.LOCAL_AUTH {
-		return nil, response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return nil, response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 4. Hash password
-	if !crypto.CheckPasswordHash(loginCommand.Password, *userFound.Password) {
-		return nil, response.NewCustomError(response.ErrCodeEmailOrPasswordIsWrong)
+	if !crypto2.CheckPasswordHash(loginCommand.Password, *userFound.Password) {
+		return nil, response2.NewCustomError(response2.ErrCodeEmailOrPasswordIsWrong)
 	}
 
 	// 5. Put claims into token
@@ -79,9 +78,9 @@ func (s *sUserAuth) Login(
 	}
 
 	// 6. Generate token
-	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+	accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
-		return result, response.NewServerFailedError("can not create access token")
+		return result, response2.NewServerFailedError("can not create access token")
 	}
 
 	// 7. Map to command result
@@ -98,43 +97,43 @@ func (s *sUserAuth) Register(
 	// 1. Check user exist in user table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, command.Email)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound {
-		return nil, response.NewCustomError(
-			response.ErrCodeUserHasExists,
+		return nil, response2.NewCustomError(
+			response2.ErrCodeUserHasExists,
 			fmt.Sprintf("user %s already exists", command.Email),
 		)
 	}
 
 	// 3. Get Otp from Redis
-	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
+	hashEmail := crypto2.GetHash(strings.ToLower(command.Email))
 	userKey := utils.GetUserKey(hashEmail)
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return nil, response.NewCustomError(
-				response.ErrCodeOtpNotExists,
+			return nil, response2.NewCustomError(
+				response2.ErrCodeOtpNotExists,
 				fmt.Sprintf("no OTP found for %s", command.Email),
 			)
 		}
-		return nil, response.NewCustomError(response.ErrCodeOtpNotExists, err.Error())
+		return nil, response2.NewCustomError(response2.ErrCodeOtpNotExists, err.Error())
 	}
 
 	// 3. Compare Otp
 	if otpFound != command.Otp {
-		return nil, response.NewCustomError(
-			response.ErrInvalidOTP,
+		return nil, response2.NewCustomError(
+			response2.ErrInvalidOTP,
 			fmt.Sprintf("otp does not match for %s", command.Email),
 		)
 	}
 
 	// 4. Hash password
-	hashedPassword, err := crypto.HashPassword(command.Password)
+	hashedPassword, err := crypto2.HashPassword(command.Password)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 5. Create new user
@@ -147,23 +146,23 @@ func (s *sUserAuth) Register(
 		command.Birthday,
 	)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	createdUser, err := s.userRepo.CreateOne(ctx, newUser)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 6. Create setting for user
 	newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	createdUser.Setting = createdSetting
@@ -171,7 +170,7 @@ func (s *sUserAuth) Register(
 	// 7. Validate user
 	validatedUser, err := userValidator.NewValidatedUser(createdUser)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 8. Send success email for user
@@ -182,7 +181,7 @@ func (s *sUserAuth) Register(
 		map[string]interface{}{"email": command.Email},
 		"Yourvibes sign up successful",
 	); err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	return &userCommand.RegisterCommandResult{
@@ -195,17 +194,17 @@ func (s *sUserAuth) VerifyEmail(
 	email string,
 ) (err error) {
 	// 1. hash Email
-	hashEmail := crypto.GetHash(strings.ToLower(email))
+	hashEmail := crypto2.GetHash(strings.ToLower(email))
 
 	// 2. check user exists in users table
 	userFound, err := s.userRepo.CheckUserExistByEmail(ctx, email)
 	if err != nil {
-		return response.NewCustomError(response.ErrCodeUserHasExists)
+		return response2.NewCustomError(response2.ErrCodeUserHasExists)
 	}
 
 	if userFound {
-		return response.NewCustomError(
-			response.ErrCodeUserHasExists,
+		return response2.NewCustomError(
+			response2.ErrCodeUserHasExists,
 			fmt.Sprintf("user %s already exists", email),
 		)
 	}
@@ -219,10 +218,10 @@ func (s *sUserAuth) VerifyEmail(
 		fmt.Println("Key does not exist")
 	case err != nil:
 		fmt.Println("Get failed::", err)
-		return response.NewCustomError(response.ErrCodeOtpNotExists, err.Error())
+		return response2.NewCustomError(response2.ErrCodeOtpNotExists, err.Error())
 	case otpFound != "":
-		return response.NewCustomError(
-			response.ErrCodeOtpNotExists,
+		return response2.NewCustomError(
+			response2.ErrCodeOtpNotExists,
 			"otp already exists but not registered",
 		)
 	}
@@ -233,7 +232,7 @@ func (s *sUserAuth) VerifyEmail(
 	// 5. save OTP into Redis with expiration time
 	err = global.Rdb.SetEx(ctx, userKey, strconv.Itoa(otpNew), time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
 	if err != nil {
-		return response.NewCustomError(response.ErrInvalidOTP, err.Error())
+		return response2.NewCustomError(response2.ErrInvalidOTP, err.Error())
 	}
 
 	// 6. send OTP
@@ -246,7 +245,7 @@ func (s *sUserAuth) VerifyEmail(
 	)
 
 	if err != nil {
-		return response.NewCustomError(response.ErrSendEmailOTP, err.Error())
+		return response2.NewCustomError(response2.ErrSendEmailOTP, err.Error())
 	}
 
 	return nil
@@ -259,39 +258,39 @@ func (s *sUserAuth) ChangePassword(
 	// 1. Find user
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewCustomError(response.UserNotFound)
+		return response2.NewCustomError(response2.UserNotFound)
 	}
 
 	// 2. Check auth type
 	if userFound.AuthType != consts.LOCAL_AUTH {
-		return response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 3. Check old password
-	if !crypto.CheckPasswordHash(command.OldPassword, *userFound.Password) {
-		return response.NewCustomError(response.ErrCodeOldPasswordIsWrong)
+	if !crypto2.CheckPasswordHash(command.OldPassword, *userFound.Password) {
+		return response2.NewCustomError(response2.ErrCodeOldPasswordIsWrong)
 	}
 
 	// 4. Update new password
-	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	hashedPassword, err := crypto2.HashPassword(command.NewPassword)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	updateUserData := &userEntity.UserUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 	if err := updateUserData.ValidateUserUpdate(); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, command.UserId, updateUserData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -302,21 +301,21 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 	command *userCommand.GetOtpForgotUserPasswordCommand,
 ) (err error) {
 	// 1. Hash Email
-	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
+	hashEmail := crypto2.GetHash(strings.ToLower(command.Email))
 
 	// 2. Check user exist
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewCustomError(response.UserNotFound)
+		return response2.NewCustomError(response2.UserNotFound)
 	}
 
 	// 3. Check auth type
 	if userFound.AuthType != consts.LOCAL_AUTH {
-		return response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 4. Check OTP exists
@@ -328,9 +327,9 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 		fmt.Println("Key does not exist")
 	case err != nil:
 		fmt.Println("Get failed::", err)
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	case otpFound != "":
-		return response.NewCustomError(response.ErrCodeOtpNotExists)
+		return response2.NewCustomError(response2.ErrCodeOtpNotExists)
 	}
 
 	// 5. Generate OTP
@@ -338,7 +337,7 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 
 	// 6. Save OTP into Redis with expiration time
 	if err = global.Rdb.SetEx(ctx, userKey, strconv.Itoa(otpNew), time.Duration(consts.TIME_OTP_FORGOT_USER_PASSWORD)*time.Minute).Err(); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	// 7. Send OTP
@@ -349,7 +348,7 @@ func (s *sUserAuth) GetOtpForgotUserPassword(
 		map[string]interface{}{"otp": strconv.Itoa(otpNew)},
 		"Yourvibes OTP Verification",
 	); err != nil {
-		return response.NewCustomError(response.ErrSendEmailOTP)
+		return response2.NewCustomError(response2.ErrSendEmailOTP)
 	}
 
 	return nil
@@ -362,45 +361,45 @@ func (s *sUserAuth) ForgotUserPassword(
 	// 1. Check user exist
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return response.NewCustomError(response.UserNotFound)
+		return response2.NewCustomError(response2.UserNotFound)
 	}
 
 	// 2. Check auth type
 	if userFound.AuthType != consts.LOCAL_AUTH {
-		return response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 3. Get Otp from Redis
-	hashEmail := crypto.GetHash(strings.ToLower(command.Email))
+	hashEmail := crypto2.GetHash(strings.ToLower(command.Email))
 	userKey := utils.GetOtpForgotPasswordUser(hashEmail)
 	otpFound, err := global.Rdb.Get(ctx, userKey).Result()
 
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return response.NewCustomError(
-				response.ErrCodeOtpNotExists,
+			return response2.NewCustomError(
+				response2.ErrCodeOtpNotExists,
 				fmt.Sprintf("no otp found for %s", command.Email),
 			)
 		}
-		return response.NewCustomError(response.ErrCodeOtpNotExists)
+		return response2.NewCustomError(response2.ErrCodeOtpNotExists)
 	}
 
 	// 4. Compare otp
 	if otpFound != command.Otp {
-		return response.NewCustomError(
-			response.ErrInvalidOTP,
+		return response2.NewCustomError(
+			response2.ErrInvalidOTP,
 			fmt.Sprintf("otp does not match for %s", command.Email),
 		)
 	}
 
 	// 5. Update new password
-	hashedPassword, err := crypto.HashPassword(command.NewPassword)
+	hashedPassword, err := crypto2.HashPassword(command.NewPassword)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	updateUserData := &userEntity.UserUpdate{
@@ -408,12 +407,12 @@ func (s *sUserAuth) ForgotUserPassword(
 	}
 
 	if err = updateUserData.ValidateUserUpdate(); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, updateUserData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -426,19 +425,19 @@ func (s *sUserAuth) AuthGoogle(
 	// 1. Call api google to get openid ODCI
 	idToken, err := third_party_authentication.GetGoogleIDToken(command.AuthorizationCode, command.Platform, command.RedirectUrl)
 	if err != nil {
-		return nil, response.NewCustomError(response.ErrCodeGoogleAuth)
+		return nil, response2.NewCustomError(response2.ErrCodeGoogleAuth)
 	}
 
 	// 2. Get claims from openid
-	claims, err := jwtutil.DecodeGoogleIDToken(idToken)
+	claims, err := jwtutil2.DecodeGoogleIDToken(idToken)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 3. Get user by email
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", claims.Email)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
@@ -451,23 +450,23 @@ func (s *sUserAuth) AuthGoogle(
 			claims.Picture,
 		)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdUser, err := s.userRepo.CreateOne(ctx, newUser)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		// 2.2. Create setting for user
 		newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdUser.Setting = createdSetting
@@ -475,7 +474,7 @@ func (s *sUserAuth) AuthGoogle(
 		// 2.3. Validate user
 		validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		// 2.4. Send success email to user
@@ -486,7 +485,7 @@ func (s *sUserAuth) AuthGoogle(
 			map[string]interface{}{"email": claims.Email},
 			"Yourvibes sign up with Google account successfully",
 		); err != nil {
-			return nil, response.NewCustomError(response.ErrSendEmailOTP)
+			return nil, response2.NewCustomError(response2.ErrSendEmailOTP)
 		}
 
 		accessClaims := jwt.MapClaims{
@@ -495,9 +494,9 @@ func (s *sUserAuth) AuthGoogle(
 		}
 
 		// 2.4. Generate token
-		accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+		accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		return &userCommand.AuthGoogleCommandResult{
@@ -508,12 +507,12 @@ func (s *sUserAuth) AuthGoogle(
 
 	// 3. Return if account is blocked (status = false)
 	if !userFound.Status {
-		return nil, response.NewCustomError(response.ErrCodeAccountBlockedByAdmin)
+		return nil, response2.NewCustomError(response2.ErrCodeAccountBlockedByAdmin)
 	}
 
 	// 4. Return if auth type is local
 	if userFound.AuthType == consts.LOCAL_AUTH {
-		return nil, response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return nil, response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 5. Check auth google id
@@ -523,7 +522,7 @@ func (s *sUserAuth) AuthGoogle(
 	}
 
 	// 5.1 Generate token
-	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+	accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
 		return result, fmt.Errorf("cannot create access token: %w", err)
 	}
@@ -539,15 +538,15 @@ func (s *sUserAuth) AppAuthGoogle(
 	command *userCommand.AuthAppGoogleCommand,
 ) (result *userCommand.AuthGoogleCommandResult, err error) {
 	// 1. Get claims from openid
-	claims, err := jwtutil.DecodeGoogleIDToken(command.OpenId)
+	claims, err := jwtutil2.DecodeGoogleIDToken(command.OpenId)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 2. Get user by email
 	userFound, err := s.userRepo.GetOne(ctx, "email = ?", claims.Email)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
@@ -560,23 +559,23 @@ func (s *sUserAuth) AppAuthGoogle(
 			claims.Picture,
 		)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdUser, err := s.userRepo.CreateOne(ctx, newUser)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		// 2.2. Create setting for user
 		newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		createdUser.Setting = createdSetting
@@ -584,7 +583,7 @@ func (s *sUserAuth) AppAuthGoogle(
 		// 2.3. Validate user
 		validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		// 2.4. Send success email to user
@@ -595,7 +594,7 @@ func (s *sUserAuth) AppAuthGoogle(
 			map[string]interface{}{"email": claims.Email},
 			"Yourvibes sign up with Google Account successfully",
 		); err != nil {
-			return nil, response.NewCustomError(response.ErrSendEmailOTP)
+			return nil, response2.NewCustomError(response2.ErrSendEmailOTP)
 		}
 
 		accessClaims := jwt.MapClaims{
@@ -604,9 +603,9 @@ func (s *sUserAuth) AppAuthGoogle(
 		}
 
 		// 2.4. Generate token
-		accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+		accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, response2.NewServerFailedError(err.Error())
 		}
 
 		return &userCommand.AuthGoogleCommandResult{
@@ -617,12 +616,12 @@ func (s *sUserAuth) AppAuthGoogle(
 
 	// 3. Return if account is blocked (status = false)
 	if !userFound.Status {
-		return nil, response.NewCustomError(response.ErrCodeAccountBlockedByAdmin)
+		return nil, response2.NewCustomError(response2.ErrCodeAccountBlockedByAdmin)
 	}
 
 	// 4. Return if auth type is local
 	if userFound.AuthType == consts.LOCAL_AUTH {
-		return nil, response.NewCustomError(response.ErrCodeInvalidLocalAuthType)
+		return nil, response2.NewCustomError(response2.ErrCodeInvalidLocalAuthType)
 	}
 
 	// 5. Check auth google id
@@ -632,9 +631,9 @@ func (s *sUserAuth) AppAuthGoogle(
 	}
 
 	// 6 Generate token
-	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+	accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	return &userCommand.AuthGoogleCommandResult{

@@ -3,14 +3,14 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/mapper"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -96,17 +96,41 @@ func (r *rComment) DeleteOne(
 	ctx context.Context,
 	id uuid.UUID,
 ) (*entities.Comment, error) {
-	comment, err := r.GetById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+	commentFound := &models.Comment{}
 
-	res := r.db.WithContext(ctx).Delete(comment)
-	if res.Error != nil {
-		return nil, res.Error
-	}
+	return mapper.FromCommentModel(commentFound), r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Check if comment exists
+		if err := tx.WithContext(ctx).
+			Model(commentFound).
+			First(commentFound, "id = ?", id).
+			Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil
+			}
+			return err
+		}
 
-	return comment, nil
+		// 2. Delete related report
+		result := tx.WithContext(ctx).
+			Where("id IN (?)",
+				tx.Model(&models.CommentReport{}).
+					Select("report_id").
+					Where("reported_comment_id = ?", id),
+			).
+			Delete(&models.Report{})
+
+		if result.Error != nil {
+			return response.NewServerFailedError(result.Error.Error())
+		}
+
+		// 3. Delete comment
+		if err := tx.WithContext(ctx).
+			Delete(&models.Comment{}, "id = ?", id).
+			Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *rComment) DeleteMany(

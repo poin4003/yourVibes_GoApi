@@ -10,7 +10,7 @@ import (
 	conversationDetailQuery "github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	messageRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
 
 type sConversationDetail struct {
@@ -95,5 +95,4 @@ func (s *sConversationDetail) GetConversationDetailByUsesId(
 		ConversationDetail: conversationDetailResults,
 		PagingResponse:     paging,
 	}, nil
-
 }

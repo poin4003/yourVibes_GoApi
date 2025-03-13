@@ -2,10 +2,11 @@ package repositories
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -39,16 +40,6 @@ type (
 		GetFriendIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
 	}
-	IUserReportRepository interface {
-		GetById(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (*entities.UserReport, error)
-		CreateOne(ctx context.Context, entity *entities.UserReport) (*entities.UserReport, error)
-		UpdateOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID, updateData *entities.UserReportUpdate) (*entities.UserReport, error)
-		UpdateMany(ctx context.Context, reportedUserId uuid.UUID, updateData *entities.UserReportUpdate) error
-		DeleteOne(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) error
-		DeleteByUserId(ctx context.Context, userId uuid.UUID) error
-		GetMany(ctx context.Context, query *query.GetManyUserReportQuery) ([]*entities.UserReport, *response.PagingResponse, error)
-		CheckExist(ctx context.Context, userId uuid.UUID, reportedUserId uuid.UUID) (bool, error)
-	}
 )
 
 var (
@@ -56,7 +47,6 @@ var (
 	localSetting       ISettingRepository
 	localFriendRequest IFriendRequestRepository
 	localFriend        IFriendRepository
-	localUserReport    IUserReportRepository
 )
 
 func User() IUserRepository {
@@ -91,14 +81,6 @@ func Friend() IFriendRepository {
 	return localFriend
 }
 
-func UserReport() IUserReportRepository {
-	if localUserReport == nil {
-		panic("repository_implement localUserReport not found for interface IUserReport")
-	}
-
-	return localUserReport
-}
-
 func InitUserRepository(i IUserRepository) {
 	localUser = i
 }
@@ -113,8 +95,4 @@ func InitFriendRequestRepository(i IFriendRequestRepository) {
 
 func InitFriendRepository(i IFriendRepository) {
 	localFriend = i
-}
-
-func InitUserReportRepository(i IUserReportRepository) {
-	localUserReport = i
 }

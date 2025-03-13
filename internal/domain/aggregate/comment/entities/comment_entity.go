@@ -30,20 +30,6 @@ type CommentUpdate struct {
 	Status          *bool
 }
 
-type CommentForReport struct {
-	ID              uuid.UUID
-	PostId          uuid.UUID
-	UserId          uuid.UUID
-	User            *UserForReport
-	ParentId        *uuid.UUID
-	Content         string
-	LikeCount       int
-	RepCommentCount int
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Status          bool
-}
-
 func (c *Comment) ValidateComment() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.PostId, validation.Required),

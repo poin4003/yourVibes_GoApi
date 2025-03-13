@@ -9,7 +9,7 @@ import (
 )
 
 type CreateConversationRequest struct {
-	Name  string               `json:"name"`
+	Name  string               `form:"name"`
 	Image multipart.FileHeader `form:"image,omitempty" binding:"omitempty"`
 }
 

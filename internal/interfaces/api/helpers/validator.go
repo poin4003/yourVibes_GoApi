@@ -3,8 +3,9 @@ package helpers
 import (
 	"reflect"
 
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 func ValidateJsonBody(
@@ -15,12 +16,14 @@ func ValidateJsonBody(
 		dtoInstance := reflect.New(reflect.TypeOf(dto).Elem()).Interface()
 
 		if err := ctx.ShouldBindJSON(dtoInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 
 		if err := validateFunc(dtoInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 
@@ -37,12 +40,14 @@ func ValidateFormBody(
 		dtoInstance := reflect.New(reflect.TypeOf(dto).Elem()).Interface()
 
 		if err := ctx.ShouldBind(dtoInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 
 		if err := validateFunc(dtoInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 
@@ -59,12 +64,14 @@ func ValidateQuery(
 		queryInstance := reflect.New(reflect.TypeOf(query).Elem()).Interface()
 
 		if err := ctx.ShouldBindQuery(queryInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 
 		if err := validateFunc(queryInstance); err != nil {
-			ctx.Error(response.NewCustomError(response.ErrCodeValidate, err.Error()))
+			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrCodeValidate, err.Error()))
+			ctx.Abort()
 			return
 		}
 

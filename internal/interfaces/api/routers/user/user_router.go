@@ -18,7 +18,6 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	UserInfoController := user_user.NewUserInfoController()
 	UserNotificationController := user_user.NewNotificationController()
 	UserFriendController := user_user.NewUserFriendController()
-	UserReportController := user_user.NewUserReportController()
 
 	// Public router
 
@@ -112,12 +111,6 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 		userRouterPrivate.GET("/friends/:user_id",
 			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
 			UserFriendController.GetFriends,
-		)
-
-		// user report
-		userRouterPrivate.POST("/report",
-			helpers.ValidateJsonBody(&userRequest.ReportUserRequest{}, userRequest.ValidateReportUserRequest),
-			UserReportController.ReportUser,
 		)
 	}
 }

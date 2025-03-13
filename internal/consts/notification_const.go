@@ -1,8 +1,9 @@
 package consts
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type NotificationType string
@@ -20,6 +21,20 @@ const (
 	DEACTIVATE_COMMENT    NotificationType = "deactivate_comment"
 	ACTICATE_COMMENT      NotificationType = "activate_comment"
 )
+
+var NotificationTypes = []interface{}{
+	NEW_POST,
+	NEW_COMMENT,
+	LIKE_POST,
+	LIKE_COMMENT,
+	NEW_SHARE,
+	FRIEND_REQUEST,
+	ACCEPT_FRIEND_REQUEST,
+	DEACTIVATE_POST,
+	ACTIVATE_POST,
+	DEACTIVATE_COMMENT,
+	ACTICATE_COMMENT,
+}
 
 type NotificationSocketResponse struct {
 	ID               uint               `json:"id"`

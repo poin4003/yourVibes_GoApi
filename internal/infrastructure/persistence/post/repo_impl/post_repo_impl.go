@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,8 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -119,17 +119,41 @@ func (r *rPost) DeleteOne(
 	ctx context.Context,
 	id uuid.UUID,
 ) (*entities.Post, error) {
-	post, err := r.GetById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+	postFound := &models.Post{}
 
-	res := r.db.WithContext(ctx).Delete(mapper.ToPostModel(post))
-	if res.Error != nil {
-		return nil, res.Error
-	}
+	return mapper.FromPostModel(postFound), r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Check if post exists
+		if err := tx.WithContext(ctx).
+			Model(postFound).
+			First(postFound, "id = ?", id).
+			Error; err != nil {
+			if errors.Is(gorm.ErrRecordNotFound, err) {
+				return nil
+			}
+			return err
+		}
 
-	return post, nil
+		// 2. Delete related reports
+		result := tx.WithContext(ctx).
+			Where("id IN (?)",
+				tx.Model(&models.PostReport{}).
+					Select("report_id").
+					Where("reported_post_id = ?", id),
+			).
+			Delete(&models.Report{})
+
+		if result.Error != nil {
+			return response.NewServerFailedError(result.Error.Error())
+		}
+
+		// 3. Delete post
+		if err := r.db.WithContext(ctx).
+			Delete(&models.Post{}, "id = ?", id).
+			Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *rPost) GetOne(

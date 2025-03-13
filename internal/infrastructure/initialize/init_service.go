@@ -6,26 +6,40 @@ import (
 	adminServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services/implement"
 	advertiseService "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertiseServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
+
 	commentService "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
 	commentServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
+
 	mediaService "github.com/poin4003/yourVibes_GoApi/internal/application/media/services"
 	mediaServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/media/services/implement"
 	messageService "github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	messageServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/messages/services/implement"
 	postService "github.com/poin4003/yourVibes_GoApi/internal/application/post/services"
 	postServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/post/services/implement"
+
 	revenueService "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services"
 	revenueServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services/implement"
+
 	userService "github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 	userServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/user/services/implement"
+
+	reportService "github.com/poin4003/yourVibes_GoApi/internal/application/report/services"
+	reportServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/report/services/implement"
+
 	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+
 	adminRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/admin/repo_impl"
 	advertiseRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/advertise/repo_impl"
+
 	commentRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
 	messageRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/repo_impl"
 	notificationRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
+
 	postRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
+
 	userRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
+
+	reportRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/report/repo_impl"
 )
 
 func InitServiceInterface() {
@@ -33,14 +47,11 @@ func InitServiceInterface() {
 
 	// 1. Initialize Repository
 	userRepo := userRepoImpl.NewUserRepositoryImplement(db)
-	userReportRepo := userRepoImpl.NewUserReportRepositoryImplement(db)
 	postRepo := postRepoImpl.NewPostRepositoryImplement(db)
-	postReportRepo := postRepoImpl.NewPostReportRepositoryImplement(db)
 	postLikeRepo := postRepoImpl.NewLikeUserPostRepositoryImplement(db)
 	mediaRepo := postRepoImpl.NewMediaRepositoryImplement(db)
 	settingRepo := userRepoImpl.NewSettingRepositoryImplement(db)
 	commentRepo := commentRepoImpl.NewCommentRepositoryImplement(db)
-	commentReportRepo := commentRepoImpl.NewCommentReportRepositoryImplement(db)
 	likeUserCommentRepo := commentRepoImpl.NewLikeUserCommentRepositoryImplement(db)
 	notificationRepo := notificationRepoImpl.NewNotificationRepositoryImplement(db)
 	friendRepo := userRepoImpl.NewFriendImplement(db)
@@ -52,6 +63,7 @@ func InitServiceInterface() {
 	conversationRepo := messageRepoImpl.NewConversationRepositoryImplement(db)
 	messageRepo := messageRepoImpl.NewMessageRepositoryImplement(db)
 	conversationDetailRepo := messageRepoImpl.NewConversationDetailRepositoryImplement(db)
+	reportRepo := reportRepoImpl.NewReportRepositoryImplement(db)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
@@ -67,12 +79,10 @@ func InitServiceInterface() {
 	repository.InitAdvertiseRepository(advertiseRepo)
 	repository.InitBillRepository(billRepo)
 	repository.InitAdminRepository(adminRepo)
-	repository.InitUserReportRepository(userReportRepo)
-	repository.InitPostReportRepository(postReportRepo)
-	repository.InitCommentReportRepository(commentReportRepo)
 	repository.InitConversationRepository(conversationRepo)
 	repository.InitMessageRepository(messageRepo)
 	repository.InitConversationDetailRepository(conversationDetailRepo)
+	repository.InitReportRepository(reportRepo)
 
 	// 2. Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo)
@@ -80,19 +90,17 @@ func InitServiceInterface() {
 	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, notificationRepo)
 	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo)
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
-	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo, advertiseRepo, postReportRepo)
+	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo, advertiseRepo)
 	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
-	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentReportRepo)
+	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
 	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, notificationRepo)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)
 	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo)
 	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo)
-	userReportServiceInit := userServiceImpl.NewUserReportImplement(userReportRepo, userRepo, postRepo, commentRepo)
-	postReportServiceInit := postServiceImpl.NewPostReportImplement(postReportRepo, postRepo, notificationRepo)
-	commentReportServiceInit := commentServiceImpl.NewCommentReportImplement(commentReportRepo, commentRepo, notificationRepo)
+	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
@@ -114,9 +122,7 @@ func InitServiceInterface() {
 	adminService.InitAdminAuth(adminAuthServiceInit)
 	adminService.InitAdminInfo(adminInfoServiceInit)
 	adminService.InitSuperAdmin(superAdminServiceInit)
-	userService.InitUserReport(userReportServiceInit)
-	postService.InitPostReport(postReportServiceInit)
-	commentService.InitCommentReport(commentReportServiceInit)
+	reportService.InitReport(reportServiceInit)
 	revenueService.InitRevenue(revenueServiceInit)
 	mediaService.InitMedia(mediaServiceInit)
 	messageService.InitConversation(conversationServiceInit)

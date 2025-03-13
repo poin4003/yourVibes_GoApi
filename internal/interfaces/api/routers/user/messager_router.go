@@ -18,17 +18,17 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 
 	conversationRouter := Router.Group("/conversations")
 	{
-		conversationRouter.POST("/create_conversation",
-			helpers.ValidateJsonBody(&conversationRequest.CreateConversationRequest{}, conversationRequest.ValidateCreateConversationRequest),
+		conversationRouter.POST("/",
+			helpers.ValidateFormBody(&conversationRequest.CreateConversationRequest{}, conversationRequest.ValidateCreateConversationRequest),
 			userConversationController.CreateConversation)
 
-		conversationRouter.GET("/conversation",
+		conversationRouter.GET("/",
 			helpers.ValidateQuery(&conversationQuery.ConversationObject{}, conversationQuery.ValidateConversationObject),
 			userConversationController.GetConversation)
 
-		conversationRouter.GET("/conversation/:conversationId", userConversationController.GetConversationById)
+		conversationRouter.GET("/:conversationId", userConversationController.GetConversationById)
 
-		conversationRouter.DELETE("/conversation/:conversationId", userConversationController.DeleteConversationById)
+		conversationRouter.DELETE("/:conversationId", userConversationController.DeleteConversationById)
 
 	}
 
@@ -46,13 +46,15 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 		messageRouter.GET("/message/:messageId", useMessageController.GetMessageById)
 	}
 
-	conversationDetailRouter := Router.Group("/conversation_detail")
+	conversationDetailRouter := Router.Group("/conversation_details")
 	conversationDetailRouter.Use(middlewares.UserAuthProtected())
 	{
-		conversationDetailRouter.POST("/create_conversation_detail",
+		conversationDetailRouter.POST("/",
 			helpers.ValidateJsonBody(&conversationRequest.CreateConversationDetailRequest{}, conversationRequest.ValidateCreatCOnversationDetailRequest),
 			useConversationDetailController.CreateConversationDetail)
+
 		conversationDetailRouter.GET("/get_by_id/:userId/:conversationId", useConversationDetailController.GetConversationDetailById)
+
 		conversationDetailRouter.GET("/get_by_user_id",
 			helpers.ValidateQuery(&conversationQuery.ConversationDetailObject{}, conversationQuery.ValidateConversationDetailObject),
 			useConversationDetailController.GetConversationDetailByUserId)

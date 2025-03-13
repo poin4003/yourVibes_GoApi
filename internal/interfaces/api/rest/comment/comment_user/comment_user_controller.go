@@ -5,11 +5,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cCommentUser struct {
@@ -32,28 +32,28 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to create comment request
 	createCommentRequest, ok := body.(*request.CreateCommentRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 2. Get userid from token
 	userIdClaims, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle create comment
 	createCommentCommand, err := createCommentRequest.ToCreateCommentCommand(userIdClaims)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -66,7 +66,7 @@ func (p *cCommentUser) CreateComment(ctx *gin.Context) {
 	// 4. Map to dto
 	commentDto := response.ToCommentDto(result.Comment)
 
-	pkgResponse.OK(ctx, commentDto)
+	response2.OK(ctx, commentDto)
 }
 
 // GetComment documentation
@@ -85,28 +85,28 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to CommentQueryObject
 	commentQueryObject, ok := queryInput.(*query.CommentQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaims, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get many
 	getManyCommentQuery, err := commentQueryObject.ToGetManyCommentQuery(userIdClaims)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -122,7 +122,7 @@ func (p *cCommentUser) GetComment(ctx *gin.Context) {
 		commentDtos = append(commentDtos, response.ToCommentWithLikedDto(commentResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, commentDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, commentDtos, *result.PagingResponse)
 }
 
 // DeleteComment documentation
@@ -139,7 +139,7 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
@@ -151,7 +151,7 @@ func (p *cCommentUser) DeleteComment(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // UpdateComment documentation
@@ -168,14 +168,14 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to update comment request
 	updateCommentRequest, ok := body.(*request.UpdateCommentRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -183,14 +183,14 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle update comment
 	updateCommentCommand, err := updateCommentRequest.ToUpdateCommentCommand(commentId)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -203,5 +203,5 @@ func (p *cCommentUser) UpdateComment(ctx *gin.Context) {
 	// 4. Map to dto
 	commentDto := response.ToCommentDto(result.Comment)
 
-	pkgResponse.OK(ctx, commentDto)
+	response2.OK(ctx, commentDto)
 }

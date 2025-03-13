@@ -2,6 +2,10 @@ package implement
 
 import (
 	"context"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/crypto"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/jwtutil"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -10,10 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
 	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/crypto"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/jwtutil"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 )
 
 type sAdminAuth struct {
@@ -35,21 +35,21 @@ func (s *sAdminAuth) Login(
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	if adminFound == nil {
-		return nil, response.NewDataNotFoundError("admin not found")
+		return nil, response2.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Return if account is blocked by admin
 	if !adminFound.Status {
-		return nil, response.NewCustomError(response.ErrCodeAccountBlockedBySuperAdmin)
+		return nil, response2.NewCustomError(response2.ErrCodeAccountBlockedBySuperAdmin)
 	}
 
 	// 3. Check hash password
 	if !crypto.CheckPasswordHash(command.Password, adminFound.Password) {
-		return nil, response.NewCustomError(response.ErrCodeEmailOrPasswordIsWrong)
+		return nil, response2.NewCustomError(response2.ErrCodeEmailOrPasswordIsWrong)
 	}
 
 	// 4. Put claims into token
@@ -62,7 +62,7 @@ func (s *sAdminAuth) Login(
 	// 5. Generate token
 	accessTokenGen, err := jwtutil.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtAdminSecretKey)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, response2.NewServerFailedError(err.Error())
 	}
 
 	// 6. Map to result
@@ -79,34 +79,34 @@ func (s *sAdminAuth) ChangeAdminPassword(
 	// 1. Find admin
 	adminFound, err := s.adminRepo.GetById(ctx, command.AdminId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if adminFound == nil {
-		return response.NewDataNotFoundError("admin not found")
+		return response2.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Check old password
 	if !crypto.CheckPasswordHash(command.OldPassword, adminFound.Password) {
-		return response.NewCustomError(response.ErrCodeOldPasswordIsWrong)
+		return response2.NewCustomError(response2.ErrCodeOldPasswordIsWrong)
 	}
 
 	// 3. Update new password
 	hashedPassword, err := crypto.HashPassword(command.NewPassword)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	updateAdminData := &adminEntity.AdminUpdate{
 		Password: pointer.Ptr(hashedPassword),
 	}
 	if err := updateAdminData.ValidateAdminUpdate(); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.adminRepo.UpdateOne(ctx, command.AdminId, updateAdminData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -119,17 +119,17 @@ func (s *sAdminAuth) ForgotAdminPassword(
 	// 1. Check admin exist
 	adminFound, err := s.adminRepo.GetOne(ctx, "email = ?", command.Email)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	if adminFound == nil {
-		return response.NewDataNotFoundError("admin not found")
+		return response2.NewDataNotFoundError("admin not found")
 	}
 
 	// 2. Update new password
 	hashedPassword, err := crypto.HashPassword(command.NewPassword)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	updateAdminData := &adminEntity.AdminUpdate{
@@ -137,12 +137,12 @@ func (s *sAdminAuth) ForgotAdminPassword(
 	}
 
 	if err = updateAdminData.ValidateAdminUpdate(); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	_, err = s.adminRepo.UpdateOne(ctx, adminFound.ID, updateAdminData)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return response2.NewServerFailedError(err.Error())
 	}
 
 	return nil

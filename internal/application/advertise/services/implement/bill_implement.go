@@ -2,13 +2,14 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	billCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	billEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	billRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 )
 
 type sBill struct {
@@ -78,7 +79,7 @@ func (s *sBill) ConfirmPayment(
 
 	// 3.2. Update isAdvertisement
 	updatePostData := &postEntity.PostUpdate{
-		IsAdvertisement: pointer.Ptr(true),
+		IsAdvertisement: pointer.Ptr(consts.IS_ADVERTISE),
 	}
 
 	err = updatePostData.ValidatePostUpdate()

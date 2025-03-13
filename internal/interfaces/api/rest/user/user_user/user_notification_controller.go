@@ -2,6 +2,7 @@ package user_user
 
 import (
 	"fmt"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cNotification struct{}
@@ -35,19 +35,17 @@ func NewNotificationController() *cNotification {
 // @Tags user_notification
 // @Accept json
 // @Produce json
-// @Success 200 {string} string "WebSocket connection established"
-// @Failure 500 {object} response.ErrResponse
 // @Router /users/notifications/ws/{user_id} [get]
 func (c *cNotification) SendNotification(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
 	userId := ctx.Param("user_id")
 	if _, err := uuid.Parse(userId); err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		conn.Close()
 		return
 	}
@@ -86,29 +84,27 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Param isDescending query bool false "Sort notifications in descending order"
 // @Param limit query int false "Limit the number of notifications returned"
 // @Param page query int false "Pagination: page number"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /users/notifications [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	notificationQueryObject, ok := queryInput.(*query.NotificationQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from param
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -126,7 +122,7 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 		notificationDtos = append(notificationDtos, response.ToNotificationDto(notificationResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, notificationDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, notificationDtos, *result.PagingResponse)
 }
 
 // UpdateOneStatusNotifications Update status of notification to false
@@ -135,8 +131,6 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param notification_id path string true "Notification ID"
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /users/notifications/{notification_id} [patch]
 func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
@@ -144,7 +138,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	notificationIdStr := ctx.Param("notification_id")
 	notificationID, err := strconv.ParseUint(notificationIdStr, 10, 32)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError("Invalid notification id"))
+		ctx.Error(response2.NewValidateError("Invalid notification id"))
 		return
 	}
 
@@ -158,7 +152,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // UpdateManyStatusNotifications Update all status of notification to false
@@ -166,15 +160,13 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 // @Tags user_notification
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.ResponseData
-// @Failure 500 {object} response.ErrResponse
 // @Security ApiKeyAuth
 // @Router /users/notifications/ [patch]
 func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	// 1. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -188,5 +180,5 @@ func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }

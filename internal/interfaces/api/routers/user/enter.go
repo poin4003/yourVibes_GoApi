@@ -7,4 +7,5 @@ type UserRouterGroup struct {
 	AdvertiseRouter
 	MediaRouter
 	MessagesRouter
+	ReportRouter
 }

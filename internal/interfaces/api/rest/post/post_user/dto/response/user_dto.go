@@ -27,14 +27,3 @@ func ToUserDto(userResult *common.UserResult) *UserDto {
 		AvatarUrl:  userResult.AvatarUrl,
 	}
 }
-
-func ToUserForReportDto(
-	userResult *common.UserForReportResult,
-) *UserForReportDto {
-	return &UserForReportDto{
-		ID:         userResult.ID,
-		FamilyName: userResult.FamilyName,
-		Name:       userResult.Name,
-		AvatarUrl:  userResult.AvatarUrl,
-	}
-}
