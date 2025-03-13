@@ -6,4 +6,5 @@ type UserRouterGroup struct {
 	CommentRouter
 	AdvertiseRouter
 	MediaRouter
+	ReportRouter
 }

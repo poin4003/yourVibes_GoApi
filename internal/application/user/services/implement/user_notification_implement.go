@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
@@ -9,8 +11,6 @@ import (
 	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 )
 
 type sUserNotification struct {

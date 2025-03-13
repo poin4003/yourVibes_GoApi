@@ -2,10 +2,11 @@ package repositories
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type (
@@ -43,16 +44,6 @@ type (
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 	}
-	IPostReportRepository interface {
-		GetById(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (*entities.PostReport, error)
-		CreateOne(ctx context.Context, entity *entities.PostReport) (*entities.PostReport, error)
-		UpdateOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) (*entities.PostReport, error)
-		UpdateMany(ctx context.Context, reportedPostId uuid.UUID, updateData *entities.PostReportUpdate) error
-		DeleteOne(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) error
-		DeleteByPostId(ctx context.Context, postId uuid.UUID) error
-		GetMany(ctx context.Context, query *query.GetManyPostReportQuery) ([]*entities.PostReport, *response.PagingResponse, error)
-		CheckExist(ctx context.Context, userId uuid.UUID, reportedPostId uuid.UUID) (bool, error)
-	}
 )
 
 var (
@@ -60,7 +51,6 @@ var (
 	localPost         IPostRepository
 	localLikeUserPost ILikeUserPostRepository
 	localNewFeed      INewFeedRepository
-	localPostReport   IPostReportRepository
 )
 
 func Post() IPostRepository {
@@ -95,14 +85,6 @@ func NewFeed() INewFeedRepository {
 	return localNewFeed
 }
 
-func PostReport() IPostReportRepository {
-	if localPostReport == nil {
-		panic("repository_implement localPostReport not found for interface IPostReport")
-	}
-
-	return localPostReport
-}
-
 func InitPostRepository(i IPostRepository) {
 	localPost = i
 }
@@ -117,8 +99,4 @@ func InitLikeUserPostRepository(i ILikeUserPostRepository) {
 
 func InitNewFeedRepository(i INewFeedRepository) {
 	localNewFeed = i
-}
-
-func InitPostReportRepository(i IPostReportRepository) {
-	localPostReport = i
 }

@@ -9,6 +9,12 @@ const (
 	PRIVATE     PrivacyLevel = "private"
 )
 
+var PrivacyLevels = []interface{}{
+	PUBLIC,
+	FRIEND_ONLY,
+	PRIVATE,
+}
+
 func IsValidPrivacyLevel(level PrivacyLevel) bool {
 	switch level {
 	case PUBLIC, FRIEND_ONLY, PRIVATE:

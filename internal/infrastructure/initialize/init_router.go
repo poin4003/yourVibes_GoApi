@@ -49,14 +49,13 @@ func InitRouter() *gin.Engine {
 		userRouter.InitCommentRouter(MainGroup)
 		userRouter.InitAdvertiseRouter(MainGroup)
 		userRouter.InitMediaRouter(MainGroup)
+		userRouter.InitReportRouter(MainGroup)
 	}
 	{
 		adminRouter.InitAdminRouter(MainGroup)
-		adminRouter.InitUserAdminRouter(MainGroup)
-		adminRouter.InitPostAdminRouter(MainGroup)
-		adminRouter.InitCommentAdminRouter(MainGroup)
 		adminRouter.InitAdvertiseAdminRouter(MainGroup)
 		adminRouter.InitRevenueAdminRouter(MainGroup)
+		adminRouter.InitAdminReportRouter(MainGroup)
 	}
 	return r
 }

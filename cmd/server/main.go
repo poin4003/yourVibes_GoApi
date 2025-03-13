@@ -16,17 +16,21 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host yourvibesapi.duckdns.org:8080
+// @host localhost:8080
 // @BasePath /v1/2024
-// @schema https
+// @schema http
 
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in header
 // @name Authorization
-// @description Token without 'Bearer ' prefix
+// @description Token with 'Bearer ' prefix
 
 func main() {
 	r := initialize.Run()
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.URL("http://localhost:8080/swagger/doc.json"),
+		ginSwagger.DocExpansion("none"),
+		ginSwagger.DefaultModelsExpandDepth(-1),
+	))
 	r.Run(":8080")
 }

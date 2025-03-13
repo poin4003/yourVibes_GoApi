@@ -1,11 +1,11 @@
 package query
 
 import (
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type GetOnePostQuery struct {

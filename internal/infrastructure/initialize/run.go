@@ -2,10 +2,10 @@ package initialize
 
 import (
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 	"go.uber.org/zap"
 )
 

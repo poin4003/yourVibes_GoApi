@@ -14,7 +14,6 @@ type CommentRouter struct{}
 func (cr *CommentRouter) InitCommentRouter(Router *gin.RouterGroup) {
 	commentUserController := comment_user.NewCommentUserController()
 	commentLikeController := comment_user.NewCommentLikeController()
-	commentReportController := comment_user.NewCommentReportController()
 
 	// Private router
 	commentRouterPrivate := Router.Group("/comments")
@@ -44,12 +43,6 @@ func (cr *CommentRouter) InitCommentRouter(Router *gin.RouterGroup) {
 		commentRouterPrivate.GET("/like_comment/:comment_id",
 			helpers.ValidateQuery(&commentQuery.CommentLikeQueryObject{}, commentQuery.ValidateCommentLikeQueryObject),
 			commentLikeController.GetUserLikeComment,
-		)
-
-		// Comment report
-		commentRouterPrivate.POST("/report",
-			helpers.ValidateJsonBody(&commentRequest.ReportCommentRequest{}, commentRequest.ValidateReportCommentRequest),
-			commentReportController.ReportComment,
 		)
 	}
 }

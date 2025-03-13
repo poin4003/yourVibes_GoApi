@@ -1,13 +1,13 @@
 package revenue_admin
 
 import (
+	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	revenueServiceQuery "github.com/poin4003/yourVibes_GoApi/internal/application/revenue/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/revenue/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/revenue/revenue_admin/dto/response"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cRevenueAdmin struct{}

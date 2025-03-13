@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/services"
-	"github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 func AdminAuthProtected() gin.HandlerFunc {
@@ -19,6 +20,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 		// 1. Check authHeader
 		if authHeader == "" {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -26,6 +28,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -42,6 +45,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -49,12 +53,14 @@ func AdminAuthProtected() gin.HandlerFunc {
 		adminIdStr, ok := token.Claims.(jwt.MapClaims)["id"].(string)
 		if !ok {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
 		adminId, err := uuid.Parse(adminIdStr)
 		if err != nil {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
@@ -62,24 +68,28 @@ func AdminAuthProtected() gin.HandlerFunc {
 		adminStatus, err := services.AdminInfo().GetAdminStatusById(ctx, adminId)
 		if err != nil {
 			ctx.Error(response.NewServerFailedError())
+			ctx.Abort()
 			return
 		}
 
 		// 6. Check admin status
 		if !adminStatus {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
 		roleClaim, ok := token.Claims.(jwt.MapClaims)["role"]
 		if !ok {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 
 		role, ok := roleClaim.(bool)
 		if !ok {
 			ctx.Error(response.NewInvalidTokenError())
+			ctx.Abort()
 			return
 		}
 

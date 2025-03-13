@@ -2,6 +2,8 @@ package post_user
 
 import (
 	"context"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -12,8 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/pkg/utils/pointer"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -45,28 +45,28 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	createPostRequest, ok := body.(*request.CreatePostRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle create post
 	createPostCommand, err := createPostRequest.ToCreatePostCommand(userIdClaim, createPostRequest.Media)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -79,7 +79,7 @@ func (p *cPostUser) CreatePost(ctx *gin.Context) {
 	// 5. Map result to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	pkgResponse.OK(ctx, postDto)
+	response2.OK(ctx, postDto)
 }
 
 // UpdatePost documentation
@@ -101,14 +101,14 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	updatePostRequest, ok := body.(*request.UpdatePostRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -116,21 +116,21 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 4. Get userId from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 5. Call service to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -142,23 +142,23 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	}
 
 	// 7. Check post advertise privacy
-	if queryResult.Post.IsAdvertisement {
+	if queryResult.Post.IsAdvertisement == consts.IS_ADVERTISE {
 		if updatePostRequest.Privacy != pointer.Ptr(consts.PUBLIC) {
-			ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrAdMustBePublic, "You can't update privacy of advertise"))
+			ctx.Error(response2.NewCustomError(response2.ErrAdMustBePublic, "You can't update privacy of advertise"))
 			return
 		}
 	}
 
 	// 7. Get user id from token
 	if userIdClaim != queryResult.Post.UserId {
-		ctx.Error(pkgResponse.NewInvalidTokenError("You can not edit this post"))
+		ctx.Error(response2.NewInvalidTokenError("You can not edit this post"))
 		return
 	}
 
 	// 8. Call service to handle update post
 	updatePostCommand, err := updatePostRequest.ToUpdatePostCommand(&postId, updatePostRequest.Media)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -171,7 +171,7 @@ func (p *cPostUser) UpdatePost(ctx *gin.Context) {
 	// 9. Map to dto
 	postDto := response.ToPostDto(*result.Post)
 
-	pkgResponse.OK(ctx, postDto)
+	response2.OK(ctx, postDto)
 }
 
 // GetManyPost documentation
@@ -195,21 +195,21 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to PostQueryObject
 	postQueryObject, ok := queryInput.(*query.PostQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -228,7 +228,7 @@ func (p *cPostUser) GetManyPost(ctx *gin.Context) {
 		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, postDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, postDtos, *result.PagingResponse)
 }
 
 // GetPostById documentation
@@ -247,21 +247,21 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Call service to handle get one
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 	result, err := services.PostUser().GetPost(ctx, getOnePostQuery)
@@ -273,7 +273,7 @@ func (p *cPostUser) GetPostById(ctx *gin.Context) {
 	// 4. Map to Dto
 	postDto := response.ToPostWithLikedDto(*result.Post)
 
-	pkgResponse.OK(ctx, postDto)
+	response2.OK(ctx, postDto)
 }
 
 // DeletePost documentation
@@ -292,21 +292,21 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 	postIdStr := ctx.Param("post_id")
 	postId, err := uuid.Parse(postIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 3. Get post to check owner
 	getOnePostQuery, err := postRequest.ToGetOnePostQuery(postId, userIdClaim)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -318,7 +318,7 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 
 	// 4. Check owner
 	if userIdClaim != query_result.Post.UserId {
-		ctx.Error(pkgResponse.NewCustomError(pkgResponse.ErrInvalidToken, "you can not delete this post"))
+		ctx.Error(response2.NewCustomError(response2.ErrInvalidToken, "you can not delete this post"))
 		return
 	}
 
@@ -331,5 +331,5 @@ func (p *cPostUser) DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, postId)
+	response2.OK(ctx, postId)
 }

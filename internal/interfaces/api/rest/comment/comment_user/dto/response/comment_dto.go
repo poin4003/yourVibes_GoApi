@@ -1,9 +1,10 @@
 package response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
-	"time"
 )
 
 type CommentDto struct {
@@ -81,21 +82,5 @@ func ToCommentWithLikedDto(
 		UpdatedAt:       commentResult.UpdatedAt,
 		Status:          commentResult.Status,
 		IsLiked:         commentResult.IsLiked,
-	}
-}
-
-func ToCommentForReportDto(commentResult *common.CommentForReportResult) *CommentForReportDto {
-	return &CommentForReportDto{
-		ID:              commentResult.ID,
-		PostId:          commentResult.PostId,
-		UserId:          commentResult.UserId,
-		User:            ToUserForReportDto(commentResult.User),
-		ParentId:        commentResult.ParentId,
-		Content:         commentResult.Content,
-		LikeCount:       commentResult.LikeCount,
-		RepCommentCount: commentResult.RepCommentCount,
-		CreatedAt:       commentResult.CreatedAt,
-		UpdatedAt:       commentResult.UpdatedAt,
-		Status:          commentResult.Status,
 	}
 }

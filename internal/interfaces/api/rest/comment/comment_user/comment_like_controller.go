@@ -2,6 +2,7 @@ package comment_user
 
 import (
 	"fmt"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,7 +11,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/comment/comment_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cCommentLike struct{}
@@ -33,14 +33,14 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -55,7 +55,7 @@ func (p *cCommentLike) LikeComment(ctx *gin.Context) {
 	// 4. Map to dto
 	commentDto := response.ToCommentWithLikedDto(result.Comment)
 
-	pkgResponse.OK(ctx, commentDto)
+	response2.OK(ctx, commentDto)
 }
 
 // GetUserLikeComment documentation
@@ -73,14 +73,14 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to CommentLikeQueryObject
 	commentLikeQueryObject, ok := queryInput.(*query.CommentLikeQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -88,14 +88,14 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 	commentIdStr := ctx.Param("comment_id")
 	commentId, err := uuid.Parse(commentIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(fmt.Sprintf("invalid comment id: %s", commentIdStr)))
+		ctx.Error(response2.NewValidateError(fmt.Sprintf("invalid comment id: %s", commentIdStr)))
 		return
 	}
 
 	// 4. Call service to handle get user like comment
 	getUserLikeCommentQuery, err := commentLikeQueryObject.ToGetCommentLikeQuery(commentId)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -111,5 +111,5 @@ func (p *cCommentLike) GetUserLikeComment(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserDto(userResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }

@@ -669,262 +669,6 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/comments/report": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve comment report base on filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_comment_report"
-                ],
-                "summary": "Get a list of comment report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "reason to filter report",
-                        "name": "reason",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Filter by status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by creation day",
-                        "name": "created_at",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by user email",
-                        "name": "user_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by admin email",
-                        "name": "admin_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by from date",
-                        "name": "from_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by to date",
-                        "name": "to_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Sort in descending order",
-                        "name": "isDescending",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of results per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {}
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When user need to report comment break our rule",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "comment_report"
-                ],
-                "summary": "report comment",
-                "parameters": [
-                    {
-                        "description": "input",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.ReportCommentRequest"
-                        }
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/comments/report/activate/{comment_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to activate comment",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_comment_report"
-                ],
-                "summary": "activate comment account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "comment ID",
-                        "name": "comment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/comments/report/{user_id}/{reported_comment_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a comment report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_comment_report"
-                ],
-                "summary": "Get comment report detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported comment id",
-                        "name": "reported_comment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to delete report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_comment_report"
-                ],
-                "summary": "delete comment report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported comment id",
-                        "name": "reported_comment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to handle report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_comment_report"
-                ],
-                "summary": "handle comment report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported comment id",
-                        "name": "reported_comment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
         "/comments/{comment_id}": {
             "delete": {
                 "security": [
@@ -1237,262 +981,6 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/posts/report": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve post report base on filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_post_report"
-                ],
-                "summary": "Get a list of post report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "reason to filter report",
-                        "name": "reason",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Filter by status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by creation day",
-                        "name": "created_at",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by user email",
-                        "name": "user_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by admin email",
-                        "name": "admin_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by from date",
-                        "name": "from_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by to date",
-                        "name": "to_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Sort in descending order",
-                        "name": "isDescending",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of results per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {}
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When user need to report post break our rule",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post_report"
-                ],
-                "summary": "report post",
-                "parameters": [
-                    {
-                        "description": "input",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.ReportPostRequest"
-                        }
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/posts/report/activate/{post_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to activate post",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_post_report"
-                ],
-                "summary": "activate post account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "post ID",
-                        "name": "post_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/posts/report/{user_id}/{reported_post_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a post report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_post_report"
-                ],
-                "summary": "Get post report detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported post id",
-                        "name": "reported_post_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to delete report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_post_report"
-                ],
-                "summary": "delete post report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported post id",
-                        "name": "reported_post_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to handle report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_post_report"
-                ],
-                "summary": "handle post report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported post id",
-                        "name": "reported_post_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
         "/posts/share_post/{post_id}": {
             "post": {
                 "security": [
@@ -1652,6 +1140,283 @@ const docTemplate = `{
                         "description": "Array of media you want to upload",
                         "name": "media",
                         "in": "formData"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/report": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve report base on type and filter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_report"
+                ],
+                "summary": "Get a list of report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "type to get report",
+                        "name": "report_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "reason to filter report",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation day",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user email",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by reported user email",
+                        "name": "reported_user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by admin email",
+                        "name": "admin_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by from date",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by to date",
+                        "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort in descending order",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to report break our rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report"
+                ],
+                "summary": "report",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReportRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/report/activate/{report_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to activate user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_report"
+                ],
+                "summary": "activate user account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "report ID",
+                        "name": "report_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ActivateRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/report/handle_report/{report_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to handle report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_report"
+                ],
+                "summary": "handle report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Report id",
+                        "name": "report_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.HandleReportRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/report/{report_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_report"
+                ],
+                "summary": "Get report detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Report ID",
+                        "name": "report_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "type to get report",
+                        "name": "report_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/report/{reported_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to delete report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_report"
+                ],
+                "summary": "delete report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reported id",
+                        "name": "reported_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -2260,20 +2025,7 @@ const docTemplate = `{
                         "in": "query"
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/notifications/": {
@@ -2293,20 +2045,7 @@ const docTemplate = `{
                     "user_notification"
                 ],
                 "summary": "Update all notification status to false",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/notifications/ws/{user_id}": {
@@ -2322,20 +2061,7 @@ const docTemplate = `{
                     "user_notification"
                 ],
                 "summary": "Connect to WebSocket",
-                "responses": {
-                    "200": {
-                        "description": "WebSocket connection established",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/notifications/{notification_id}": {
@@ -2364,20 +2090,7 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.ResponseData"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/users/register/": {
@@ -2402,268 +2115,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.RegisterRequest"
                         }
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/users/report": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve users report base on filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_user_report"
-                ],
-                "summary": "Get a list of users report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "reason to filter report",
-                        "name": "reason",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Filter by status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by creation day",
-                        "name": "created_at",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by user email",
-                        "name": "user_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by reported user email",
-                        "name": "reported_user_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by admin email",
-                        "name": "admin_email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by from date",
-                        "name": "from_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by to date",
-                        "name": "to_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Sort in descending order",
-                        "name": "isDescending",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of results per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {}
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When user need to report someone break our rule",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_report"
-                ],
-                "summary": "report user",
-                "parameters": [
-                    {
-                        "description": "input",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.ReportUserRequest"
-                        }
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/users/report/activate/{user_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to activate user account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_user_report"
-                ],
-                "summary": "activate user account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/users/report/{user_id}/{reported_user_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a user report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_user_report"
-                ],
-                "summary": "Get user report detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported user id",
-                        "name": "reported_user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to delete report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_user_report"
-                ],
-                "summary": "delete user report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported user id",
-                        "name": "reported_user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "When admin need to handle report",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin_user_report"
-                ],
-                "summary": "handle user report",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Reported user id",
-                        "name": "reported_user_id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {}
@@ -2740,6 +2191,27 @@ const docTemplate = `{
                 "ANDROID",
                 "IOS"
             ]
+        },
+        "consts.ReportType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "USER_REPORT",
+                "POST_REPORT",
+                "COMMENT_REPORT"
+            ]
+        },
+        "request.ActivateRequest": {
+            "type": "object",
+            "properties": {
+                "report_type": {
+                    "$ref": "#/definitions/consts.ReportType"
+                }
+            }
         },
         "request.AdminLoginRequest": {
             "type": "object",
@@ -2905,6 +2377,14 @@ const docTemplate = `{
                 }
             }
         },
+        "request.HandleReportRequest": {
+            "type": "object",
+            "properties": {
+                "report_type": {
+                    "$ref": "#/definitions/consts.ReportType"
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -2955,36 +2435,17 @@ const docTemplate = `{
                 }
             }
         },
-        "request.ReportCommentRequest": {
+        "request.ReportRequest": {
             "type": "object",
             "properties": {
                 "reason": {
                     "type": "string"
                 },
-                "report_comment_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.ReportPostRequest": {
-            "type": "object",
-            "properties": {
-                "reason": {
+                "reported_id": {
                     "type": "string"
                 },
-                "report_post_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.ReportUserRequest": {
-            "type": "object",
-            "properties": {
-                "reason": {
-                    "type": "string"
-                },
-                "reported_user_id": {
-                    "type": "string"
+                "type": {
+                    "$ref": "#/definitions/consts.ReportType"
                 }
             }
         },
@@ -3040,71 +2501,11 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "response.ErrResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "$ref": "#/definitions/response.ErrResponseChild"
-                }
-            }
-        },
-        "response.ErrResponseChild": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "detail_err": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.PagingResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.ResponseData": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "Status code",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "Data"
-                },
-                "message": {
-                    "description": "Status message",
-                    "type": "string"
-                },
-                "paging": {
-                    "description": "Paging (optional)",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/response.PagingResponse"
-                        }
-                    ]
-                }
-            }
         }
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "Token without 'Bearer ' prefix",
+            "description": "Token with 'Bearer ' prefix",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
@@ -3115,7 +2516,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibesapi.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

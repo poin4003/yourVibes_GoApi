@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/response"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cUserAuth struct {
@@ -29,14 +29,14 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to verify email request
 	verifyEmailRequest, ok := body.(*request.VerifyEmailRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -47,7 +47,7 @@ func (c *cUserAuth) VerifyEmail(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // Register documentation
@@ -62,21 +62,21 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to registerRequest
 	registerRequest, ok := body.(*request.RegisterRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle register
 	registerCommand, err := registerRequest.ToRegisterCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -86,7 +86,7 @@ func (c *cUserAuth) Register(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // Login documentation
@@ -101,21 +101,21 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to loginRequest
 	loginRequest, ok := body.(*request.LoginRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid login request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid login request type"))
 		return
 	}
 
 	// 3. Call service to handle login
 	loginCommand, err := loginRequest.ToLoginCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -128,7 +128,7 @@ func (c *cUserAuth) Login(ctx *gin.Context) {
 	// 4. Convert to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkgResponse.OK(ctx, gin.H{
+	response2.OK(ctx, gin.H{
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})
@@ -146,21 +146,21 @@ func (c *cUserAuth) AuthGoogle(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to authGoogleRequest
 	authGoogleRequest, ok := body.(*request.AuthGoogleRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle auth google
 	authGoogleCommand, err := authGoogleRequest.ToAuthGoogleCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -173,7 +173,7 @@ func (c *cUserAuth) AuthGoogle(ctx *gin.Context) {
 	// 4. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkgResponse.OK(ctx, gin.H{
+	response2.OK(ctx, gin.H{
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})
@@ -192,28 +192,28 @@ func (c *cUserAuth) ChangePassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to change password request
 	changePasswordRequest, ok := body.(*request.ChangePasswordRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
 	// 4. Call service to handle change password
 	changePasswordCommand, err := changePasswordRequest.ToChangePasswordCommand(userIdClaim)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -223,7 +223,7 @@ func (c *cUserAuth) ChangePassword(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // GetOtpForgotUserPassword documentation
@@ -238,14 +238,14 @@ func (c *cUserAuth) GetOtpForgotUserPassword(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to get otp forgot user password request
 	getOtpForgotUserPasswordRequest, ok := body.(*request.GetOtpForgotUserPasswordRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -256,11 +256,11 @@ func (c *cUserAuth) GetOtpForgotUserPassword(ctx *gin.Context) {
 
 	err := services.UserAuth().GetOtpForgotUserPassword(ctx, getOtpForgotUserPasswordCommand)
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // ForgotUserPassword documentation
@@ -275,21 +275,21 @@ func (c *cUserAuth) ForgotUserPassword(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to forgot user password request
 	forgotUserPasswordRequest, ok := body.(*request.ForgotUserPasswordRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle forgot user password
 	forgotUserPasswordCommand, err := forgotUserPasswordRequest.ToForgotUserPasswordCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -299,7 +299,7 @@ func (c *cUserAuth) ForgotUserPassword(ctx *gin.Context) {
 		return
 	}
 
-	pkgResponse.OK(ctx, nil)
+	response2.OK(ctx, nil)
 }
 
 // AppAuthGoogle documentation
@@ -314,21 +314,21 @@ func (c *cUserAuth) AppAuthGoogle(ctx *gin.Context) {
 	// 1. Get body
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to appAuthGoogleRequest
 	authGoogleRequest, ok := body.(*request.AppAuthGoogleRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Call service to handle auth google
 	appAuthGoogleCommand, err := authGoogleRequest.ToAppAuthGoogleCommand()
 	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		ctx.Error(response2.NewServerFailedError(err.Error()))
 		return
 	}
 
@@ -341,7 +341,7 @@ func (c *cUserAuth) AppAuthGoogle(ctx *gin.Context) {
 	// 4. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkgResponse.OK(ctx, gin.H{
+	response2.OK(ctx, gin.H{
 		"access_token": result.AccessToken,
 		"user":         userDto,
 	})

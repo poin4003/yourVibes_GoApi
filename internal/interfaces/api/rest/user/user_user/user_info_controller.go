@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
 )
 
 type cUserInfo struct{}
@@ -33,14 +33,14 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 	userIdStr := ctx.Param("userId")
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
 	// 2. Get userId from jwt
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		ctx.Error(response2.NewValidateError(err.Error()))
 		return
 	}
 
@@ -56,7 +56,7 @@ func (c *cUserInfo) GetInfoByUserId(ctx *gin.Context) {
 	// 4. Map to dto
 	userDto := response.ToUserWithoutSettingDto(result.User)
 
-	pkgResponse.SuccessResponse(ctx, result.ResultCode, userDto)
+	response2.SuccessResponse(ctx, result.ResultCode, userDto)
 }
 
 // GetManyUsers documentation
@@ -80,14 +80,14 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
 		return
 	}
 
 	// 2. Convert to userQueryObject
 	userQueryObject, ok := queryInput.(*query.UserQueryObject)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
@@ -105,7 +105,7 @@ func (c *cUserInfo) GetManyUsers(ctx *gin.Context) {
 		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
 	}
 
-	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
+	response2.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }
 
 // UpdateUser godoc
@@ -129,21 +129,21 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	// 1. Get body from form
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validated request"))
+		ctx.Error(response2.NewServerFailedError("Missing validated request"))
 		return
 	}
 
 	// 2. Convert to updateUserRequest
 	updateUserRequest, ok := body.(*request.UpdateUserRequest)
 	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
 		return
 	}
 
 	// 3. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
 	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
 		return
 	}
 
@@ -158,5 +158,5 @@ func (*cUserInfo) UpdateUser(ctx *gin.Context) {
 	// 6. Map to dto
 	userDto := response.ToUserWithSettingDto(result.User)
 
-	pkgResponse.OK(ctx, userDto)
+	response2.OK(ctx, userDto)
 }

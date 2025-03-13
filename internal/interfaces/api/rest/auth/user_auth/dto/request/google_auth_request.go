@@ -22,7 +22,7 @@ func ValidateAuthGoogleRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.AuthorizationCode, validation.Required),
-		validation.Field(&dto.Platform, validation.Required, validation.In(consts.WEB, consts.ANDROID, consts.IOS)),
+		validation.Field(&dto.Platform, validation.Required, validation.In(consts.Platforms...)),
 		validation.Field(&dto.RedirectUrl, validation.Required),
 	)
 }

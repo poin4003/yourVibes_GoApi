@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	pkgResponse "github.com/poin4003/yourVibes_GoApi/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
 
 func ErrorHandlerMiddleware() gin.HandlerFunc {
@@ -10,7 +10,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		defer func() {
 			if rec := recover(); rec != nil {
 				// If server panic return 500
-				pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed)
+				response.ErrorResponse(ctx, response.ErrServerFailed)
 				ctx.Abort()
 			}
 		}()
@@ -19,12 +19,11 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 
 		// If context has a error
 		if len(ctx.Errors) > 0 {
-			for _, err := range ctx.Errors {
-				if customErr, ok := err.Err.(pkgResponse.CustomError); ok {
-					pkgResponse.ErrorResponse(ctx, customErr.Code)
-				} else {
-					pkgResponse.ErrorResponse(ctx, pkgResponse.ErrServerFailed, customErr.MessageDetail)
-				}
+			lastErr := ctx.Errors.Last()
+			if customErr, ok := lastErr.Err.(response.CustomError); ok {
+				response.ErrorResponse(ctx, customErr.Code, customErr.MessageDetail)
+			} else {
+				response.ErrorResponse(ctx, response.ErrServerFailed, lastErr.Error())
 			}
 			ctx.Abort()
 		}

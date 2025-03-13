@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/server/main.go",
-            "env": {}, 
+            "env": {"YOURVIBES_SERVER_CONFIG_FILE":"dev"}, 
             "args": [],
             "cwd": "${workspaceFolder}"
         }

@@ -1,10 +1,11 @@
 package entities
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type Setting struct {
@@ -25,7 +26,7 @@ type SettingUpdate struct {
 func (s *Setting) ValidateSetting() error {
 	return validation.ValidateStruct(s,
 		validation.Field(&s.UserId, validation.Required),
-		validation.Field(&s.Language, validation.Required, validation.In(consts.VI, consts.EN)),
+		validation.Field(&s.Language, validation.Required, validation.In(consts.Languages...)),
 		validation.Field(&s.Status, validation.Required),
 		validation.Field(&s.CreatedAt, validation.Required),
 		validation.Field(&s.UpdatedAt, validation.Required, validation.Min(s.CreatedAt)),
@@ -34,7 +35,7 @@ func (s *Setting) ValidateSetting() error {
 
 func (s *SettingUpdate) ValidateSettingUpdate() error {
 	return validation.ValidateStruct(s,
-		validation.Field(&s.Language, validation.In(consts.VI, consts.EN)),
+		validation.Field(&s.Language, validation.In(consts.Languages...)),
 	)
 }
 

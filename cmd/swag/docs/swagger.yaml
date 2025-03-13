@@ -10,6 +10,21 @@ definitions:
     - WEB
     - ANDROID
     - IOS
+  consts.ReportType:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - USER_REPORT
+    - POST_REPORT
+    - COMMENT_REPORT
+  request.ActivateRequest:
+    properties:
+      report_type:
+        $ref: '#/definitions/consts.ReportType'
+    type: object
   request.AdminLoginRequest:
     properties:
       email:
@@ -117,6 +132,11 @@ definitions:
       email:
         type: string
     type: object
+  request.HandleReportRequest:
+    properties:
+      report_type:
+        $ref: '#/definitions/consts.ReportType'
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -152,26 +172,14 @@ definitions:
     - password
     - phone_number
     type: object
-  request.ReportCommentRequest:
+  request.ReportRequest:
     properties:
       reason:
         type: string
-      report_comment_id:
+      reported_id:
         type: string
-    type: object
-  request.ReportPostRequest:
-    properties:
-      reason:
-        type: string
-      report_post_id:
-        type: string
-    type: object
-  request.ReportUserRequest:
-    properties:
-      reason:
-        type: string
-      reported_user_id:
-        type: string
+      type:
+        $ref: '#/definitions/consts.ReportType'
     type: object
   request.UpdateAdminForSuperAdminRequest:
     properties:
@@ -207,45 +215,7 @@ definitions:
     required:
     - email
     type: object
-  response.ErrResponse:
-    properties:
-      error:
-        $ref: '#/definitions/response.ErrResponseChild'
-    type: object
-  response.ErrResponseChild:
-    properties:
-      code:
-        type: integer
-      detail_err:
-        type: string
-      message:
-        type: string
-    type: object
-  response.PagingResponse:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
-  response.ResponseData:
-    properties:
-      code:
-        description: Status code
-        type: integer
-      data:
-        description: Data
-      message:
-        description: Status message
-        type: string
-      paging:
-        allOf:
-        - $ref: '#/definitions/response.PagingResponse'
-        description: Paging (optional)
-    type: object
-host: yourvibesapi.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -715,172 +685,6 @@ paths:
       summary: Like comment
       tags:
       - like_comment
-  /comments/report:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve comment report base on filters
-      parameters:
-      - description: reason to filter report
-        in: query
-        name: reason
-        type: string
-      - description: Filter by status
-        in: query
-        name: status
-        type: boolean
-      - description: Filter by creation day
-        in: query
-        name: created_at
-        type: string
-      - description: Filter by user email
-        in: query
-        name: user_email
-        type: string
-      - description: Filter by admin email
-        in: query
-        name: admin_email
-        type: string
-      - description: Filter by from date
-        in: query
-        name: from_date
-        type: string
-      - description: Filter by to date
-        in: query
-        name: to_date
-        type: string
-      - description: Sort by field
-        in: query
-        name: sort_by
-        type: string
-      - description: Sort in descending order
-        in: query
-        name: isDescending
-        type: boolean
-      - description: Number of results per page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get a list of comment report
-      tags:
-      - admin_comment_report
-    post:
-      consumes:
-      - application/json
-      description: When user need to report comment break our rule
-      parameters:
-      - description: input
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/request.ReportCommentRequest'
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: report comment
-      tags:
-      - comment_report
-  /comments/report/{user_id}/{reported_comment_id}:
-    delete:
-      consumes:
-      - application/json
-      description: When admin need to delete report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported comment id
-        in: path
-        name: reported_comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: delete comment report
-      tags:
-      - admin_comment_report
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a comment report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported comment id
-        in: path
-        name: reported_comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get comment report detail
-      tags:
-      - admin_comment_report
-    patch:
-      consumes:
-      - application/json
-      description: When admin need to handle report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported comment id
-        in: path
-        name: reported_comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: handle comment report
-      tags:
-      - admin_comment_report
-  /comments/report/activate/{comment_id}:
-    patch:
-      consumes:
-      - application/json
-      description: When admin need to activate comment
-      parameters:
-      - description: comment ID
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: activate comment account
-      tags:
-      - admin_comment_report
   /posts/:
     get:
       consumes:
@@ -1113,12 +917,48 @@ paths:
       summary: DeleteNewFeeds
       tags:
       - post_new_feed
-  /posts/report:
+  /posts/share_post/{post_id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: When user want to share post of another user post's
+      parameters:
+      - description: PostId
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Content of the post
+        in: formData
+        name: content
+        type: string
+      - description: Privacy level
+        in: formData
+        name: privacy
+        type: string
+      - description: Location of the post
+        in: formData
+        name: location
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: share post
+      tags:
+      - post_share
+  /report:
     get:
       consumes:
       - application/json
-      description: Retrieve post report base on filters
+      description: Retrieve report base on type and filter
       parameters:
+      - description: type to get report
+        in: query
+        name: report_type
+        required: true
+        type: string
       - description: reason to filter report
         in: query
         name: reason
@@ -1134,6 +974,10 @@ paths:
       - description: Filter by user email
         in: query
         name: user_email
+        type: string
+      - description: Filter by reported user email
+        in: query
+        name: reported_user_email
         type: string
       - description: Filter by admin email
         in: query
@@ -1168,42 +1012,61 @@ paths:
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: Get a list of post report
+      summary: Get a list of report
       tags:
-      - admin_post_report
+      - admin_report
     post:
       consumes:
       - application/json
-      description: When user need to report post break our rule
+      description: When user need to report break our rule
       parameters:
       - description: input
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/request.ReportPostRequest'
+          $ref: '#/definitions/request.ReportRequest'
       produces:
       - application/json
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: report post
+      summary: report
       tags:
-      - post_report
-  /posts/report/{user_id}/{reported_post_id}:
+      - report
+  /report/{report_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a report
+      parameters:
+      - description: Report ID
+        in: path
+        name: report_id
+        required: true
+        type: string
+      - description: type to get report
+        in: query
+        name: report_type
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get report detail
+      tags:
+      - admin_report
+  /report/{reported_id}:
     delete:
       consumes:
       - application/json
       description: When admin need to delete report
       parameters:
-      - description: User ID
+      - description: Reported id
         in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported post id
-        in: path
-        name: reported_post_id
+        name: reported_id
         required: true
         type: string
       produces:
@@ -1211,105 +1074,59 @@ paths:
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: delete post report
+      summary: delete report
       tags:
-      - admin_post_report
-    get:
+      - admin_report
+  /report/activate/{report_id}:
+    patch:
       consumes:
       - application/json
-      description: Retrieve a post report
+      description: When admin need to activate user account
       parameters:
-      - description: User ID
+      - description: report ID
         in: path
-        name: user_id
+        name: report_id
         required: true
         type: string
-      - description: Reported post id
-        in: path
-        name: reported_post_id
+      - description: input
+        in: body
+        name: input
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/request.ActivateRequest'
       produces:
       - application/json
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: Get post report detail
+      summary: activate user account
       tags:
-      - admin_post_report
+      - admin_report
+  /report/handle_report/{report_id}:
     patch:
       consumes:
       - application/json
       description: When admin need to handle report
       parameters:
-      - description: User ID
+      - description: Report id
         in: path
-        name: user_id
+        name: report_id
         required: true
         type: string
-      - description: Reported post id
-        in: path
-        name: reported_post_id
+      - description: input
+        in: body
+        name: input
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/request.HandleReportRequest'
       produces:
       - application/json
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: handle post report
+      summary: handle report
       tags:
-      - admin_post_report
-  /posts/report/activate/{post_id}:
-    patch:
-      consumes:
-      - application/json
-      description: When admin need to activate post
-      parameters:
-      - description: post ID
-        in: path
-        name: post_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: activate post account
-      tags:
-      - admin_post_report
-  /posts/share_post/{post_id}:
-    post:
-      consumes:
-      - multipart/form-data
-      description: When user want to share post of another user post's
-      parameters:
-      - description: PostId
-        in: path
-        name: post_id
-        required: true
-        type: string
-      - description: Content of the post
-        in: formData
-        name: content
-        type: string
-      - description: Privacy level
-        in: formData
-        name: privacy
-        type: string
-      - description: Location of the post
-        in: formData
-        name: location
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: share post
-      tags:
-      - post_share
+      - admin_report
   /revenue/monthly_revenue:
     get:
       consumes:
@@ -1715,15 +1532,7 @@ paths:
         type: integer
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get notifications
@@ -1735,15 +1544,7 @@ paths:
       - application/json
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Update all notification status to false
@@ -1761,15 +1562,7 @@ paths:
         type: string
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseData'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       summary: Update notification status to false
@@ -1782,15 +1575,7 @@ paths:
       description: Establish a WebSocket connection for real-time notifications
       produces:
       - application/json
-      responses:
-        "200":
-          description: WebSocket connection established
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrResponse'
+      responses: {}
       summary: Connect to WebSocket
       tags:
       - user_notification
@@ -1812,176 +1597,6 @@ paths:
       summary: User Registration
       tags:
       - user_auth
-  /users/report:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve users report base on filters
-      parameters:
-      - description: reason to filter report
-        in: query
-        name: reason
-        type: string
-      - description: Filter by status
-        in: query
-        name: status
-        type: boolean
-      - description: Filter by creation day
-        in: query
-        name: created_at
-        type: string
-      - description: Filter by user email
-        in: query
-        name: user_email
-        type: string
-      - description: Filter by reported user email
-        in: query
-        name: reported_user_email
-        type: string
-      - description: Filter by admin email
-        in: query
-        name: admin_email
-        type: string
-      - description: Filter by from date
-        in: query
-        name: from_date
-        type: string
-      - description: Filter by to date
-        in: query
-        name: to_date
-        type: string
-      - description: Sort by field
-        in: query
-        name: sort_by
-        type: string
-      - description: Sort in descending order
-        in: query
-        name: isDescending
-        type: boolean
-      - description: Number of results per page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get a list of users report
-      tags:
-      - admin_user_report
-    post:
-      consumes:
-      - application/json
-      description: When user need to report someone break our rule
-      parameters:
-      - description: input
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/request.ReportUserRequest'
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: report user
-      tags:
-      - user_report
-  /users/report/{user_id}/{reported_user_id}:
-    delete:
-      consumes:
-      - application/json
-      description: When admin need to delete report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported user id
-        in: path
-        name: reported_user_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: delete user report
-      tags:
-      - admin_user_report
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a user report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported user id
-        in: path
-        name: reported_user_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get user report detail
-      tags:
-      - admin_user_report
-    patch:
-      consumes:
-      - application/json
-      description: When admin need to handle report
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Reported user id
-        in: path
-        name: reported_user_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: handle user report
-      tags:
-      - admin_user_report
-  /users/report/activate/{user_id}:
-    patch:
-      consumes:
-      - application/json
-      description: When admin need to activate user account
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: activate user account
-      tags:
-      - admin_user_report
   /users/verifyemail/:
     post:
       consumes:
@@ -2002,7 +1617,7 @@ paths:
       - user_auth
 securityDefinitions:
   ApiKeyAuth:
-    description: Token without 'Bearer ' prefix
+    description: Token with 'Bearer ' prefix
     in: header
     name: Authorization
     type: apiKey

@@ -25,7 +25,7 @@ func ValidateUpdatePostRequest(req interface{}) error {
 		return fmt.Errorf("validate CreatePostRequest failed")
 	}
 
-	if dto.Media != nil && len(dto.Media) > 0 {
+	if dto.Media != nil {
 		for _, fileHeader := range dto.Media {
 			if err := validateMediaForUpdate(&fileHeader); err != nil {
 				return err
@@ -35,7 +35,7 @@ func ValidateUpdatePostRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.Content, validation.Length(2, 1000)),
-		validation.Field(&dto.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+		validation.Field(&dto.Privacy, validation.In(consts.PrivacyLevels...)),
 	)
 }
 

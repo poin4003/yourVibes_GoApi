@@ -1,10 +1,11 @@
 package entities
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	"time"
 )
 
 type Post struct {
@@ -18,7 +19,7 @@ type Post struct {
 	CommentCount    int
 	Privacy         consts.PrivacyLevel
 	Location        string
-	IsAdvertisement bool
+	IsAdvertisement consts.AdvertiseStatus
 	Status          bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -36,7 +37,7 @@ type PostWithLiked struct {
 	CommentCount    int
 	Privacy         consts.PrivacyLevel
 	Location        string
-	IsAdvertisement bool
+	IsAdvertisement consts.AdvertiseStatus
 	Status          bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -50,45 +51,29 @@ type PostUpdate struct {
 	CommentCount    *int
 	Privacy         *consts.PrivacyLevel
 	Location        *string
-	IsAdvertisement *bool
+	IsAdvertisement *consts.AdvertiseStatus
 	Status          *bool
 	UpdatedAt       *time.Time
-}
-
-type PostForReport struct {
-	ID              uuid.UUID
-	UserId          uuid.UUID
-	User            *UserForReport
-	ParentId        *uuid.UUID
-	ParentPost      *PostForReport
-	Content         string
-	LikeCount       int
-	CommentCount    int
-	Privacy         consts.PrivacyLevel
-	Location        string
-	IsAdvertisement bool
-	Status          bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Media           []*Media
 }
 
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.Length(2, 1000)),
-		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+		validation.Field(&p.Privacy, validation.In(consts.Languages...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
 		validation.Field(&p.UpdatedAt, validation.Min(p.CreatedAt)),
+		validation.Field(&p.IsAdvertisement, validation.In(consts.AdvertiseStatusList...)),
 	)
 }
 
 func (p *PostUpdate) ValidatePostUpdate() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.Length(2, 1000)),
-		validation.Field(&p.Privacy, validation.In(consts.PRIVATE, consts.PUBLIC, consts.FRIEND_ONLY)),
+		validation.Field(&p.Privacy, validation.In(consts.Languages...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
+		validation.Field(&p.IsAdvertisement, validation.In(consts.AdvertiseStatusList...)),
 	)
 }
 
@@ -106,7 +91,7 @@ func NewPost(
 		CommentCount:    0,
 		Privacy:         privacy,
 		Location:        location,
-		IsAdvertisement: false,
+		IsAdvertisement: consts.NOT_ADVERTISE,
 		Status:          true,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
@@ -134,7 +119,7 @@ func NewPostForShare(
 		ParentId:        parentId,
 		Privacy:         privacy,
 		Location:        location,
-		IsAdvertisement: false,
+		IsAdvertisement: consts.NOT_ADVERTISE,
 		Status:          true,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
