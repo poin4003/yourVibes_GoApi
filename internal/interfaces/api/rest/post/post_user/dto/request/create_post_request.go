@@ -34,7 +34,7 @@ func ValidateCreatePostRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.Content, validation.Length(2, 1000)),
-		validation.Field(&dto.Privacy, validation.In(consts.FriendTypes...)),
+		validation.Field(&dto.Privacy, validation.In(consts.PrivacyLevels...)),
 	)
 }
 
