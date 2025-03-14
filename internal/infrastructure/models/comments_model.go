@@ -13,7 +13,7 @@ type Comment struct {
 	Post            *Post          `gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	UserId          uuid.UUID      `gorm:"type:uuid;not null"`
 	User            User           `gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	ParentId        *uuid.UUID     `gorm:"type:uuid;default:null"`
+	ParentId        *uuid.UUID     `gorm:"type:uuid;default:null;index"`
 	ParentComment   *Comment       `gorm:"foreignKey:ParentId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Content         string         `gorm:"type:text;not null"`
 	LikeCount       int            `gorm:"type:int;default:0"`

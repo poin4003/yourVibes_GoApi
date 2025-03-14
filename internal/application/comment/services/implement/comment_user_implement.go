@@ -152,79 +152,10 @@ func (s *sCommentUser) DeleteComment(
 	ctx context.Context,
 	command *commentCommand.DeleteCommentCommand,
 ) error {
-	// 1. Find comment
-	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
+	err := s.commentRepo.DeleteCommentAndChildComment(ctx, command.CommentId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
-
-	if commentFound == nil {
-		return response.NewDataNotFoundError("comment not found")
-	}
-
-	// 2. Find post
-	postFound, err := s.postRepo.GetById(ctx, commentFound.PostId)
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	if postFound == nil {
-		return response.NewDataNotFoundError("post not found")
-	}
-
-	// 3. Delete all child comment
-	deletedCommentCount, err := s.commentRepo.DeleteCommentAndChildComment(ctx, commentFound.ID)
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	updatePost := &postEntity.PostUpdate{
-		CommentCount: pointer.Ptr(postFound.CommentCount - int(deletedCommentCount)),
-	}
-
-	err = updatePost.ValidatePostUpdate()
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePost)
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	if commentFound.ParentId == nil {
-		return nil
-	}
-
-	// 5. Update rep_comment_count of parent comment -1
-	parentCommentFound, err := s.commentRepo.GetById(ctx, *commentFound.ParentId)
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	if parentCommentFound == nil {
-		return response.NewDataNotFoundError("parent comment not found")
-	}
-
-	updateParentCommentData := commentEntity.CommentUpdate{
-		RepCommentCount: pointer.Ptr(parentCommentFound.RepCommentCount - 1),
-	}
-
-	err = updateParentCommentData.ValidateCommentUpdate()
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	_, err = s.commentRepo.UpdateOne(ctx, parentCommentFound.ID, &updateParentCommentData)
-
-	if err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
-
-	// 6. Delete comment report
-	// if err = s.commentReportRepor.DeleteByCommentId(ctx, command.CommentId); err != nil {
-	// 	return response.NewServerFailedError(err.Error())
-	// }
 
 	return nil
 }

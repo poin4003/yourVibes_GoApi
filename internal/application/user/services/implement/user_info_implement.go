@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 
@@ -57,6 +58,7 @@ func (s *sUserInfo) GetInfoByUserId(
 	// 2. Return if user fetches his own information
 	if query.AuthenticatedUserId == query.UserId {
 		result.User = userMapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
+		result.ResultCode = response2.ErrCodeSuccess
 		return result, nil
 	}
 

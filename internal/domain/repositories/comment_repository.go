@@ -19,7 +19,7 @@ type (
 		DeleteMany(ctx context.Context, condition map[string]interface{}) (int64, error)
 		GetOne(ctx context.Context, query interface{}, args ...interface{}) (*entities.Comment, error)
 		GetMany(ctx context.Context, query *query.GetManyCommentQuery) ([]*entities.Comment, *response.PagingResponse, error)
-		DeleteCommentAndChildComment(ctx context.Context, commentId uuid.UUID) (int64, error)
+		DeleteCommentAndChildComment(ctx context.Context, commentId uuid.UUID) error
 	}
 	ILikeUserCommentRepository interface {
 		CreateLikeUserComment(ctx context.Context, entity *entities.LikeUserComment) error

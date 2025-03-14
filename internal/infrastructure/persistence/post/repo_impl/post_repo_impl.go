@@ -125,12 +125,14 @@ func (r *rPost) DeleteOne(
 		// 1. Check if post exists
 		if err := tx.WithContext(ctx).
 			Model(postFound).
-			First(postFound, "id = ?", id).
+			Where("id = ?", id).
+			Select("id, user_id").
+			First(postFound).
 			Error; err != nil {
 			if errors.Is(gorm.ErrRecordNotFound, err) {
-				return nil
+				return response.NewDataNotFoundError(err.Error())
 			}
-			return err
+			return response.NewServerFailedError(err.Error())
 		}
 
 		// 2. Delete related reports
@@ -146,8 +148,46 @@ func (r *rPost) DeleteOne(
 			return response.NewServerFailedError(result.Error.Error())
 		}
 
-		// 3. Delete post
-		if err := r.db.WithContext(ctx).
+		// 3. Update postCount -1 in User table
+		if err := tx.WithContext(ctx).
+			Model(&models.User{}).
+			Where("id = ?", postFound.UserId).
+			Update("post_count", gorm.Expr("post_count - ?", 1)).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// 4. Delete related comment
+		commentResult := tx.WithContext(ctx).
+			Model(&models.Comment{}).
+			Where("post_id = ?", id).
+			Delete(&models.Comment{})
+
+		if commentResult.Error != nil {
+			return response.NewServerFailedError(commentResult.Error.Error())
+		}
+
+		// 5. Delete related report (Comment report)
+		if commentResult.RowsAffected > 0 {
+			commentReportResult := tx.WithContext(ctx).
+				Where("id IN (?)",
+					tx.Model(&models.CommentReport{}).
+						Select("report_id").
+						Where("reported_comment_id IN (?)",
+							tx.Model(&models.Comment{}).
+								Select("id").
+								Where("post_id = ?", id),
+						),
+				).
+				Delete(&models.Report{})
+
+			if commentReportResult.Error != nil {
+				return response.NewServerFailedError(commentReportResult.Error.Error())
+			}
+		}
+
+		// 6. Delete post
+		if err := tx.WithContext(ctx).
 			Delete(&models.Post{}, "id = ?", id).
 			Error; err != nil {
 			return err

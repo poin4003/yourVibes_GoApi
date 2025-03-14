@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 
@@ -212,7 +213,7 @@ func (r *rComment) GetMany(
 	offset := (page - 1) * limit
 
 	if err := db.Offset(offset).Limit(limit).
-		Order("comment_left ASC").
+		Order("created_at ASC").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
@@ -257,28 +258,86 @@ func (r *rComment) GetMany(
 func (r *rComment) DeleteCommentAndChildComment(
 	ctx context.Context,
 	commentId uuid.UUID,
-) (int64, error) {
-	var deleteCount int64
+) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Find comment
+		comment := &models.Comment{}
+		if err := tx.WithContext(ctx).
+			Model(comment).
+			Where("id = ?", commentId).
+			Select("id, parent_id, post_id").
+			First(comment).
+			Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.NewDataNotFoundError(err.Error())
+			}
+			return response.NewServerFailedError(err.Error())
+		}
 
-	tx := r.db.WithContext(ctx).Exec(`
-		WITH RECURSIVE cte AS (
-			SELECT id FROM comments WHERE id = ?
-			UNION ALL
-			SELECT c.id FROM comments c INNER JOIN cte ON c.parent_id = cte.id
-		)
-		UPDATE comments 
-		SET deleted_at = NOW() 
-		WHERE id IN (SELECT id FROM cte) AND deleted_at IS NULL;
-	`, commentId)
+		// 2. Update -1 in parent comment
+		if comment.ParentId != nil {
+			if err := tx.WithContext(ctx).
+				Model(&models.Comment{}).
+				Where("id = ?", comment.ParentId).
+				Update("rep_comment_count", gorm.Expr("rep_comment_count - ?", 1)).
+				Error; err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+		}
 
-	if tx.Error != nil {
-		return 0, tx.Error
-	}
+		// 3. Delete comment and child comment
+		result := tx.WithContext(ctx).Exec(`
+			WITH RECURSIVE cte AS (
+				SELECT id FROM comments WHERE id = ?
+				UNION ALL
+				SELECT c.id FROM comments c INNER JOIN cte ON c.parent_id = cte.id
+			)
+			UPDATE comments 
+			SET deleted_at = NOW() 
+			WHERE id IN (SELECT id FROM cte) AND deleted_at IS NULL;
+		`, commentId)
 
-	deleteCount = tx.RowsAffected
-	if deleteCount == 0 {
-		return 0, errors.New("no comments found to delete")
-	}
+		if result.Error != nil {
+			return result.Error
+		}
 
-	return deleteCount, nil
+		if result.RowsAffected == 0 {
+			return errors.New("no comments found to delete")
+		}
+
+		// 4. Delete related reports (CommentReport)
+		if result.RowsAffected > 0 {
+			commentReportResult := tx.WithContext(ctx).
+				Where("id IN (?)",
+					tx.Model(&models.CommentReport{}).
+						Select("report_id").
+						Where("reported_comment_id IN (?)",
+							tx.Raw(`
+                                WITH RECURSIVE cte AS (
+                                    SELECT id FROM comments WHERE id = ?
+                                    UNION ALL
+                                    SELECT c.id FROM comments c INNER JOIN cte ON c.parent_id = cte.id
+                                )
+                                SELECT id FROM cte
+                            `, commentId),
+						),
+				).
+				Delete(&models.Report{})
+
+			if commentReportResult.Error != nil {
+				return response.NewServerFailedError(commentReportResult.Error.Error())
+			}
+		}
+
+		// 5. Update commentCount in post table
+		if err := tx.WithContext(ctx).
+			Model(&models.Post{}).
+			Where("id = ?", comment.PostId).
+			Update("comment_count", gorm.Expr("comment_count - ?", result.RowsAffected)).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		return nil
+	})
 }

@@ -2,9 +2,9 @@ package implement
 
 import (
 	"context"
+
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -330,34 +330,9 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 5. Delete post
-	post, err := s.postRepo.DeleteOne(ctx, *command.PostId)
+	_, err = s.postRepo.DeleteOne(ctx, *command.PostId)
 	if err != nil {
-		return response2.NewServerFailedError(err.Error())
-	}
-
-	// 6. Find user
-	userFound, err := s.userRepo.GetOne(ctx, "id=?", post.UserId)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
-	}
-
-	if userFound == nil {
-		return response2.NewDataNotFoundError("user not found")
-	}
-
-	// 7. Update post count of user
-	userFound.PostCount--
-
-	userUpdateEntity := &userEntity.UserUpdate{PostCount: pointer.Ptr(userFound.PostCount)}
-
-	err = userUpdateEntity.ValidateUserUpdate()
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
-	}
-
-	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdateEntity)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+		return err
 	}
 
 	return nil
