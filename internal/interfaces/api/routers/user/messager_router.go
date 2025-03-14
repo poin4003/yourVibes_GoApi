@@ -35,7 +35,7 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 	messageRouter := Router.Group("/messages")
 	messageRouter.Use(middlewares.UserAuthProtected())
 	{
-		messageRouter.POST("/create_message",
+		messageRouter.POST("/",
 			helpers.ValidateJsonBody(&conversationRequest.CreateMessageRequest{}, conversationRequest.ValidateCreateMessageRequest),
 			useMessageController.CreateMessage)
 

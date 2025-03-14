@@ -18,6 +18,15 @@ func NewMessageController() *cMessage {
 	return &cMessage{}
 }
 
+// CreateMessage documentation
+// @Summary Message create Message
+// @Description When user create message
+// @Tags message
+// @Accept json
+// @Produce json
+// @Param input body request.CreateMessageRequest true "input"
+// @Security ApiKeyAuth
+// @Router /messages/ [post]
 func (m *cMessage) CreateMessage(ctx *gin.Context) {
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
@@ -55,6 +64,15 @@ func (m *cMessage) CreateMessage(ctx *gin.Context) {
 
 }
 
+// GetMessageById documentation
+// @Summary Get message by ID
+// @Description Retrieve a message by its unique ID
+// @Tags message
+// @Accept json
+// @Produce json
+// @Param messageId path string true "Message ID"
+// @Security ApiKeyAuth
+// @Router /messages/message/{messageId} [get]
 func (m *cMessage) GetMessageById(ctx *gin.Context) {
 	messageIdStr := ctx.Param("messageId")
 	messageId, err := uuid.Parse(messageIdStr)
@@ -74,18 +92,23 @@ func (m *cMessage) GetMessageById(ctx *gin.Context) {
 	pkgResponse.OK(ctx, messageDto)
 }
 
+// GetMessagesByConversationId documentation
+// @Summary Get messages by conversation ID
+// @Description Retrieve messages by conversation ID
+// @Tags message
+// @Accept json
+// @Produce json
+// @Param conversation_id query string true "ConversationId"
+// @Param page query int false "Page"
+// @Param limit query int false "Limit"
+// @Security ApiKeyAuth
+// @Router /messages/get_by_conversation_id [get]
 func (m *cMessage) GetMessagesByConversationId(ctx *gin.Context) {
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
 		ctx.Error(pkgResponse.NewValidateError("Missing validateQuery request"))
 		return
 	}
-	// conversationStr := ctx.Param("conversationId")
-	// conversationId, err := uuid.Parse(conversationStr)
-	// if err != nil {
-	// 	ctx.Error(pkgResponse.NewValidateError(err.Error()))
-	// 	return
-	// }
 
 	MessagesByConversationIdQuery, ok := queryInput.(*query.MessageObject)
 	if !ok {
