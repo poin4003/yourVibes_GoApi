@@ -59,7 +59,7 @@ type PostUpdate struct {
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.Length(2, 1000)),
-		validation.Field(&p.Privacy, validation.In(consts.Languages...)),
+		validation.Field(&p.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
 		validation.Field(&p.UpdatedAt, validation.Min(p.CreatedAt)),
@@ -70,7 +70,7 @@ func (p *Post) ValidatePost() error {
 func (p *PostUpdate) ValidatePostUpdate() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.Length(2, 1000)),
-		validation.Field(&p.Privacy, validation.In(consts.Languages...)),
+		validation.Field(&p.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
 		validation.Field(&p.IsAdvertisement, validation.In(consts.AdvertiseStatusList...)),
