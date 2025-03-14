@@ -118,6 +118,15 @@ definitions:
       user_id:
         type: string
     type: object
+  request.CreateMessageRequest:
+    properties:
+      content:
+        type: string
+      conversation_id:
+        type: string
+      parent_id:
+        type: string
+    type: object
   request.ForgotAdminPasswordRequest:
     properties:
       email:
@@ -838,6 +847,72 @@ paths:
       summary: Get conversation by ID
       tags:
       - conversation
+  /messages/:
+    post:
+      consumes:
+      - application/json
+      description: When user create message
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateMessageRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Message create Message
+      tags:
+      - message
+  /messages/get_by_conversation_id:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve messages by conversation ID
+      parameters:
+      - description: ConversationId
+        in: query
+        name: conversation_id
+        required: true
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get messages by conversation ID
+      tags:
+      - message
+  /messages/message/{messageId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a message by its unique ID
+      parameters:
+      - description: Message ID
+        in: path
+        name: messageId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get message by ID
+      tags:
+      - message
   /posts/:
     get:
       consumes:
