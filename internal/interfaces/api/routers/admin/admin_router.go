@@ -32,7 +32,7 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 
 	// Private router
 	adminRouterPrivate := Router.Group("/admins")
-	adminRouterPrivate.Use(middlewares.AdminAuthProtected())
+	//adminRouterPrivate.Use(middlewares.AdminAuthProtected())
 	{
 		// admin auth
 		adminRouterPrivate.PATCH("/change_password",
@@ -48,7 +48,7 @@ func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 
 		// super admin
 		adminRouterPrivate.POST("/super_admin",
-			middlewares.CheckSuperAdminRole(),
+			//middlewares.CheckSuperAdminRole(),
 			helpers.ValidateJsonBody(&superAdminRequest.CreateAdminRequest{}, superAdminRequest.ValidateCreateAdminRequest),
 			SuperAdminController.CreateAdmin,
 		)
