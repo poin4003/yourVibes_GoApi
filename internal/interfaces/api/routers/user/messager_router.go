@@ -44,6 +44,8 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 			useMessageController.GetMessagesByConversationId)
 
 		messageRouter.GET("/message/:messageId", useMessageController.GetMessageById)
+
+		messageRouter.DELETE("/message/:messageId", useMessageController.DeleteMessageById)
 	}
 
 	conversationDetailRouter := Router.Group("/conversation_details")
@@ -55,9 +57,11 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 
 		conversationDetailRouter.GET("/get_by_id/:userId/:conversationId", useConversationDetailController.GetConversationDetailById)
 
-		conversationDetailRouter.GET("/get_by_user_id",
+		conversationDetailRouter.GET("/get_by_id",
 			helpers.ValidateQuery(&conversationQuery.ConversationDetailObject{}, conversationQuery.ValidateConversationDetailObject),
 			useConversationDetailController.GetConversationDetailByUserId)
+
+		conversationDetailRouter.DELETE("/delete/:userId/:conversationId", useConversationDetailController.DeleteConversationDetailById)
 	}
 
 }

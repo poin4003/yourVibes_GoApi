@@ -21,11 +21,14 @@ type (
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Message, error)
 		CreateOne(ctx context.Context, entity *entities.Message) (*entities.Message, error)
 		GetMessagesByConversationId(ctx context.Context, query *query.GetMessagesByConversationIdQuery) ([]*entities.Message, *response.PagingResponse, error)
+		DeleteById(ctx context.Context, id uuid.UUID) error
 	}
 	IConversationDetailRepository interface {
 		GetById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) (*entities.ConversationDetail, error)
+		// GetConversationDetailByConversationId(ctx context.Context, query *query.GetConversationDetailQuery) ([]*entities.ConversationDetail, *response.PagingResponse, error)
 		CreateOne(ctx context.Context, entity *entities.ConversationDetail) (*entities.ConversationDetail, error)
 		GetConversationDetailByUserId(ctx context.Context, query *query.GetConversationDetailQuery) ([]*entities.ConversationDetail, *response.PagingResponse, error)
+		DeleteById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) error
 	}
 )
 

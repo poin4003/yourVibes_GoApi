@@ -3,6 +3,7 @@ package message_user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
@@ -130,4 +131,34 @@ func (m *cMessage) GetMessagesByConversationId(ctx *gin.Context) {
 	}
 
 	pkgResponse.OKWithPaging(ctx, messageDtos, *result.PagingResponse)
+}
+
+// DeleteMessageById documentation
+// @Summary Delete message by ID
+// @Description When user delete message
+// @Tags message
+// @Accept json
+// @Produce json
+// @Param message_id path string true "Message ID"
+// @Security ApiKeyAuth
+// @Router /messages/message/{message_id} [delete]
+func (m *cMessage) DeleteMessageById(ctx *gin.Context) {
+	messageIdStr := ctx.Param("messageId")
+	messageId, err := uuid.Parse(messageIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewValidateError(err.Error()))
+		return
+	}
+
+	deleteMessageCommand := &command.DeleteMessageCommand{
+		MessageId: &messageId,
+	}
+
+	err = services.Message().DeleteMessageById(ctx, deleteMessageCommand)
+	if err != nil {
+		ctx.Error(err)
+		return
+
+	}
+	pkgResponse.OK(ctx, nil)
 }

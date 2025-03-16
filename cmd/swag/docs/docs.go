@@ -768,6 +768,90 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/conversation_details/delete/{user_id}/{conversation_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "when user delete conversationDetail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Delete conversationDetail by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/conversation_details/get_by_id": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a conversationDetail by its unique User ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Get conversationDetail by User ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversation_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/conversation_details/get_by_id/{userId}/{conversationId}": {
             "get": {
                 "security": [
@@ -800,41 +884,6 @@ const docTemplate = `{
                         "name": "conversationId",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/conversation_details/get_by_user_id": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a conversationDetail by its unique User ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "conversationDetail"
-                ],
-                "summary": "Get conversationDetail by User ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Limit on page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
                     }
                 ],
                 "responses": {}
@@ -1063,6 +1112,36 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Message ID",
                         "name": "messageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/messages/message/{message_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user delete message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Delete message by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "message_id",
                         "in": "path",
                         "required": true
                     }

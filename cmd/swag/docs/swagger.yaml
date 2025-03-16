@@ -721,6 +721,60 @@ paths:
       summary: ConversationDetail create ConversationDatail
       tags:
       - conversationDetail
+  /conversation_details/delete/{user_id}/{conversation_id}:
+    delete:
+      consumes:
+      - application/json
+      description: when user delete conversationDetail
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Conversation ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete conversationDetail by ID
+      tags:
+      - conversationDetail
+  /conversation_details/get_by_id:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a conversationDetail by its unique User ID
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        type: string
+      - description: Conversation ID
+        in: query
+        name: conversation_id
+        type: string
+      - description: Limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get conversationDetail by User ID
+      tags:
+      - conversationDetail
   /conversation_details/get_by_id/{userId}/{conversationId}:
     get:
       consumes:
@@ -743,28 +797,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get conversationDetail by ID
-      tags:
-      - conversationDetail
-  /conversation_details/get_by_user_id:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a conversationDetail by its unique User ID
-      parameters:
-      - description: Limit on page
-        in: query
-        name: limit
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get conversationDetail by User ID
       tags:
       - conversationDetail
   /conversations/:
@@ -892,6 +924,25 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get messages by conversation ID
+      tags:
+      - message
+  /messages/message/{message_id}:
+    delete:
+      consumes:
+      - application/json
+      description: When user delete message
+      parameters:
+      - description: Message ID
+        in: path
+        name: message_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete message by ID
       tags:
       - message
   /messages/message/{messageId}:

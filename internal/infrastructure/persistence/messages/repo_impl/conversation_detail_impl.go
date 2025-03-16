@@ -66,7 +66,7 @@ func (r *rConversatioDetail) GetConversationDetailByUserId(
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.ConversationDetail{}).
-		Where("user_id = ?", query.UserId).
+		Where("user_id = ? OR conversation_id = ?", query.UserId, query.ConversationId).
 		Preload("User").
 		Preload("Conversation")
 	// if query.ConversationId != uuid.Nil { // Nếu có ConversationId -> Lọc theo User + Conversation
@@ -116,4 +116,23 @@ func (r *rConversatioDetail) GetConversationDetailByUserId(
 
 	return conversationDetailEntities, &pagingResponse, nil
 
+}
+func (r *rConversatioDetail) DeleteById(
+	ctx context.Context,
+	userId uuid.UUID,
+	conversationId uuid.UUID,
+) error {
+	// conversationDetail, err := r.GetById(ctx, userId, conversationId)
+	// if err != nil {
+	// 	return err
+	// }
+
+	res := r.db.WithContext(ctx).
+		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
+		Delete(&entities.ConversationDetail{})
+
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }
