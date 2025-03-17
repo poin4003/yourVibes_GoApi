@@ -2,8 +2,10 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"go.uber.org/zap"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -17,23 +19,23 @@ import (
 )
 
 type sUserFriend struct {
-	userRepo          userRepo.IUserRepository
-	friendRequestRepo userRepo.IFriendRequestRepository
-	friendRepo        userRepo.IFriendRepository
-	notificationRepo  userRepo.INotificationRepository
+	userRepo              userRepo.IUserRepository
+	friendRequestRepo     userRepo.IFriendRequestRepository
+	friendRepo            userRepo.IFriendRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewUserFriendImplement(
 	userRepo userRepo.IUserRepository,
 	friendRequestRepo userRepo.IFriendRequestRepository,
 	friendRepo userRepo.IFriendRepository,
-	notificationRepo userRepo.INotificationRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sUserFriend {
 	return &sUserFriend{
-		userRepo:          userRepo,
-		friendRequestRepo: friendRequestRepo,
-		friendRepo:        friendRepo,
-		notificationRepo:  notificationRepo,
+		userRepo:              userRepo,
+		friendRequestRepo:     friendRequestRepo,
+		friendRepo:            friendRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -121,7 +123,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 		return response2.NewServerFailedError(err.Error())
 	}
 
-	// 7. Push notification to user
+	// 7. Publish to RabbitMQ to handle notification
 	notification, _ := notificationEntity.NewNotification(
 		userFound.FamilyName+" "+userFound.Name,
 		userFound.AvatarUrl,
@@ -131,31 +133,9 @@ func (s *sUserFriend) SendAddFriendRequest(
 		"",
 	)
 
-	_, err = s.notificationRepo.CreateOne(ctx, notification)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
-	}
-
-	// 8. Send realtime notification (websocket)
-	userSocketResponse := &consts.UserSocketResponse{
-		ID:         friendFound.ID,
-		FamilyName: friendFound.FamilyName,
-		Name:       friendFound.Name,
-		AvatarUrl:  friendFound.AvatarUrl,
-	}
-
-	notificationSocketResponse := &consts.NotificationSocketResponse{
-		From:             userFound.FamilyName + " " + userFound.Name,
-		FromUrl:          userFound.AvatarUrl,
-		UserId:           friendFound.ID,
-		User:             *userSocketResponse,
-		NotificationType: consts.FRIEND_REQUEST,
-		ContentId:        (userFound.ID).String(),
-	}
-
-	err = global.SocketHub.SendNotification(friendFound.ID.String(), notificationSocketResponse)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+	notiMsg := mapper.NewNotificationResult(notification)
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single"); err != nil {
+		global.Logger.Error("Failed to publish notification", zap.Error(err))
 	}
 
 	// 9. Response success
@@ -291,31 +271,9 @@ func (s *sUserFriend) AcceptFriendRequest(
 		ContentId:        (friendFound.ID).String(),
 	}
 
-	_, err = s.notificationRepo.CreateOne(ctx, notification)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
-	}
-
-	// 8. Send realtime notification (websocket)
-	userSocketResponse := &consts.UserSocketResponse{
-		ID:         userFound.ID,
-		FamilyName: userFound.FamilyName,
-		Name:       userFound.Name,
-		AvatarUrl:  userFound.AvatarUrl,
-	}
-
-	notificationSocketResponse := &consts.NotificationSocketResponse{
-		From:             friendFound.FamilyName + " " + friendFound.Name,
-		FromUrl:          friendFound.AvatarUrl,
-		UserId:           userFound.ID,
-		User:             *userSocketResponse,
-		NotificationType: consts.ACCEPT_FRIEND_REQUEST,
-		ContentId:        (friendFound.ID).String(),
-	}
-
-	err = global.SocketHub.SendNotification(userFound.ID.String(), notificationSocketResponse)
-	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+	notiMsg := mapper.NewNotificationResult(notification)
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single"); err != nil {
+		global.Logger.Error("Failed to publish notification", zap.Error(err))
 	}
 
 	// 9. Response success

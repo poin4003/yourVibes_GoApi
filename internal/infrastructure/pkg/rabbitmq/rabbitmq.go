@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"log"
 	"net"
 	"sync"
@@ -13,7 +14,7 @@ import (
 )
 
 type Connection struct {
-	conn        *amqp091.Connection
+	Conn        *amqp091.Connection
 	channel     *amqp091.Channel
 	config      settings.RabbitMQSetting
 	mu          sync.RWMutex
@@ -28,6 +29,11 @@ func NewConnection(cfg settings.RabbitMQSetting) (*Connection, error) {
 
 	if err := c.connect(); err != nil {
 		return nil, err
+	}
+
+	if err := c.setupExchanges(); err != nil {
+		c.Close()
+		return nil, fmt.Errorf("setup exchanges failed: %v", err)
 	}
 
 	go c.handleReconnect()
@@ -55,20 +61,36 @@ func (c *Connection) connect() error {
 		return fmt.Errorf("failed to open channel: %v", err)
 	}
 
-	for _, ex := range c.config.Exchanges {
-		err = ch.ExchangeDeclare(ex.Name, ex.Type, true, false, false, false, nil)
-		if err != nil {
-			ch.Close()
-			conn.Close()
-			return fmt.Errorf("failed to declare exchange %s: %v", ex.Name, err)
-		}
+	c.mu.Lock()
+	c.Conn = conn
+	c.channel = ch
+	c.Conn.NotifyClose(c.notifyClose)
+	c.mu.Unlock()
+
+	return nil
+}
+
+func (c *Connection) setupExchanges() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.channel == nil {
+		return fmt.Errorf("channel is nil, cannot setup exchange")
 	}
 
-	c.mu.Lock()
-	c.conn = conn
-	c.channel = ch
-	c.conn.NotifyClose(c.notifyClose)
-	c.mu.Unlock()
+	err := c.channel.ExchangeDeclare(
+		consts.NotificationExName,
+		consts.NotificationExType,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to setup exchange: %v", err)
+	}
 
 	return nil
 }
@@ -82,14 +104,21 @@ func (c *Connection) handleReconnect() {
 				attempts := 0
 				for attempts < c.config.MaxReconnectAttempts {
 					if err := c.connect(); err == nil {
+						if err := c.setupExchanges(); err != nil {
+							log.Printf("Failed to setup exchanges after reconnect: %v", err)
+							continue
+						}
 						log.Println("Reconnected to RabbitMQ successfully")
-						return
+						break
 					}
 					attempts++
 					log.Printf("Reconnect attempt %d/%d failed: %v", attempts, c.config.MaxReconnectAttempts, err)
 					time.Sleep(2 * time.Second)
 				}
-				log.Fatalf("Failed to reconnect to RabbitMQ after %d attempts", c.config.MaxReconnectAttempts)
+				if attempts >= c.config.MaxReconnectAttempts {
+					log.Printf("Failed to reconnect to RabbitMQ after %d attempts", c.config.MaxReconnectAttempts)
+					panic(fmt.Sprintf("Failed to reconnect to RabbitMQ after %d attempts", c.config.MaxReconnectAttempts))
+				}
 			}
 		}
 	}
@@ -101,8 +130,8 @@ func (c *Connection) Close() {
 	if c.channel != nil {
 		c.channel.Close()
 	}
-	if c.conn != nil {
-		c.conn.Close()
+	if c.Conn != nil {
+		c.Conn.Close()
 	}
 }
 
@@ -119,10 +148,18 @@ func (c *Connection) Publish(ctx context.Context, exchange, routingKey string, b
 }
 
 func (c *Connection) GetChannel() (*amqp091.Channel, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	if c.channel == nil {
-		return nil, fmt.Errorf("channel is nil")
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.Conn == nil || c.Conn.IsClosed() || c.channel == nil {
+		log.Println("RabbitMQ connection or channel closed, attempting to reconnect")
+		if err := c.connect(); err != nil {
+			return nil, fmt.Errorf("failed to reconnect to RabbitMQ: %v", err)
+		}
+		if err := c.setupExchanges(); err != nil {
+			return nil, fmt.Errorf("failed to setup exchanges after reconnect: %v", err)
+		}
 	}
+
 	return c.channel, nil
 }

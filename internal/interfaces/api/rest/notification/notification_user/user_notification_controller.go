@@ -1,8 +1,11 @@
-package user_user
+package notification_user
 
 import (
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/command"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/dto/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/query"
 	"net/http"
 	"strconv"
 
@@ -10,11 +13,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/poin4003/yourVibes_GoApi/global"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 )
 
 type cNotification struct{}
@@ -85,7 +85,7 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Param limit query int false "Limit the number of notifications returned"
 // @Param page query int false "Pagination: page number"
 // @Security ApiKeyAuth
-// @Router /users/notifications [get]
+// @Router /notifications [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
@@ -110,7 +110,7 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 
 	// 4. Call service to handle get many
 	getManyNotificationQuery, _ := notificationQueryObject.ToGetManyNotificationQuery(userIdClaim)
-	result, err := services.UserNotification().GetNotificationByUserId(ctx, getManyNotificationQuery)
+	result, err := services.NotificationUser().GetNotificationByUserId(ctx, getManyNotificationQuery)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -132,7 +132,7 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 // @Produce json
 // @Param notification_id path string true "Notification ID"
 // @Security ApiKeyAuth
-// @Router /users/notifications/{notification_id} [patch]
+// @Router /notifications/{notification_id} [patch]
 func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	// 1. Get notification id from param
 	notificationIdStr := ctx.Param("notification_id")
@@ -146,7 +146,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	updateOneStatusNotificationCommand := &command.UpdateOneStatusNotificationCommand{
 		NotificationId: uint(notificationID),
 	}
-	err = services.UserNotification().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
+	err = services.NotificationUser().UpdateOneStatusNotification(ctx, updateOneStatusNotificationCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -161,7 +161,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Router /users/notifications/ [patch]
+// @Router /notifications/ [patch]
 func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	// 1. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)
@@ -174,7 +174,7 @@ func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	updateManyStatusNotificationCommand := &command.UpdateManyStatusNotificationCommand{
 		UserId: userIdClaim,
 	}
-	err = services.UserNotification().UpdateManyStatusNotification(ctx, updateManyStatusNotificationCommand)
+	err = services.NotificationUser().UpdateManyStatusNotification(ctx, updateManyStatusNotificationCommand)
 	if err != nil {
 		ctx.Error(err)
 		return

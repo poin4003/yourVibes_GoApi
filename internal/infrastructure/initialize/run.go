@@ -17,16 +17,9 @@ func Run() *gin.Engine {
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
 	InitRedis()
 	InitRabbitMQ()
-	defer func() {
-		if global.RabbitMQConn != nil {
-			global.RabbitMQConn.Close()
-			global.Logger.Info("RabbitMQ connection closed")
-		}
-	}()
-
 	InitPostgreSql()
 	InitSocketHub()
-	InitServiceInterface()
+	InitDependencyInjection()
 	InitCronJob()
 	response.InitCustomCode()
 

@@ -82,16 +82,10 @@ type GoogleSetting struct {
 }
 
 type RabbitMQSetting struct {
-	URL                  string            `mapstructure:"url"`
-	Username             string            `mapstructure:"username"`
-	Password             string            `mapstructure:"password"`
-	Vhost                string            `mapstructure:"vhost"`
-	ConnectionTimeout    int               `mapstructure:"connection_timeout"`
-	MaxReconnectAttempts int               `mapstructure:"max_reconnect_attempts"`
-	Exchanges            []ExchangesConfig `mapstructure:"exchanges"`
-}
-
-type ExchangesConfig struct {
-	Name string `mapstructure:"name"`
-	Type string `mapstructure:"type"`
+	URL                  string `mapstructure:"url"`
+	Username             string `mapstructure:"username"`
+	Password             string `mapstructure:"password"`
+	Vhost                string `mapstructure:"vhost"`
+	ConnectionTimeout    int    `mapstructure:"connection_timeout"`
+	MaxReconnectAttempts int    `mapstructure:"max_reconnect_attempts"`
 }

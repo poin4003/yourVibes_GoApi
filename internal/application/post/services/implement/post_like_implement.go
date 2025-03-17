@@ -2,10 +2,12 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"go.uber.org/zap"
 
-	"github.com/poin4003/yourVibes_GoApi/global"
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
@@ -17,23 +19,23 @@ import (
 )
 
 type sPostLike struct {
-	userRepo         postRepo.IUserRepository
-	postRepo         postRepo.IPostRepository
-	postLikeRepo     postRepo.ILikeUserPostRepository
-	notificationRepo postRepo.INotificationRepository
+	userRepo              postRepo.IUserRepository
+	postRepo              postRepo.IPostRepository
+	postLikeRepo          postRepo.ILikeUserPostRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewPostLikeImplement(
 	userRepo postRepo.IUserRepository,
 	postRepo postRepo.IPostRepository,
 	postLikeRepo postRepo.ILikeUserPostRepository,
-	notificationRepo postRepo.INotificationRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sPostLike {
 	return &sPostLike{
-		userRepo:         userRepo,
-		postRepo:         postRepo,
-		postLikeRepo:     postLikeRepo,
-		notificationRepo: notificationRepo,
+		userRepo:              userRepo,
+		postRepo:              postRepo,
+		postLikeRepo:          postLikeRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -104,7 +106,7 @@ func (s *sPostLike) LikePost(
 			return result, nil
 		}
 
-		// 4.1.5. Push notification to owner of the post
+		// 4.1.5. Publish to RabbitMQ handle Notification
 		notification, _ := notificationEntity.NewNotification(
 			userLike.FamilyName+" "+userLike.Name,
 			userLike.AvatarUrl,
@@ -114,23 +116,9 @@ func (s *sPostLike) LikePost(
 			postFound.Content,
 		)
 
-		_, err = s.notificationRepo.CreateOne(ctx, notification)
-		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
-		}
-
-		// 4.1.6. Send realtime notification (websocket)
-		notificationSocketResponse := &consts.NotificationSocketResponse{
-			From:             userLike.FamilyName + " " + userLike.Name,
-			FromUrl:          userLike.AvatarUrl,
-			UserId:           postFound.UserId,
-			NotificationType: consts.LIKE_POST,
-			ContentId:        (postFound.ID).String(),
-		}
-
-		err = global.SocketHub.SendNotification(postFound.UserId.String(), notificationSocketResponse)
-		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+		notifMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single"); err != nil {
+			global.Logger.Error("Failed to publish notification result", zap.Error(err))
 		}
 
 		// 4.1.7. Map to result

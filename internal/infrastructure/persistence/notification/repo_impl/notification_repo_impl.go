@@ -3,11 +3,13 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
+	"go.uber.org/zap"
 	"time"
 
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/mapper"
@@ -57,23 +59,39 @@ func (r *rNotification) CreateOne(
 	return r.GetById(ctx, notificationModel.ID)
 }
 
-func (r *rNotification) CreateMany(
+func (r *rNotification) CreateAndGetNotificationsForFriends(
 	ctx context.Context,
-	notificationEntities []*entities.Notification,
+	notificationEntity *entities.Notification,
 ) ([]*entities.Notification, error) {
+	query := `
+        WITH inserted_notifications AS (
+            INSERT INTO notifications ("from", from_url, user_id, notification_type, content_id, content, status, created_at, updated_at)
+            SELECT ?, ?, f.friend_id, ?, ?, ?, ?, ?, ?
+            FROM friends f
+            WHERE f.user_id = ?
+            RETURNING id, "from", from_url, user_id, notification_type, content_id, content, status, created_at, updated_at
+        )
+        SELECT * FROM inserted_notifications
+    `
 	var notificationModels []*models.Notification
-	for _, notification := range notificationEntities {
-		notificationModels = append(notificationModels, mapper.ToNotificationModel(notification))
-	}
-
-	err := r.db.WithContext(ctx).Create(&notificationModels).Error
-	if err != nil {
+	if err := r.db.WithContext(ctx).Raw(query,
+		notificationEntity.From,
+		notificationEntity.FromUrl,
+		notificationEntity.NotificationType,
+		notificationEntity.ContentId,
+		notificationEntity.Content,
+		notificationEntity.Status,
+		notificationEntity.CreatedAt,
+		notificationEntity.UpdatedAt,
+		notificationEntity.UserId,
+	).Scan(&notificationModels).Error; err != nil {
+		global.Logger.Error("Failed to create and get notifications", zap.Error(err))
 		return nil, err
 	}
 
 	var notificationEntityList []*entities.Notification
-	for _, notificationEntity := range notificationModels {
-		notificationEntityList = append(notificationEntityList, mapper.FromNotificationModel(notificationEntity))
+	for _, notificationModel := range notificationModels {
+		notificationEntityList = append(notificationEntityList, mapper.FromNotificationModel(notificationModel))
 	}
 
 	return notificationEntityList, nil

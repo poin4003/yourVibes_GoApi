@@ -27,8 +27,8 @@ func (r *rNewFeed) CreateMany(
 	userId uuid.UUID,
 ) error {
 	query := `
-		INSERT INTO new_feeds (user_id, post_id, view)
-		SELECT friend.friend_id, CAST(? AS UUID), 0
+		INSERT INTO new_feeds (user_id, post_id)
+		SELECT friend.friend_id, CAST(? AS UUID)
 		FROM friends friend
 		WHERE friend.user_id = CAST(? AS UUID)
 		  AND NOT EXISTS (
@@ -38,7 +38,7 @@ func (r *rNewFeed) CreateMany(
 				AND nf.post_id = CAST(? AS UUID)
 		  )
 		UNION ALL
-		SELECT CAST(? AS UUID), CAST(? AS UUID), 0
+		SELECT CAST(? AS UUID), CAST(? AS UUID)
 		WHERE NOT EXISTS (
 			SELECT 1
 			FROM new_feeds nf
@@ -192,8 +192,8 @@ func (r *rNewFeed) CreateManyWithRandomUser(
 	numUsers int,
 ) error {
 	query := `
-		INSERT INTO new_feeds (user_id, post_id, view)
-		SELECT u.id, a.post_id, 0
+		INSERT INTO new_feeds (user_id, post_id)
+		SELECT u.id, a.post_id
 		FROM users u
 		CROSS JOIN (
 			SELECT advertises.id AS advertise_id, advertises.post_id

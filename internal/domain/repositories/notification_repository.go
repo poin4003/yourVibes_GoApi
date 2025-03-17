@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
@@ -10,7 +10,7 @@ import (
 type (
 	INotificationRepository interface {
 		CreateOne(ctx context.Context, entity *entities.Notification) (*entities.Notification, error)
-		CreateMany(ctx context.Context, entity []*entities.Notification) ([]*entities.Notification, error)
+		CreateAndGetNotificationsForFriends(ctx context.Context, entity *entities.Notification) ([]*entities.Notification, error)
 		UpdateOne(ctx context.Context, id uint, updateData *entities.NotificationUpdate) (*entities.Notification, error)
 		UpdateMany(ctx context.Context, condition map[string]interface{}, updateData map[string]interface{}) error
 		DeleteOne(ctx context.Context, id uint) (*entities.Notification, error)

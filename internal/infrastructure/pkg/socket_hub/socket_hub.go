@@ -71,13 +71,18 @@ func (hub *WebSocketHub) SendNotification(userId string, notification interface{
 		return nil
 	}
 
-	if err := conn.SetWriteDeadline(time.Now)
-
-	err := conn.WriteJSON(notification)
-	if err != nil {
+	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
 		hub.RemoveConnection(userId)
 		return err
 	}
 
+	err := conn.WriteJSON(notification)
+	if err != nil {
+		log.Printf("Failed to send WebSocket notification to userId: %s, error: %v", userId, err)
+		hub.RemoveConnection(userId)
+		return err
+	}
+
+	log.Printf("WebSocket notification sent to userId: %s", userId)
 	return nil
 }

@@ -913,6 +913,77 @@ paths:
       summary: Get message by ID
       tags:
       - message
+  /notifications:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Filter notifications by sender
+        in: query
+        name: from
+        type: string
+      - description: Filter notifications by type
+        in: query
+        name: notification_type
+        type: string
+      - description: Filter notifications created at this date
+        in: query
+        name: created_at
+        type: string
+      - description: Sort notifications by this field
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort notifications in descending order
+        in: query
+        name: isDescending
+        type: boolean
+      - description: Limit the number of notifications returned
+        in: query
+        name: limit
+        type: integer
+      - description: 'Pagination: page number'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get notifications
+      tags:
+      - user_notification
+  /notifications/:
+    patch:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update all notification status to false
+      tags:
+      - user_notification
+  /notifications/{notification_id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Notification ID
+        in: path
+        name: notification_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update notification status to false
+      tags:
+      - user_notification
   /posts/:
     get:
       consumes:
@@ -1724,77 +1795,6 @@ paths:
       summary: User login
       tags:
       - user_auth
-  /users/notifications:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Filter notifications by sender
-        in: query
-        name: from
-        type: string
-      - description: Filter notifications by type
-        in: query
-        name: notification_type
-        type: string
-      - description: Filter notifications created at this date
-        in: query
-        name: created_at
-        type: string
-      - description: Sort notifications by this field
-        in: query
-        name: sort_by
-        type: string
-      - description: Sort notifications in descending order
-        in: query
-        name: isDescending
-        type: boolean
-      - description: Limit the number of notifications returned
-        in: query
-        name: limit
-        type: integer
-      - description: 'Pagination: page number'
-        in: query
-        name: page
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Get notifications
-      tags:
-      - user_notification
-  /users/notifications/:
-    patch:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Update all notification status to false
-      tags:
-      - user_notification
-  /users/notifications/{notification_id}:
-    patch:
-      consumes:
-      - application/json
-      parameters:
-      - description: Notification ID
-        in: path
-        name: notification_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Update notification status to false
-      tags:
-      - user_notification
   /users/notifications/ws/{user_id}:
     get:
       consumes:
