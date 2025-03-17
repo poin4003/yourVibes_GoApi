@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	messageCommand "github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/mapper"
@@ -101,4 +102,24 @@ func (s *sMessage) GetMessagesByConversationId(
 		Messages:       messageResults,
 		PagingResponse: paging,
 	}, nil
+}
+
+func (s *sMessage) DeleteMessageById(
+	ctx context.Context,
+	command *command.DeleteMessageCommand,
+) error {
+	messageFound, err := s.messageRepo.GetById(ctx, *command.MessageId)
+	if err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if messageFound == nil {
+		return response.NewDataNotFoundError("Message not found")
+	}
+
+	if err := s.messageRepo.DeleteById(ctx, *command.MessageId); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
 }

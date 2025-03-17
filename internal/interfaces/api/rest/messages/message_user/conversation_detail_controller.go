@@ -3,6 +3,7 @@ package message_user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
@@ -92,17 +93,19 @@ func (cc *cConversationController) GetConversationDetailById(ctx *gin.Context) {
 	pkgResponse.OK(ctx, conversationDetailDto)
 }
 
-// GetConversationDetailByUserId documentation
-// @Summary Get conversationDetail by User ID
+// GetConversationDetailByIdList documentation
+// @Summary Get conversationDetail by ID response list
 // @Description Retrieve a conversationDetail by its unique User ID
 // @Tags conversationDetail
 // @Accept json
 // @Produce json
+// @Param user_id query string false "User ID"
+// @Param conversation_id query string false "Conversation ID"
 // @Param limit query int false "Limit on page"
 // @Param page query int false "Page number"
 // @Security ApiKeyAuth
-// @Router /conversation_details/get_by_user_id [get]
-func (cc *cConversationController) GetConversationDetailByUserId(ctx *gin.Context) {
+// @Router /conversation_details/get_by_id [get]
+func (cc *cConversationController) GetConversationDetailByIdList(ctx *gin.Context) {
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
 		ctx.Error(pkgResponse.NewServerFailedError("Missing validatedQuery request"))
@@ -115,13 +118,17 @@ func (cc *cConversationController) GetConversationDetailByUserId(ctx *gin.Contex
 		return
 	}
 
-	userIdClaim, err := extensions.GetUserID(ctx)
-	if err != nil {
-		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
-		return
+	if conversationDetailQueryObject.UserId == "" && conversationDetailQueryObject.ConversationId == "" {
+
+		userIdClaim, err := extensions.GetUserID(ctx)
+		if err != nil {
+			ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+			return
+		}
+		conversationDetailQueryObject.UserId = userIdClaim.String()
 	}
 
-	getConversationDetailByUserIdQuery, _ := conversationDetailQueryObject.ToGetConversationDetailQuery(userIdClaim, conversationDetailQueryObject.ConversationId)
+	getConversationDetailByUserIdQuery, _ := conversationDetailQueryObject.ToGetConversationDetailQuery()
 
 	result, err := services.ConversationDetail().GetConversationDetailByUsesId(ctx, getConversationDetailByUserIdQuery)
 	if err != nil {
@@ -135,4 +142,40 @@ func (cc *cConversationController) GetConversationDetailByUserId(ctx *gin.Contex
 	}
 
 	pkgResponse.OKWithPaging(ctx, conversationDetailDtos, *result.PagingResponse)
+}
+
+// DeleteConversationDetailById documentation
+// @Summary Delete conversationDetail by ID
+// @Description when user delete conversationDetail
+// @Tags conversationDetail
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param conversation_id path string true "Conversation ID"
+// @Security ApiKeyAuth
+// @Router /conversation_details/delete/{user_id}/{conversation_id} [delete]
+func (cc *cConversationController) DeleteConversationDetailById(ctx *gin.Context) {
+	userIdStr := ctx.Param("userId")
+	conversationIdStr := ctx.Param("conversationId")
+
+	userID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	conversationID, err := uuid.Parse(conversationIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	deleteConversationDetailCommand := &command.DeleteConversationDetailCommand{UserId: &userID, ConversationId: &conversationID}
+	err = services.ConversationDetail().DeleteConversationDetailById(ctx, deleteConversationDetailCommand)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	pkgResponse.OK(ctx, nil)
 }

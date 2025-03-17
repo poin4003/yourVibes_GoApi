@@ -21,12 +21,13 @@ type (
 		GetMessageById(ctx context.Context, messageId uuid.UUID) (result *common.MessageResult, err error)
 		CreateMessage(ctx context.Context, command *command.CreateMessageCommand) (result *command.CreateMessageResult, err error)
 		GetMessagesByConversationId(ctx context.Context, query *query.GetMessagesByConversationIdQuery) (result *query.GetMessagesByConversationIdResult, err error)
+		DeleteMessageById(ctx context.Context, command *command.DeleteMessageCommand) error
 	}
 	IConversationDetail interface {
 		GetConversationDetailById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) (result *common.ConversationDetailResult, err error)
 		CreateConversationDetail(ctx context.Context, command *command.CreateConversationDetailCommand) (result *command.CreateConversationDetailResult, err error)
-
-		GetConversationDetailByUsesId(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
+		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
+		DeleteConversationDetailById(ctx context.Context, command *command.DeleteConversationDetailCommand) error
 	}
 )
 
