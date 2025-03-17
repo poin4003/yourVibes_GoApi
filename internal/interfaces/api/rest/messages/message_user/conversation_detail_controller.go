@@ -93,8 +93,8 @@ func (cc *cConversationController) GetConversationDetailById(ctx *gin.Context) {
 	pkgResponse.OK(ctx, conversationDetailDto)
 }
 
-// GetConversationDetailByUserId documentation
-// @Summary Get conversationDetail by User ID
+// GetConversationDetailByIdList documentation
+// @Summary Get conversationDetail by ID response list
 // @Description Retrieve a conversationDetail by its unique User ID
 // @Tags conversationDetail
 // @Accept json
@@ -105,7 +105,7 @@ func (cc *cConversationController) GetConversationDetailById(ctx *gin.Context) {
 // @Param page query int false "Page number"
 // @Security ApiKeyAuth
 // @Router /conversation_details/get_by_id [get]
-func (cc *cConversationController) GetConversationDetailByUserId(ctx *gin.Context) {
+func (cc *cConversationController) GetConversationDetailByIdList(ctx *gin.Context) {
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
 		ctx.Error(pkgResponse.NewServerFailedError("Missing validatedQuery request"))

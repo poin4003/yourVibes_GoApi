@@ -58,7 +58,7 @@ func (r *rConversatioDetail) CreateOne(
 	return r.GetById(ctx, entity.UserId, entity.ConversationId)
 }
 
-func (r *rConversatioDetail) GetConversationDetailByUserId(
+func (r *rConversatioDetail) GetConversationDetailByIdList(
 	ctx context.Context,
 	query *query.GetConversationDetailQuery,
 ) ([]*entities.ConversationDetail, *response.PagingResponse, error) {
@@ -69,11 +69,6 @@ func (r *rConversatioDetail) GetConversationDetailByUserId(
 		Where("user_id = ? OR conversation_id = ?", query.UserId, query.ConversationId).
 		Preload("User").
 		Preload("Conversation")
-	// if query.ConversationId != uuid.Nil { // Nếu có ConversationId -> Lọc theo User + Conversation
-	// 	db = db.Where("user_id = ? AND conversation_id = ?", query.UserId, query.ConversationId)
-	// } else { // Nếu chỉ có UserId -> Lấy tất cả theo User
-	// 	db = db.Where("user_id = ?", query.UserId)
-	// }
 
 	if err := db.Find(&conversationDetails).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -122,11 +117,6 @@ func (r *rConversatioDetail) DeleteById(
 	userId uuid.UUID,
 	conversationId uuid.UUID,
 ) error {
-	// conversationDetail, err := r.GetById(ctx, userId, conversationId)
-	// if err != nil {
-	// 	return err
-	// }
-
 	res := r.db.WithContext(ctx).
 		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
 		Delete(&entities.ConversationDetail{})

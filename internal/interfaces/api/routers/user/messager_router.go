@@ -59,7 +59,7 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 
 		conversationDetailRouter.GET("/get_by_id",
 			helpers.ValidateQuery(&conversationQuery.ConversationDetailObject{}, conversationQuery.ValidateConversationDetailObject),
-			useConversationDetailController.GetConversationDetailByUserId)
+			useConversationDetailController.GetConversationDetailByIdList)
 
 		conversationDetailRouter.DELETE("/delete/:userId/:conversationId", useConversationDetailController.DeleteConversationDetailById)
 	}

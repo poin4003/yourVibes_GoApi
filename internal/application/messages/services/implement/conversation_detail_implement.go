@@ -77,7 +77,7 @@ func (s *sConversationDetail) CreateConversationDetail(
 	}, nil
 }
 
-func (s *sConversationDetail) GetConversationDetailByUsesId(
+func (s *sConversationDetail) GetConversationDetailByIdList(
 	ctx context.Context,
 	query *conversationDetailQuery.GetConversationDetailQuery,
 ) (result *conversationDetailQuery.GetConversationDetailResult, err error) {

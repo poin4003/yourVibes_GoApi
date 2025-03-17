@@ -26,7 +26,7 @@ type (
 	IConversationDetail interface {
 		GetConversationDetailById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) (result *common.ConversationDetailResult, err error)
 		CreateConversationDetail(ctx context.Context, command *command.CreateConversationDetailCommand) (result *command.CreateConversationDetailResult, err error)
-		GetConversationDetailByUsesId(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
+		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
 		DeleteConversationDetailById(ctx context.Context, command *command.DeleteConversationDetailCommand) error
 	}
 )
