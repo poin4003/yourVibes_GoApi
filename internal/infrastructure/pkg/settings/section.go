@@ -1,15 +1,16 @@
 package settings
 
 type Config struct {
-	Server         ServerSetting         `mapstructure:"server"`
-	PostgreSql     PostgreSqlSetting     `mapstructure:"postgresql"`
-	Logger         LoggerSetting         `mapstructure:"logger"`
-	Media          MediaSetting          `mapstructure:"media"`
-	Redis          RedisSetting          `mapstructure:"redis"`
-	Authentication AuthenticationSetting `mapstructure:"authentication"`
-	MailService    MailServiceSetting    `mapstructure:"mail_service"`
-	MomoSetting    MomoSetting           `mapstructure:"momo"`
-	GoogleSetting  GoogleSetting         `mapstructure:"google"`
+	Server          ServerSetting         `mapstructure:"server"`
+	PostgreSql      PostgreSqlSetting     `mapstructure:"postgresql"`
+	Logger          LoggerSetting         `mapstructure:"logger"`
+	Media           MediaSetting          `mapstructure:"media"`
+	Redis           RedisSetting          `mapstructure:"redis"`
+	Authentication  AuthenticationSetting `mapstructure:"authentication"`
+	MailService     MailServiceSetting    `mapstructure:"mail_service"`
+	MomoSetting     MomoSetting           `mapstructure:"momo"`
+	GoogleSetting   GoogleSetting         `mapstructure:"google"`
+	RabbitMQSetting RabbitMQSetting       `mapstructure:"rabbitmq"`
 }
 
 type ServerSetting struct {
@@ -78,4 +79,13 @@ type GoogleSetting struct {
 	WebClientId     string `mapstructure:"web_client_id"`
 	AndroidClientId string `mapstructure:"android_client_id"`
 	IosClientId     string `mapstructure:"ios_client_id"`
+}
+
+type RabbitMQSetting struct {
+	URL                  string `mapstructure:"url"`
+	Username             string `mapstructure:"username"`
+	Password             string `mapstructure:"password"`
+	Vhost                string `mapstructure:"vhost"`
+	ConnectionTimeout    int    `mapstructure:"connection_timeout"`
+	MaxReconnectAttempts int    `mapstructure:"max_reconnect_attempts"`
 }

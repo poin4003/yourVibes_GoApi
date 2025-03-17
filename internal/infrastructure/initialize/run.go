@@ -16,9 +16,10 @@ func Run() *gin.Engine {
 	InitLogger()
 	global.Logger.Info("Config log ok!!", zap.String("ok", "success"))
 	InitRedis()
+	InitRabbitMQ()
 	InitPostgreSql()
 	InitSocketHub()
-	InitServiceInterface()
+	InitDependencyInjection()
 	InitCronJob()
 	response.InitCustomCode()
 

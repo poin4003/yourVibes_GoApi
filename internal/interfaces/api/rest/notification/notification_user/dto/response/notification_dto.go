@@ -2,7 +2,7 @@ package response
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 )
@@ -22,7 +22,7 @@ type NotificationDto struct {
 }
 
 func ToNotificationDto(
-	notificationResult *common.NotificationResult,
+	notificationResult *common.NotificationResultForInterface,
 ) *NotificationDto {
 	return &NotificationDto{
 		ID:               notificationResult.ID,

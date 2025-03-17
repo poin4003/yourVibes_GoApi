@@ -2,15 +2,11 @@ package implement
 
 import (
 	"context"
-
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
-
 	"github.com/poin4003/yourVibes_GoApi/global"
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
@@ -18,17 +14,21 @@ import (
 	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
+	"go.uber.org/zap"
 )
 
 type sPostUser struct {
-	userRepo         postRepo.IUserRepository
-	friendRepo       postRepo.IFriendRepository
-	newFeedRepo      postRepo.INewFeedRepository
-	postRepo         postRepo.IPostRepository
-	mediaRepo        postRepo.IMediaRepository
-	likeUserPostRepo postRepo.ILikeUserPostRepository
-	notificationRepo postRepo.INotificationRepository
-	advertiseRepo    postRepo.IAdvertiseRepository
+	userRepo              postRepo.IUserRepository
+	friendRepo            postRepo.IFriendRepository
+	newFeedRepo           postRepo.INewFeedRepository
+	postRepo              postRepo.IPostRepository
+	mediaRepo             postRepo.IMediaRepository
+	likeUserPostRepo      postRepo.ILikeUserPostRepository
+	advertiseRepo         postRepo.IAdvertiseRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewPostUserImplement(
@@ -38,18 +38,18 @@ func NewPostUserImplement(
 	postRepo postRepo.IPostRepository,
 	mediaRepo postRepo.IMediaRepository,
 	likeUserPostRepo postRepo.ILikeUserPostRepository,
-	notificationRepo postRepo.INotificationRepository,
 	advertiseRepo postRepo.IAdvertiseRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sPostUser {
 	return &sPostUser{
-		userRepo:         userRepo,
-		friendRepo:       friendRepo,
-		newFeedRepo:      newFeedRepo,
-		postRepo:         postRepo,
-		mediaRepo:        mediaRepo,
-		likeUserPostRepo: likeUserPostRepo,
-		notificationRepo: notificationRepo,
-		advertiseRepo:    advertiseRepo,
+		userRepo:              userRepo,
+		friendRepo:            friendRepo,
+		newFeedRepo:           newFeedRepo,
+		postRepo:              postRepo,
+		mediaRepo:             mediaRepo,
+		likeUserPostRepo:      likeUserPostRepo,
+		advertiseRepo:         advertiseRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -145,44 +145,23 @@ func (s *sPostUser) CreatePost(
 	}
 
 	// 6.4. Create notification for friend
-	var notificationEntities []*notificationEntity.Notification
-	for _, friendId := range friendIds {
-		content := truncate.TruncateContent(newPost.Content, 20)
-		notification, err := notificationEntity.NewNotification(
-			userFound.FamilyName+" "+userFound.Name,
-			userFound.AvatarUrl,
-			friendId,
-			consts.NEW_POST,
-			newPost.ID.String(),
-			content,
-		)
-
-		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
-		}
-
-		notificationEntities = append(notificationEntities, notification)
-	}
-
-	_, err = s.notificationRepo.CreateMany(ctx, notificationEntities)
+	notification, err := notificationEntity.NewNotification(
+		userFound.FamilyName+" "+userFound.Name,
+		userFound.AvatarUrl,
+		userFound.ID,
+		consts.NEW_POST,
+		newPost.ID.String(),
+		truncate.TruncateContent(newPost.Content, 20),
+	)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		global.Logger.Error("Failed to create notification entity", zap.Error(err))
+		return result, nil
 	}
 
-	// 6.5. Send realtime notification (websocket)
-	for _, friendId := range friendIds {
-		notificationSocketResponse := &consts.NotificationSocketResponse{
-			From:             userFound.FamilyName + " " + userFound.Name,
-			FromUrl:          userFound.AvatarUrl,
-			UserId:           friendId,
-			NotificationType: consts.NEW_POST,
-			ContentId:        (postCreated.ID).String(),
-		}
-
-		err = global.SocketHub.SendNotification(friendId.String(), notificationSocketResponse)
-		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
-		}
+	// 6.5. Publish to RabbitMQ to handle Notification
+	notiMsg := mapper.NewNotificationResult(notification)
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.bulk"); err != nil {
+		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 
 	// 7. Validate post after create
@@ -192,7 +171,6 @@ func (s *sPostUser) CreatePost(
 	}
 
 	result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
-
 	return result, nil
 }
 

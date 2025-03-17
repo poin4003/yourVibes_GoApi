@@ -1,11 +1,11 @@
-package common
+package command
 
 import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"time"
 )
 
-type NotificationResult struct {
+type NotificationCommand struct {
 	From             string                  `json:"from"`
 	FromUrl          string                  `json:"from_url"`
 	UserID           string                  `json:"user_id"`

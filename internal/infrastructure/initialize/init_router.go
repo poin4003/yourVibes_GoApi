@@ -51,6 +51,7 @@ func InitRouter() *gin.Engine {
 		userRouter.InitMediaRouter(MainGroup)
 		userRouter.InitMessagesRouter(MainGroup)
 		userRouter.InitReportRouter(MainGroup)
+		userRouter.InitNotificationRouter(MainGroup)
 	}
 	{
 		adminRouter.InitAdminRouter(MainGroup)
