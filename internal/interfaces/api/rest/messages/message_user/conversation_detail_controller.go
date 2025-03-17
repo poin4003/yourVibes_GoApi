@@ -130,7 +130,7 @@ func (cc *cConversationController) GetConversationDetailByIdList(ctx *gin.Contex
 
 	getConversationDetailByUserIdQuery, _ := conversationDetailQueryObject.ToGetConversationDetailQuery()
 
-	result, err := services.ConversationDetail().GetConversationDetailByUsesId(ctx, getConversationDetailByUserIdQuery)
+	result, err := services.ConversationDetail().GetConversationDetailByIdList(ctx, getConversationDetailByUserIdQuery)
 	if err != nil {
 		ctx.Error(err)
 		return
