@@ -81,7 +81,7 @@ func (s *sConversationDetail) GetConversationDetailByIdList(
 	ctx context.Context,
 	query *conversationDetailQuery.GetConversationDetailQuery,
 ) (result *conversationDetailQuery.GetConversationDetailResult, err error) {
-	conversationDetailEntities, paging, err := s.conversationDetailRepo.GetConversationDetailByUserId(ctx, query)
+	conversationDetailEntities, paging, err := s.conversationDetailRepo.GetConversationDetailByIdList(ctx, query)
 	if err != nil {
 		return result, err
 	}
