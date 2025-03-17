@@ -77,7 +77,7 @@ func (s *sConversationDetail) CreateConversationDetail(
 	}, nil
 }
 
-func (s *sConversationDetail) GetConversationDetailByUsesId(
+func (s *sConversationDetail) GetConversationDetailByIdList(
 	ctx context.Context,
 	query *conversationDetailQuery.GetConversationDetailQuery,
 ) (result *conversationDetailQuery.GetConversationDetailResult, err error) {
@@ -95,4 +95,24 @@ func (s *sConversationDetail) GetConversationDetailByUsesId(
 		ConversationDetail: conversationDetailResults,
 		PagingResponse:     paging,
 	}, nil
+}
+
+func (s *sConversationDetail) DeleteConversationDetailById(
+	ctx context.Context,
+	command *conversationDetailCommand.DeleteConversationDetailCommand,
+) error {
+	conversationDetailFound, err := s.conversationDetailRepo.GetById(ctx, *command.UserId, *command.ConversationId)
+	if err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if conversationDetailFound == nil {
+		return response.NewDataNotFoundError("Conversation detaul not found")
+	}
+
+	if err := s.conversationDetailRepo.DeleteById(ctx, *command.UserId, *command.ConversationId); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
 }

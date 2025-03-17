@@ -104,3 +104,19 @@ func (r *rMessage) GetMessagesByConversationId(
 	}
 	return messageEntities, &pagingResponse, nil
 }
+
+func (r *rMessage) DeleteById(
+	ctx context.Context,
+	id uuid.UUID,
+) error {
+	message, err := r.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	res := r.db.WithContext(ctx).Delete(message)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
