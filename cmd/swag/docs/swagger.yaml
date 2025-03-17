@@ -231,7 +231,7 @@ definitions:
     required:
     - email
     type: object
-host: yourvibes.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -772,7 +772,7 @@ paths:
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: Get conversationDetail by User ID
+      summary: Get conversationDetail by ID response list
       tags:
       - conversationDetail
   /conversation_details/get_by_id/{userId}/{conversationId}:

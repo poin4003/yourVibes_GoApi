@@ -67,7 +67,7 @@ func (r *rMessage) GetMessagesByConversationId(
 		Where("conversation_id = ?", query.ConversationId).
 		Preload("User").
 		Preload("Conversation").
-		Order("created_at DESC")
+		Order("created_at ASC")
 
 	err := db.Count(&total).Error
 	if err != nil {

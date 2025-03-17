@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibes.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -816,7 +816,7 @@
                 "tags": [
                     "conversationDetail"
                 ],
-                "summary": "Get conversationDetail by User ID",
+                "summary": "Get conversationDetail by ID response list",
                 "parameters": [
                     {
                         "type": "string",
