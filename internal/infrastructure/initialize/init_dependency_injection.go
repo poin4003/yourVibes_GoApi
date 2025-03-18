@@ -149,6 +149,6 @@ func InitDependencyInjection() {
 	notificationService.InitNotificationUser(notificationUserInit)
 
 	// Init dependency service
-	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, notificationServiceInit)
-	messageConsumer.InitMessageConsumer(consts.MessageQueue, messageMQServiceInit)
+	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, consts.NotificationDLQ, notificationServiceInit)
+	messageConsumer.InitMessageConsumer(consts.MessageQueue, consts.MessageDLQ, messageMQServiceInit)
 }
