@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	Config       settings.Config
-	Logger       *logger.LoggerZap
-	Rdb          *redis.Client
-	Pdb          *gorm.DB
-	SocketHub    *socket_hub.WebSocketHub
-	RabbitMQConn *rabbitmq.Connection
+	Config                settings.Config
+	Logger                *logger.LoggerZap
+	Rdb                   *redis.Client
+	Pdb                   *gorm.DB
+	NotificationSocketHub *socket_hub.NotificationSocketHub
+	MessageSocketHub      *socket_hub.MessageSocketHub
+	RabbitMQConn          *rabbitmq.Connection
 )

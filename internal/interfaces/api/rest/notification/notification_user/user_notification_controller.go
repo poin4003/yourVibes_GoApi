@@ -35,7 +35,7 @@ func NewNotificationController() *cNotification {
 // @Tags user_notification
 // @Accept json
 // @Produce json
-// @Router /users/notifications/ws/{user_id} [get]
+// @Router /notification/ws/{user_id} [get]
 func (c *cNotification) SendNotification(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -50,11 +50,11 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 		return
 	}
 
-	global.SocketHub.AddConnection(userId, conn)
+	global.NotificationSocketHub.AddConnection(userId, conn)
 	fmt.Println("WebSocket connection established")
 
 	go func() {
-		defer global.SocketHub.RemoveConnection(userId)
+		defer global.NotificationSocketHub.RemoveConnection(userId)
 		defer conn.Close()
 
 		for {
@@ -85,7 +85,7 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 // @Param limit query int false "Limit the number of notifications returned"
 // @Param page query int false "Pagination: page number"
 // @Security ApiKeyAuth
-// @Router /notifications [get]
+// @Router /notification [get]
 func (c *cNotification) GetNotification(ctx *gin.Context) {
 	// 1. Get query
 	queryInput, exists := ctx.Get("validatedQuery")
@@ -132,7 +132,7 @@ func (c *cNotification) GetNotification(ctx *gin.Context) {
 // @Produce json
 // @Param notification_id path string true "Notification ID"
 // @Security ApiKeyAuth
-// @Router /notifications/{notification_id} [patch]
+// @Router /notification/{notification_id} [patch]
 func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 	// 1. Get notification id from param
 	notificationIdStr := ctx.Param("notification_id")
@@ -161,7 +161,7 @@ func (c *cNotification) UpdateOneStatusNotifications(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Router /notifications/ [patch]
+// @Router /notification/ [patch]
 func (c *cNotification) UpdateManyStatusNotifications(ctx *gin.Context) {
 	// 1. Get user id from token
 	userIdClaim, err := extensions.GetUserID(ctx)

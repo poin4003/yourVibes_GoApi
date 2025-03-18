@@ -124,8 +124,12 @@ definitions:
         type: string
       conversation_id:
         type: string
+      parent_content:
+        type: string
       parent_id:
         type: string
+      user:
+        $ref: '#/definitions/request.userDto'
     type: object
   request.ForgotAdminPasswordRequest:
     properties:
@@ -230,6 +234,17 @@ definitions:
         type: string
     required:
     - email
+    type: object
+  request.userDto:
+    properties:
+      avatar_url:
+        type: string
+      family_name:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -964,7 +979,18 @@ paths:
       summary: Get message by ID
       tags:
       - message
-  /notifications:
+  /messages/ws/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Establish a WebSocket connection for real-time messaging
+      produces:
+      - application/json
+      responses: {}
+      summary: Connect to WebSocket
+      tags:
+      - message
+  /notification:
     get:
       consumes:
       - application/json
@@ -1005,7 +1031,7 @@ paths:
       summary: Get notifications
       tags:
       - user_notification
-  /notifications/:
+  /notification/:
     patch:
       consumes:
       - application/json
@@ -1017,7 +1043,7 @@ paths:
       summary: Update all notification status to false
       tags:
       - user_notification
-  /notifications/{notification_id}:
+  /notification/{notification_id}:
     patch:
       consumes:
       - application/json
@@ -1033,6 +1059,17 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update notification status to false
+      tags:
+      - user_notification
+  /notification/ws/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Establish a WebSocket connection for real-time notifications
+      produces:
+      - application/json
+      responses: {}
+      summary: Connect to WebSocket
       tags:
       - user_notification
   /posts/:
@@ -1846,17 +1883,6 @@ paths:
       summary: User login
       tags:
       - user_auth
-  /users/notifications/ws/{user_id}:
-    get:
-      consumes:
-      - application/json
-      description: Establish a WebSocket connection for real-time notifications
-      produces:
-      - application/json
-      responses: {}
-      summary: Connect to WebSocket
-      tags:
-      - user_notification
   /users/register/:
     post:
       consumes:

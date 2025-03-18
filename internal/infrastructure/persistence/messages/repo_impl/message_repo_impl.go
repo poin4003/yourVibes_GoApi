@@ -44,6 +44,7 @@ func (r *rMessage) GetById(
 func (r *rMessage) CreateOne(
 	ctx context.Context,
 	entity *entities.Message,
+<<<<<<< HEAD
 ) (*entities.Message, error) {
 	messageModel := mapper.ToMessageModel(entity)
 
@@ -54,6 +55,17 @@ func (r *rMessage) CreateOne(
 	}
 
 	return r.GetById(ctx, messageModel.ID)
+=======
+) error {
+	// Create message
+	messageModel := mapper.ToMessageModel(entity)
+	if err := r.db.WithContext(ctx).
+		Create(messageModel).Error; err != nil {
+		return err
+	}
+
+	return nil
+>>>>>>> 94c54b865d9a982f39ddcb73c47b5d40ec545b65
 }
 
 func (r *rMessage) GetMessagesByConversationId(
@@ -65,9 +77,19 @@ func (r *rMessage) GetMessagesByConversationId(
 
 	db := r.db.WithContext(ctx).Model(&models.Message{}).
 		Where("conversation_id = ?", query.ConversationId).
+<<<<<<< HEAD
 		Preload("User").
 		Preload("Conversation").
 		Order("created_at ASC")
+=======
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentMessage", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, content")
+		}).
+		Order("created_at DESC")
+>>>>>>> 94c54b865d9a982f39ddcb73c47b5d40ec545b65
 
 	err := db.Count(&total).Error
 	if err != nil {
@@ -85,7 +107,14 @@ func (r *rMessage) GetMessagesByConversationId(
 
 	offset := (page - 1) * limit
 
+<<<<<<< HEAD
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Find(&messageModels).Error; err != nil {
+=======
+	if err = db.WithContext(ctx).
+		Offset(offset).
+		Limit(limit).
+		Find(&messageModels).Error; err != nil {
+>>>>>>> 94c54b865d9a982f39ddcb73c47b5d40ec545b65
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, nil
 		}

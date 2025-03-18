@@ -5,7 +5,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Message struct {
@@ -14,10 +13,10 @@ type Message struct {
 	User           *User
 	ConversationId uuid.UUID
 	ParentId       *uuid.UUID
+	ParentContent  *string
 	Content        *string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	DeletedAt      gorm.DeletedAt
 }
 
 func (m *Message) Validate() error {

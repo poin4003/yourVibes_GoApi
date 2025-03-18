@@ -18,8 +18,8 @@ func NewMessageResult(
 		UserId:         message.UserId,
 		User:           NewMessageUserResultFromEntity(message.User),
 		ParentId:       message.ParentId,
+		ParentContent:  message.ParentContent,
 		CreatedAt:      message.CreatedAt,
 		UpdatedAt:      message.UpdatedAt,
 	}
-
 }

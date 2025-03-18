@@ -1,8 +1,11 @@
 package message_user
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
+	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -10,6 +13,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/query"
+	"net/http"
 )
 
 type cMessage struct {
@@ -17,6 +21,55 @@ type cMessage struct {
 
 func NewMessageController() *cMessage {
 	return &cMessage{}
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+// SendMessageWebSocket documentation
+// @Summary Connect to WebSocket
+// @Description Establish a WebSocket connection for real-time messaging
+// @Tags message
+// @Accept json
+// @Produce json
+// @Router /messages/ws/{user_id} [get]
+func (c *cMessage) SendMessageWebSocket(ctx *gin.Context) {
+	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	userIdStr := ctx.Param("user_id")
+	_, err = uuid.Parse(userIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		conn.Close()
+		return
+	}
+
+	global.MessageSocketHub.AddConnection(userIdStr, conn)
+
+	go func() {
+		defer global.MessageSocketHub.RemoveConnection(userIdStr)
+		defer conn.Close()
+
+		for {
+			_, message, err := conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+					fmt.Printf("Unexpected close error for user %s: %v \n", userIdStr, err)
+				} else {
+					fmt.Printf("Websocket connection closed for user: %s: %v \n", userIdStr, err)
+				}
+				break
+			}
+			fmt.Printf("Receive message from user: %s : %s \n", userIdStr, message)
+		}
+	}()
 }
 
 // CreateMessage documentation
@@ -53,16 +106,13 @@ func (m *cMessage) CreateMessage(ctx *gin.Context) {
 		return
 	}
 
-	result, err := services.Message().CreateMessage(ctx, createMessageCommand)
+	err = services.Message().CreateMessage(ctx, createMessageCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
 	}
 
-	messageDto := response.ToMessageDto(result.Message)
-
-	pkgResponse.OK(ctx, messageDto)
-
+	pkgResponse.OK(ctx, nil)
 }
 
 // GetMessageById documentation

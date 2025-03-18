@@ -134,7 +134,7 @@ func (s *sUserFriend) SendAddFriendRequest(
 	)
 
 	notiMsg := mapper.NewNotificationResult(notification)
-	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single"); err != nil {
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification", zap.Error(err))
 	}
 
@@ -272,7 +272,7 @@ func (s *sUserFriend) AcceptFriendRequest(
 	}
 
 	notiMsg := mapper.NewNotificationResult(notification)
-	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single"); err != nil {
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification", zap.Error(err))
 	}
 

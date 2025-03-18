@@ -8,6 +8,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"go.uber.org/zap"
+	"strings"
 )
 
 type NotificationConsumer struct {
@@ -30,7 +31,10 @@ func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) e
 		return err
 	}
 
-	routingKeys := []string{"notification.bulk", "notification.single"}
+	routingKeys := []string{
+		"notification.bulk.db_websocket",
+		"notification.single.db_websocket",
+	}
 	for _, key := range routingKeys {
 		err = ch.QueueBind(
 			q.Name,
@@ -59,17 +63,25 @@ func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) e
 					continue
 				}
 
-				switch msg.RoutingKey {
-				case "notification.bulk":
-					if err = c.notificationService.HandleBulkNotification(ctx, notifMsg); err != nil {
+				parts := strings.Split(msg.RoutingKey, ".")
+				if len(parts) < 3 || parts[0] != "notification" {
+					global.Logger.Warn("Invalid routing key", zap.String("routing_key", msg.RoutingKey))
+					return
+				}
+				scope := parts[1]
+				actions := strings.Split(parts[2], "_")
+
+				switch scope {
+				case "bulk":
+					if err = c.notificationService.HandleBulkNotification(ctx, notifMsg, actions); err != nil {
 						global.Logger.Error("Failed to handle bulk notification", zap.Error(err))
 					}
-				case "notification.single":
-					if err = c.notificationService.HandleSingleNotification(ctx, notifMsg); err != nil {
+				case "single":
+					if err = c.notificationService.HandleSingleNotification(ctx, notifMsg, actions); err != nil {
 						global.Logger.Error("Failed to handle single notification", zap.Error(err))
 					}
 				default:
-					global.Logger.Warn("Unknown routing key", zap.String("routingKey", msg.RoutingKey))
+					global.Logger.Warn("Unknown scope in routing key", zap.String("scope", scope))
 				}
 			case <-ctx.Done():
 				global.Logger.Info("Stopping consumer")

@@ -117,7 +117,7 @@ func (s *sPostLike) LikePost(
 		)
 
 		notifMsg := mapper.NewNotificationResult(notification)
-		if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single"); err != nil {
+		if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single.db_websocket"); err != nil {
 			global.Logger.Error("Failed to publish notification result", zap.Error(err))
 		}
 

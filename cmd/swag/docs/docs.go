@@ -1119,7 +1119,53 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/notifications": {
+        "/messages/message/{message_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user delete message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Delete message by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "message_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/messages/ws/{user_id}": {
+            "get": {
+                "description": "Establish a WebSocket connection for real-time messaging",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Connect to WebSocket",
+                "responses": {}
+            }
+        },
+        "/notification": {
             "get": {
                 "security": [
                     {
@@ -1183,7 +1229,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/notifications/": {
+        "/notification/": {
             "patch": {
                 "security": [
                     {
@@ -1203,7 +1249,23 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/notifications/{notification_id}": {
+        "/notification/ws/{user_id}": {
+            "get": {
+                "description": "Establish a WebSocket connection for real-time notifications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_notification"
+                ],
+                "summary": "Connect to WebSocket",
+                "responses": {}
+            }
+        },
+        "/notification/{notification_id}": {
             "patch": {
                 "security": [
                     {
@@ -2458,22 +2520,6 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/users/notifications/ws/{user_id}": {
-            "get": {
-                "description": "Establish a WebSocket connection for real-time notifications",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_notification"
-                ],
-                "summary": "Connect to WebSocket",
-                "responses": {}
-            }
-        },
         "/users/register/": {
             "post": {
                 "description": "When user registration",
@@ -2745,8 +2791,14 @@ const docTemplate = `{
                 "conversation_id": {
                     "type": "string"
                 },
+                "parent_content": {
+                    "type": "string"
+                },
                 "parent_id": {
                     "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/request.userDto"
                 }
             }
         },
@@ -2904,6 +2956,23 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.userDto": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "family_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

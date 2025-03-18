@@ -6,6 +6,8 @@ import (
 	adminServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services/implement"
 	advertiseService "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertiseServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
+	messageConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/consumer"
+	messageProducer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -76,6 +78,7 @@ func InitDependencyInjection() {
 	// Init publisher
 	postNotificationPublisher := postProducer.NewNotificationPublisher(rabbitmqConnection)
 	userNotificationPublisher := userProducer.NewNotificationPublisher(rabbitmqConnection)
+	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
@@ -115,7 +118,8 @@ func InitDependencyInjection() {
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
-	messagerServiceInit := messageServiceImpl.NewMessageImplement(conversationRepo, messageRepo)
+	messageServiceInit := messageServiceImpl.NewMessageImplement(messageRepo, messagePublisher)
+	messageMQServiceInit := messageServiceImpl.NewMessageMQImplement(conversationDetailRepo)
 	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)
 	notificationServiceInit := notificationServiceImpl.NewNotification(notificationRepo)
 	notificationUserInit := notificationServiceImpl.NewNotificationUserImplement(userRepo, notificationRepo)
@@ -138,11 +142,13 @@ func InitDependencyInjection() {
 	revenueService.InitRevenue(revenueServiceInit)
 	mediaService.InitMedia(mediaServiceInit)
 	messageService.InitConversation(conversationServiceInit)
-	messageService.InitMessage(messagerServiceInit)
+	messageService.InitMessage(messageServiceInit)
+	messageService.InitMessageMQ(messageMQServiceInit)
 	messageService.InitConversationDetail(conversationDetailServiceInit)
 	notificationService.InitNotificationMQ(notificationServiceInit)
 	notificationService.InitNotificationUser(notificationUserInit)
 
 	// Init dependency service
 	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, notificationServiceInit)
+	messageConsumer.InitMessageConsumer(consts.MessageQueue, messageMQServiceInit)
 }

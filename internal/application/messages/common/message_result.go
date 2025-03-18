@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type MessageResult struct {
@@ -13,8 +12,8 @@ type MessageResult struct {
 	User           *UserResult
 	ConversationId uuid.UUID
 	ParentId       *uuid.UUID
+	ParentContent  *string
 	Content        *string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	DeletedAt      gorm.DeletedAt
 }
