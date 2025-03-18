@@ -6,6 +6,9 @@ import (
 	adminServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services/implement"
 	advertiseService "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertiseServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
+	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
+	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 
 	commentService "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services"
 	commentServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
@@ -26,6 +29,10 @@ import (
 	reportService "github.com/poin4003/yourVibes_GoApi/internal/application/report/services"
 	reportServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/report/services/implement"
 
+	notificationConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/notification/consumer"
+	notificationService "github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
+	notificationServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/notification/services/implement"
+
 	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 
 	adminRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/admin/repo_impl"
@@ -42,8 +49,9 @@ import (
 	reportRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/report/repo_impl"
 )
 
-func InitServiceInterface() {
+func InitDependencyInjection() {
 	db := global.Pdb
+	rabbitmqConnection := global.RabbitMQConn
 
 	// 1. Initialize Repository
 	userRepo := userRepoImpl.NewUserRepositoryImplement(db)
@@ -64,6 +72,10 @@ func InitServiceInterface() {
 	messageRepo := messageRepoImpl.NewMessageRepositoryImplement(db)
 	conversationDetailRepo := messageRepoImpl.NewConversationDetailRepositoryImplement(db)
 	reportRepo := reportRepoImpl.NewReportRepositoryImplement(db)
+
+	// Init publisher
+	postNotificationPublisher := postProducer.NewNotificationPublisher(rabbitmqConnection)
+	userNotificationPublisher := userProducer.NewNotificationPublisher(rabbitmqConnection)
 
 	repository.InitUserRepository(userRepo)
 	repository.InitPostRepository(postRepo)
@@ -86,12 +98,11 @@ func InitServiceInterface() {
 
 	// 2. Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo)
-	userNotificationInit := userServiceImpl.NewUserNotificationImplement(userRepo, notificationRepo)
-	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, notificationRepo)
+	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userNotificationPublisher)
 	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo)
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
-	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, notificationRepo, advertiseRepo)
-	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, notificationRepo)
+	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postNotificationPublisher)
+	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postNotificationPublisher)
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
@@ -106,10 +117,11 @@ func InitServiceInterface() {
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
 	messagerServiceInit := messageServiceImpl.NewMessageImplement(conversationRepo, messageRepo)
 	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)
+	notificationServiceInit := notificationServiceImpl.NewNotification(notificationRepo)
+	notificationUserInit := notificationServiceImpl.NewNotificationUserImplement(userRepo, notificationRepo)
 
 	userService.InitUserAuth(userAuthServiceInit)
 	userService.InitUserInfo(userInfoServiceInit)
-	userService.InitUserNotification(userNotificationInit)
 	userService.InitUserFriend(userFriendServiceInit)
 	postService.InitPostNewFeed(userNewFeedServiceInit)
 	postService.InitLikeUserPost(postLikeServiceInit)
@@ -128,5 +140,9 @@ func InitServiceInterface() {
 	messageService.InitConversation(conversationServiceInit)
 	messageService.InitMessage(messagerServiceInit)
 	messageService.InitConversationDetail(conversationDetailServiceInit)
+	notificationService.InitNotificationMQ(notificationServiceInit)
+	notificationService.InitNotificationUser(notificationUserInit)
 
+	// Init dependency service
+	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, notificationServiceInit)
 }

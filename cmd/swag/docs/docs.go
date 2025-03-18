@@ -1119,14 +1119,13 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/messages/message/{message_id}": {
-            "delete": {
+        "/notifications": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "When user delete message",
                 "consumes": [
                     "application/json"
                 ],
@@ -1134,14 +1133,98 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "message"
+                    "user_notification"
                 ],
-                "summary": "Delete message by ID",
+                "summary": "Get notifications",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Message ID",
-                        "name": "message_id",
+                        "description": "Filter notifications by sender",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter notifications by type",
+                        "name": "notification_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter notifications created at this date",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort notifications by this field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Sort notifications in descending order",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit the number of notifications returned",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pagination: page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/notifications/": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_notification"
+                ],
+                "summary": "Update all notification status to false",
+                "responses": {}
+            }
+        },
+        "/notifications/{notification_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_notification"
+                ],
+                "summary": "Update notification status to false",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "notification_id",
                         "in": "path",
                         "required": true
                     }
@@ -2375,90 +2458,6 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/users/notifications": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_notification"
-                ],
-                "summary": "Get notifications",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter notifications by sender",
-                        "name": "from",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter notifications by type",
-                        "name": "notification_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter notifications created at this date",
-                        "name": "created_at",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort notifications by this field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Sort notifications in descending order",
-                        "name": "isDescending",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Limit the number of notifications returned",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Pagination: page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/users/notifications/": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_notification"
-                ],
-                "summary": "Update all notification status to false",
-                "responses": {}
-            }
-        },
         "/users/notifications/ws/{user_id}": {
             "get": {
                 "description": "Establish a WebSocket connection for real-time notifications",
@@ -2472,35 +2471,6 @@ const docTemplate = `{
                     "user_notification"
                 ],
                 "summary": "Connect to WebSocket",
-                "responses": {}
-            }
-        },
-        "/users/notifications/{notification_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_notification"
-                ],
-                "summary": "Update notification status to false",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Notification ID",
-                        "name": "notification_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {}
             }
         },

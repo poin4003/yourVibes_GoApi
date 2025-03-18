@@ -16,7 +16,6 @@ type UserRouter struct{}
 func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	UserAuthController := user_auth.NewUserAuthController()
 	UserInfoController := user_user.NewUserInfoController()
-	UserNotificationController := user_user.NewNotificationController()
 	UserFriendController := user_user.NewUserFriendController()
 
 	// Public router
@@ -58,9 +57,6 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			helpers.ValidateJsonBody(&authRequest.ForgotUserPasswordRequest{}, authRequest.ValidateForgotUserPasswordRequest),
 			UserAuthController.ForgotUserPassword,
 		)
-
-		// user_notification
-		userRouterPublic.GET("/notifications/ws/:user_id", UserNotificationController.SendNotification)
 	}
 
 	// Private router
@@ -85,15 +81,6 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			helpers.ValidateFormBody(&userRequest.UpdateUserRequest{}, userRequest.ValidateUpdateUserRequest),
 			UserInfoController.UpdateUser,
 		)
-
-		// user_notification
-		userRouterPrivate.GET("/notifications",
-			helpers.ValidateQuery(&userQuery.NotificationQueryObject{}, userQuery.ValidateNotificationQueryObject),
-			UserNotificationController.GetNotification,
-		)
-
-		userRouterPrivate.PATCH("/notifications/:notification_id", UserNotificationController.UpdateOneStatusNotifications)
-		userRouterPrivate.PATCH("/notifications", UserNotificationController.UpdateManyStatusNotifications)
 
 		// user_friend
 		userRouterPrivate.POST("/friends/friend_request/:friend_id", UserFriendController.SendAddFriendRequest)

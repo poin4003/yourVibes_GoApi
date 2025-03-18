@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/common"
 )
 
 type GetManyNotificationQuery struct {
@@ -20,6 +20,6 @@ type GetManyNotificationQuery struct {
 }
 
 type GetManyNotificationQueryResult struct {
-	Notifications  []*common.NotificationResult
+	Notifications  []*common.NotificationResultForInterface
 	PagingResponse *response.PagingResponse
 }

@@ -25,11 +25,6 @@ type (
 		GetManyUsers(ctx context.Context, query *query.GetManyUserQuery) (result *query.UserQueryListResult, err error)
 		UpdateUser(ctx context.Context, command *command.UpdateUserCommand) (result *command.UpdateUserCommandResult, err error)
 	}
-	IUserNotification interface {
-		GetNotificationByUserId(ctx context.Context, query *query.GetManyNotificationQuery) (result *query.GetManyNotificationQueryResult, err error)
-		UpdateOneStatusNotification(ctx context.Context, command *command.UpdateOneStatusNotificationCommand) (err error)
-		UpdateManyStatusNotification(ctx context.Context, command *command.UpdateManyStatusNotificationCommand) (err error)
-	}
 	IUserFriend interface {
 		SendAddFriendRequest(ctx context.Context, command *command.SendAddFriendRequestCommand) (err error)
 		GetFriendRequests(ctx context.Context, query *query.FriendRequestQuery) (result *query.FriendRequestQueryResult, err error)
@@ -41,10 +36,9 @@ type (
 )
 
 var (
-	localUserAuth         IUserAuth
-	localUserInfo         IUserInfo
-	localUserNotification IUserNotification
-	localUserFriend       IUserFriend
+	localUserAuth   IUserAuth
+	localUserInfo   IUserInfo
+	localUserFriend IUserFriend
 )
 
 func UserAuth() IUserAuth {
@@ -63,14 +57,6 @@ func UserInfo() IUserInfo {
 	return localUserInfo
 }
 
-func UserNotification() IUserNotification {
-	if localUserNotification == nil {
-		panic("repository_implement localUserNotification not found for interface IUserNotification")
-	}
-
-	return localUserNotification
-}
-
 func UserFriend() IUserFriend {
 	if localUserFriend == nil {
 		panic("repository_implement localUserFriend not found for interface IUserFriend")
@@ -85,10 +71,6 @@ func InitUserAuth(i IUserAuth) {
 
 func InitUserInfo(i IUserInfo) {
 	localUserInfo = i
-}
-
-func InitUserNotification(i IUserNotification) {
-	localUserNotification = i
 }
 
 func InitUserFriend(i IUserFriend) {
