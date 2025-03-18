@@ -16,6 +16,6 @@ type Bill struct {
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 	Status      bool           `gorm:"default:false"`
-	VoucherId   uuid.UUID      `gorm:"type:uuid;not null"`
-	Voucher     Voucher        `gorm:"foreignKey:VoucherId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	VoucherId   *uuid.UUID     `gorm:"type:uuid;"`
+	Voucher     *Voucher       `gorm:"foreignKey:VoucherId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
