@@ -56,7 +56,7 @@ func (c *MessageConsumer) StartMessageConsuming(ctx context.Context) error {
 				var msgCommand command.CreateMessageCommand
 				if err = json.Unmarshal(msg.Body, &msgCommand); err != nil {
 					global.Logger.Error("Failed to unmarshal command", zap.Error(err))
-					return
+					break
 				}
 
 				if err = c.messageService.HandleMessage(ctx, &msgCommand); err != nil {
