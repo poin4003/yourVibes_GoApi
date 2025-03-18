@@ -126,3 +126,20 @@ func (r *rConversatioDetail) DeleteById(
 	}
 	return nil
 }
+
+func (r *rConversatioDetail) GetListUserIdByConversationId(
+	ctx context.Context,
+	conversationId uuid.UUID,
+) ([]uuid.UUID, error) {
+	var userIds []uuid.UUID
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("conversation_id = ?", conversationId).
+		Pluck("user_id", &userIds).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return userIds, nil
+}

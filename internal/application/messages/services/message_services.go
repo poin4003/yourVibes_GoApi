@@ -16,10 +16,9 @@ type (
 		GetManyConversation(ctx context.Context, query *query.GetManyConversationQuery) (result *query.GetManyConversationQueryResult, err error)
 		DeleteConversationById(ctx context.Context, command *command.DeleteConversationCommand) error
 	}
-
 	IMessage interface {
 		GetMessageById(ctx context.Context, messageId uuid.UUID) (result *common.MessageResult, err error)
-		CreateMessage(ctx context.Context, command *command.CreateMessageCommand) (result *command.CreateMessageResult, err error)
+		CreateMessage(ctx context.Context, command *command.CreateMessageCommand) error
 		GetMessagesByConversationId(ctx context.Context, query *query.GetMessagesByConversationIdQuery) (result *query.GetMessagesByConversationIdResult, err error)
 		DeleteMessageById(ctx context.Context, command *command.DeleteMessageCommand) error
 	}
@@ -29,12 +28,16 @@ type (
 		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
 		DeleteConversationDetailById(ctx context.Context, command *command.DeleteConversationDetailCommand) error
 	}
+	IMessageMQ interface {
+		HandleMessage(ctx context.Context, message *command.CreateMessageCommand) error
+	}
 )
 
 var (
 	localConversation       IConversation
 	localMessage            IMessage
 	localConversationDetail IConversationDetail
+	localMessageMQ          IMessageMQ
 )
 
 func Conversation() IConversation {
@@ -68,4 +71,15 @@ func ConversationDetail() IConversationDetail {
 
 func InitConversationDetail(i IConversationDetail) {
 	localConversationDetail = i
+}
+
+func MessageMQ() IMessageMQ {
+	if localMessageMQ == nil {
+		panic("service_implement localMessageMQ not found for interface IMessageMQ")
+	}
+	return localMessageMQ
+}
+
+func InitMessageMQ(i IMessageMQ) {
+	localMessageMQ = i
 }

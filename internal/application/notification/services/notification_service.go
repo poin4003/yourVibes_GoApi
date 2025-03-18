@@ -8,8 +8,8 @@ import (
 
 type (
 	INotificationMQ interface {
-		HandleBulkNotification(ctx context.Context, command command.NotificationCommand) error
-		HandleSingleNotification(ctx context.Context, command command.NotificationCommand) error
+		HandleBulkNotification(ctx context.Context, command command.NotificationCommand, actions []string) error
+		HandleSingleNotification(ctx context.Context, command command.NotificationCommand, actions []string) error
 	}
 	INotificationUser interface {
 		GetNotificationByUserId(ctx context.Context, query *query.GetManyNotificationQuery) (result *query.GetManyNotificationQueryResult, err error)

@@ -7,19 +7,19 @@ import (
 	"time"
 )
 
-type WebSocketHub struct {
+type MessageSocketHub struct {
 	connections map[string]*websocket.Conn
 	mu          sync.RWMutex
 }
 
-func NewWebSocketHub() *WebSocketHub {
-	return &WebSocketHub{
+func NewMessageSocketHub() *MessageSocketHub {
+	return &MessageSocketHub{
 		connections: make(map[string]*websocket.Conn),
 	}
 }
 
 // Add connection to hub
-func (hub *WebSocketHub) AddConnection(userId string, conn *websocket.Conn) {
+func (hub *MessageSocketHub) AddConnection(userId string, conn *websocket.Conn) {
 	hub.mu.Lock()
 	defer hub.mu.Unlock()
 
@@ -34,7 +34,7 @@ func (hub *WebSocketHub) AddConnection(userId string, conn *websocket.Conn) {
 }
 
 // remove connection to hub
-func (hub *WebSocketHub) RemoveConnection(userId string) {
+func (hub *MessageSocketHub) RemoveConnection(userId string) {
 	hub.mu.Lock()
 	defer hub.mu.Unlock()
 	if conn, ok := hub.connections[userId]; ok {
@@ -45,7 +45,7 @@ func (hub *WebSocketHub) RemoveConnection(userId string) {
 }
 
 // monitor connection
-func (hub *WebSocketHub) monitorConnection(userId string, conn *websocket.Conn) {
+func (hub *MessageSocketHub) monitorConnection(userId string, conn *websocket.Conn) {
 	defer hub.RemoveConnection(userId)
 
 	// Read message to keep connection alive
@@ -61,7 +61,7 @@ func (hub *WebSocketHub) monitorConnection(userId string, conn *websocket.Conn) 
 }
 
 // Send notification to User
-func (hub *WebSocketHub) SendNotification(userId string, notification interface{}) error {
+func (hub *MessageSocketHub) SendMessage(userId string, notification interface{}) error {
 	hub.mu.RLock()
 	conn, ok := hub.connections[userId]
 	hub.mu.RUnlock()

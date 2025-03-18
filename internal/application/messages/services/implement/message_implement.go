@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -15,17 +16,17 @@ import (
 )
 
 type sMessage struct {
-	conversationRepo messageRepo.IConversationRepository
 	messageRepo      messageRepo.IMessageRepository
+	messagePublisher *producer.MessagePublisher
 }
 
 func NewMessageImplement(
-	conversationRepo messageRepo.IConversationRepository,
 	messageRepo messageRepo.IMessageRepository,
+	messagePublisher *producer.MessagePublisher,
 ) *sMessage {
 	return &sMessage{
-		conversationRepo: conversationRepo,
 		messageRepo:      messageRepo,
+		messagePublisher: messagePublisher,
 	}
 }
 
@@ -46,28 +47,13 @@ func (s *sMessage) GetMessageById(
 func (s *sMessage) CreateMessage(
 	ctx context.Context,
 	command *messageCommand.CreateMessageCommand,
-) (result *messageCommand.CreateMessageResult, err error) {
-	messageFound, err := s.conversationRepo.GetById(ctx, command.ConversationId)
-	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+) error {
+	// 1. Publish to rabbitmq (push websocket)
+	if err := s.messagePublisher.PublishMessage(ctx, command); err != nil {
+		return response.NewServerFailedError(err.Error())
 	}
 
-	if messageFound == nil {
-		return nil, response.NewDataNotFoundError("Conversation not found")
-	}
-
-	if command.ParentId != nil {
-		// 2.1. Get root comment
-		parentMessage, err := s.messageRepo.GetById(ctx, *command.ParentId)
-		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
-		}
-
-		if parentMessage == nil {
-			return nil, response.NewDataNotFoundError("Parent message not found")
-		}
-	}
-
+	// 2. Create message in db
 	newMessage, _ := messageEntity.NewMessage(
 		command.UserId,
 		command.ConversationId,
@@ -75,14 +61,12 @@ func (s *sMessage) CreateMessage(
 		&command.Content,
 	)
 
-	messageCreated, err := s.messageRepo.CreateOne(ctx, newMessage)
+	err := s.messageRepo.CreateOne(ctx, newMessage)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return response.NewServerFailedError(err.Error())
 	}
 
-	return &messageCommand.CreateMessageResult{
-		Message: mapper.NewMessageResult(messageCreated),
-	}, nil
+	return nil
 }
 
 func (s *sMessage) GetMessagesByConversationId(

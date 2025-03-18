@@ -6,6 +6,7 @@ import (
 )
 
 func InitSocketHub() {
-	global.SocketHub = socket_hub.NewWebSocketHub()
+	global.NotificationSocketHub = socket_hub.NewNotificationSocketHub()
+	global.MessageSocketHub = socket_hub.NewMessageSocketHub()
 	global.Logger.Info("init socket hub success")
 }

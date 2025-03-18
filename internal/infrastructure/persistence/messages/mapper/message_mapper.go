@@ -17,6 +17,7 @@ func ToMessageModel(message *entities.Message) *models.Message {
 	}
 	return m
 }
+
 func ToUserEntity(
 	user *models.User,
 ) *entities.User {
@@ -37,12 +38,18 @@ func FromMessageModel(m *models.Message) *entities.Message {
 		return nil
 	}
 
+	var parentContent *string
+	if m.ParentMessage != nil {
+		parentContent = m.ParentMessage.Content
+	}
+
 	return &entities.Message{
 		ID:             m.ID,
 		UserId:         m.UserId,
 		User:           ToUserEntity(&m.User),
 		ConversationId: m.ConversationId,
 		ParentId:       m.ParentId,
+		ParentContent:  parentContent,
 		Content:        m.Content,
 		CreatedAt:      m.CreatedAt,
 		UpdatedAt:      m.UpdatedAt,

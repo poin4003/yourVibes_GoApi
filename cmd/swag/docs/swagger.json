@@ -816,7 +816,7 @@
                 "tags": [
                     "conversationDetail"
                 ],
-                "summary": "Get conversationDetail by User ID",
+                "summary": "Get conversationDetail by ID response list",
                 "parameters": [
                     {
                         "type": "string",
@@ -1113,7 +1113,53 @@
                 "responses": {}
             }
         },
-        "/notifications": {
+        "/messages/message/{message_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user delete message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Delete message by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "message_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/messages/ws/{user_id}": {
+            "get": {
+                "description": "Establish a WebSocket connection for real-time messaging",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Connect to WebSocket",
+                "responses": {}
+            }
+        },
+        "/notification": {
             "get": {
                 "security": [
                     {
@@ -1177,7 +1223,7 @@
                 "responses": {}
             }
         },
-        "/notifications/": {
+        "/notification/": {
             "patch": {
                 "security": [
                     {
@@ -1197,7 +1243,23 @@
                 "responses": {}
             }
         },
-        "/notifications/{notification_id}": {
+        "/notification/ws/{user_id}": {
+            "get": {
+                "description": "Establish a WebSocket connection for real-time notifications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_notification"
+                ],
+                "summary": "Connect to WebSocket",
+                "responses": {}
+            }
+        },
+        "/notification/{notification_id}": {
             "patch": {
                 "security": [
                     {
@@ -2452,22 +2514,6 @@
                 "responses": {}
             }
         },
-        "/users/notifications/ws/{user_id}": {
-            "get": {
-                "description": "Establish a WebSocket connection for real-time notifications",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user_notification"
-                ],
-                "summary": "Connect to WebSocket",
-                "responses": {}
-            }
-        },
         "/users/register/": {
             "post": {
                 "description": "When user registration",
@@ -2739,8 +2785,14 @@
                 "conversation_id": {
                     "type": "string"
                 },
+                "parent_content": {
+                    "type": "string"
+                },
                 "parent_id": {
                     "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/request.userDto"
                 }
             }
         },
@@ -2898,6 +2950,23 @@
             ],
             "properties": {
                 "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.userDto": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "family_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

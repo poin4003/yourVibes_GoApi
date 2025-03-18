@@ -88,6 +88,16 @@ func (c *Connection) setupExchanges() error {
 		nil,
 	)
 
+	err = c.channel.ExchangeDeclare(
+		consts.MessageExName,
+		consts.MessageExType,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to setup exchange: %v", err)
 	}

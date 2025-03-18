@@ -19,7 +19,7 @@ type (
 
 	IMessageRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Message, error)
-		CreateOne(ctx context.Context, entity *entities.Message) (*entities.Message, error)
+		CreateOne(ctx context.Context, entity *entities.Message) error
 		GetMessagesByConversationId(ctx context.Context, query *query.GetMessagesByConversationIdQuery) ([]*entities.Message, *response.PagingResponse, error)
 		DeleteById(ctx context.Context, id uuid.UUID) error
 	}
@@ -29,6 +29,7 @@ type (
 		CreateOne(ctx context.Context, entity *entities.ConversationDetail) (*entities.ConversationDetail, error)
 		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) ([]*entities.ConversationDetail, *response.PagingResponse, error)
 		DeleteById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) error
+		GetListUserIdByConversationId(ctx context.Context, conversationId uuid.UUID) ([]uuid.UUID, error)
 	}
 )
 

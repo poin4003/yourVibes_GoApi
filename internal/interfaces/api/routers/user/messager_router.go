@@ -32,6 +32,11 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 
 	}
 
+	messageRouterPublic := Router.Group("/messages")
+	{
+		messageRouterPublic.GET("/ws/:user_id", useMessageController.SendMessageWebSocket)
+	}
+
 	messageRouter := Router.Group("/messages")
 	messageRouter.Use(middlewares.UserAuthProtected())
 	{

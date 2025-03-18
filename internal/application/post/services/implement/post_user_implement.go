@@ -160,7 +160,7 @@ func (s *sPostUser) CreatePost(
 
 	// 6.5. Publish to RabbitMQ to handle Notification
 	notiMsg := mapper.NewNotificationResult(notification)
-	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.bulk"); err != nil {
+	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 
