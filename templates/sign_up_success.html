@@ -1,15 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Sign up successful</title>
+    <title>YourVibes - Welcome Aboard!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f6f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .welcome-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 26px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        p {
+            font-size: 16px;
+            color: #444;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+        .email-highlight {
+            background: #e8f5e9;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #219653;
+            display: inline-block;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #219653;
+        }
+        @media screen and (max-width: 480px) {
+            .welcome-container {
+                padding: 25px;
+                margin: 10px;
+            }
+            .logo {
+                font-size: 28px;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            p {
+                font-size: 14px;
+            }
+            .btn {
+                padding: 10px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to YourVibes</h1>
-    <p>You have been sign up with email: {{.email}}</p>
-    <p>Thank you, you can enjoin our product now</p>
+    <div class="welcome-container">
+        <div class="logo">YourVibes</div>
+        <h1>Welcome to YourVibes!</h1>
+        <p>You’ve successfully signed up with the email: <span class="email-highlight">{{.email}}</span></p>
+        <p>Thank you for joining us! Get ready to enjoy all the exciting features and vibes our platform has to offer.</p>
+        <a href="https://yourvibes.com/login" class="btn">Start Exploring</a>
+    </div>
 </body>
 </html>

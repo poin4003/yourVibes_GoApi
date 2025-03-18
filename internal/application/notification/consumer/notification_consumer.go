@@ -60,13 +60,12 @@ func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) e
 				var notifMsg command.NotificationCommand
 				if err = json.Unmarshal(msg.Body, &notifMsg); err != nil {
 					global.Logger.Error("Failed to unmarshal notification command", zap.Error(err))
-					continue
+					break
 				}
 
 				parts := strings.Split(msg.RoutingKey, ".")
 				if len(parts) < 3 || parts[0] != "notification" {
 					global.Logger.Warn("Invalid routing key", zap.String("routing_key", msg.RoutingKey))
-					return
 				}
 				scope := parts[1]
 				actions := strings.Split(parts[2], "_")

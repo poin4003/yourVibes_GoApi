@@ -16,7 +16,7 @@ type Voucher struct {
 	Type        bool           `gorm:"default:false"`
 	Value       int            `gorm:"type:int;default:1"`
 	Code        string         `gorm:"type:varchar(30);not null"`
-	Max_uses    int            `gorm:"type:int;default:1"`
+	MaxUses     int            `gorm:"type:int;default:1"`
 	Status      bool           `gorm:"default:true"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
