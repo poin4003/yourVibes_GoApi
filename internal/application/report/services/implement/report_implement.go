@@ -2,8 +2,15 @@ package implement
 
 import (
 	"context"
+
+	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/report/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/voucher/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/sendto"
+	"go.uber.org/zap"
 
 	reportCommand "github.com/poin4003/yourVibes_GoApi/internal/application/report/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/report/mapper"
@@ -14,14 +21,20 @@ import (
 )
 
 type sReportFactory struct {
-	reportRepo repo.IReportRepository
+	reportRepo            repo.IReportRepository
+	voucherRepo           repo.IVoucherRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewReportFactoryImplment(
 	reportRepo repo.IReportRepository,
+	voucherRepo repo.IVoucherRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sReportFactory {
 	return &sReportFactory{
-		reportRepo: reportRepo,
+		reportRepo:            reportRepo,
+		voucherRepo:           voucherRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -162,19 +175,83 @@ func (s *sReportFactory) HandleReport(
 ) (err error) {
 	switch command.Type {
 	case consts.USER_REPORT:
-		if err = s.reportRepo.HandleUserReport(ctx, command.ReportId, command.AdminId); err != nil {
+		// Handle user report
+		userEntity, err := s.reportRepo.HandleUserReport(ctx, command.ReportId, command.AdminId)
+		if err != nil {
 			return err
 		}
+
+		// Send email for user
+		if err = sendto.SendTemplateEmail(
+			[]string{userEntity.Email},
+			consts.HOST_EMAIL,
+			"deactivate_account.html",
+			map[string]interface{}{
+				"familyname": userEntity.FamilyName,
+				"name":       userEntity.Name,
+				"email":      userEntity.Email,
+			},
+			"deactivate account user",
+		); err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
 		return nil
 	case consts.POST_REPORT:
-		if err = s.reportRepo.HandlePostReport(ctx, command.ReportId, command.AdminId); err != nil {
+		// handle post report
+		postEntity, err := s.reportRepo.HandlePostReport(ctx, command.ReportId, command.AdminId)
+		if err != nil {
 			return err
 		}
+
+		// Send notification for user
+		notification, err := notificationEntity.NewNotification(
+			"System",
+			consts.AVATAR_URL,
+			postEntity.User.ID,
+			consts.DEACTIVATE_POST,
+			postEntity.ID.String(),
+			"your post has been deactivate",
+		)
+		if err != nil {
+			global.Logger.Error("Failed to create notification entity", zap.Error(err))
+			return nil
+		}
+
+		// Publish to RabbitMQ to handle Notification
+		notiMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+		}
+
 		return nil
 	case consts.COMMENT_REPORT:
-		if err = s.reportRepo.HandleCommentReport(ctx, command.ReportId, command.AdminId); err != nil {
+		// Handle comment report
+		commentEntity, err := s.reportRepo.HandleCommentReport(ctx, command.ReportId, command.AdminId)
+		if err != nil {
 			return err
 		}
+
+		// Send notification for user
+		notification, err := notificationEntity.NewNotification(
+			"System",
+			consts.AVATAR_URL,
+			commentEntity.User.ID,
+			consts.DEACTIVATE_COMMENT,
+			commentEntity.ID.String(),
+			"your comment has been deactivated",
+		)
+		if err != nil {
+			global.Logger.Error("Failed to create notification entity", zap.Error(err))
+			return nil
+		}
+
+		// Publish to RabbitMQ to handle Notification
+		notiMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+		}
+
 		return nil
 	default:
 		return response.NewValidateError("invalid report type")
@@ -197,19 +274,103 @@ func (s *sReportFactory) Activate(
 ) (err error) {
 	switch command.Type {
 	case consts.USER_REPORT:
-		if err = s.reportRepo.ActivateUser(ctx, command.ReportId); err != nil {
+		// Activate user
+		userEntity, err := s.reportRepo.ActivateUser(ctx, command.ReportId)
+		if err != nil {
 			return err
 		}
+
+		// Send email for user
+		if err = sendto.SendTemplateEmail(
+			[]string{userEntity.Email},
+			consts.HOST_EMAIL,
+			"activate_account.html",
+			map[string]interface{}{
+				"familyname": userEntity.FamilyName,
+				"name":       userEntity.Name,
+				"email":      userEntity.Email,
+			},
+			"activate account for user",
+		); err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
 		return nil
 	case consts.POST_REPORT:
-		if err = s.reportRepo.ActivatePost(ctx, command.ReportId); err != nil {
+		// Activate post
+		postEntity, err := s.reportRepo.ActivatePost(ctx, command.ReportId)
+		if err != nil {
 			return err
 		}
+
+		// Check if post is advertise or was advertises
+		content := "your post has been activated"
+		if postEntity.IsAdvertisement != consts.NOT_ADVERTISE {
+			voucherEntity, err := entities.NewVoucherBySystem(
+				"yourvibes",
+				"yourvibes voucher after admin deactivate mistake",
+				1,
+				20,
+				consts.PERCENTAGE,
+			)
+			if err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+
+			if err = s.voucherRepo.CreateVoucher(ctx, voucherEntity); err != nil {
+				return err
+			}
+
+			content = "your post has been activated, your voucher is " + voucherEntity.Code
+		}
+
+		// Send notification for user
+		notification, err := notificationEntity.NewNotification(
+			"System",
+			consts.AVATAR_URL,
+			postEntity.User.ID,
+			consts.ACTIVATE_POST,
+			postEntity.ID.String(),
+			content,
+		)
+		if err != nil {
+			global.Logger.Error("Failed to create notification entity", zap.Error(err))
+			return nil
+		}
+
+		// Publish to RabbitMQ to handle Notification
+		notiMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+		}
+
 		return nil
 	case consts.COMMENT_REPORT:
-		if err = s.reportRepo.ActivateComment(ctx, command.ReportId); err != nil {
+		commentEntity, err := s.reportRepo.ActivateComment(ctx, command.ReportId)
+		if err != nil {
 			return err
 		}
+
+		// Send notification for user
+		notification, err := notificationEntity.NewNotification(
+			commentEntity.User.FamilyName+" "+commentEntity.User.Name,
+			commentEntity.User.AvatarUrl,
+			commentEntity.User.ID,
+			consts.ACTIVATE_COMMENT,
+			commentEntity.ID.String(),
+			"your comment has been activated",
+		)
+		if err != nil {
+			global.Logger.Error("Failed to create notification entity", zap.Error(err))
+			return nil
+		}
+
+		// Publish to RabbitMQ to handle Notification
+		notiMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+		}
+
 		return nil
 	default:
 		return response.NewValidateError("invalid report type")

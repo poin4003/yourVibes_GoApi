@@ -12,6 +12,7 @@ func ToBillModel(bill *entities.Bill) *models.Bill {
 		CreatedAt:   bill.CreatedAt,
 		UpdatedAt:   bill.UpdateAt,
 		Status:      bill.Status,
+		VoucherId:   bill.VoucherId,
 	}
 	b.ID = bill.ID
 

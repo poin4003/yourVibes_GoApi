@@ -2,33 +2,37 @@ package implement
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	voucherEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/voucher/entities"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/payment"
-	"time"
 
 	advertiseCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/mapper"
 	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
 	advertiseEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
-	advertiseRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sAdvertise struct {
-	advertiseRepo    advertiseRepo.IAdvertiseRepository
-	billRepo         advertiseRepo.IBillRepository
-	notificationRepo advertiseRepo.INotificationRepository
+	advertiseRepo repository.IAdvertiseRepository
+	billRepo      repository.IBillRepository
+	voucherRepo   repository.IVoucherRepository
 }
 
 func NewAdvertiseImplement(
-	advertiseRepo advertiseRepo.IAdvertiseRepository,
-	billRepo advertiseRepo.IBillRepository,
-	notificationRepo advertiseRepo.INotificationRepository,
+	advertiseRepo repository.IAdvertiseRepository,
+	billRepo repository.IBillRepository,
+	voucherRepo repository.IVoucherRepository,
 ) *sAdvertise {
 	return &sAdvertise{
-		advertiseRepo:    advertiseRepo,
-		billRepo:         billRepo,
-		notificationRepo: notificationRepo,
+		advertiseRepo: advertiseRepo,
+		billRepo:      billRepo,
+		voucherRepo:   voucherRepo,
 	}
 }
 
@@ -61,7 +65,38 @@ func (s *sAdvertise) CreateAdvertise(
 		}
 	}
 
-	// 2. Create advertise
+	// 2. Calculate bill
+	duration := command.EndDate.Sub(command.StartDate)
+	durationDate := int(duration.Seconds() / 86400)
+	price := durationDate*30000 + int(float64(durationDate)*30000*0.1)
+
+	var voucher *voucherEntity.VoucherEntity
+	if command.VoucherCode != nil {
+		// Get and redeem voucher
+		voucher, err = s.voucherRepo.RedeemVoucher(ctx, *command.VoucherCode)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check and calculate discount
+		discount := 0
+		if voucher.Type == consts.PERCENTAGE {
+			discount = price * voucher.Value / 100
+		} else {
+			discount = price - voucher.Value
+		}
+
+		// Apply discount to price
+		price -= discount
+	}
+
+	// 3. Apply voucher into bill if it exists
+	var voucherId *uuid.UUID
+	if voucher != nil {
+		voucherId = &voucher.ID
+	}
+
+	// 4. Create advertise
 	newAdvertise, err := advertiseEntity.NewAdvertise(
 		command.PostId,
 		command.StartDate,
@@ -76,14 +111,10 @@ func (s *sAdvertise) CreateAdvertise(
 		return nil, response2.NewServerFailedError(err.Error())
 	}
 
-	// 3. Create bill
-	duration := command.EndDate.Sub(command.StartDate)
-	durationDate := int(duration.Seconds() / 86400)
-	price := durationDate*30000 + int(float64(durationDate)*30000*0.1)
-
 	billEntity, err := advertiseEntity.NewBill(
 		advertiseCreated.ID,
 		price,
+		voucherId,
 	)
 	if err != nil {
 		return nil, response2.NewServerFailedError(err.Error())
@@ -94,7 +125,7 @@ func (s *sAdvertise) CreateAdvertise(
 		return nil, response2.NewServerFailedError(err.Error())
 	}
 
-	// 4. Call momo api to handle payment
+	// 5. Call momo api to handle payment
 	payUrl, err := payment.SendRequestToMomo(
 		newBill.ID.String(),
 		newBill.ID.String(),

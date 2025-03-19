@@ -13,6 +13,7 @@ type CreateAdvertiseRequest struct {
 	StartDate   time.Time `json:"start_date" binding:"required"`
 	EndDate     time.Time `json:"end_date" binding:"required"`
 	RedirectUrl string    `json:"redirect_url" binding:"required"`
+	VoucherCode *string   `json:"voucher_code,omitempty"`
 }
 
 func ValidateCreateAdvertiseRequest(req interface{}) error {
@@ -52,6 +53,7 @@ func ValidateCreateAdvertiseRequest(req interface{}) error {
 			return nil
 		})),
 		validation.Field(&dto.RedirectUrl, validation.Required),
+		validation.Field(&dto.VoucherCode, validation.Length(2, 50)),
 	)
 }
 
@@ -61,5 +63,6 @@ func (req *CreateAdvertiseRequest) ToCreateAdvertiseCommand() (*command.CreateAd
 		StartDate:   req.StartDate,
 		EndDate:     req.EndDate,
 		RedirectUrl: req.RedirectUrl,
+		VoucherCode: req.VoucherCode,
 	}, nil
 }

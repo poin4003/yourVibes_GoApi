@@ -14,6 +14,7 @@ type Bill struct {
 	CreatedAt   time.Time
 	UpdateAt    time.Time
 	Status      bool
+	VoucherId   *uuid.UUID
 }
 
 type BillUpdate struct {
@@ -36,6 +37,7 @@ func (b *BillUpdate) ValidateUpdateBill() error {
 func NewBill(
 	AdvertiseId uuid.UUID,
 	Price int,
+	VoucherId *uuid.UUID,
 ) (*Bill, error) {
 	bill := &Bill{
 		ID:          uuid.New(),
@@ -44,6 +46,7 @@ func NewBill(
 		CreatedAt:   time.Now(),
 		UpdateAt:    time.Now(),
 		Status:      false,
+		VoucherId:   VoucherId,
 	}
 	if err := bill.Validate(); err != nil {
 		return nil, err

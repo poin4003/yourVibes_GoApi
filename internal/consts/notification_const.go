@@ -19,7 +19,7 @@ const (
 	DEACTIVATE_POST       NotificationType = "deactivate_post"
 	ACTIVATE_POST         NotificationType = "activate_post"
 	DEACTIVATE_COMMENT    NotificationType = "deactivate_comment"
-	ACTICATE_COMMENT      NotificationType = "activate_comment"
+	ACTIVATE_COMMENT      NotificationType = "activate_comment"
 )
 
 var NotificationTypes = []interface{}{
@@ -33,7 +33,7 @@ var NotificationTypes = []interface{}{
 	DEACTIVATE_POST,
 	ACTIVATE_POST,
 	DEACTIVATE_COMMENT,
-	ACTICATE_COMMENT,
+	ACTIVATE_COMMENT,
 }
 
 type NotificationSocketResponse struct {
