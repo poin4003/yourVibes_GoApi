@@ -10,6 +10,7 @@ type CreateAdvertiseCommand struct {
 	PostId      uuid.UUID
 	StartDate   time.Time
 	EndDate     time.Time
+	VoucherCode *string
 	RedirectUrl string
 }
 

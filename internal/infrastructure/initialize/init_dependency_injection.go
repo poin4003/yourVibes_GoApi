@@ -9,6 +9,7 @@ import (
 	messageConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/consumer"
 	messageProducer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
+	reportProducer "github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 
@@ -46,6 +47,8 @@ import (
 
 	postRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
 
+	voucherRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/voucher/repo_impl"
+
 	userRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
 
 	reportRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/report/repo_impl"
@@ -74,10 +77,12 @@ func InitDependencyInjection() {
 	messageRepo := messageRepoImpl.NewMessageRepositoryImplement(db)
 	conversationDetailRepo := messageRepoImpl.NewConversationDetailRepositoryImplement(db)
 	reportRepo := reportRepoImpl.NewReportRepositoryImplement(db)
+	voucherRepo := voucherRepoImpl.NewVoucherRepositoryImplement(db)
 
 	// Init publisher
 	postNotificationPublisher := postProducer.NewNotificationPublisher(rabbitmqConnection)
 	userNotificationPublisher := userProducer.NewNotificationPublisher(rabbitmqConnection)
+	reportNotificationPublisher := reportProducer.NewNotificationPublisher(rabbitmqConnection)
 	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
 	repository.InitUserRepository(userRepo)
@@ -98,6 +103,7 @@ func InitDependencyInjection() {
 	repository.InitMessageRepository(messageRepo)
 	repository.InitConversationDetailRepository(conversationDetailRepo)
 	repository.InitReportRepository(reportRepo)
+	repository.InitVoucherRepository(voucherRepo)
 
 	// 2. Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo)
@@ -109,12 +115,12 @@ func InitDependencyInjection() {
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
 	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
-	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, notificationRepo)
+	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)
 	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo)
 	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo)
-	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo)
+	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, reportNotificationPublisher)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
@@ -149,6 +155,6 @@ func InitDependencyInjection() {
 	notificationService.InitNotificationUser(notificationUserInit)
 
 	// Init dependency service
-	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, notificationServiceInit)
-	messageConsumer.InitMessageConsumer(consts.MessageQueue, messageMQServiceInit)
+	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, consts.NotificationDLQ, notificationServiceInit)
+	messageConsumer.InitMessageConsumer(consts.MessageQueue, consts.MessageDLQ, messageMQServiceInit)
 }

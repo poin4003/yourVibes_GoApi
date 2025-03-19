@@ -13,12 +13,33 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - yourvibes_network
+
   redis:
     image: redis:latest
     container_name: redis_container
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      - yourvibes_network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_container
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_VHOST=/
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - yourvibes_network
 
   yourvibes_server:
     build:
@@ -30,18 +51,31 @@ services:
     depends_on:
       - postgres
       - redis
+      - rabbitmq
     ports:
       - "8080:8080"
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_CONNECTION_TIMEOUT=10
+      - RABBITMQ_MAX_RECONNECT_ATTEMPTS=5
     volumes:
       - yourvibes_storage:/storages
       - tmp_volume:/tmp
-#      - template_volume:/templates
+    networks:
+      - yourvibes_network
 
 volumes:
   postgres_data:
   yourvibes_storage:
   tmp_volume:
-#  template_volume:
+  rabbitmq_data:
+
+networks:
+  yourvibes_network:
+    driver: bridge

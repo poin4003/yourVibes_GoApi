@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "localhost:8080",
+    "host": "yourvibes.duckdns.org:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -2747,6 +2747,9 @@
                     "type": "string"
                 },
                 "start_date": {
+                    "type": "string"
+                },
+                "voucher_code": {
                     "type": "string"
                 }
             }

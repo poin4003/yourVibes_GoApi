@@ -555,115 +555,169 @@ func (r *rReport) CreateCommentReport(
 func (r *rReport) HandleUserReport(
 	ctx context.Context,
 	reportId, adminId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+) (*entities.UserForReport, error) {
+	userFound := &models.User{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Get user report
 		userReportFound, err := r.getUserReportById(ctx, tx, reportId)
 		if err != nil {
 			return err
 		}
 
-		// 2. Check report status
+		// 2. Check user exits
+		if err = tx.WithContext(ctx).
+			Select("id, family_name, name, avatar_url").
+			First(&userReportFound, userReportFound.ReportedUserId).
+			Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.NewDataNotFoundError(err.Error())
+			}
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// 3. Check report status
 		if userReportFound.Report.Status {
 			return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 		}
 
-		// 3. Update reported user status
+		// 4. Update reported user status
 		if err = r.updateUserStatus(ctx, tx, userReportFound.ReportedUserId, false); err != nil {
 			return err
 		}
 
-		// 4. Update reportedUser posts status
+		// 5. Update reportedUser posts status
 		if err = r.updateUserPostStatus(ctx, tx, userReportFound.ReportedUserId, false); err != nil {
 			return err
 		}
 
-		// 5. Update reported User comments status
+		// 6. Update reported User comments status
 		if err = r.updateUserCommentStatus(ctx, tx, userReportFound.ReportedUserId, false); err != nil {
 			return err
 		}
 
-		// 6. Update report status
+		// 7. Update report status
 		if err = r.updateReportAdminIdAndStatus(ctx, tx, reportId, adminId, true); err != nil {
 			return err
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromUserModel(userFound), nil
 }
 
 func (r *rReport) HandlePostReport(
 	ctx context.Context,
 	reportId, adminId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+) (*entities.PostForReport, error) {
+	postFound := &models.Post{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Get post report
 		postReportFound, err := r.getPostReportById(ctx, tx, reportId)
 		if err != nil {
 			return err
 		}
 
-		// 2. Check report status
+		// 2. Check post exists
+		if err = tx.WithContext(ctx).
+			Model(postFound).
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select("id, family_name, name, avatar_url")
+			}).
+			First(&postFound, postReportFound.ReportedPostId).
+			Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.NewDataNotFoundError(err.Error())
+			}
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// 3. Check report status
 		if postReportFound.Report.Status {
 			return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 		}
 
-		// 3. Update reported post status
+		// 4. Update reported post status
 		if err = r.updatePostStatus(ctx, tx, postReportFound.ReportedPostId, false); err != nil {
 			return err
 		}
 
-		// 4. Update report status
+		// 5. Update report status
 		if err = r.updateReportAdminIdAndStatus(ctx, tx, reportId, adminId, true); err != nil {
 			return err
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromPostModel(postFound), nil
 }
 
 func (r *rReport) HandleCommentReport(
 	ctx context.Context,
 	reportId, adminId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+) (*entities.CommentForReport, error) {
+	commentFound := &models.Comment{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Get comment report
 		commentReportFound, err := r.getCommentReportById(ctx, tx, reportId)
 		if err != nil {
 			return err
 		}
 
-		// 2. Check report status
+		// 2. Get comment to check
+		if err = tx.WithContext(ctx).
+			Model(commentFound).
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select("id, family_name, name, avatar_url")
+			}).
+			First(commentFound, commentReportFound.ReportedCommentId).
+			Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.NewDataNotFoundError(err.Error())
+			}
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// 3. Check report status
 		if commentReportFound.Report.Status {
 			return response.NewCustomError(response.ErrCodeReportIsAlreadyHandled)
 		}
 
-		// 3. Update reported comment status
+		// 4. Update reported comment status
 		if err = r.updateCommentStatus(ctx, tx, commentReportFound.ReportedCommentId, false); err != nil {
 			return err
 		}
 
-		// 4. Update report status
+		// 5. Update report status
 		if err = r.updateReportAdminIdAndStatus(ctx, tx, reportId, adminId, true); err != nil {
 			return err
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromCommentModel(commentFound), nil
 }
 
 func (r *rReport) ActivateUser(
 	ctx context.Context,
 	reportId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		userFound := &models.User{}
+) (*entities.UserForReport, error) {
+	userFound := &models.User{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Check user exists
 		if err := tx.WithContext(ctx).
 			Model(userFound).
 			Joins("JOIN user_reports ON user_reports.reported_user_id = users.id").
 			Where("user_reports.report_id = ?", reportId).
-			Select("users.id, users.status").
+			Select("users.id, users.status, users.email, users.name, users.family_name").
 			First(userFound).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -715,21 +769,28 @@ func (r *rReport) ActivateUser(
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromUserModel(userFound), nil
 }
 
 func (r *rReport) ActivatePost(
 	ctx context.Context,
 	reportId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		postFound := &models.Post{}
+) (*entities.PostForReport, error) {
+	postFound := &models.Post{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Check post exists
 		if err := tx.WithContext(ctx).
 			Model(postFound).
 			Joins("JOIN post_reports ON post_reports.reported_post_id = posts.id").
 			Where("post_reports.report_id = ?", reportId).
-			Select("posts.id, posts.status").
+			Select("posts.id, posts.status, posts.user_id, posts.is_advertisement").
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select("id, family_name, name, avatar_url")
+			}).
 			First(postFound).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -765,21 +826,28 @@ func (r *rReport) ActivatePost(
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromPostModel(postFound), nil
 }
 
 func (r *rReport) ActivateComment(
 	ctx context.Context,
 	reportId uuid.UUID,
-) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		commentFound := &models.Comment{}
+) (*entities.CommentForReport, error) {
+	commentFound := &models.Comment{}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Check comment exists
 		if err := tx.WithContext(ctx).
 			Model(commentFound).
 			Joins("JOIN comment_reports ON comment_reports.reported_comment_id = comments.id").
 			Where("comment_reports.report_id = ?", reportId).
-			Select("comments.id, comments.status").
+			Select("comments.id, comments.status, comments.user_id").
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select("id, family_name, name, avatar_url")
+			}).
 			First(commentFound).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -815,7 +883,11 @@ func (r *rReport) ActivateComment(
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return mapper.FromCommentModel(commentFound), nil
 }
 
 func (r *rReport) DeleteReportById(

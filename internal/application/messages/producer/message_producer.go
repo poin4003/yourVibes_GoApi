@@ -29,7 +29,7 @@ func (p *MessagePublisher) PublishMessage(
 		global.Logger.Error("failed to marshal message", zap.Error(err))
 	}
 
-	err = p.conn.Publish(ctx, consts.MessageExName, "", body)
+	err = p.conn.Publish(ctx, consts.MessageExName, "message.created", body)
 	if err != nil {
 		global.Logger.Error("failed to publish message", zap.Error(err))
 		return err
