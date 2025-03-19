@@ -70,7 +70,7 @@ func (r *rMessage) GetMessagesByConversationId(
 		Preload("ParentMessage", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, content")
 		}).
-		Order("created_at ASC")
+		Order("created_at DESC")
 
 	err := db.Count(&total).Error
 	if err != nil {
