@@ -6,6 +6,7 @@ import (
 	adminServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/admin/services/implement"
 	advertiseService "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services"
 	advertiseServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/services/implement"
+	commentProducer "github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
 	messageConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/consumer"
 	messageProducer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
@@ -83,6 +84,7 @@ func InitDependencyInjection() {
 	postNotificationPublisher := postProducer.NewNotificationPublisher(rabbitmqConnection)
 	userNotificationPublisher := userProducer.NewNotificationPublisher(rabbitmqConnection)
 	reportNotificationPublisher := reportProducer.NewNotificationPublisher(rabbitmqConnection)
+	commentNotificationPublisher := commentProducer.NewNotificationPublisher(rabbitmqConnection)
 	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
 	repository.InitUserRepository(userRepo)
@@ -112,9 +114,9 @@ func InitDependencyInjection() {
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
 	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postNotificationPublisher)
 	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postNotificationPublisher)
-	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo)
-	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo)
-	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo)
+	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, postNotificationPublisher)
+	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentNotificationPublisher)
+	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo, commentNotificationPublisher)
 	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)

@@ -128,7 +128,7 @@ func (c *MessageConsumer) consumeMessages(ctx context.Context, msgs <-chan amqp0
 				var msgCommand command.CreateMessageCommand
 				if err := json.Unmarshal(msg.Body, &msgCommand); err != nil {
 					global.Logger.Error("Failed to unmarshal command", zap.Error(err))
-					msg.Nack(false, true)
+					msg.Ack(false)
 					continue
 				}
 

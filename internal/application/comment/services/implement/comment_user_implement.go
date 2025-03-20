@@ -2,8 +2,13 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
@@ -17,10 +22,11 @@ import (
 )
 
 type sCommentUser struct {
-	commentRepo         commentRepo.ICommentRepository
-	userRepo            commentRepo.IUserRepository
-	postRepo            commentRepo.IPostRepository
-	likeUserCommentRepo commentRepo.ILikeUserCommentRepository
+	commentRepo           commentRepo.ICommentRepository
+	userRepo              commentRepo.IUserRepository
+	postRepo              commentRepo.IPostRepository
+	likeUserCommentRepo   commentRepo.ILikeUserCommentRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewCommentUserImplement(
@@ -28,12 +34,14 @@ func NewCommentUserImplement(
 	userRepo commentRepo.IUserRepository,
 	postRepo commentRepo.IPostRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sCommentUser {
 	return &sCommentUser{
-		commentRepo:         commentRepo,
-		userRepo:            userRepo,
-		postRepo:            postRepo,
-		likeUserCommentRepo: likeUserCommentRepo,
+		commentRepo:           commentRepo,
+		userRepo:              userRepo,
+		postRepo:              postRepo,
+		likeUserCommentRepo:   likeUserCommentRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -103,6 +111,21 @@ func (s *sCommentUser) CreateComment(
 	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePost)
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	// 4.1.5. Publish to RabbitMQ handle Notification
+	notification, _ := notificationEntity.NewNotification(
+		commentCreated.User.FamilyName+" "+commentCreated.User.Name,
+		commentCreated.User.AvatarUrl,
+		postFound.UserId,
+		consts.NEW_COMMENT,
+		(postFound.ID).String(),
+		postFound.Content,
+	)
+
+	notifMsg := mapper.NewNotificationResult(notification)
+	if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single.db_websocket"); err != nil {
+		global.Logger.Error("Failed to publish notification result", zap.Error(err))
 	}
 
 	// 6. Validate comment after create

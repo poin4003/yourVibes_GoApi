@@ -2,8 +2,13 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"go.uber.org/zap"
 
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
@@ -14,20 +19,23 @@ import (
 )
 
 type sCommentLike struct {
-	userRepo            commentRepo.IUserRepository
-	commentRepo         commentRepo.ICommentRepository
-	likeUserCommentRepo commentRepo.ILikeUserCommentRepository
+	userRepo              commentRepo.IUserRepository
+	commentRepo           commentRepo.ICommentRepository
+	likeUserCommentRepo   commentRepo.ILikeUserCommentRepository
+	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewCommentLikeImplement(
 	userRepo commentRepo.IUserRepository,
 	commentRepo commentRepo.ICommentRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
+	notificationPublisher *producer.NotificationPublisher,
 ) *sCommentLike {
 	return &sCommentLike{
-		userRepo:            userRepo,
-		commentRepo:         commentRepo,
-		likeUserCommentRepo: likeUserCommentRepo,
+		userRepo:              userRepo,
+		commentRepo:           commentRepo,
+		likeUserCommentRepo:   likeUserCommentRepo,
+		notificationPublisher: notificationPublisher,
 	}
 }
 
@@ -76,6 +84,21 @@ func (s *sCommentLike) LikeComment(
 		}
 
 		s.commentRepo.UpdateOne(ctx, commentFound.ID, &updateCommentData)
+
+		// 4.1.5. Publish to RabbitMQ handle Notification
+		notification, _ := notificationEntity.NewNotification(
+			commentFound.User.FamilyName+" "+commentFound.User.Name,
+			commentFound.User.AvatarUrl,
+			commentFound.User.ID,
+			consts.LIKE_COMMENT,
+			(commentFound.ID).String(),
+			commentFound.Content,
+		)
+
+		notifMsg := mapper.NewNotificationResult(notification)
+		if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single.db_websocket"); err != nil {
+			global.Logger.Error("Failed to publish notification result", zap.Error(err))
+		}
 
 		// 2. Check like status of authenticated user
 		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)

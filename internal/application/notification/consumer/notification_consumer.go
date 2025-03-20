@@ -135,7 +135,7 @@ func (c *NotificationConsumer) consumeMessages(ctx context.Context, msgs <-chan 
 				var notifMsg command.NotificationCommand
 				if err := json.Unmarshal(msg.Body, &notifMsg); err != nil {
 					global.Logger.Error("Failed to unmarshal notification command", zap.Error(err))
-					msg.Nack(false, true)
+					msg.Ack(false)
 					continue
 				}
 
