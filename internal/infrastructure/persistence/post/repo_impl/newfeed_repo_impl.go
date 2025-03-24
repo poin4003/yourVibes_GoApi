@@ -191,34 +191,62 @@ func (r *rNewFeed) CreateManyWithRandomUser(
 	ctx context.Context,
 	numUsers int,
 ) error {
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		} else if tx.Error != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
 	query := `
-		INSERT INTO new_feeds (user_id, post_id)
-		SELECT u.id, a.post_id
-		FROM users u
-		CROSS JOIN (
-			SELECT advertises.id AS advertise_id, advertises.post_id
-			FROM advertises
-			JOIN bills ON bills.advertise_id = advertises.id
-			WHERE bills.status = true
-			AND advertises.start_date <= ?
-			AND advertises.end_date >= ?
-			AND advertises.deleted_at IS NULL
-			AND bills.deleted_at IS NULL
-		) a
-		WHERE NOT EXISTS (
-			SELECT 1
-			FROM new_feeds nf
-			WHERE nf.user_id = u.id
-			AND nf.post_id = a.post_id
-		)
-		ORDER BY RANDOM()
-		LIMIT ?;
-	`
+        WITH 
+            inserted AS (
+                INSERT INTO new_feeds (user_id, post_id)
+                SELECT u.id, a.post_id
+                FROM users u
+                CROSS JOIN (
+                    SELECT advertises.id AS advertise_id, advertises.post_id
+                    FROM advertises
+                    JOIN bills ON bills.advertise_id = advertises.id
+                    WHERE bills.status = true
+                    AND advertises.start_date <= ?
+                    AND advertises.end_date >= ?
+                    AND advertises.deleted_at IS NULL
+                    AND bills.deleted_at IS NULL
+                ) a
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM new_feeds nf
+                    WHERE nf.user_id = u.id
+                    AND nf.post_id = a.post_id
+                )
+                ORDER BY RANDOM()
+                LIMIT ?
+                RETURNING post_id
+            ),
+            reach_counts AS (
+                SELECT post_id, COUNT(*) as reach_count
+                FROM inserted
+                GROUP BY post_id
+            )
+        UPDATE statistics
+        SET reach = statistics.reach + rc.reach_count,
+            updated_at = ?
+        FROM reach_counts rc
+        WHERE statistics.post_id = rc.post_id;
+    `
 	now := time.Now()
 
-	if err := r.db.WithContext(ctx).
-		Exec(query, now, now, numUsers).Error; err != nil {
-		return err
+	result := tx.Exec(query, now, now, numUsers, now)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil

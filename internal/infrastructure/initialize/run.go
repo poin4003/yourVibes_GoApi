@@ -20,7 +20,6 @@ func Run() *gin.Engine {
 	InitPostgreSql()
 	InitSocketHub()
 	InitDependencyInjection()
-	InitCronJob()
 	response.InitCustomCode()
 
 	r := InitRouter()

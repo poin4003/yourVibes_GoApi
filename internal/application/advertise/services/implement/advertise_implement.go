@@ -182,3 +182,15 @@ func (s *sAdvertise) GetAdvertise(
 		Advertise: mapper.NewAdvertiseDetailFromEntity(advertise),
 	}, nil
 }
+
+func (s *sAdvertise) GetAdvertiseWithStatistic(
+	ctx context.Context,
+	AdvertiseId uuid.UUID,
+) (result *common.AdvertiseForStatisticResult, err error) {
+	advertise, err := s.advertiseRepo.GetDetailAndStatisticOfAdvertise(ctx, AdvertiseId)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.NewAdvertiseDetailAndStatisticResult(advertise), nil
+}

@@ -27,7 +27,7 @@ type GetManyAdvertiseQuery struct {
 }
 
 type GetOneAdvertiseResult struct {
-	Advertise *common.AdvertiseDetail
+	Advertise *common.AdvertiseDetailResult
 }
 
 type GetManyAdvertiseResults struct {

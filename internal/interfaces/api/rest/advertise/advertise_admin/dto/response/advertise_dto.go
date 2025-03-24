@@ -50,7 +50,7 @@ func ToAdvertiseWithBillDto(
 }
 
 func ToAdvertiseDetail(
-	advertiseResult *common.AdvertiseDetail,
+	advertiseResult *common.AdvertiseDetailResult,
 ) *AdvertiseDetailDto {
 	advertiseDto := &AdvertiseDetailDto{
 		ID:           advertiseResult.ID,

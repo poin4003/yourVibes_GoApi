@@ -19,23 +19,23 @@ import (
 )
 
 type sPostLike struct {
-	userRepo              postRepo.IUserRepository
-	postRepo              postRepo.IPostRepository
-	postLikeRepo          postRepo.ILikeUserPostRepository
-	notificationPublisher *producer.NotificationPublisher
+	userRepo           postRepo.IUserRepository
+	postRepo           postRepo.IPostRepository
+	postLikeRepo       postRepo.ILikeUserPostRepository
+	postEventPublisher *producer.PostEventPublisher
 }
 
 func NewPostLikeImplement(
 	userRepo postRepo.IUserRepository,
 	postRepo postRepo.IPostRepository,
 	postLikeRepo postRepo.ILikeUserPostRepository,
-	notificationPublisher *producer.NotificationPublisher,
+	postEventPublisher *producer.PostEventPublisher,
 ) *sPostLike {
 	return &sPostLike{
-		userRepo:              userRepo,
-		postRepo:              postRepo,
-		postLikeRepo:          postLikeRepo,
-		notificationPublisher: notificationPublisher,
+		userRepo:           userRepo,
+		postRepo:           postRepo,
+		postLikeRepo:       postLikeRepo,
+		postEventPublisher: postEventPublisher,
 	}
 }
 
@@ -117,7 +117,7 @@ func (s *sPostLike) LikePost(
 		)
 
 		notifMsg := mapper.NewNotificationResult(notification)
-		if err = s.notificationPublisher.PublishNotification(ctx, notifMsg, "notification.single.db_websocket"); err != nil {
+		if err = s.postEventPublisher.PublishNotification(ctx, notifMsg, "notification.single.db_websocket"); err != nil {
 			global.Logger.Error("Failed to publish notification result", zap.Error(err))
 		}
 

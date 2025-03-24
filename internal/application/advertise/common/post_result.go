@@ -17,7 +17,7 @@ type PostForAdvertiseResult struct {
 	CommentCount    int
 	Privacy         consts.PrivacyLevel
 	Location        string
-	IsAdvertisement bool
+	IsAdvertisement consts.AdvertiseStatus
 	Status          bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

@@ -25,4 +25,5 @@ type Post struct {
 	UpdatedAt       time.Time              `gorm:"autoUpdateTime"`
 	DeletedAt       gorm.DeletedAt         `gorm:"index"`
 	Media           []Media                `gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Statistics      []Statistics           `gorm:"foreignKey:PostId;constraint:OnUpdate:CASCADE,ONDelete:CASCADE;"`
 }

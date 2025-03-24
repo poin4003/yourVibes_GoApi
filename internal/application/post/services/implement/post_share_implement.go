@@ -17,11 +17,11 @@ import (
 )
 
 type sPostShare struct {
-	userRepo              repository.IUserRepository
-	postRepo              repository.IPostRepository
-	mediaRepo             repository.IMediaRepository
-	newFeedRepo           repository.INewFeedRepository
-	notificationPublisher *producer.NotificationPublisher
+	userRepo           repository.IUserRepository
+	postRepo           repository.IPostRepository
+	mediaRepo          repository.IMediaRepository
+	newFeedRepo        repository.INewFeedRepository
+	postEventPublisher *producer.PostEventPublisher
 }
 
 func NewPostShareImplement(
@@ -29,14 +29,14 @@ func NewPostShareImplement(
 	postRepo repository.IPostRepository,
 	mediaRepo repository.IMediaRepository,
 	newFeedRepo repository.INewFeedRepository,
-	notificationPublisher *producer.NotificationPublisher,
+	postEventPublisher *producer.PostEventPublisher,
 ) *sPostShare {
 	return &sPostShare{
-		userRepo:              userRepo,
-		postRepo:              postRepo,
-		mediaRepo:             mediaRepo,
-		newFeedRepo:           newFeedRepo,
-		notificationPublisher: notificationPublisher,
+		userRepo:           userRepo,
+		postRepo:           postRepo,
+		mediaRepo:          mediaRepo,
+		newFeedRepo:        newFeedRepo,
+		postEventPublisher: postEventPublisher,
 	}
 }
 
@@ -110,7 +110,7 @@ func (s *sPostShare) SharePost(
 
 	// 7. Publish to RabbitMQ to handle Notification
 	notiMsg := mapper.NewNotificationResult(notification)
-	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
+	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 

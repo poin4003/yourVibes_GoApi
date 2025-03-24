@@ -28,7 +28,7 @@ type AdvertiseWithoutBillResult struct {
 	UpdatedAt    time.Time
 }
 
-type AdvertiseDetail struct {
+type AdvertiseDetailResult struct {
 	ID           uuid.UUID
 	PostId       uuid.UUID
 	Post         *PostForAdvertiseResult
@@ -38,4 +38,18 @@ type AdvertiseDetail struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Bill         *BillWithoutAdvertiseResult
+}
+
+type AdvertiseForStatisticResult struct {
+	ID              uuid.UUID
+	PostId          uuid.UUID
+	StartDate       time.Time
+	EndDate         time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DayRemaining    int
+	TotalReach      int
+	TotalClicks     int
+	TotalImpression int
+	Statistics      []*StatisticResult
 }

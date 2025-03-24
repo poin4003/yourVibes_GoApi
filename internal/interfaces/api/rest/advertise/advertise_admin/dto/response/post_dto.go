@@ -9,21 +9,21 @@ import (
 )
 
 type PostForAdvertiseDto struct {
-	ID              uuid.UUID            `json:"id"`
-	UserId          uuid.UUID            `json:"user_id"`
-	User            *UserForAdvertiseDto `json:"user"`
-	ParentId        *uuid.UUID           `json:"parent_id"`
-	ParentPost      *PostForAdvertiseDto `json:"parent_post"`
-	Content         string               `json:"content"`
-	LikeCount       int                  `json:"like_count"`
-	CommentCount    int                  `json:"comment_count"`
-	Privacy         consts.PrivacyLevel  `json:"privacy"`
-	Location        string               `json:"location"`
-	IsAdvertisement bool                 `json:"is_advertisement"`
-	Status          bool                 `json:"status"`
-	CreatedAt       time.Time            `json:"created_at"`
-	UpdatedAt       time.Time            `json:"updated_at"`
-	Media           []*MediaDto          `json:"media"`
+	ID              uuid.UUID              `json:"id"`
+	UserId          uuid.UUID              `json:"user_id"`
+	User            *UserForAdvertiseDto   `json:"user"`
+	ParentId        *uuid.UUID             `json:"parent_id"`
+	ParentPost      *PostForAdvertiseDto   `json:"parent_post"`
+	Content         string                 `json:"content"`
+	LikeCount       int                    `json:"like_count"`
+	CommentCount    int                    `json:"comment_count"`
+	Privacy         consts.PrivacyLevel    `json:"privacy"`
+	Location        string                 `json:"location"`
+	IsAdvertisement consts.AdvertiseStatus `json:"is_advertisement"`
+	Status          bool                   `json:"status"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+	Media           []*MediaDto            `json:"media"`
 }
 
 func ToPostForAdvertiseDto(postResult *common.PostForAdvertiseResult) *PostForAdvertiseDto {
