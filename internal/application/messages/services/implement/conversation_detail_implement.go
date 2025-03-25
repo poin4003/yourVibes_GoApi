@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	conversationDetailCommand "github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/mapper"
@@ -11,6 +12,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	messageRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 )
 
 type sConversationDetail struct {
@@ -115,4 +117,21 @@ func (s *sConversationDetail) DeleteConversationDetailById(
 	}
 
 	return nil
+}
+
+func (s *sConversationDetail) UpdateOneStatusConversationDetail(ctx context.Context, command *command.UpdateOneStatusConversationDetailCommand) (err error) {
+	notificationUpdateEntity := &entities.ConversationDetailUpdate{
+		LastMessStatus: pointer.Ptr(false),
+	}
+
+	newNotificationUpdateEntity, _ := entities.NewConversationDetailUpdate(notificationUpdateEntity)
+
+	_, err = s.conversationDetailRepo.UpdateOneStatus(ctx, command.UserId, command.ConversationId, newNotificationUpdateEntity)
+
+	if err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
+
 }

@@ -27,6 +27,7 @@ type (
 		CreateConversationDetail(ctx context.Context, command *command.CreateConversationDetailCommand) (result *command.CreateConversationDetailResult, err error)
 		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
 		DeleteConversationDetailById(ctx context.Context, command *command.DeleteConversationDetailCommand) error
+		UpdateOneStatusConversationDetail(ctx context.Context, command *command.UpdateOneStatusConversationDetailCommand) (err error)
 	}
 	IMessageMQ interface {
 		HandleMessage(ctx context.Context, message *command.CreateMessageCommand) error

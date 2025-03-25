@@ -10,6 +10,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -142,4 +143,26 @@ func (r *rConversatioDetail) GetListUserIdByConversationId(
 	}
 
 	return userIds, nil
+}
+
+func (r *rConversatioDetail) UpdateOneStatus(
+	ctx context.Context,
+	userId uuid.UUID,
+	conversationId uuid.UUID,
+	updateData *entities.ConversationDetailUpdate,
+) (*entities.ConversationDetail, error) {
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
+		Updates(&updates).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return r.GetById(ctx, userId, conversationId)
 }

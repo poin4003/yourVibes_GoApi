@@ -10,6 +10,7 @@ type ConversationDetailDto struct {
 	ConversationId uuid.UUID        `json:"conversation_id"`
 	User           *UserDto         `json:"user"`
 	Conversation   *ConversationDto `json:"conversation"`
+	LastMessStatus bool             `json:"last_mess_status"`
 }
 
 func ToConversationDetailDto(conversationDetailResult *common.ConversationDetailResult) *ConversationDetailDto {
@@ -22,5 +23,6 @@ func ToConversationDetailDto(conversationDetailResult *common.ConversationDetail
 		ConversationId: conversationDetailResult.ConversationId,
 		User:           ToUserDto(conversationDetailResult.User),
 		Conversation:   ToConversationDto(conversationDetailResult.Conversation),
+		LastMessStatus: conversationDetailResult.LastMessStatus,
 	}
 }

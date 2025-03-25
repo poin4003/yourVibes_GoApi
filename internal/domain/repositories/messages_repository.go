@@ -25,11 +25,11 @@ type (
 	}
 	IConversationDetailRepository interface {
 		GetById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) (*entities.ConversationDetail, error)
-		// GetConversationDetailByConversationId(ctx context.Context, query *query.GetConversationDetailQuery) ([]*entities.ConversationDetail, *response.PagingResponse, error)
 		CreateOne(ctx context.Context, entity *entities.ConversationDetail) (*entities.ConversationDetail, error)
 		GetConversationDetailByIdList(ctx context.Context, query *query.GetConversationDetailQuery) ([]*entities.ConversationDetail, *response.PagingResponse, error)
 		DeleteById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) error
 		GetListUserIdByConversationId(ctx context.Context, conversationId uuid.UUID) ([]uuid.UUID, error)
+		UpdateOneStatus(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID, updateData *entities.ConversationDetailUpdate) (*entities.ConversationDetail, error)
 	}
 )
 

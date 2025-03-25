@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
@@ -294,7 +295,7 @@ func (r *rPost) GetMany(
 			if query.IsDescending {
 				db = db.Order(sortColumn + " DESC")
 			} else {
-				db = db.Order(sortColumn + " ASC")
+				db = db.Order(sortColumn)
 			}
 		}
 	}
