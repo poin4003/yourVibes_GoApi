@@ -34,10 +34,13 @@ func (r *rPost) GetById(
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
 		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost.Media").
 		First(&postModel, id).
 		Error; err != nil {
@@ -341,10 +344,13 @@ func (r *rPost) GetMany(
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
 		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost.Media").
 		Find(&postModels).
 		Error; err != nil {

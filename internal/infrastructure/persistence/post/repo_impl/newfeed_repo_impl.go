@@ -145,10 +145,13 @@ func (r *rNewFeed) GetMany(
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
 		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost.Media").
 		Order("posts.created_at desc").
 		Offset(offset).
