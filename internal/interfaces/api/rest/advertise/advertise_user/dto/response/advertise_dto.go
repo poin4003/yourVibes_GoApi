@@ -18,17 +18,19 @@ type AdvertiseWithBillDto struct {
 }
 
 type AdvertiseWithStatisticDto struct {
-	ID              uuid.UUID       `json:"id"`
-	PostId          uuid.UUID       `json:"post_id"`
-	StartDate       time.Time       `json:"start_date"`
-	EndDate         time.Time       `json:"end_date"`
-	CreatedAt       time.Time       `json:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at"`
-	DayRemaining    int             `json:"day_remaining"`
-	TotalReach      int             `json:"total_reach"`
-	TotalClicks     int             `json:"total_clicks"`
-	TotalImpression int             `json:"total_impression"`
-	Statistics      []*StatisticDto `json:"statistics"`
+	ID              uuid.UUID                `json:"id"`
+	PostId          uuid.UUID                `json:"post_id"`
+	StartDate       time.Time                `json:"start_date"`
+	EndDate         time.Time                `json:"end_date"`
+	CreatedAt       time.Time                `json:"created_at"`
+	UpdatedAt       time.Time                `json:"updated_at"`
+	DayRemaining    int                      `json:"day_remaining"`
+	Bill            *BillWithoutAdvertiseDto `json:"bill"`
+	Post            *PostForAdvertiseDto     `json:"post"`
+	TotalReach      int                      `json:"total_reach"`
+	TotalClicks     int                      `json:"total_clicks"`
+	TotalImpression int                      `json:"total_impression"`
+	Statistics      []*StatisticDto          `json:"statistics"`
 }
 
 func ToAdvertiseWithBillDto(
@@ -68,6 +70,8 @@ func ToAdvertiseWithStatisticDto(
 		DayRemaining:    advertiseResult.DayRemaining,
 		CreatedAt:       advertiseResult.CreatedAt,
 		UpdatedAt:       advertiseResult.UpdatedAt,
+		Bill:            ToBillWithoutAdvertiseDto(*advertiseResult.Bill),
+		Post:            ToPostForAdvertiseDto(advertiseResult.Post),
 		TotalReach:      advertiseResult.TotalReach,
 		TotalClicks:     advertiseResult.TotalClicks,
 		TotalImpression: advertiseResult.TotalImpression,

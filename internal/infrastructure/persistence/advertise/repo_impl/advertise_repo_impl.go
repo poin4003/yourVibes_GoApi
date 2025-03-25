@@ -76,6 +76,14 @@ func (r *rAdvertise) GetDetailAndStatisticOfAdvertise(
 
 	if err := r.db.WithContext(ctx).
 		Model(advertiseModel).
+		Preload("Bill").
+		Preload("Post", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
+		Preload("Post.User").
+		Preload("Post.Media").
+		Preload("Post.ParentPost.Media").
+		Preload("Post.ParentPost.User").
 		First(&advertiseModel, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

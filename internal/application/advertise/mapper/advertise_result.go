@@ -138,6 +138,8 @@ func NewAdvertiseDetailAndStatisticResult(
 		DayRemaining:    dayRemaining,
 		CreatedAt:       advertise.CreatedAt,
 		UpdatedAt:       advertise.UpdatedAt,
+		Bill:            NewBillWithoutAdvertiseResultFromEntity(advertise.Bill),
+		Post:            NewPostResult(advertise.PostForAdvertise),
 		TotalReach:      advertise.TotalReach,
 		TotalClicks:     advertise.TotalClicks,
 		TotalImpression: advertise.TotalImpression,

@@ -81,16 +81,27 @@ func FromAdvertiseModelForDetailAndStatistics(
 		return nil
 	}
 
+	var bill = &entities.Bill{
+		ID:          a.Bill.ID,
+		AdvertiseId: a.Bill.AdvertiseId,
+		Price:       a.Bill.Price,
+		CreatedAt:   a.Bill.CreatedAt,
+		UpdateAt:    a.Bill.UpdatedAt,
+		Status:      a.Bill.Status,
+	}
+
 	var advertise = &entities.AdvertiseForStatistic{
-		PostId:          a.PostId,
-		StartDate:       a.StartDate,
-		EndDate:         a.EndDate,
-		CreatedAt:       a.CreatedAt,
-		UpdatedAt:       a.UpdatedAt,
-		TotalReach:      totalReach,
-		TotalClicks:     totalClicks,
-		TotalImpression: totalImpressions,
-		Statistics:      statEntities,
+		PostId:           a.PostId,
+		StartDate:        a.StartDate,
+		EndDate:          a.EndDate,
+		CreatedAt:        a.CreatedAt,
+		UpdatedAt:        a.UpdatedAt,
+		Bill:             bill,
+		PostForAdvertise: FromPostModel(&a.Post),
+		TotalReach:       totalReach,
+		TotalClicks:      totalClicks,
+		TotalImpression:  totalImpressions,
+		Statistics:       statEntities,
 	}
 	advertise.ID = a.ID
 

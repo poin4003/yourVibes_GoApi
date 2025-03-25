@@ -19,16 +19,18 @@ type Advertise struct {
 }
 
 type AdvertiseForStatistic struct {
-	ID              uuid.UUID
-	PostId          uuid.UUID
-	StartDate       time.Time
-	EndDate         time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	TotalReach      int
-	TotalClicks     int
-	TotalImpression int
-	Statistics      []*StatisticEntity
+	ID               uuid.UUID
+	PostId           uuid.UUID
+	StartDate        time.Time
+	EndDate          time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	Bill             *Bill
+	PostForAdvertise *PostForAdvertise
+	TotalReach       int
+	TotalClicks      int
+	TotalImpression  int
+	Statistics       []*StatisticEntity
 }
 
 type AdvertiseUpdate struct {

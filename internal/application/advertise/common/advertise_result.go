@@ -48,6 +48,8 @@ type AdvertiseForStatisticResult struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DayRemaining    int
+	Bill            *BillWithoutAdvertiseResult
+	Post            *PostForAdvertiseResult
 	TotalReach      int
 	TotalClicks     int
 	TotalImpression int
