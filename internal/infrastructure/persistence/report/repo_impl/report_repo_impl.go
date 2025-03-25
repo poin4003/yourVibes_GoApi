@@ -566,7 +566,7 @@ func (r *rReport) HandleUserReport(
 
 		// 2. Check user exits
 		if err = tx.WithContext(ctx).
-			Select("id, family_name, name, avatar_url").
+			Select("id, family_name, name, avatar_url, email").
 			First(&userFound, userReportFound.ReportedUserId).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
