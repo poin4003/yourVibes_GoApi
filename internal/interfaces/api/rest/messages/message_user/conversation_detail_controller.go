@@ -12,10 +12,10 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/query"
 )
 
-type cConversationController struct{}
+type cConversationDetail struct{}
 
-func NewConversationDetailController() *cConversationController {
-	return &cConversationController{}
+func NewConversationDetailController() *cConversationDetail {
+	return &cConversationDetail{}
 }
 
 // CreateConversationDetail documentation
@@ -27,7 +27,7 @@ func NewConversationDetailController() *cConversationController {
 // @Param input body request.CreateConversationDetailRequest true "input"
 // @Security ApiKeyAuth
 // @Router /conversation_details/ [post]
-func (cc *cConversationController) CreateConversationDetail(ctx *gin.Context) {
+func (cd *cConversationDetail) CreateConversationDetail(ctx *gin.Context) {
 	body, exists := ctx.Get("validatedRequest")
 	if !exists {
 		ctx.Error(pkgResponse.NewServerFailedError("Missing validateRequest request"))
@@ -66,7 +66,7 @@ func (cc *cConversationController) CreateConversationDetail(ctx *gin.Context) {
 // @Param conversationId path string true "Conversation ID"
 // @Security ApiKeyAuth
 // @Router /conversation_details/get_by_id/{userId}/{conversationId} [get]
-func (cc *cConversationController) GetConversationDetailById(ctx *gin.Context) {
+func (cd *cConversationDetail) GetConversationDetailById(ctx *gin.Context) {
 	userIdStr := ctx.Param("userId")
 	conversationIdStr := ctx.Param("conversationId")
 
@@ -105,7 +105,7 @@ func (cc *cConversationController) GetConversationDetailById(ctx *gin.Context) {
 // @Param page query int false "Page number"
 // @Security ApiKeyAuth
 // @Router /conversation_details/get_by_id [get]
-func (cc *cConversationController) GetConversationDetailByIdList(ctx *gin.Context) {
+func (cd *cConversationDetail) GetConversationDetailByIdList(ctx *gin.Context) {
 	queryInput, exists := ctx.Get("validatedQuery")
 	if !exists {
 		ctx.Error(pkgResponse.NewServerFailedError("Missing validatedQuery request"))
@@ -154,7 +154,7 @@ func (cc *cConversationController) GetConversationDetailByIdList(ctx *gin.Contex
 // @Param conversation_id path string true "Conversation ID"
 // @Security ApiKeyAuth
 // @Router /conversation_details/delete/{user_id}/{conversation_id} [delete]
-func (cc *cConversationController) DeleteConversationDetailById(ctx *gin.Context) {
+func (cd *cConversationDetail) DeleteConversationDetailById(ctx *gin.Context) {
 	userIdStr := ctx.Param("userId")
 	conversationIdStr := ctx.Param("conversationId")
 
@@ -178,4 +178,41 @@ func (cc *cConversationController) DeleteConversationDetailById(ctx *gin.Context
 	}
 
 	pkgResponse.OK(ctx, nil)
+}
+
+// UpdateConversationDetail Update Last Message Status of notification to false
+// @Summary Update conversationDetail status to false
+// @Tags conversationDetail
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param conversation_id path string true "Conversation ID"
+// @Security ApiKeyAuth
+// @Router /conversation_details/update/{user_id}/{conversation_id} [patch]
+func (cd *cConversationDetail) UpdateConversationDetail(ctx *gin.Context) {
+	userIdStr := ctx.Param("userId")
+	conversationIdStr := ctx.Param("conversationId")
+
+	userID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	conversationID, err := uuid.Parse(conversationIdStr)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	updateOneStatusConversationDetailCommand := &command.UpdateOneStatusConversationDetailCommand{UserId: userID, ConversationId: conversationID}
+
+	err = services.ConversationDetail().UpdateOneStatusConversationDetail(ctx, updateOneStatusConversationDetailCommand)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	pkgResponse.OK(ctx, nil)
+
 }

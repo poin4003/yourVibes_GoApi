@@ -5,7 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 )
 
-func ToConversationModel(conversation *entities.Conversation) *models.Conversation {
+func ToConversationModel(conversation *entities.CreateConversation) *models.Conversation {
 	var c = &models.Conversation{
 		ID:        conversation.ID,
 		Name:      conversation.Name,

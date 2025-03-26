@@ -64,6 +64,7 @@ const (
 	ErrCodeGoogleAuth                   = 50025
 	ErrDataHasAlreadyExist              = 50026
 	ErrVoucherExpired                   = 50027
+	ErrConversationAlreadyExist         = 50028
 
 	// Err Decentralization
 	ErrCodeLoginFailed        = 60001
@@ -123,6 +124,7 @@ func InitCustomCode() {
 	registerCode(ErrCodeGoogleAuth, "Failed to login with Google", http.StatusBadRequest)
 	registerCode(ErrDataHasAlreadyExist, "Data has already exist", http.StatusBadRequest)
 	registerCode(ErrVoucherExpired, "Voucher has expired", http.StatusBadRequest)
+	registerCode(ErrConversationAlreadyExist, "Conversation has already exist", http.StatusBadRequest)
 
 	registerCode(ErrCodeLoginFailed, "Account or Password is not correct", http.StatusBadRequest)
 	registerCode(ErrCodeValidateParamLogin, "Validate param login", http.StatusBadRequest)

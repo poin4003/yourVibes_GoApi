@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 
 	"github.com/google/uuid"
@@ -39,7 +40,7 @@ func (s *sMessage) GetMessageById(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 	if message == nil {
-		return nil, response.NewDataNotFoundError("Message not found")
+		return nil, err
 	}
 	return mapper.NewMessageResult(message), nil
 }
@@ -63,7 +64,7 @@ func (s *sMessage) CreateMessage(
 
 	err := s.messageRepo.CreateOne(ctx, newMessage)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	return nil
@@ -94,15 +95,15 @@ func (s *sMessage) DeleteMessageById(
 ) error {
 	messageFound, err := s.messageRepo.GetById(ctx, *command.MessageId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	if messageFound == nil {
-		return response.NewDataNotFoundError("Message not found")
+		return err
 	}
 
 	if err := s.messageRepo.DeleteById(ctx, *command.MessageId); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	return nil

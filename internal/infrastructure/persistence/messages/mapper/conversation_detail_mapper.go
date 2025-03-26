@@ -9,6 +9,8 @@ func ToConversationDetailModel(conversationDetail *entities.ConversationDetail) 
 	cd := &models.ConversationDetail{
 		UserId:         conversationDetail.UserId,
 		ConversationId: conversationDetail.ConversationId,
+		LastMessStatus: conversationDetail.LastMessStatus,
+		LastMessId:     conversationDetail.LastMessId,
 	}
 	return cd
 }
@@ -19,6 +21,9 @@ func FromConversationDetailModel(cd *models.ConversationDetail) *entities.Conver
 		ConversationId: cd.ConversationId,
 		User:           FromUserModel(&cd.User),
 		Conversation:   FromConversationModel(&cd.Conversation),
+		LastMessStatus: cd.LastMessStatus,
+		LastMessId:     cd.LastMessId,
+		LastMess:       FromMessageModel(cd.LastMess),
 	}
 
 	return conversationDetail

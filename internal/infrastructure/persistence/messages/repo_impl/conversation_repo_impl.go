@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,24 +32,54 @@ func (r *rConversation) GetById(
 		First(&ConversationModel, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 	return mapper.FromConversationModel(&ConversationModel), nil
 }
 
 func (r *rConversation) CreateOne(
 	ctx context.Context,
-	entity *entities.Conversation,
+	entity *entities.CreateConversation,
 ) (*entities.Conversation, error) {
-	conversationModel := mapper.ToConversationModel(entity)
-
-	res := r.db.WithContext(ctx).Create(conversationModel)
-
-	if res.Error != nil {
-		return nil, res.Error
+	if len(entity.UserIds) == 2 {
+		conversationFound, err := r.findExistingTwoUserConversation(ctx, entity.UserIds[0], entity.UserIds[1])
+		if err != nil {
+			return nil, response.NewServerFailedError(err.Error())
+		}
+		if conversationFound != nil {
+			return nil, response.NewCustomError(response.ErrConversationAlreadyExist, fmt.Sprint(conversationFound.ID))
+		}
 	}
+
+	var conversationModel *models.Conversation
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		conversationModel = mapper.ToConversationModel(entity)
+		if err := tx.Create(conversationModel).Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		for _, userId := range entity.UserIds {
+			conversationDetail := &models.ConversationDetail{
+				UserId:         userId,
+				ConversationId: conversationModel.ID,
+				LastMessStatus: true,
+				LastMessId:     nil,
+			}
+
+			if err := tx.Create(conversationDetail).Error; err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
 	return r.GetById(ctx, conversationModel.ID)
 }
 
@@ -88,7 +119,7 @@ func (r *rConversation) GetManyConversation(
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -104,7 +135,7 @@ func (r *rConversation) GetManyConversation(
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).
 		Find(&conversationModels).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := response.PagingResponse{
@@ -127,13 +158,31 @@ func (r *rConversation) DeleteById(
 ) error {
 	conversation, err := r.GetById(ctx, id)
 	if err != nil {
-		return err
+		return response.NewDataNotFoundError(err.Error())
 	}
 
 	res := r.db.WithContext(ctx).Delete(conversation)
 	if res.Error != nil {
-		return res.Error
+		return response.NewServerFailedError(res.Error.Error())
 	}
 
 	return nil
+}
+
+func (r *rConversation) findExistingTwoUserConversation(ctx context.Context, user1, user2 uuid.UUID) (*models.Conversation, error) {
+	var conversation models.Conversation
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Conversation{}).
+		Joins("JOIN conversation_details cd1 ON conversations.id = cd1.conversation_id").
+		Joins("JOIN conversation_details cd2 ON conversations.id = cd2.conversation_id").
+		Where("cd1.user_id = ? AND cd2.user_id = ?", user1, user2).
+		Where("cd1.user_id != cd2.user_id").
+		First(&conversation).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &conversation, nil
 }

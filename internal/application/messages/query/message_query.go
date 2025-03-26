@@ -1,6 +1,8 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -8,6 +10,9 @@ import (
 
 type GetMessagesByConversationIdQuery struct {
 	ConversationId uuid.UUID
+	CreatedAt      time.Time
+	SortBy         string
+	IsDescending   bool
 	Limit          int
 	Page           int
 }

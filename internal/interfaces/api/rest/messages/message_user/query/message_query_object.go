@@ -10,6 +10,8 @@ import (
 
 type MessageObject struct {
 	ConversationId string `form:"conversation_id,omitempty"`
+	SortBy         string `form:"sort_by,omitempty"`
+	IsDescending   bool   `form:"is_descending,omitempty"`
 	Limit          int    `form:"limit,omitempty"`
 	Page           int    `form:"page,omitempty"`
 }
@@ -38,6 +40,8 @@ func (req *MessageObject) ToGetManyMessageQuery() (*query.GetMessagesByConversat
 	}
 	return &query.GetMessagesByConversationIdQuery{
 		ConversationId: conversationId,
+		SortBy:         req.SortBy,
+		IsDescending:   req.IsDescending,
 		Limit:          req.Limit,
 		Page:           req.Page,
 	}, nil

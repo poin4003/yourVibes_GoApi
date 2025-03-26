@@ -23,10 +23,11 @@ func NewConversationController() *cConversation {
 // @Summary Conversation create Conversation
 // @Description When user create conversation
 // @Tags conversation
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param name formData string false "Name of the conversation"
 // @Param image formData file false "Image of the conversation" multiple
+// @Param user_ids formData []string true "List of user IDs" collectionFormat(multi)
 // @Security ApiKeyAuth
 // @Router /conversations/ [post]
 func (c *cConversation) CreateConversation(ctx *gin.Context) {
@@ -42,7 +43,16 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 		return
 	}
 
-	createConversation := creatConsersation.ToCreateConversationCommand(creatConsersation.Name)
+	var userIds []uuid.UUID
+	for _, userId := range creatConsersation.UserIds {
+		userUUID, err := uuid.Parse(userId)
+		if err != nil {
+			ctx.Error(pkgResponse.NewValidateError("Invalid user id"))
+		}
+		userIds = append(userIds, userUUID)
+	}
+
+	createConversation := creatConsersation.ToCreateConversationCommand(creatConsersation.Name, userIds)
 
 	result, err := services.Conversation().CreateConversation(ctx, createConversation)
 	if err != nil {
