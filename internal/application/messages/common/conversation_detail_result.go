@@ -8,4 +8,6 @@ type ConversationDetailResult struct {
 	User           *UserResult
 	Conversation   *ConversationResult
 	LastMessStatus bool
+	LastMessId     *uuid.UUID
+	LastMess       *MessageResult
 }

@@ -10,7 +10,6 @@ import (
 	conversationQuery "github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
 	conversationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	conversationRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
 
 type sConversation struct {
@@ -31,11 +30,11 @@ func (s *sConversation) GetConversationById(
 ) (result *common.ConversationResult, err error) {
 	conversation, err := s.conversationRepo.GetById(ctx, conversationId)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	if conversation == nil {
-		return nil, response.NewDataNotFoundError("Conversation not found")
+		return nil, err
 	}
 
 	return mapper.NewConversationResult(conversation), nil
@@ -47,12 +46,12 @@ func (s *sConversation) CreateConversation(
 ) (result *conversationCommand.CreateConversationResult, err error) {
 	conversationEntity, err := conversationEntity.NewConversation(command.Name)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	conversation, err := s.conversationRepo.CreateOne(ctx, conversationEntity)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	return &conversationCommand.CreateConversationResult{
@@ -87,16 +86,16 @@ func (s *sConversation) DeleteConversationById(
 	//1. Find conversation
 	conversationFound, err := s.conversationRepo.GetById(ctx, *command.ConversationId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	if conversationFound == nil {
-		return response.NewDataNotFoundError("Conversation not found")
+		return err
 	}
 
 	//2. Delete conversation
 	if err = s.conversationRepo.DeleteById(ctx, *command.ConversationId); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	return nil

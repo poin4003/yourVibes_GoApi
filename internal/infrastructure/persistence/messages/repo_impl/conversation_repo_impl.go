@@ -31,9 +31,9 @@ func (r *rConversation) GetById(
 		First(&ConversationModel, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 	return mapper.FromConversationModel(&ConversationModel), nil
 }
@@ -47,7 +47,7 @@ func (r *rConversation) CreateOne(
 	res := r.db.WithContext(ctx).Create(conversationModel)
 
 	if res.Error != nil {
-		return nil, res.Error
+		return nil, response.NewServerFailedError(res.Error.Error())
 	}
 	return r.GetById(ctx, conversationModel.ID)
 }
@@ -88,7 +88,7 @@ func (r *rConversation) GetManyConversation(
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -104,7 +104,7 @@ func (r *rConversation) GetManyConversation(
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).
 		Find(&conversationModels).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := response.PagingResponse{
@@ -127,12 +127,12 @@ func (r *rConversation) DeleteById(
 ) error {
 	conversation, err := r.GetById(ctx, id)
 	if err != nil {
-		return err
+		return response.NewDataNotFoundError(err.Error())
 	}
 
 	res := r.db.WithContext(ctx).Delete(conversation)
 	if res.Error != nil {
-		return res.Error
+		return response.NewServerFailedError(res.Error.Error())
 	}
 
 	return nil

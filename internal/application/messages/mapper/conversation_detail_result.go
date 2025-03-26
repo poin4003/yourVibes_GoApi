@@ -17,5 +17,7 @@ func NewConversationDetailResult(
 		User:           NewMessageUserResultFromEntity(conversationDetail.User),
 		Conversation:   NewConversationResult(conversationDetail.Conversation),
 		LastMessStatus: conversationDetail.LastMessStatus,
+		LastMessId:     conversationDetail.LastMessId,
+		LastMess:       NewMessageResult(conversationDetail.LastMess),
 	}
 }

@@ -11,6 +11,8 @@ type ConversationDetailDto struct {
 	User           *UserDto         `json:"user"`
 	Conversation   *ConversationDto `json:"conversation"`
 	LastMessStatus bool             `json:"last_mess_status"`
+	LastMessId     *uuid.UUID       `json:"last_mess_id"`
+	LastMess       *MessageDto      `json:"last_mess"`
 }
 
 func ToConversationDetailDto(conversationDetailResult *common.ConversationDetailResult) *ConversationDetailDto {
@@ -24,5 +26,7 @@ func ToConversationDetailDto(conversationDetailResult *common.ConversationDetail
 		User:           ToUserDto(conversationDetailResult.User),
 		Conversation:   ToConversationDto(conversationDetailResult.Conversation),
 		LastMessStatus: conversationDetailResult.LastMessStatus,
+		LastMessId:     conversationDetailResult.LastMessId,
+		LastMess:       ToMessageDto(conversationDetailResult.LastMess),
 	}
 }

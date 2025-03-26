@@ -11,10 +11,13 @@ type ConversationDetail struct {
 	User           *User
 	Conversation   *Conversation
 	LastMessStatus bool
+	LastMessId     *uuid.UUID
+	LastMess       *Message
 }
 
 type ConversationDetailUpdate struct {
 	LastMessStatus *bool
+	LastMessId     *uuid.UUID
 }
 
 func (cd *ConversationDetail) Validate() error {
@@ -33,6 +36,7 @@ func NewConversationDetail(
 		UserId:         UserId,
 		ConversationId: ConversationId,
 		LastMessStatus: true,
+		LastMessId:     nil,
 	}
 	if err := conversationDetail.Validate(); err != nil {
 		return nil, err
@@ -45,6 +49,7 @@ func NewConversationDetailUpdate(
 ) (*ConversationDetailUpdate, error) {
 	conversationDetailUpdate := &ConversationDetailUpdate{
 		LastMessStatus: updateData.LastMessStatus,
+		LastMessId:     updateData.LastMessId,
 	}
 
 	return conversationDetailUpdate, nil

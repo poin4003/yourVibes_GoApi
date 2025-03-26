@@ -2834,6 +2834,9 @@ const docTemplate = `{
                 "conversation_id": {
                     "type": "string"
                 },
+                "last_mess_id": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }

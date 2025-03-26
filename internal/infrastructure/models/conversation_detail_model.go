@@ -8,4 +8,6 @@ type ConversationDetail struct {
 	User           User         `gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Conversation   Conversation `gorm:"foreignKey:ConversationId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	LastMessStatus bool         `gorm:"default:true"`
+	LastMessId     *uuid.UUID   `gorm:"type:uuid;"`
+	LastMess       *Message     `gorm:"foreignKey:LastMessId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

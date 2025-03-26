@@ -35,9 +35,9 @@ func (r *rMessage) GetById(
 		First(&messageModel, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 	return mapper.FromMessageModel(&messageModel), nil
 }
@@ -50,7 +50,7 @@ func (r *rMessage) CreateOne(
 	messageModel := mapper.ToMessageModel(entity)
 	if err := r.db.WithContext(ctx).
 		Create(messageModel).Error; err != nil {
-		return err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -89,7 +89,7 @@ func (r *rMessage) GetMessagesByConversationId(
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -111,10 +111,7 @@ func (r *rMessage) GetMessagesByConversationId(
 			return db.Select("id, content")
 		}).
 		Find(&messageModels).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, nil
-		}
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := response.PagingResponse{
@@ -136,12 +133,12 @@ func (r *rMessage) DeleteById(
 ) error {
 	message, err := r.GetById(ctx, id)
 	if err != nil {
-		return err
+		return response.NewDataNotFoundError(err.Error())
 	}
 
 	res := r.db.WithContext(ctx).Delete(message)
 	if res.Error != nil {
-		return res.Error
+		return response.NewServerFailedError(res.Error.Error())
 	}
 	return nil
 }
