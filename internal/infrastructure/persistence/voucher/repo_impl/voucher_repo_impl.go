@@ -43,8 +43,8 @@ func (r *rVoucher) GetVoucherByCode(
 ) (*entities.VoucherEntity, error) {
 	var voucherModel models.Voucher
 	if err := r.db.WithContext(ctx).
-		First(&voucherModel).
 		Where("code = ?", voucherCode).
+		First(&voucherModel).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, response.NewDataNotFoundError(err.Error())
@@ -84,8 +84,8 @@ func (r *rVoucher) RedeemVoucher(
 	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		// 1. find voucher
 		if err := tx.WithContext(ctx).
-			First(voucherModel).
 			Where("code = ?", voucherCode).
+			First(voucherModel).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return response.NewDataNotFoundError(err.Error())

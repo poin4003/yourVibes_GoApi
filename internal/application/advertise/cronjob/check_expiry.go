@@ -3,24 +3,41 @@ package cronjob
 import (
 	"context"
 	"fmt"
+	"github.com/robfig/cron/v3"
 
 	advertise_repo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	"github.com/robfig/cron/v3"
 )
 
 type crjCheckExpiry struct {
 	postRepo    advertise_repo.IPostRepository
 	newFeedRepo advertise_repo.INewFeedRepository
+	cron        *cron.Cron
 }
 
 func NewCheckExpiryCronJob(
 	postRepo advertise_repo.IPostRepository,
 	newFeedRepo advertise_repo.INewFeedRepository,
 ) *crjCheckExpiry {
-	return &crjCheckExpiry{
+	crj := &crjCheckExpiry{
 		postRepo:    postRepo,
 		newFeedRepo: newFeedRepo,
+		cron:        cron.New(),
 	}
+
+	_, err := crj.cron.AddFunc("@every 12h", func() {
+		go crj.Run()
+	})
+	if err != nil {
+		fmt.Println(err)
+		return crj
+	}
+
+	go func() {
+		crj.cron.Start()
+		fmt.Println("Check expiry of advertises cronjob started")
+	}()
+
+	return crj
 }
 
 func (crj *crjCheckExpiry) Run() {
@@ -37,29 +54,7 @@ func (crj *crjCheckExpiry) Run() {
 	}
 }
 
-func StartCheckExpiryCronJob(
-	postRepo advertise_repo.IPostRepository,
-	newFeedRepo advertise_repo.INewFeedRepository,
-) {
-	c := cron.New()
-	cronJob := NewCheckExpiryCronJob(postRepo, newFeedRepo)
-	cronJob.Run()
-
-	// _, err := c.AddFunc("@every 1m", func() {
-	// 	cronJob.Run()
-	// })
-
-	_, err := c.AddFunc("@daily", func() {
-		cronJob.Run()
-	})
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c.Start()
-	fmt.Println("Check expiry of advertises cronjob started")
-
-	select {}
+func (crj *crjCheckExpiry) Stop() {
+	crj.cron.Stop()
+	fmt.Println("Check expiry Cronjob stopped")
 }

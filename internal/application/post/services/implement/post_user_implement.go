@@ -18,17 +18,19 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 	"go.uber.org/zap"
+	"sync"
+	"time"
 )
 
 type sPostUser struct {
-	userRepo              postRepo.IUserRepository
-	friendRepo            postRepo.IFriendRepository
-	newFeedRepo           postRepo.INewFeedRepository
-	postRepo              postRepo.IPostRepository
-	mediaRepo             postRepo.IMediaRepository
-	likeUserPostRepo      postRepo.ILikeUserPostRepository
-	advertiseRepo         postRepo.IAdvertiseRepository
-	notificationPublisher *producer.NotificationPublisher
+	userRepo           postRepo.IUserRepository
+	friendRepo         postRepo.IFriendRepository
+	newFeedRepo        postRepo.INewFeedRepository
+	postRepo           postRepo.IPostRepository
+	mediaRepo          postRepo.IMediaRepository
+	likeUserPostRepo   postRepo.ILikeUserPostRepository
+	advertiseRepo      postRepo.IAdvertiseRepository
+	postEventPublisher *producer.PostEventPublisher
 }
 
 func NewPostUserImplement(
@@ -39,17 +41,17 @@ func NewPostUserImplement(
 	mediaRepo postRepo.IMediaRepository,
 	likeUserPostRepo postRepo.ILikeUserPostRepository,
 	advertiseRepo postRepo.IAdvertiseRepository,
-	notificationPublisher *producer.NotificationPublisher,
+	postEventPublisher *producer.PostEventPublisher,
 ) *sPostUser {
 	return &sPostUser{
-		userRepo:              userRepo,
-		friendRepo:            friendRepo,
-		newFeedRepo:           newFeedRepo,
-		postRepo:              postRepo,
-		mediaRepo:             mediaRepo,
-		likeUserPostRepo:      likeUserPostRepo,
-		advertiseRepo:         advertiseRepo,
-		notificationPublisher: notificationPublisher,
+		userRepo:           userRepo,
+		friendRepo:         friendRepo,
+		newFeedRepo:        newFeedRepo,
+		postRepo:           postRepo,
+		mediaRepo:          mediaRepo,
+		likeUserPostRepo:   likeUserPostRepo,
+		advertiseRepo:      advertiseRepo,
+		postEventPublisher: postEventPublisher,
 	}
 }
 
@@ -160,7 +162,7 @@ func (s *sPostUser) CreatePost(
 
 	// 6.5. Publish to RabbitMQ to handle Notification
 	notiMsg := mapper.NewNotificationResult(notification)
-	if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
+	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 
@@ -330,6 +332,19 @@ func (s *sPostUser) GetPost(
 		return nil, response2.NewDataNotFoundError("post not found")
 	}
 
+	// 2. Publish event to rabbitmq for statistic
+	go func(post *postEntity.PostWithLiked) {
+		statisticEvent := common.StatisticEventResult{
+			PostId:    post.ID,
+			EventType: "clicks",
+			Count:     1,
+			Timestamp: time.Now(),
+		}
+		if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
+			global.Logger.Error("Failed to publish statistic", zap.Error(err))
+		}
+	}(postFound)
+
 	// 2. Check privacy
 	isOwner := postFound.UserId == query.AuthenticatedUserId
 	if !isOwner {
@@ -367,6 +382,25 @@ func (s *sPostUser) GetManyPosts(
 	if err != nil {
 		return nil, response2.NewServerFailedError(err.Error())
 	}
+
+	// Publish event to rabbitmq for statistic
+	var wg sync.WaitGroup
+	for _, post := range postEntities {
+		wg.Add(1)
+		go func(post *postEntity.PostWithLiked) {
+			defer wg.Done()
+			statisticEvent := common.StatisticEventResult{
+				PostId:    post.ID,
+				EventType: "impression",
+				Count:     1,
+				Timestamp: time.Now(),
+			}
+			if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
+				global.Logger.Error("Failed to publish statistic", zap.Error(err))
+			}
+		}(post)
+	}
+	wg.Wait()
 
 	var postResults []*common.PostResultWithLiked
 	for _, post := range postEntities {

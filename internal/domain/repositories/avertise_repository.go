@@ -14,6 +14,7 @@ type (
 	IAdvertiseRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Advertise, error)
 		GetOne(ctx context.Context, id uuid.UUID) (*entities.Advertise, error)
+		GetDetailAndStatisticOfAdvertise(ctx context.Context, id uuid.UUID) (*entities.AdvertiseForStatistic, error)
 		GetMany(ctx context.Context, query *query.GetManyAdvertiseQuery) ([]*entities.Advertise, *response.PagingResponse, error)
 		CreateOne(ctx context.Context, entity *entities.Advertise) (*entities.Advertise, error)
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.AdvertiseUpdate) (*entities.Advertise, error)

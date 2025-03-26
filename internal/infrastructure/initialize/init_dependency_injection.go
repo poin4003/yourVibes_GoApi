@@ -11,6 +11,7 @@ import (
 	messageProducer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	reportProducer "github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/statistic/consumer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 
@@ -33,6 +34,9 @@ import (
 	reportService "github.com/poin4003/yourVibes_GoApi/internal/application/report/services"
 	reportServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/report/services/implement"
 
+	statisticService "github.com/poin4003/yourVibes_GoApi/internal/application/statistic/services"
+	statisticServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/statistic/services/implement"
+
 	notificationConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/notification/consumer"
 	notificationService "github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
 	notificationServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/notification/services/implement"
@@ -45,6 +49,7 @@ import (
 	commentRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/comment/repo_impl"
 	messageRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/repo_impl"
 	notificationRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/notification/repo_impl"
+	StatisticRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/statistic/repo_impl"
 
 	postRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/repo_impl"
 
@@ -53,6 +58,8 @@ import (
 	userRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/repo_impl"
 
 	reportRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/report/repo_impl"
+
+	advertiseCronjob "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/cronjob"
 )
 
 func InitDependencyInjection() {
@@ -79,9 +86,10 @@ func InitDependencyInjection() {
 	conversationDetailRepo := messageRepoImpl.NewConversationDetailRepositoryImplement(db)
 	reportRepo := reportRepoImpl.NewReportRepositoryImplement(db)
 	voucherRepo := voucherRepoImpl.NewVoucherRepositoryImplement(db)
+	statisticRepo := StatisticRepoImpl.NewStatisticRepository(db)
 
 	// Init publisher
-	postNotificationPublisher := postProducer.NewNotificationPublisher(rabbitmqConnection)
+	postEventPublisher := postProducer.NewPostEventPublisher(rabbitmqConnection)
 	userNotificationPublisher := userProducer.NewNotificationPublisher(rabbitmqConnection)
 	reportNotificationPublisher := reportProducer.NewNotificationPublisher(rabbitmqConnection)
 	commentNotificationPublisher := commentProducer.NewNotificationPublisher(rabbitmqConnection)
@@ -106,15 +114,16 @@ func InitDependencyInjection() {
 	repository.InitConversationDetailRepository(conversationDetailRepo)
 	repository.InitReportRepository(reportRepo)
 	repository.InitVoucherRepository(voucherRepo)
+	repository.InitStatisticRepository(statisticRepo)
 
 	// 2. Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo)
 	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userNotificationPublisher)
-	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo)
+	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo, postEventPublisher)
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
-	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postNotificationPublisher)
-	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postNotificationPublisher)
-	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, postNotificationPublisher)
+	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postEventPublisher)
+	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postEventPublisher)
+	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, postEventPublisher)
 	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentNotificationPublisher)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo, commentNotificationPublisher)
 	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo)
@@ -131,6 +140,7 @@ func InitDependencyInjection() {
 	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)
 	notificationServiceInit := notificationServiceImpl.NewNotification(notificationRepo)
 	notificationUserInit := notificationServiceImpl.NewNotificationUserImplement(userRepo, notificationRepo)
+	statisticServiceInit := statisticServiceImpl.NewStatisticImplement(statisticRepo)
 
 	userService.InitUserAuth(userAuthServiceInit)
 	userService.InitUserInfo(userInfoServiceInit)
@@ -155,8 +165,14 @@ func InitDependencyInjection() {
 	messageService.InitConversationDetail(conversationDetailServiceInit)
 	notificationService.InitNotificationMQ(notificationServiceInit)
 	notificationService.InitNotificationUser(notificationUserInit)
+	statisticService.InitStatistic(statisticServiceInit)
 
 	// Init dependency service
 	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, consts.NotificationDLQ, notificationServiceInit)
 	messageConsumer.InitMessageConsumer(consts.MessageQueue, consts.MessageDLQ, messageMQServiceInit)
+	consumer.InitStatisticsConsumer(consts.StatisticsQueue, consts.StatisticsExName, statisticServiceInit)
+
+	// Init cronjob
+	advertiseCronjob.NewCheckExpiryCronJob(postRepo, newFeedRepo)
+	advertiseCronjob.NewPushToNewFeedCronJob(newFeedRepo)
 }

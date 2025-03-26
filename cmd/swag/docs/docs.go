@@ -491,6 +491,36 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/advertise/statistic/{advertise_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve advertise with statistic",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "advertise_user"
+                ],
+                "summary": "Get advertise with statistic",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Advertise ID",
+                        "name": "advertise_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/advertise/{advertise_id}": {
             "get": {
                 "security": [

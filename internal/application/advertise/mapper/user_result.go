@@ -5,7 +5,7 @@ import (
 	advertiseEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/advertise/entities"
 )
 
-func NewUserForAdvertiseResult(
+func NewUserResult(
 	user *advertiseEntity.UserForAdvertise,
 ) *common.UserForAdvertiseResult {
 	if user == nil {

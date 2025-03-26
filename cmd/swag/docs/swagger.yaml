@@ -582,6 +582,25 @@ paths:
       summary: Get a list of advertise
       tags:
       - admin_advertise_report
+  /advertise/statistic/{advertise_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve advertise with statistic
+      parameters:
+      - description: Advertise ID
+        in: path
+        name: advertise_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get advertise with statistic
+      tags:
+      - advertise_user
   /comments/:
     get:
       consumes:

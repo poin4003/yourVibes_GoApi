@@ -37,5 +37,7 @@ func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&advertiseQuery.AdvertiseQueryObject{}, advertiseQuery.ValidateAdvertiseQueryObject),
 			advertiseController.GetManyAdvertise,
 		)
+
+		advertiseRouterPrivate.GET("/statistic/:advertise_id", advertiseController.GetAdvertiseWithStatistic)
 	}
 }

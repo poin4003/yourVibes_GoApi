@@ -105,10 +105,9 @@ func (c *Connection) Setup() error {
 		return fmt.Errorf("channel is nil, cannot setup")
 	}
 
-	// Khai báo exchange cho Notification
 	err := c.channel.ExchangeDeclare(
 		consts.NotificationDLXName,
-		consts.NotificationDLXType,
+		"topic",
 		true,
 		false,
 		false,
@@ -121,7 +120,7 @@ func (c *Connection) Setup() error {
 
 	err = c.channel.ExchangeDeclare(
 		consts.NotificationExName,
-		consts.NotificationExType,
+		"topic",
 		true,
 		false,
 		false,
@@ -132,10 +131,9 @@ func (c *Connection) Setup() error {
 		return fmt.Errorf("failed to declare notification exchange: %v", err)
 	}
 
-	// Khai báo exchange cho Message
 	err = c.channel.ExchangeDeclare(
 		consts.MessageDLXName,
-		consts.MessageDLXType,
+		"direct",
 		true,
 		false,
 		false,
@@ -148,7 +146,7 @@ func (c *Connection) Setup() error {
 
 	err = c.channel.ExchangeDeclare(
 		consts.MessageExName,
-		consts.MessageExType,
+		"direct",
 		true,
 		false,
 		false,
@@ -157,6 +155,19 @@ func (c *Connection) Setup() error {
 	)
 	if err != nil {
 		return fmt.Errorf("failed to declare message exchange: %v", err)
+	}
+
+	err = c.channel.ExchangeDeclare(
+		consts.StatisticsExName,
+		"topic",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to declare message statistics exchange: %v", err)
 	}
 
 	log.Println("RabbitMQ exchanges setup completed successfully")

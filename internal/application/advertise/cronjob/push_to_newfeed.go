@@ -10,14 +10,32 @@ import (
 
 type crjPushToNewFeed struct {
 	newFeedRepo advertise_repo.INewFeedRepository
+	cron        *cron.Cron
 }
 
 func NewPushToNewFeedCronJob(
 	newFeedRepo advertise_repo.INewFeedRepository,
 ) *crjPushToNewFeed {
-	return &crjPushToNewFeed{
+	crj := &crjPushToNewFeed{
 		newFeedRepo: newFeedRepo,
+		cron:        cron.New(),
 	}
+
+	_, err := crj.cron.AddFunc("@every 6h", func() {
+		go crj.Run()
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return crj
+	}
+
+	go func() {
+		crj.cron.Start()
+		fmt.Println("Push advertise to new feed cronjob start")
+	}()
+
+	return crj
 }
 
 func (crj *crjPushToNewFeed) Run() {
@@ -29,28 +47,7 @@ func (crj *crjPushToNewFeed) Run() {
 	}
 }
 
-func StartPushAdvertiseToNewFeedCronJob(
-	newFeedRepo advertise_repo.INewFeedRepository,
-) {
-	c := cron.New()
-
-	// _, err := c.AddFunc("@every 1m", func() {
-	// 	cronJob := NewPushToNewFeedCronJob(newFeedRepo)
-	// 	cronJob.Run()
-	// })
-
-	_, err := c.AddFunc("@daily", func() {
-		cronJob := NewPushToNewFeedCronJob(newFeedRepo)
-		cronJob.Run()
-	})
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c.Start()
-	fmt.Println("Push advertise cronjob started")
-
-	select {}
+func (crj *crjPushToNewFeed) Stop() {
+	crj.cron.Stop()
+	fmt.Println("Cron job stopped")
 }

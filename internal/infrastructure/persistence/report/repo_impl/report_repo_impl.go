@@ -566,8 +566,8 @@ func (r *rReport) HandleUserReport(
 
 		// 2. Check user exits
 		if err = tx.WithContext(ctx).
-			Select("id, family_name, name, avatar_url").
-			First(&userReportFound, userReportFound.ReportedUserId).
+			Select("id, family_name, name, avatar_url, email").
+			First(&userFound, userReportFound.ReportedUserId).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return response.NewDataNotFoundError(err.Error())
@@ -900,7 +900,7 @@ func (r *rReport) DeleteReportById(
 		Model(reportModel).
 		First(reportModel, "id = ?", reportId).
 		Error; err != nil {
-		if errors.Is(gorm.ErrRecordNotFound, err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.NewDataNotFoundError(err.Error())
 		}
 		return response.NewServerFailedError(err.Error())

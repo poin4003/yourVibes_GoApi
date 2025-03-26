@@ -35,10 +35,13 @@ func (r *rPost) GetById(
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
 		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost.Media").
 		First(&postModel, id).
 		Error; err != nil {
@@ -57,9 +60,24 @@ func (r *rPost) CreateOne(
 ) (*entities.Post, error) {
 	postModel := mapper.ToPostModel(entity)
 
-	if err := r.db.WithContext(ctx).
-		Create(postModel).
-		Error; err != nil {
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Create(postModel).
+			Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).
+			Create(&models.Statistics{
+				ID:     uuid.New(),
+				PostId: postModel.ID,
+			}).
+			Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
@@ -187,7 +205,14 @@ func (r *rPost) DeleteOne(
 			}
 		}
 
-		// 6. Delete post
+		// 6. Delete statistic
+		if err := tx.WithContext(ctx).
+			Delete(&models.Statistics{}, "post_id = ?", id).
+			Error; err != nil {
+			return err
+		}
+
+		// 7. Delete post
 		if err := tx.WithContext(ctx).
 			Delete(&models.Post{}, "id = ?", id).
 			Error; err != nil {
@@ -320,10 +345,13 @@ func (r *rPost) GetMany(
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
 		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost.Media").
 		Find(&postModels).
 		Error; err != nil {
@@ -369,8 +397,8 @@ func (r *rPost) UpdateExpiredAdvertisements(
 ) error {
 	query := `
       	UPDATE posts
-		SET is_advertisement = false
-		WHERE is_advertisement = true 
+		SET is_advertisement = 2
+		WHERE is_advertisement = 1
 		  AND NOT EXISTS (
 			  SELECT 1
 			  FROM advertises 

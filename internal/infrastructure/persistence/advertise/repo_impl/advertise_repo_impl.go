@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
+	"go.uber.org/zap"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/advertise/query"
@@ -63,6 +66,70 @@ func (r *rAdvertise) GetOne(
 	}
 
 	return mapper.FromAdvertiseModelForAdvertiseDetail(&advertiseModel), nil
+}
+
+func (r *rAdvertise) GetDetailAndStatisticOfAdvertise(
+	ctx context.Context,
+	id uuid.UUID,
+) (*entities.AdvertiseForStatistic, error) {
+	advertiseModel := &models.Advertise{}
+
+	if err := r.db.WithContext(ctx).
+		Model(advertiseModel).
+		Preload("Bill").
+		Preload("Post", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
+		Preload("Post.User").
+		Preload("Post.Media").
+		Preload("Post.ParentPost.Media").
+		Preload("Post.ParentPost.User").
+		First(&advertiseModel, id).
+		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.NewDataNotFoundError(err.Error())
+		}
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	type StatsSummary struct {
+		TotalReach       int
+		TotalClicks      int
+		TotalImpressions int
+	}
+	var statsSummary StatsSummary
+	if err := r.db.WithContext(ctx).
+		Model(&models.Statistics{}).
+		Select(
+			"COALESCE(SUM(reach), 0) as total_reach, "+
+				"COALESCE(SUM(clicks), 0) as total_clicks, "+
+				"COALESCE(SUM(impression), 0) as total_impressions",
+		).
+		Where(
+			"post_id = ? AND created_at BETWEEN ? AND ?",
+			advertiseModel.PostId,
+			advertiseModel.StartDate,
+			advertiseModel.EndDate,
+		).
+		Scan(&statsSummary).
+		Error; err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	statEntities := r.getAverageStatistics(
+		ctx,
+		advertiseModel.PostId,
+		&advertiseModel.StartDate, &advertiseModel.EndDate,
+		10,
+	)
+
+	return mapper.FromAdvertiseModelForDetailAndStatistics(
+		advertiseModel,
+		statsSummary.TotalReach,
+		statsSummary.TotalClicks,
+		statsSummary.TotalImpressions,
+		statEntities,
+	), nil
 }
 
 func (r *rAdvertise) GetMany(
@@ -269,4 +336,61 @@ func (r *rAdvertise) DeleteMany(
 
 		return nil
 	})
+}
+
+func (r *rAdvertise) getAverageStatistics(
+	ctx context.Context,
+	postId uuid.UUID,
+	startDate, endDate *time.Time,
+	numIntervals int,
+) []*entities.StatisticEntity {
+	if startDate == nil || endDate == nil {
+		return nil
+	}
+
+	duration := endDate.Sub(*startDate)
+	if duration <= 0 {
+		return nil
+	}
+
+	intervalDuration := duration / time.Duration(numIntervals)
+
+	statEntities := make([]*entities.StatisticEntity, numIntervals)
+	for i := 0; i < numIntervals; i++ {
+		intervalStart := startDate.Add(time.Duration(i) * intervalDuration)
+		intervalEnd := startDate.Add(time.Duration(i+1) * intervalDuration)
+		if i == numIntervals-1 {
+			intervalEnd = *endDate
+		}
+
+		type AvgStats struct {
+			AvgReach       float64
+			AvgClicks      float64
+			AvgImpressions float64
+		}
+		var avgStats AvgStats
+		if err := r.db.WithContext(ctx).
+			Model(&models.Statistics{}).
+			Select(
+				"COALESCE(AVG(reach), 0) as avg_reach, "+
+					"COALESCE(AVG(clicks), 0) as avg_clicks, "+
+					"COALESCE(AVG(impression), 0) as avg_impressions",
+			).
+			Where("post_id = ? AND deleted_at IS NULL AND created_at BETWEEN ? AND ?", postId, intervalStart, intervalEnd).
+			Scan(&avgStats).
+			Error; err != nil {
+			global.Logger.Error("Failed to calculate average statistic", zap.Error(err))
+			continue
+		}
+
+		statEntities[i] = &entities.StatisticEntity{
+			PostId:          postId,
+			Reach:           int(avgStats.AvgReach),
+			Clicks:          int(avgStats.AvgClicks),
+			Impression:      int(avgStats.AvgImpressions),
+			AggregationDate: intervalStart,
+		}
+	}
+
+	return statEntities
 }

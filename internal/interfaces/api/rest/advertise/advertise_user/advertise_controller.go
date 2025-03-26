@@ -168,3 +168,34 @@ func (c *cAdvertise) GetManyAdvertise(ctx *gin.Context) {
 
 	response2.OK(ctx, advertiseDtos)
 }
+
+// GetAdvertiseWithStatistic godoc
+// @Summary Get advertise with statistic
+// @Description Retrieve advertise with statistic
+// @Tags advertise_user
+// @Accept json
+// @Produce json
+// @Param advertise_id path string true "Advertise ID"
+// @Security ApiKeyAuth
+// @Router /advertise/statistic/{advertise_id} [get]
+func (c *cAdvertise) GetAdvertiseWithStatistic(ctx *gin.Context) {
+	// 1. Get advertise_id from params
+	advertiseIdStr := ctx.Param("advertise_id")
+	advertiseId, err := uuid.Parse(advertiseIdStr)
+	if err != nil {
+		ctx.Error(response2.NewValidateError(err.Error()))
+		return
+	}
+
+	// 2. Call service to get detail
+	result, err := advertiseServices.Advertise().GetAdvertiseWithStatistic(ctx, advertiseId)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 3. Map to dto
+	advertiseDto := response.ToAdvertiseWithStatisticDto(*result)
+
+	response2.OK(ctx, advertiseDto)
+}

@@ -83,6 +83,7 @@ func DBMigrator(db *gorm.DB) error {
 		&models.Conversation{},
 		&models.Message{},
 		&models.ConversationDetail{},
+		&models.Statistics{},
 	)
 	return err
 }
