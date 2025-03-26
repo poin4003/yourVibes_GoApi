@@ -24,10 +24,10 @@ func InitRedis() {
 
 	if err != nil {
 		global.Logger.Error("Redis initialization Error:", zap.Error(err))
+		panic(fmt.Sprintf("Failed to connect to Redis: %v", err))
 	}
 
-	fmt.Println("InitRedis is running")
-
+	global.Logger.Info("Redis initialization success")
 	global.Rdb = rdb
 
 	redisExample()
