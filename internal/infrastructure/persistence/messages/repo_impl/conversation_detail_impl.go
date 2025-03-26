@@ -10,6 +10,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 	"gorm.io/gorm"
 )
 
@@ -36,9 +37,9 @@ func (r *rConversatioDetail) GetById(
 		First(&conversationDetailModel).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 	return mapper.FromConversationDetailModel(&conversationDetailModel), nil
 
@@ -52,7 +53,7 @@ func (r *rConversatioDetail) CreateOne(
 	res := r.db.WithContext(ctx).Create(conversationDetailModel)
 
 	if res.Error != nil {
-		return nil, res.Error
+		return nil, response.NewServerFailedError(res.Error.Error())
 	}
 
 	return r.GetById(ctx, entity.UserId, entity.ConversationId)
@@ -71,15 +72,12 @@ func (r *rConversatioDetail) GetConversationDetailByIdList(
 		Preload("Conversation")
 
 	if err := db.Find(&conversationDetails).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, nil
-		}
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -95,7 +93,7 @@ func (r *rConversatioDetail) GetConversationDetailByIdList(
 	offset := (page - 1) * limit
 
 	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Find(&conversationDetails).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := response.PagingResponse{
@@ -122,7 +120,7 @@ func (r *rConversatioDetail) DeleteById(
 		Delete(&entities.ConversationDetail{})
 
 	if res.Error != nil {
-		return res.Error
+		return response.NewServerFailedError(res.Error.Error())
 	}
 	return nil
 }
@@ -138,8 +136,34 @@ func (r *rConversatioDetail) GetListUserIdByConversationId(
 		Where("conversation_id = ?", conversationId).
 		Pluck("user_id", &userIds).
 		Error; err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, response.NewDataNotFoundError(err.Error())
+		}
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	return userIds, nil
+}
+
+func (r *rConversatioDetail) UpdateOneStatus(
+	ctx context.Context,
+	userId uuid.UUID,
+	conversationId uuid.UUID,
+	updateData *entities.ConversationDetailUpdate,
+) (*entities.ConversationDetail, error) {
+	updates := converter.StructToMap(updateData)
+	if len(updates) == 0 {
+		return nil, errors.New("no field to update")
+	}
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
+		Updates(&updates).
+		Error; err != nil {
+
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	return r.GetById(ctx, userId, conversationId)
 }

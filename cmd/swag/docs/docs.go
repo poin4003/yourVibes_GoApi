@@ -919,6 +919,42 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/conversation_details/update/{user_id}/{conversation_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Update conversationDetail status to false",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/conversations/": {
             "get": {
                 "security": [
@@ -961,7 +997,7 @@ const docTemplate = `{
                 ],
                 "description": "When user create conversation",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -982,6 +1018,17 @@ const docTemplate = `{
                         "description": "Image of the conversation",
                         "name": "image",
                         "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "List of user IDs",
+                        "name": "user_ids",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -1102,6 +1149,24 @@ const docTemplate = `{
                         "name": "conversation_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation time",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Which column to sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Order by descending if true",
+                        "name": "is_descending",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2810,6 +2875,9 @@ const docTemplate = `{
                 "conversation_id": {
                     "type": "string"
                 },
+                "last_mess_id": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -3024,7 +3092,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibes.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

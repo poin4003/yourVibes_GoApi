@@ -2,6 +2,8 @@ package message_user
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -13,7 +15,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/query"
-	"net/http"
 )
 
 type cMessage struct {
@@ -150,6 +151,9 @@ func (m *cMessage) GetMessageById(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param conversation_id query string true "ConversationId"
+// @Param created_at query string false "Filter by creation time"
+// @Param sort_by query string false "Which column to sort by"
+// @Param is_descending query boolean false "Order by descending if true"
 // @Param page query int false "Page"
 // @Param limit query int false "Limit"
 // @Security ApiKeyAuth

@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
@@ -34,9 +35,9 @@ func (r *rMessage) GetById(
 		First(&messageModel, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 	return mapper.FromMessageModel(&messageModel), nil
 }
@@ -49,7 +50,7 @@ func (r *rMessage) CreateOne(
 	messageModel := mapper.ToMessageModel(entity)
 	if err := r.db.WithContext(ctx).
 		Create(messageModel).Error; err != nil {
-		return err
+		return response.NewServerFailedError(err.Error())
 	}
 
 	return nil
@@ -62,19 +63,33 @@ func (r *rMessage) GetMessagesByConversationId(
 	var messageModels []*models.Message
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&models.Message{}).
-		Where("conversation_id = ?", query.ConversationId).
-		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, family_name, name, avatar_url")
-		}).
-		Preload("ParentMessage", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, content")
-		}).
-		Order("created_at ASC")
+	db := r.db.WithContext(ctx).Model(&models.Message{})
+
+	db = db.Where("conversation_id = ?", query.ConversationId)
+
+	if !query.CreatedAt.IsZero() {
+		createAt := query.CreatedAt.Truncate(24 * time.Hour)
+		db = db.Where("created_at = ?", createAt)
+	}
+
+	if query.SortBy != "" {
+		shortColumn := ""
+		switch query.SortBy {
+		case "created_at":
+			shortColumn = "created_at"
+		}
+		if shortColumn != "" {
+			if query.IsDescending {
+				db = db.Order(shortColumn + " DESC")
+			} else {
+				db = db.Order(shortColumn)
+			}
+		}
+	}
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -88,14 +103,15 @@ func (r *rMessage) GetMessagesByConversationId(
 
 	offset := (page - 1) * limit
 
-	if err = db.WithContext(ctx).
-		Offset(offset).
-		Limit(limit).
+	if err = db.Offset(offset).Limit(limit).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentMessage", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, content")
+		}).
 		Find(&messageModels).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, nil
-		}
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := response.PagingResponse{
@@ -117,12 +133,12 @@ func (r *rMessage) DeleteById(
 ) error {
 	message, err := r.GetById(ctx, id)
 	if err != nil {
-		return err
+		return response.NewDataNotFoundError(err.Error())
 	}
 
 	res := r.db.WithContext(ctx).Delete(message)
 	if res.Error != nil {
-		return res.Error
+		return response.NewServerFailedError(res.Error.Error())
 	}
 	return nil
 }

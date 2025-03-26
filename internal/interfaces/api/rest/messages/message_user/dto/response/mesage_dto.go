@@ -20,6 +20,9 @@ type MessageDto struct {
 }
 
 func ToMessageDto(messageResult *common.MessageResult) *MessageDto {
+	if messageResult == nil {
+		return nil
+	}
 	return &MessageDto{
 		ID:             messageResult.ID,
 		UserId:         messageResult.UserId,

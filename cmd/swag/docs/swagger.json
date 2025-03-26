@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibes.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -913,6 +913,42 @@
                 "responses": {}
             }
         },
+        "/conversation_details/update/{user_id}/{conversation_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Update conversationDetail status to false",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/conversations/": {
             "get": {
                 "security": [
@@ -955,7 +991,7 @@
                 ],
                 "description": "When user create conversation",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -976,6 +1012,17 @@
                         "description": "Image of the conversation",
                         "name": "image",
                         "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "List of user IDs",
+                        "name": "user_ids",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {}
@@ -1096,6 +1143,24 @@
                         "name": "conversation_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation time",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Which column to sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Order by descending if true",
+                        "name": "is_descending",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2802,6 +2867,9 @@
             "type": "object",
             "properties": {
                 "conversation_id": {
+                    "type": "string"
+                },
+                "last_mess_id": {
                     "type": "string"
                 },
                 "user_id": {

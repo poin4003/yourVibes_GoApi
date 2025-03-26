@@ -117,6 +117,8 @@ definitions:
     properties:
       conversation_id:
         type: string
+      last_mess_id:
+        type: string
       user_id:
         type: string
     type: object
@@ -248,7 +250,7 @@ definitions:
       name:
         type: string
     type: object
-host: yourvibes.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -835,6 +837,29 @@ paths:
       summary: Get conversationDetail by ID
       tags:
       - conversationDetail
+  /conversation_details/update/{user_id}/{conversation_id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Conversation ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update conversationDetail status to false
+      tags:
+      - conversationDetail
   /conversations/:
     get:
       consumes:
@@ -859,7 +884,7 @@ paths:
       - conversation
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: When user create conversation
       parameters:
       - description: Name of the conversation
@@ -870,6 +895,14 @@ paths:
         in: formData
         name: image
         type: file
+      - collectionFormat: multi
+        description: List of user IDs
+        in: formData
+        items:
+          type: string
+        name: user_ids
+        required: true
+        type: array
       produces:
       - application/json
       responses: {}
@@ -946,6 +979,18 @@ paths:
         name: conversation_id
         required: true
         type: string
+      - description: Filter by creation time
+        in: query
+        name: created_at
+        type: string
+      - description: Which column to sort by
+        in: query
+        name: sort_by
+        type: string
+      - description: Order by descending if true
+        in: query
+        name: is_descending
+        type: boolean
       - description: Page
         in: query
         name: page

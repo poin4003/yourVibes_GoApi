@@ -67,6 +67,9 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 			useConversationDetailController.GetConversationDetailByIdList)
 
 		conversationDetailRouter.DELETE("/delete/:userId/:conversationId", useConversationDetailController.DeleteConversationDetailById)
+
+		conversationDetailRouter.PATCH("/update/:userId/:conversationId",
+			useConversationDetailController.UpdateConversationDetail)
 	}
 
 }
