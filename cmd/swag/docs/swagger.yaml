@@ -884,7 +884,7 @@ paths:
       - conversation
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: When user create conversation
       parameters:
       - description: Name of the conversation
@@ -895,6 +895,14 @@ paths:
         in: formData
         name: image
         type: file
+      - collectionFormat: multi
+        description: List of user IDs
+        in: formData
+        items:
+          type: string
+        name: user_ids
+        required: true
+        type: array
       produces:
       - application/json
       responses: {}

@@ -44,7 +44,7 @@ func (s *sConversation) CreateConversation(
 	ctx context.Context,
 	command *conversationCommand.CreateConversationCommand,
 ) (result *conversationCommand.CreateConversationResult, err error) {
-	conversationEntity, err := conversationEntity.NewConversation(command.Name)
+	conversationEntity, err := conversationEntity.NewConversation(command.Name, command.UserIds)
 	if err != nil {
 		return nil, err
 	}

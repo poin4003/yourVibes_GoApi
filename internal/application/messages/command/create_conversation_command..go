@@ -1,10 +1,14 @@
 package command
 
-import "github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
+import (
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
+)
 
 type CreateConversationCommand struct {
-	Name  string
-	Image string
+	Name    string
+	Image   string
+	UserIds []uuid.UUID
 }
 
 type CreateConversationResult struct {

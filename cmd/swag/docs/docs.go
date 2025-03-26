@@ -997,7 +997,7 @@ const docTemplate = `{
                 ],
                 "description": "When user create conversation",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -1018,6 +1018,17 @@ const docTemplate = `{
                         "description": "Image of the conversation",
                         "name": "image",
                         "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "List of user IDs",
+                        "name": "user_ids",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {}

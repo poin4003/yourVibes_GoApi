@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,15 +41,45 @@ func (r *rConversation) GetById(
 
 func (r *rConversation) CreateOne(
 	ctx context.Context,
-	entity *entities.Conversation,
+	entity *entities.CreateConversation,
 ) (*entities.Conversation, error) {
-	conversationModel := mapper.ToConversationModel(entity)
-
-	res := r.db.WithContext(ctx).Create(conversationModel)
-
-	if res.Error != nil {
-		return nil, response.NewServerFailedError(res.Error.Error())
+	if len(entity.UserIds) == 2 {
+		conversationFound, err := r.findExistingTwoUserConversation(ctx, entity.UserIds[0], entity.UserIds[1])
+		if err != nil {
+			return nil, response.NewServerFailedError(err.Error())
+		}
+		if conversationFound != nil {
+			return nil, response.NewCustomError(response.ErrConversationAlreadyExist, fmt.Sprint(conversationFound.ID))
+		}
 	}
+
+	var conversationModel *models.Conversation
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		conversationModel = mapper.ToConversationModel(entity)
+		if err := tx.Create(conversationModel).Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		for _, userId := range entity.UserIds {
+			conversationDetail := &models.ConversationDetail{
+				UserId:         userId,
+				ConversationId: conversationModel.ID,
+				LastMessStatus: true,
+				LastMessId:     nil,
+			}
+
+			if err := tx.Create(conversationDetail).Error; err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
 	return r.GetById(ctx, conversationModel.ID)
 }
 
@@ -136,4 +167,22 @@ func (r *rConversation) DeleteById(
 	}
 
 	return nil
+}
+
+func (r *rConversation) findExistingTwoUserConversation(ctx context.Context, user1, user2 uuid.UUID) (*models.Conversation, error) {
+	var conversation models.Conversation
+
+	if err := r.db.WithContext(ctx).
+		Model(&models.Conversation{}).
+		Joins("JOIN conversation_details cd1 ON conversations.id = cd1.conversation_id").
+		Joins("JOIN conversation_details cd2 ON conversations.id = cd2.conversation_id").
+		Where("cd1.user_id = ? AND cd2.user_id = ?", user1, user2).
+		Where("cd1.user_id != cd2.user_id").
+		First(&conversation).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &conversation, nil
 }

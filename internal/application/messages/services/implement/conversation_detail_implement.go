@@ -40,11 +40,11 @@ func (s *sConversationDetail) GetConversationDetailById(
 ) (result *common.ConversationDetailResult, err error) {
 	conversationDetail, err := s.conversationDetailRepo.GetById(ctx, userId, conversationId)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	if conversationDetail == nil {
-		return nil, response.NewDataNotFoundError("Conversation detail not found")
+		return nil, err
 	}
 
 	return mapper.NewConversationDetailResult(conversationDetail), nil
@@ -57,11 +57,11 @@ func (s *sConversationDetail) CreateConversationDetail(
 
 	conversation, err := s.conversationRepo.GetById(ctx, command.ConversationId)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	if conversation == nil {
-		return nil, response.NewDataNotFoundError("Conversation not found")
+		return nil, err
 	}
 
 	newconversationDertail, _ := entities.NewConversationDetail(
@@ -71,7 +71,7 @@ func (s *sConversationDetail) CreateConversationDetail(
 
 	conversationCreate, err := s.conversationDetailRepo.CreateOne(ctx, newconversationDertail)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		return nil, err
 	}
 
 	return &conversationDetailCommand.CreateConversationDetailResult{
@@ -105,15 +105,15 @@ func (s *sConversationDetail) DeleteConversationDetailById(
 ) error {
 	conversationDetailFound, err := s.conversationDetailRepo.GetById(ctx, *command.UserId, *command.ConversationId)
 	if err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	if conversationDetailFound == nil {
-		return response.NewDataNotFoundError("Conversation detaul not found")
+		return err
 	}
 
 	if err := s.conversationDetailRepo.DeleteById(ctx, *command.UserId, *command.ConversationId); err != nil {
-		return response.NewServerFailedError(err.Error())
+		return err
 	}
 
 	return nil
@@ -124,9 +124,9 @@ func (s *sConversationDetail) UpdateOneStatusConversationDetail(ctx context.Cont
 		LastMessStatus: pointer.Ptr(false),
 	}
 
-	newNotificationUpdateEntity, _ := entities.NewConversationDetailUpdate(notificationUpdateEntity)
+	newConversationUpdateEntity, _ := entities.NewConversationDetailUpdate(notificationUpdateEntity)
 
-	_, err = s.conversationDetailRepo.UpdateOneStatus(ctx, command.UserId, command.ConversationId, newNotificationUpdateEntity)
+	_, err = s.conversationDetailRepo.UpdateOneStatus(ctx, command.UserId, command.ConversationId, newConversationUpdateEntity)
 
 	if err != nil {
 		return response.NewServerFailedError(err.Error())

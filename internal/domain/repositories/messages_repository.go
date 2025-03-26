@@ -12,7 +12,7 @@ import (
 type (
 	IConversationRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Conversation, error)
-		CreateOne(ctx context.Context, entity *entities.Conversation) (*entities.Conversation, error)
+		CreateOne(ctx context.Context, entity *entities.CreateConversation) (*entities.Conversation, error)
 		GetManyConversation(ctx context.Context, query *query.GetManyConversationQuery) ([]*entities.Conversation, *response.PagingResponse, error)
 		DeleteById(ctx context.Context, id uuid.UUID) error
 	}
