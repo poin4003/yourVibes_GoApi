@@ -24,7 +24,7 @@ func NewCheckExpiryCronJob(
 		cron:        cron.New(),
 	}
 
-	_, err := crj.cron.AddFunc("@every 20m", func() {
+	_, err := crj.cron.AddFunc("@every 12h", func() {
 		go crj.Run()
 	})
 	if err != nil {
