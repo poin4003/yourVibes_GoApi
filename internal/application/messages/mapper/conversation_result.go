@@ -13,10 +13,13 @@ func NewConversationResult(
 	}
 
 	return &common.ConversationResult{
-		ID:        conversation.ID,
-		Name:      conversation.Name,
-		Image:     conversation.Image,
-		CreatedAt: conversation.CreatedAt,
-		UpdatedAt: conversation.UpdatedAt,
+		ID:         conversation.ID,
+		Name:       conversation.Name,
+		Image:      conversation.Image,
+		UserID:     conversation.UserID,
+		Avatar:     conversation.Avatar,
+		FamilyName: conversation.FamilyName,
+		CreatedAt:  conversation.CreatedAt,
+		UpdatedAt:  conversation.UpdatedAt,
 	}
 }

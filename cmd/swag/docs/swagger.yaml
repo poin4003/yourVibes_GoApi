@@ -117,7 +117,7 @@ definitions:
     properties:
       conversation_id:
         type: string
-      last_mess_id:
+      last_mess:
         type: string
       user_id:
         type: string
@@ -230,6 +230,13 @@ definitions:
   request.UpdateCommentRequest:
     properties:
       content:
+        type: string
+    type: object
+  request.UpdateConversationDetail:
+    properties:
+      conversation_id:
+        type: string
+      user_id:
         type: string
     type: object
   request.VerifyEmailRequest:
@@ -787,15 +794,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a conversationDetail by its unique User ID
+      description: Retrieve a conversationDetail by its unique Conversation ID
       parameters:
-      - description: User ID
-        in: query
-        name: user_id
-        type: string
       - description: Conversation ID
         in: query
         name: conversation_id
+        required: true
         type: string
       - description: Limit on page
         in: query
@@ -810,7 +814,7 @@ paths:
       responses: {}
       security:
       - ApiKeyAuth: []
-      summary: Get conversationDetail by ID response list
+      summary: Get conversationDetail by Conversation Id response List User in Conversation
       tags:
       - conversationDetail
   /conversation_details/get_by_id/{userId}/{conversationId}:
@@ -837,21 +841,17 @@ paths:
       summary: Get conversationDetail by ID
       tags:
       - conversationDetail
-  /conversation_details/update/{user_id}/{conversation_id}:
+  /conversation_details/update:
     patch:
       consumes:
       - application/json
       parameters:
-      - description: User ID
-        in: path
-        name: user_id
+      - description: input
+        in: body
+        name: input
         required: true
-        type: string
-      - description: Conversation ID
-        in: path
-        name: conversation_id
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/request.UpdateConversationDetail'
       produces:
       - application/json
       responses: {}
@@ -866,6 +866,22 @@ paths:
       - application/json
       description: When user get many conversation
       parameters:
+      - description: Name of the conversation
+        in: query
+        name: name
+        type: string
+      - description: Created at
+        in: query
+        name: created_at
+        type: string
+      - description: Sort by
+        in: query
+        name: sort_by
+        type: string
+      - description: Is descending
+        in: query
+        name: isDescending
+        type: boolean
       - description: Limit of conversation per page
         in: query
         name: limit
@@ -946,6 +962,32 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get conversation by ID
+      tags:
+      - conversation
+    patch:
+      consumes:
+      - multipart/form-data
+      description: When user need to update conversation
+      parameters:
+      - description: ConversationId
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      - description: Name of the conversation
+        in: formData
+        name: name
+        type: string
+      - description: Image of the conversation
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: update conversation
       tags:
       - conversation
   /messages/:

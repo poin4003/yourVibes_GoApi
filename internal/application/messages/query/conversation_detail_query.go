@@ -7,7 +7,6 @@ import (
 )
 
 type GetConversationDetailQuery struct {
-	UserId         uuid.UUID
 	ConversationId uuid.UUID
 	Limit          int
 	Page           int

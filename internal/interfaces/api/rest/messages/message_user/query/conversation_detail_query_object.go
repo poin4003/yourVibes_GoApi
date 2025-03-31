@@ -9,7 +9,6 @@ import (
 )
 
 type ConversationDetailObject struct {
-	UserId         string `form:"user_id,omitempty"`
 	ConversationId string `form:"conversation_id,omitempty"`
 	Limit          int    `form:"limit,omitempty"`
 	Page           int    `form:"page,omitempty"`
@@ -28,16 +27,7 @@ func ValidateConversationDetailObject(input interface{}) error {
 }
 
 func (req *ConversationDetailObject) ToGetConversationDetailQuery() (*query.GetConversationDetailQuery, error) {
-	var userId uuid.UUID
 	var conversationId uuid.UUID
-	if req.UserId != "" {
-		parseUserId, err := uuid.Parse(req.UserId)
-		if err != nil {
-			return nil, err
-		}
-		userId = parseUserId
-	}
-
 	if req.ConversationId != "" {
 		parseConversationId, err := uuid.Parse(req.ConversationId)
 		if err != nil {
@@ -48,7 +38,6 @@ func (req *ConversationDetailObject) ToGetConversationDetailQuery() (*query.GetC
 	}
 	return &query.GetConversationDetailQuery{
 
-		UserId:         userId,
 		ConversationId: conversationId,
 		Limit:          req.Limit,
 		Page:           req.Page,

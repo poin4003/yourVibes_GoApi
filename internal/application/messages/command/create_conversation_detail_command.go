@@ -9,7 +9,7 @@ type CreateConversationDetailCommand struct {
 	UserId         uuid.UUID
 	ConversationId uuid.UUID
 	LastMessStatus bool
-	LastMessId     uuid.UUID
+	LastMess       string
 }
 
 type CreateConversationDetailResult struct {

@@ -9,8 +9,7 @@ import (
 )
 
 type GetOneConversationQuery struct {
-	ConversationId      uuid.UUID
-	AuthenticatedUserId uuid.UUID
+	ConversationId uuid.UUID
 }
 
 type GetManyConversationQuery struct {

@@ -9,9 +9,9 @@ import (
 )
 
 type CreateConversationDetailRequest struct {
-	UserId         uuid.UUID  `json:"user_id"`
-	ConversationId uuid.UUID  `json:"conversation_id"`
-	LastMessId     *uuid.UUID `json:"last_mess_id"`
+	UserId         uuid.UUID `json:"user_id"`
+	ConversationId uuid.UUID `json:"conversation_id"`
+	LastMess       *string   `json:"last_mess"`
 }
 
 func ValidateCreatCOnversationDetailRequest(req interface{}) error {
@@ -31,15 +31,9 @@ func (req *CreateConversationDetailRequest) ToCreateConversationDetailCommand(
 	userId uuid.UUID,
 	conversationId uuid.UUID,
 ) (*command.CreateConversationDetailCommand, error) {
-	// Nếu LastMessId là nil, gán giá trị mặc định (UUID rỗng)
-	lastMessId := uuid.Nil
-	if req.LastMessId != nil {
-		lastMessId = *req.LastMessId
-	}
 
 	return &command.CreateConversationDetailCommand{
 		UserId:         req.UserId,
 		ConversationId: req.ConversationId,
-		LastMessId:     lastMessId,
 	}, nil
 }

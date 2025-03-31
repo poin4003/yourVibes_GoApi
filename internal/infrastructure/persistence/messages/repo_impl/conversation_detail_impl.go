@@ -59,7 +59,7 @@ func (r *rConversatioDetail) CreateOne(
 	return r.GetById(ctx, entity.UserId, entity.ConversationId)
 }
 
-func (r *rConversatioDetail) GetConversationDetailByIdList(
+func (r *rConversatioDetail) GetConversationDetailByConversationId(
 	ctx context.Context,
 	query *query.GetConversationDetailQuery,
 ) ([]*entities.ConversationDetail, *response.PagingResponse, error) {
@@ -67,7 +67,7 @@ func (r *rConversatioDetail) GetConversationDetailByIdList(
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.ConversationDetail{}).
-		Where("user_id = ? OR conversation_id = ?", query.UserId, query.ConversationId).
+		Where(" conversation_id = ?", query.ConversationId).
 		Preload("User").
 		Preload("Conversation")
 
