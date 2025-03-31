@@ -103,7 +103,7 @@ func (s *sCommentLike) LikeComment(
 		// 2. Check like status of authenticated user
 		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		result.Comment = mapper.NewCommentWithLikedResultFromEntityAndIsLiked(commentFound, isLiked)
+		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
 
 		return result, nil
 	} else {
@@ -127,7 +127,7 @@ func (s *sCommentLike) LikeComment(
 		// 3.3. Check like status of authenticated user
 		isLiked, _ := s.likeUserCommentRepo.CheckUserLikeComment(ctx, likeUserCommentEntity)
 
-		result.Comment = mapper.NewCommentWithLikedResultFromEntityAndIsLiked(commentFound, isLiked)
+		result.Comment = mapper.NewCommentWithLikedResultFromEntity(commentFound, isLiked)
 
 		return result, nil
 	}

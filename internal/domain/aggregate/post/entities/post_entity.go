@@ -1,7 +1,9 @@
 package entities
 
 import (
+	"fmt"
 	"time"
+	"unicode/utf8"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
@@ -26,25 +28,6 @@ type Post struct {
 	Media           []*Media
 }
 
-type PostWithLiked struct {
-	ID              uuid.UUID
-	UserId          uuid.UUID
-	User            *User
-	ParentId        *uuid.UUID
-	ParentPost      *Post
-	Content         string
-	LikeCount       int
-	CommentCount    int
-	Privacy         consts.PrivacyLevel
-	Location        string
-	IsAdvertisement consts.AdvertiseStatus
-	Status          bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Media           []*Media
-	IsLiked         bool
-}
-
 type PostUpdate struct {
 	Content         *string
 	LikeCount       *int
@@ -58,7 +41,18 @@ type PostUpdate struct {
 
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Content, validation.Length(2, 1000)),
+		validation.Field(&p.Content, validation.By(func(value interface{}) error {
+			str, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("invalid content type")
+			}
+
+			length := utf8.RuneCountInString(str)
+			if length < 2 || length > 10000 {
+				return fmt.Errorf("content length must be between 2 and 10000 characters, but got %d", length)
+			}
+			return nil
+		})),
 		validation.Field(&p.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),
@@ -69,7 +63,18 @@ func (p *Post) ValidatePost() error {
 
 func (p *PostUpdate) ValidatePostUpdate() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Content, validation.Length(2, 1000)),
+		validation.Field(&p.Content, validation.By(func(value interface{}) error {
+			str, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("invalid content type")
+			}
+
+			length := utf8.RuneCountInString(str)
+			if length < 2 || length > 10000 {
+				return fmt.Errorf("content length must be between 2 and 10000 characters, but got %d", length)
+			}
+			return nil
+		})),
 		validation.Field(&p.Privacy, validation.In(consts.PrivacyLevels...)),
 		validation.Field(&p.LikeCount, validation.Min(0)),
 		validation.Field(&p.CommentCount, validation.Min(0)),

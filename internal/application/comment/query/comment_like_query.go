@@ -12,6 +12,11 @@ type GetCommentLikeQuery struct {
 	Page      int
 }
 
+type CheckUserLikeManyCommentQuery struct {
+	CommentIds          []uuid.UUID
+	AuthenticatedUserId uuid.UUID
+}
+
 type GetCommentLikeResult struct {
 	Users          []*common.UserResult
 	PagingResponse *response.PagingResponse

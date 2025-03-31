@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"go.uber.org/zap"
@@ -26,6 +27,7 @@ type sCommentUser struct {
 	userRepo              commentRepo.IUserRepository
 	postRepo              commentRepo.IPostRepository
 	likeUserCommentRepo   commentRepo.ILikeUserCommentRepository
+	commentCache          cache.ICommentCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
@@ -34,6 +36,7 @@ func NewCommentUserImplement(
 	userRepo commentRepo.IUserRepository,
 	postRepo commentRepo.IPostRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
+	commentCache cache.ICommentCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sCommentUser {
 	return &sCommentUser{
@@ -41,6 +44,7 @@ func NewCommentUserImplement(
 		userRepo:              userRepo,
 		postRepo:              postRepo,
 		likeUserCommentRepo:   likeUserCommentRepo,
+		commentCache:          commentCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -61,7 +65,8 @@ func (s *sCommentUser) CreateComment(
 
 	if command.ParentId != nil {
 		// 2.1. Get root comment
-		parentComment, err := s.commentRepo.GetById(ctx, *command.ParentId)
+		var parentComment *commentEntity.Comment
+		parentComment, err = s.commentRepo.GetById(ctx, *command.ParentId)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
@@ -192,9 +197,13 @@ func (s *sCommentUser) GetManyComments(
 		PagingResponse: nil,
 	}
 
+	var queryResult []*commentEntity.Comment
+	var paging *response.PagingResponse
+	var commentIDs []uuid.UUID
 	// Get next layer of comment by root comment
 	if query.ParentId != uuid.Nil {
-		parentCommentFound, err := s.commentRepo.GetById(ctx, query.ParentId)
+		var parentCommentFound *commentEntity.Comment
+		parentCommentFound, err = s.commentRepo.GetById(ctx, query.ParentId)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
@@ -203,33 +212,41 @@ func (s *sCommentUser) GetManyComments(
 			return nil, response.NewDataNotFoundError("parent comment not found")
 		}
 
-		queryResult, paging, err := s.commentRepo.GetMany(ctx, query)
+		queryResult, paging, err = s.commentRepo.GetMany(ctx, query)
 		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
+			return nil, err
 		}
 
-		var commentResults []*common.CommentResultWithLiked
 		for _, comment := range queryResult {
-			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(comment))
+			commentIDs = append(commentIDs, comment.ID)
 		}
-
-		result.Comments = commentResults
-		result.PagingResponse = paging
-		return result, nil
 	} else {
 		// Get first layer if it don't have parent id
-		queryResult, paging, err := s.commentRepo.GetMany(ctx, query)
+		queryResult, paging, err = s.commentRepo.GetMany(ctx, query)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
-
-		var commentResults []*common.CommentResultWithLiked
 		for _, comment := range queryResult {
-			commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(comment))
+			commentIDs = append(commentIDs, comment.ID)
 		}
-
-		result.Comments = commentResults
-		result.PagingResponse = paging
-		return result, nil
 	}
+
+	isLikedListQuery := &commentQuery.CheckUserLikeManyCommentQuery{
+		CommentIds:          commentIDs,
+		AuthenticatedUserId: query.AuthenticatedUserId,
+	}
+
+	isLikedList, err := s.likeUserCommentRepo.CheckUserLikeManyComment(ctx, isLikedListQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	var commentResults []*common.CommentResultWithLiked
+	for _, comment := range queryResult {
+		commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(comment, isLikedList[comment.ID]))
+	}
+
+	result.Comments = commentResults
+	result.PagingResponse = paging
+	return result, nil
 }

@@ -2,6 +2,8 @@ package repo_impl
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -10,7 +12,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/post/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"gorm.io/gorm"
-	"time"
 )
 
 type rNewFeed struct {
@@ -89,7 +90,7 @@ func (r *rNewFeed) DeleteMany(
 func (r *rNewFeed) GetMany(
 	ctx context.Context,
 	query *query.GetNewFeedQuery,
-) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
+) ([]*entities.Post, *response.PagingResponse, error) {
 	var posts []*models.Post
 	var total int64
 
@@ -161,29 +162,15 @@ func (r *rNewFeed) GetMany(
 		return nil, nil, err
 	}
 
-	var likedPostIds []uuid.UUID
-	if err := r.db.Model(&models.LikeUserPost{}).
-		Select("post_id").
-		Where("user_id = ?", authenticatedUserId).
-		Find(&likedPostIds).
-		Error; err != nil {
-		return nil, nil, err
-	}
-
-	likedMap := make(map[uuid.UUID]bool)
-	for _, id := range likedPostIds {
-		likedMap[id] = true
-	}
-
 	pagingResponse := &response.PagingResponse{
 		Limit: limit,
 		Page:  page,
 		Total: total,
 	}
 
-	var postEntities []*entities.PostWithLiked
+	var postEntities []*entities.Post
 	for _, post := range posts {
-		postEntity := mapper.FromPostWithLikedModel(post, likedMap[post.ID])
+		postEntity := mapper.FromPostModel(post)
 		postEntities = append(postEntities, postEntity)
 	}
 

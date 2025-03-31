@@ -9,19 +9,13 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
-	"github.com/redis/go-redis/v9"
 )
 
 type PostLikeController struct {
-	redisClient *redis.Client
 }
 
-func NewPostLikeController(
-	redisClient *redis.Client,
-) *PostLikeController {
-	return &PostLikeController{
-		redisClient: redisClient,
-	}
+func NewPostLikeController() *PostLikeController {
+	return &PostLikeController{}
 }
 
 // LikePost documentation

@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user"
@@ -11,7 +12,7 @@ import (
 type NotificationRouter struct{}
 
 func (nr *NotificationRouter) InitNotificationRouter(Router *gin.RouterGroup) {
-	notificationController := notification_user.NewNotificationController()
+	notificationController := notification_user.NewNotificationController(socket_hub.NewNotificationSocketHub())
 	// Public router
 	notificationRouterPublic := Router.Group("/notification")
 	{

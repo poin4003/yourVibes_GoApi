@@ -12,6 +12,11 @@ type GetPostLikeQuery struct {
 	Page   int
 }
 
+type CheckUserLikeManyPostQuery struct {
+	PostIds             []uuid.UUID
+	AuthenticatedUserId uuid.UUID
+}
+
 type GetPostLikeQueryResult struct {
 	Users          []*common.UserResult
 	PagingResponse *response.PagingResponse

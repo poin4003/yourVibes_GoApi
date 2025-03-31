@@ -2,6 +2,10 @@ package implement
 
 import (
 	"context"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	postCommand "github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/common"
@@ -13,34 +17,35 @@ import (
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	response "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 	"go.uber.org/zap"
-	"sync"
-	"time"
 )
 
 type sPostUser struct {
-	userRepo           postRepo.IUserRepository
-	friendRepo         postRepo.IFriendRepository
-	newFeedRepo        postRepo.INewFeedRepository
-	postRepo           postRepo.IPostRepository
-	mediaRepo          postRepo.IMediaRepository
-	likeUserPostRepo   postRepo.ILikeUserPostRepository
-	advertiseRepo      postRepo.IAdvertiseRepository
+	userRepo           repositories.IUserRepository
+	friendRepo         repositories.IFriendRepository
+	newFeedRepo        repositories.INewFeedRepository
+	postRepo           repositories.IPostRepository
+	mediaRepo          repositories.IMediaRepository
+	likeUserPostRepo   repositories.ILikeUserPostRepository
+	advertiseRepo      repositories.IAdvertiseRepository
+	postCache          cache.IPostCache
 	postEventPublisher *producer.PostEventPublisher
 }
 
 func NewPostUserImplement(
-	userRepo postRepo.IUserRepository,
-	friendRepo postRepo.IFriendRepository,
-	newFeedRepo postRepo.INewFeedRepository,
-	postRepo postRepo.IPostRepository,
-	mediaRepo postRepo.IMediaRepository,
-	likeUserPostRepo postRepo.ILikeUserPostRepository,
-	advertiseRepo postRepo.IAdvertiseRepository,
+	userRepo repositories.IUserRepository,
+	friendRepo repositories.IFriendRepository,
+	newFeedRepo repositories.INewFeedRepository,
+	postRepo repositories.IPostRepository,
+	mediaRepo repositories.IMediaRepository,
+	likeUserPostRepo repositories.ILikeUserPostRepository,
+	advertiseRepo repositories.IAdvertiseRepository,
+	postCache cache.IPostCache,
 	postEventPublisher *producer.PostEventPublisher,
 ) *sPostUser {
 	return &sPostUser{
@@ -51,6 +56,7 @@ func NewPostUserImplement(
 		mediaRepo:          mediaRepo,
 		likeUserPostRepo:   likeUserPostRepo,
 		advertiseRepo:      advertiseRepo,
+		postCache:          postCache,
 		postEventPublisher: postEventPublisher,
 	}
 }
@@ -70,12 +76,12 @@ func (s *sPostUser) CreatePost(
 		command.Location,
 	)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	postCreated, err := s.postRepo.CreateOne(ctx, newPost)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 2. Create Media and upload media
@@ -85,18 +91,18 @@ func (s *sPostUser) CreatePost(
 			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 
 			// 2.2. create Media model and save to database
 			mediaEntity, err := postEntity.NewMedia(postCreated.ID, mediaUrl)
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 
 			_, err = s.mediaRepo.CreateOne(ctx, mediaEntity)
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 		}
 	}
@@ -104,11 +110,11 @@ func (s *sPostUser) CreatePost(
 	// 3. Find user
 	userFound, err := s.userRepo.GetById(ctx, command.UserId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return nil, response2.NewDataNotFoundError("user not found")
+		return nil, response.NewDataNotFoundError("user not found")
 	}
 
 	// 4. Update post count for user
@@ -118,7 +124,7 @@ func (s *sPostUser) CreatePost(
 	}
 	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdate)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Check privacy of post
@@ -131,7 +137,7 @@ func (s *sPostUser) CreatePost(
 	// 6.1. Get friend id of user friend list
 	friendIds, err := s.friendRepo.GetFriendIds(ctx, userFound.ID)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 6.2. If user don't have friend, return
@@ -140,13 +146,13 @@ func (s *sPostUser) CreatePost(
 		return result, nil
 	}
 
-	// 6.3. Create new feed for friend
+	// 7. Create new feed for friend
 	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, userFound.ID)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	// 6.4. Create notification for friend
+	// 8. Create notification for friend
 	notification, err := notificationEntity.NewNotification(
 		userFound.FamilyName+" "+userFound.Name,
 		userFound.AvatarUrl,
@@ -160,17 +166,22 @@ func (s *sPostUser) CreatePost(
 		return result, nil
 	}
 
-	// 6.5. Publish to RabbitMQ to handle Notification
+	// 9. Publish to RabbitMQ to handle Notification
 	notiMsg := mapper.NewNotificationResult(notification)
 	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 
-	// 7. Validate post after create
+	// 10. Validate post after create
 	validatePost, err := postValidator.NewValidatedPost(postCreated)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
+
+	// 11. Delete feed cache
+	s.postCache.DeleteFeeds(ctx, consts.RK_USER_FEED, userFound.ID)
+	s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, userFound.ID)
+	s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
 
 	result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
 	return result, nil
@@ -182,11 +193,11 @@ func (s *sPostUser) UpdatePost(
 ) (result *postCommand.UpdatePostCommandResult, err error) {
 	postFound, err := s.postRepo.GetById(ctx, *command.PostId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if postFound == nil {
-		return nil, response2.NewDataNotFoundError("post not found")
+		return nil, response.NewDataNotFoundError("post not found")
 	}
 
 	// 1. update post information
@@ -198,12 +209,12 @@ func (s *sPostUser) UpdatePost(
 
 	err = updateData.ValidatePostUpdate()
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	postUpdated, err := s.postRepo.UpdateOne(ctx, *command.PostId, updateData)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 2. delete media in database and delete media
@@ -212,23 +223,23 @@ func (s *sPostUser) UpdatePost(
 			// 2.1. Get media information from database
 			mediaRecord, err := s.mediaRepo.GetOne(ctx, "id=?", mediaId)
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 
 			if mediaRecord == nil {
-				return nil, response2.NewDataNotFoundError("media not found")
+				return nil, response.NewDataNotFoundError("media not found")
 			}
 
 			// 2.2. Delete media from cloudinary
 			if mediaRecord.MediaUrl != "" {
 				if err := media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
-					return nil, response2.NewServerFailedError(err.Error())
+					return nil, response.NewServerFailedError(err.Error())
 				}
 			}
 
 			// 2.3. Delete media from databases
 			if err := s.mediaRepo.DeleteOne(ctx, mediaId); err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 		}
 	}
@@ -240,21 +251,24 @@ func (s *sPostUser) UpdatePost(
 			mediaUrl, err := media.SaveMedia(&file)
 
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 
 			// 3.2. create Media model and save to database
 			mediaEntity, err := postEntity.NewMedia(postUpdated.ID, mediaUrl)
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 
 			_, err = s.mediaRepo.CreateOne(ctx, mediaEntity)
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 		}
 	}
+
+	// 4. Delete cache post
+	s.postCache.DeletePost(ctx, *command.PostId)
 
 	return &postCommand.UpdatePostCommandResult{
 		Post: mapper.NewPostResultFromEntity(postUpdated),
@@ -267,29 +281,29 @@ func (s *sPostUser) DeletePost(
 ) (err error) {
 	postFound, err := s.postRepo.GetById(ctx, *command.PostId)
 	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+		return response.NewServerFailedError(err.Error())
 	}
 
 	if postFound == nil {
-		return response2.NewDataNotFoundError("post not found")
+		return response.NewDataNotFoundError("post not found")
 	}
 
 	// 1. Get media array of post
 	medias, err := s.mediaRepo.GetMany(ctx, "post_id=?", command.PostId)
 	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 2. Delete media from database and folder
 	for _, mediaRecord := range medias {
 		// 2.1. Delete media from folder
 		if err := media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
-			return response2.NewServerFailedError(err.Error())
+			return response.NewServerFailedError(err.Error())
 		}
 
 		// 2.1. Delete media from databases
 		if err := s.mediaRepo.DeleteOne(ctx, mediaRecord.ID); err != nil {
-			return response2.NewServerFailedError(err.Error())
+			return response.NewServerFailedError(err.Error())
 		}
 	}
 
@@ -300,13 +314,13 @@ func (s *sPostUser) DeletePost(
 	// 3. Delete new feed
 	err = s.newFeedRepo.DeleteMany(ctx, deleteCondition)
 	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 4. Delete advertise and bill
 	err = s.advertiseRepo.DeleteMany(ctx, deleteCondition)
 	if err != nil {
-		return response2.NewServerFailedError(err.Error())
+		return response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Delete post
@@ -314,6 +328,9 @@ func (s *sPostUser) DeletePost(
 	if err != nil {
 		return err
 	}
+
+	// 6. Delete post cache
+	s.postCache.DeletePost(ctx, *command.PostId)
 
 	return nil
 }
@@ -323,27 +340,19 @@ func (s *sPostUser) GetPost(
 	query *postQuery.GetOnePostQuery,
 ) (result *postQuery.GetOnePostQueryResult, err error) {
 	// 1. Get post
-	postFound, err := s.postRepo.GetOne(ctx, query.PostId, query.AuthenticatedUserId)
-	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
-	}
-
+	postFound := s.postCache.GetPost(ctx, query.PostId)
 	if postFound == nil {
-		return nil, response2.NewDataNotFoundError("post not found")
+		postFound, err = s.postRepo.GetById(ctx, query.PostId)
+		if err != nil {
+			return nil, response.NewServerFailedError(err.Error())
+		}
+		if postFound == nil {
+			return nil, response.NewDataNotFoundError("post not found")
+		}
+		go func(post *postEntity.Post) {
+			s.postCache.SetPost(ctx, post)
+		}(postFound)
 	}
-
-	// 2. Publish event to rabbitmq for statistic
-	go func(post *postEntity.PostWithLiked) {
-		statisticEvent := common.StatisticEventResult{
-			PostId:    post.ID,
-			EventType: "clicks",
-			Count:     1,
-			Timestamp: time.Now(),
-		}
-		if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
-			global.Logger.Error("Failed to publish statistic", zap.Error(err))
-		}
-	}(postFound)
 
 	// 2. Check privacy
 	isOwner := postFound.UserId == query.AuthenticatedUserId
@@ -356,21 +365,44 @@ func (s *sPostUser) GetPost(
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 			if !isFriend {
-				return nil, response2.NewCustomError(response2.ErrPostFriendAccess)
+				return nil, response.NewCustomError(response.ErrPostFriendAccess)
 			}
 		case consts.PRIVATE:
-			return nil, response2.NewCustomError(response2.ErrPostPrivateAccess)
+			return nil, response.NewCustomError(response.ErrPostPrivateAccess)
 		default:
-			return nil, response2.NewCustomError(response2.ErrPostPrivateAccess)
+			return nil, response.NewCustomError(response.ErrPostPrivateAccess)
 		}
 	}
 
+	// 2. Get user like
+	postLikedQuery, err := postEntity.NewLikeUserPostEntity(query.AuthenticatedUserId, query.PostId)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+	postLiked, err := s.likeUserPostRepo.CheckUserLikePost(ctx, postLikedQuery)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	// 3. Publish event to rabbitmq for statistic
+	go func(postId uuid.UUID) {
+		statisticEvent := common.StatisticEventResult{
+			PostId:    postId,
+			EventType: "clicks",
+			Count:     1,
+			Timestamp: time.Now(),
+		}
+		if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
+			global.Logger.Error("Failed to publish statistic", zap.Error(err))
+		}
+	}(postFound.ID)
+
 	// 4. Return
 	return &postQuery.GetOnePostQueryResult{
-		Post: mapper.NewPostWithLikedResultFromEntity(postFound),
+		Post: mapper.NewPostWithLikedResultFromEntity(postFound, postLiked),
 	}, nil
 }
 
@@ -378,19 +410,83 @@ func (s *sPostUser) GetManyPosts(
 	ctx context.Context,
 	query *postQuery.GetManyPostQuery,
 ) (result *postQuery.GetManyPostQueryResult, err error) {
-	postEntities, paging, err := s.postRepo.GetMany(ctx, query)
-	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+	// 1. Get post id list from cache
+	postIDs, paging := s.postCache.GetFeeds(
+		ctx, consts.RK_PERSONAL_POST, query.UserID, query.Limit, query.Page,
+	)
+
+	// 2. Cache miss
+	var posts []*postEntity.Post
+	if len(postIDs) == 0 {
+		var postEntities []*postEntity.Post
+		var pagingResp *response.PagingResponse
+		postEntities, pagingResp, err = s.postRepo.GetMany(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		posts = postEntities
+		paging = pagingResp
+		postIDs = make([]uuid.UUID, 0, len(postEntities))
+		var wg sync.WaitGroup
+		for _, post := range postEntities {
+			postIDs = append(postIDs, post.ID)
+			wg.Add(1)
+			go func(p *postEntity.Post) {
+				defer wg.Done()
+				s.postCache.SetPost(ctx, p)
+			}(post)
+		}
+		wg.Wait()
+
+		s.postCache.SetFeeds(ctx, consts.RK_PERSONAL_POST, query.UserID, postIDs, pagingResp)
+	} else {
+		// cache hit
+		posts = make([]*postEntity.Post, 0, len(postIDs))
+		var wg sync.WaitGroup
+		var postMap sync.Map
+
+		for _, postID := range postIDs {
+			wg.Add(1)
+			go func(postID uuid.UUID) {
+				defer wg.Done()
+				post := s.postCache.GetPost(ctx, postID)
+				if post == nil {
+					post, err = s.postRepo.GetById(ctx, postID)
+					if err == nil || post != nil {
+						s.postCache.SetPost(ctx, post)
+					}
+				}
+				postMap.Store(postID, post)
+			}(postID)
+		}
+		wg.Wait()
+
+		for _, postID := range postIDs {
+			if post, ok := postMap.Load(postID); ok {
+				posts = append(posts, post.(*postEntity.Post))
+			}
+		}
 	}
 
-	// Publish event to rabbitmq for statistic
+	// 3. Get list user post like
+	isLikedListQuery := &postQuery.CheckUserLikeManyPostQuery{
+		PostIds:             postIDs,
+		AuthenticatedUserId: query.AuthenticatedUserId,
+	}
+	isLikedList, err := s.likeUserPostRepo.CheckUserLikeManyPost(ctx, isLikedListQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. Publish event to rabbitmq for statistic
 	var wg sync.WaitGroup
-	for _, post := range postEntities {
+	for _, post := range posts {
+		postId := post.ID
 		wg.Add(1)
-		go func(post *postEntity.PostWithLiked) {
+		go func(postId uuid.UUID) {
 			defer wg.Done()
 			statisticEvent := common.StatisticEventResult{
-				PostId:    post.ID,
+				PostId:    postId,
 				EventType: "impression",
 				Count:     1,
 				Timestamp: time.Now(),
@@ -398,13 +494,14 @@ func (s *sPostUser) GetManyPosts(
 			if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
 				global.Logger.Error("Failed to publish statistic", zap.Error(err))
 			}
-		}(post)
+		}(postId)
 	}
 	wg.Wait()
 
+	// Map to return
 	var postResults []*common.PostResultWithLiked
-	for _, post := range postEntities {
-		postResult := mapper.NewPostWithLikedResultFromEntity(post)
+	for _, post := range posts {
+		postResult := mapper.NewPostWithLikedResultFromEntity(post, isLikedList[post.ID])
 		postResults = append(postResults, postResult)
 	}
 
@@ -420,7 +517,7 @@ func (s *sPostUser) CheckPostOwner(
 ) (result *postQuery.CheckPostOwnerQueryResult, err error) {
 	isOwner, err := s.postRepo.CheckPostOwner(ctx, query.PostId, query.UserId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	return &postQuery.CheckPostOwnerQueryResult{

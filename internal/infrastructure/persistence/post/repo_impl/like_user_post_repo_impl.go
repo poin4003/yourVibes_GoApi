@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
@@ -102,4 +103,25 @@ func (r *rLikeUserPost) CheckUserLikePost(
 		Count(&count).Error; err != nil {
 	}
 	return count > 0, nil
+}
+
+func (r *rLikeUserPost) CheckUserLikeManyPost(
+	ctx context.Context,
+	query *query.CheckUserLikeManyPostQuery,
+) (map[uuid.UUID]bool, error) {
+	var likedPostsIds []uuid.UUID
+	if err := r.db.WithContext(ctx).Model(&models.LikeUserPost{}).
+		Select("post_id").
+		Where("user_id = ? AND post_id IN ?", query.AuthenticatedUserId, query.PostIds).
+		Find(&likedPostsIds).
+		Error; err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	likedMap := make(map[uuid.UUID]bool)
+	for _, id := range likedPostsIds {
+		likedMap[id] = true
+	}
+
+	return likedMap, nil
 }

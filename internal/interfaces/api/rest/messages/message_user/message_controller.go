@@ -2,12 +2,12 @@ package message_user
 
 import (
 	"fmt"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -18,10 +18,13 @@ import (
 )
 
 type cMessage struct {
+	messageSocketHub *socket_hub.MessageSocketHub
 }
 
-func NewMessageController() *cMessage {
-	return &cMessage{}
+func NewMessageController(messageSocketHub *socket_hub.MessageSocketHub) *cMessage {
+	return &cMessage{
+		messageSocketHub: messageSocketHub,
+	}
 }
 
 var upgrader = websocket.Upgrader{
@@ -52,10 +55,10 @@ func (c *cMessage) SendMessageWebSocket(ctx *gin.Context) {
 		return
 	}
 
-	global.MessageSocketHub.AddConnection(userIdStr, conn)
+	c.messageSocketHub.AddConnection(userIdStr, conn)
 
 	go func() {
-		defer global.MessageSocketHub.RemoveConnection(userIdStr)
+		defer c.messageSocketHub.RemoveConnection(userIdStr)
 		defer conn.Close()
 
 		for {

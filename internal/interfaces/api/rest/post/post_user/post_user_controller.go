@@ -14,19 +14,12 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user/query"
-	"github.com/redis/go-redis/v9"
 )
 
-type cPostUser struct {
-	redisClient *redis.Client
-}
+type cPostUser struct{}
 
-func NewPostUserController(
-	redisClient *redis.Client,
-) *cPostUser {
-	return &cPostUser{
-		redisClient: redisClient,
-	}
+func NewPostUserController() *cPostUser {
+	return &cPostUser{}
 }
 
 // CreatePost documentation

@@ -2,7 +2,6 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/post/post_user"
@@ -14,9 +13,9 @@ type PostRouter struct{}
 
 func (pr *PostRouter) InitPostRouter(Router *gin.RouterGroup) {
 	// 1. Init Controller
-	postUserController := post_user.NewPostUserController(global.Rdb)
+	postUserController := post_user.NewPostUserController()
 	postShareController := post_user.NewPostShareController()
-	postLikeController := post_user.NewPostLikeController(global.Rdb)
+	postLikeController := post_user.NewPostLikeController()
 	postNewFeedController := post_user.NewPostNewFeedController()
 
 	// 2. Private router

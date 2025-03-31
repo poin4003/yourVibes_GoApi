@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/mapper"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/contain"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -14,14 +15,17 @@ import (
 )
 
 type sNotificationMQ struct {
-	notificationRepo repository.INotificationRepository
+	notificationRepo      repository.INotificationRepository
+	notificationSocketHub *socket_hub.NotificationSocketHub
 }
 
 func NewNotification(
 	notificationRepo repository.INotificationRepository,
+	notificationSocketHub *socket_hub.NotificationSocketHub,
 ) *sNotificationMQ {
 	return &sNotificationMQ{
-		notificationRepo: notificationRepo,
+		notificationRepo:      notificationRepo,
+		notificationSocketHub: notificationSocketHub,
 	}
 }
 
@@ -56,10 +60,10 @@ func (s *sNotificationMQ) HandleBulkNotification(
 		}
 	}
 
-	if contain.Contains(actions, "websocket") && global.NotificationSocketHub != nil {
+	if contain.Contains(actions, "websocket") {
 		for _, notification := range notifications {
 			socketMsg := mapper.NewNotificationResult(notification)
-			if err := global.NotificationSocketHub.SendNotification(notification.UserId.String(), socketMsg); err != nil {
+			if err = s.notificationSocketHub.SendNotification(notification.UserId.String(), socketMsg); err != nil {
 				global.Logger.Error("Failed to send notification", zap.Error(err))
 			}
 		}
@@ -99,9 +103,9 @@ func (s *sNotificationMQ) HandleSingleNotification(
 		}
 	}
 
-	if contain.Contains(actions, "websocket") && global.NotificationSocketHub != nil {
+	if contain.Contains(actions, "websocket") {
 		socketMsg := mapper.NewNotificationResult(notification)
-		if err := global.NotificationSocketHub.SendNotification(notification.UserId.String(), socketMsg); err != nil {
+		if err := s.notificationSocketHub.SendNotification(notification.UserId.String(), socketMsg); err != nil {
 			global.Logger.Error("Failed to send notification", zap.Error(err))
 		}
 	}

@@ -56,24 +56,3 @@ func FromCommentModel(c *models.Comment) *entities.Comment {
 		Status:          c.Status,
 	}
 }
-
-func FromCommentModelWithLiked(c *models.Comment, isLiked bool) *entities.Comment {
-	if c == nil {
-		return nil
-	}
-
-	return &entities.Comment{
-		ID:              c.ID,
-		PostId:          c.PostId,
-		UserId:          c.UserId,
-		User:            ToUserEntity(&c.User),
-		ParentId:        c.ParentId,
-		Content:         c.Content,
-		LikeCount:       c.LikeCount,
-		RepCommentCount: c.RepCommentCount,
-		CreatedAt:       c.CreatedAt,
-		UpdatedAt:       c.UpdatedAt,
-		Status:          c.Status,
-		IsLiked:         isLiked,
-	}
-}
