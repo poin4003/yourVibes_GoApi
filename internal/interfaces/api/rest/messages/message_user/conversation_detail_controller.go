@@ -6,7 +6,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/query"
@@ -56,6 +55,46 @@ func (cd *cConversationDetail) CreateConversationDetail(ctx *gin.Context) {
 	pkgResponse.OK(ctx, conversationDetailDto)
 }
 
+// GetConversationDetailByConversationId documentation
+// @Summary Get conversationDetail by Conversation Id response List User in Conversation
+// @Description Retrieve a conversationDetail by its unique Conversation ID
+// @Tags conversationDetail
+// @Accept json
+// @Produce json
+// @Param conversation_id query string true "Conversation ID"
+// @Param limit query int false "Limit on page"
+// @Param page query int false "Page number"
+// @Security ApiKeyAuth
+// @Router /conversation_details/get_by_id [get]
+func (cd *cConversationDetail) GetConversationDetailByConversationId(ctx *gin.Context) {
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validatedQuery request"))
+		return
+	}
+
+	conversationDetailQueryObject, ok := queryInput.(*query.ConversationDetailObject)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid query type"))
+		return
+	}
+
+	getConversationDetailByUserIdQuery, _ := conversationDetailQueryObject.ToGetConversationDetailQuery()
+
+	result, err := services.ConversationDetail().GetConversationDetailByConversationId(ctx, getConversationDetailByUserIdQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	var conversationDetailDtos []*response.ConversationDetailDto
+	for _, conversationDetailResults := range result.ConversationDetail {
+		conversationDetailDtos = append(conversationDetailDtos, response.ToConversationDetailDto(conversationDetailResults))
+	}
+
+	pkgResponse.OKWithPaging(ctx, conversationDetailDtos, *result.PagingResponse)
+}
+
 // GetConversationDetailById documentation
 // @Summary Get conversationDetail by ID
 // @Description Retrieve a conversationDetail by its unique ID
@@ -91,57 +130,6 @@ func (cd *cConversationDetail) GetConversationDetailById(ctx *gin.Context) {
 	conversationDetailDto := response.ToConversationDetailDto(result)
 
 	pkgResponse.OK(ctx, conversationDetailDto)
-}
-
-// GetConversationDetailByIdList documentation
-// @Summary Get conversationDetail by ID response list
-// @Description Retrieve a conversationDetail by its unique User ID
-// @Tags conversationDetail
-// @Accept json
-// @Produce json
-// @Param user_id query string false "User ID"
-// @Param conversation_id query string false "Conversation ID"
-// @Param limit query int false "Limit on page"
-// @Param page query int false "Page number"
-// @Security ApiKeyAuth
-// @Router /conversation_details/get_by_id [get]
-func (cd *cConversationDetail) GetConversationDetailByIdList(ctx *gin.Context) {
-	queryInput, exists := ctx.Get("validatedQuery")
-	if !exists {
-		ctx.Error(pkgResponse.NewServerFailedError("Missing validatedQuery request"))
-		return
-	}
-
-	conversationDetailQueryObject, ok := queryInput.(*query.ConversationDetailObject)
-	if !ok {
-		ctx.Error(pkgResponse.NewServerFailedError("Invalid query type"))
-		return
-	}
-
-	if conversationDetailQueryObject.UserId == "" && conversationDetailQueryObject.ConversationId == "" {
-
-		userIdClaim, err := extensions.GetUserID(ctx)
-		if err != nil {
-			ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
-			return
-		}
-		conversationDetailQueryObject.UserId = userIdClaim.String()
-	}
-
-	getConversationDetailByUserIdQuery, _ := conversationDetailQueryObject.ToGetConversationDetailQuery()
-
-	result, err := services.ConversationDetail().GetConversationDetailByIdList(ctx, getConversationDetailByUserIdQuery)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	var conversationDetailDtos []*response.ConversationDetailDto
-	for _, conversationDetailResults := range result.ConversationDetail {
-		conversationDetailDtos = append(conversationDetailDtos, response.ToConversationDetailDto(conversationDetailResults))
-	}
-
-	pkgResponse.OKWithPaging(ctx, conversationDetailDtos, *result.PagingResponse)
 }
 
 // DeleteConversationDetailById documentation
@@ -185,27 +173,30 @@ func (cd *cConversationDetail) DeleteConversationDetailById(ctx *gin.Context) {
 // @Tags conversationDetail
 // @Accept json
 // @Produce json
-// @Param user_id path string true "User ID"
-// @Param conversation_id path string true "Conversation ID"
+// @Param input body request.UpdateConversationDetail true "input"
 // @Security ApiKeyAuth
-// @Router /conversation_details/update/{user_id}/{conversation_id} [patch]
+// @Router /conversation_details/update [patch]
 func (cd *cConversationDetail) UpdateConversationDetail(ctx *gin.Context) {
-	userIdStr := ctx.Param("userId")
-	conversationIdStr := ctx.Param("conversationId")
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validateRequest request"))
+		return
+	}
 
-	userID, err := uuid.Parse(userIdStr)
+	updateConversationDetail, ok := body.(*request.UpdateConversationDetail)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	updateOneStatusConversationDetailCommand, err := updateConversationDetail.ToUpdateConversationDetailCommand(
+		updateConversationDetail.UserId,
+		updateConversationDetail.ConversationId,
+	)
 	if err != nil {
 		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
-
-	conversationID, err := uuid.Parse(conversationIdStr)
-	if err != nil {
-		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
-		return
-	}
-
-	updateOneStatusConversationDetailCommand := &command.UpdateOneStatusConversationDetailCommand{UserId: userID, ConversationId: conversationID}
 
 	err = services.ConversationDetail().UpdateOneStatusConversationDetail(ctx, updateOneStatusConversationDetailCommand)
 	if err != nil {

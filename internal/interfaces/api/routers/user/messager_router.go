@@ -17,6 +17,7 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 	useConversationDetailController := message_user.NewConversationDetailController()
 
 	conversationRouter := Router.Group("/conversations")
+	conversationRouter.Use(middlewares.UserAuthProtected())
 	{
 		conversationRouter.POST("/",
 			helpers.ValidateFormBody(&conversationRequest.CreateConversationRequest{}, conversationRequest.ValidateCreateConversationRequest),
@@ -30,6 +31,9 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 
 		conversationRouter.DELETE("/:conversationId", userConversationController.DeleteConversationById)
 
+		conversationRouter.PATCH("/:conversationId",
+			helpers.ValidateFormBody(&conversationRequest.UpdateConversationRequest{}, conversationRequest.ValidateUpdateConversationRequest),
+			userConversationController.UpdateConversation)
 	}
 
 	messageRouterPublic := Router.Group("/messages")
@@ -60,15 +64,16 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 			helpers.ValidateJsonBody(&conversationRequest.CreateConversationDetailRequest{}, conversationRequest.ValidateCreatCOnversationDetailRequest),
 			useConversationDetailController.CreateConversationDetail)
 
-		conversationDetailRouter.GET("/get_by_id/:userId/:conversationId", useConversationDetailController.GetConversationDetailById)
-
 		conversationDetailRouter.GET("/get_by_id",
 			helpers.ValidateQuery(&conversationQuery.ConversationDetailObject{}, conversationQuery.ValidateConversationDetailObject),
-			useConversationDetailController.GetConversationDetailByIdList)
+			useConversationDetailController.GetConversationDetailByConversationId)
+
+		conversationDetailRouter.GET("/get_by_id/:userId/:conversationId", useConversationDetailController.GetConversationDetailById)
 
 		conversationDetailRouter.DELETE("/delete/:userId/:conversationId", useConversationDetailController.DeleteConversationDetailById)
 
-		conversationDetailRouter.PATCH("/update/:userId/:conversationId",
+		conversationDetailRouter.PATCH("/update",
+			helpers.ValidateJsonBody(&conversationRequest.UpdateConversationDetail{}, conversationRequest.ValidateUpdateConversationDetail),
 			useConversationDetailController.UpdateConversationDetail)
 	}
 

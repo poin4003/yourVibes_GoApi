@@ -842,7 +842,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a conversationDetail by its unique User ID",
+                "description": "Retrieve a conversationDetail by its unique Conversation ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -852,19 +852,14 @@ const docTemplate = `{
                 "tags": [
                     "conversationDetail"
                 ],
-                "summary": "Get conversationDetail by ID response list",
+                "summary": "Get conversationDetail by Conversation Id response List User in Conversation",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query"
-                    },
                     {
                         "type": "string",
                         "description": "Conversation ID",
                         "name": "conversation_id",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "integer",
@@ -919,7 +914,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/conversation_details/update/{user_id}/{conversation_id}": {
+        "/conversation_details/update": {
             "patch": {
                 "security": [
                     {
@@ -938,18 +933,13 @@ const docTemplate = `{
                 "summary": "Update conversationDetail status to false",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Conversation ID",
-                        "name": "conversation_id",
-                        "in": "path",
-                        "required": true
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateConversationDetail"
+                        }
                     }
                 ],
                 "responses": {}
@@ -974,6 +964,30 @@ const docTemplate = `{
                 ],
                 "summary": "Get many conversation",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the conversation",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Created at",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is descending",
+                        "name": "isDescending",
+                        "in": "query"
+                    },
                     {
                         "type": "integer",
                         "description": "Limit of conversation per page",
@@ -1087,6 +1101,46 @@ const docTemplate = `{
                         "name": "conversation_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user need to update conversation",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversation"
+                ],
+                "summary": "update conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ConversationId",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name of the conversation",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image of the conversation",
+                        "name": "image",
+                        "in": "formData"
                     }
                 ],
                 "responses": {}
@@ -2875,7 +2929,7 @@ const docTemplate = `{
                 "conversation_id": {
                     "type": "string"
                 },
-                "last_mess_id": {
+                "last_mess": {
                     "type": "string"
                 },
                 "user_id": {
@@ -3046,6 +3100,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UpdateConversationDetail": {
+            "type": "object",
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

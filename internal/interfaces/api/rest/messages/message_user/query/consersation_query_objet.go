@@ -31,6 +31,7 @@ func ValidateConversationObject(input interface{}) error {
 }
 
 func (req *ConversationObject) ToGetManyConversationQuery() (*conversationQuery.GetManyConversationQuery, error) {
+
 	return &conversationQuery.GetManyConversationQuery{
 		Name:         req.Name,
 		CreatedAt:    req.CreatedAt,
@@ -46,7 +47,6 @@ func (req *ConversationObject) ToGetOneConversationQuery(
 	authenticatedUserId uuid.UUID,
 ) (*conversationQuery.GetOneConversationQuery, error) {
 	return &conversationQuery.GetOneConversationQuery{
-		ConversationId:      conversationId,
-		AuthenticatedUserId: authenticatedUserId,
+		ConversationId: conversationId,
 	}, nil
 }

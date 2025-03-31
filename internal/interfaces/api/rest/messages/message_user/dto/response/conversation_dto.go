@@ -8,11 +8,14 @@ import (
 )
 
 type ConversationDto struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Image     string    `json:"image"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Image      string    `json:"image"`
+	Avatar     string    `json:"avatar,omitempty"`
+	UserID     uuid.UUID `json:"user_id,omitempty"`
+	FamilyName string    `json:"family_name,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func ToConversationDto(conversationResult *common.ConversationResult) *ConversationDto {
@@ -20,10 +23,13 @@ func ToConversationDto(conversationResult *common.ConversationResult) *Conversat
 		return nil
 	}
 	return &ConversationDto{
-		ID:        conversationResult.ID,
-		Name:      conversationResult.Name,
-		Image:     conversationResult.Image,
-		CreatedAt: conversationResult.CreatedAt,
-		UpdatedAt: conversationResult.UpdatedAt,
+		ID:         conversationResult.ID,
+		Name:       conversationResult.Name,
+		Image:      conversationResult.Image,
+		UserID:     conversationResult.UserID,
+		Avatar:     conversationResult.Avatar,
+		FamilyName: conversationResult.FamilyName,
+		CreatedAt:  conversationResult.CreatedAt,
+		UpdatedAt:  conversationResult.UpdatedAt,
 	}
 }

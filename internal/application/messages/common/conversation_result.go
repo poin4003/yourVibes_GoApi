@@ -7,9 +7,12 @@ import (
 )
 
 type ConversationResult struct {
-	ID        uuid.UUID
-	Name      string
-	Image     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID         uuid.UUID
+	Name       string
+	Image      string
+	Avatar     string
+	UserID     uuid.UUID
+	FamilyName string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }

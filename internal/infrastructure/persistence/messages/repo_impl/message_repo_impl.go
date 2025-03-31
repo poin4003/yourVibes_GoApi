@@ -3,6 +3,7 @@ package repo_impl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,14 +47,37 @@ func (r *rMessage) CreateOne(
 	ctx context.Context,
 	entity *entities.Message,
 ) error {
-	// Create message
-	messageModel := mapper.ToMessageModel(entity)
-	if err := r.db.WithContext(ctx).
-		Create(messageModel).Error; err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
+	var messageModel *models.Message
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var count int64
+		if err := tx.Model(&models.Conversation{}).
+			Where("id = ?", entity.ConversationId).
+			Count(&count).Error; err != nil {
+		}
+		if count <= 0 {
+			return response.NewDataNotFoundError("Conversation doesn't exist")
+		}
+		messageModel = mapper.ToMessageModel(entity)
+		if err := tx.Create(messageModel).Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
 
-	return nil
+		var userModel *models.User
+		if err := tx.Select("id, name").First(&userModel, entity.UserId).Error; err != nil {
+			return response.NewDataNotFoundError(err.Error())
+		}
+
+		if err := tx.Model(&models.ConversationDetail{}).Where("conversation_id = ?", entity.ConversationId).
+			Updates(map[string]interface{}{
+				"last_mess":        fmt.Sprintf("%s: %s", userModel.Name, *messageModel.Content),
+				"last_mess_status": true,
+			}).Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+		return nil
+	})
+
+	return err
 }
 
 func (r *rMessage) GetMessagesByConversationId(

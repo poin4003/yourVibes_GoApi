@@ -19,14 +19,30 @@ type CreateConversation struct {
 }
 
 type Conversation struct {
-	ID        uuid.UUID
-	Name      string
-	Image     string
-	CreatedAt time.Time
+	ID         uuid.UUID
+	Name       string
+	Image      string
+	Avatar     string
+	UserID     uuid.UUID
+	FamilyName string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type ConversationUpdate struct {
+	Name      *string
+	Image     *string
 	UpdatedAt time.Time
 }
 
 func (c *CreateConversation) Validate() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.Name, validation.Length(1, 30)),
+		validation.Field(&c.Image, is.URL),
+	)
+}
+
+func (c *ConversationUpdate) ValidateConversationUpdate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Name, validation.Length(1, 30)),
 		validation.Field(&c.Image, is.URL),

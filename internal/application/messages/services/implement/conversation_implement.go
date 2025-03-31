@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 
 	"github.com/google/uuid"
 	conversationCommand "github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -61,9 +63,10 @@ func (s *sConversation) CreateConversation(
 
 func (s *sConversation) GetManyConversation(
 	ctx context.Context,
+	userId uuid.UUID,
 	query *conversationQuery.GetManyConversationQuery,
 ) (result *conversationQuery.GetManyConversationQueryResult, err error) {
-	conversationEntities, paging, err := s.conversationRepo.GetManyConversation(ctx, query)
+	conversationEntities, paging, err := s.conversationRepo.GetManyConversation(ctx, userId, query)
 	if err != nil {
 		return result, err
 	}
@@ -99,4 +102,48 @@ func (s *sConversation) DeleteConversationById(
 	}
 
 	return nil
+}
+
+func (s *sConversation) UpdateConversationById(
+	ctx context.Context,
+	command *conversationCommand.UpdateConversationCommand,
+) (result *conversationCommand.UpdateConversationCommandResult, err error) {
+	conversationFound, err := s.conversationRepo.GetById(ctx, *command.ConversationId)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+	if conversationFound == nil {
+		return nil, response.NewDataNotFoundError("conversation not found")
+	}
+
+	updateConversationEntity := &conversationEntity.ConversationUpdate{
+		Name: command.Name,
+	}
+	err = updateConversationEntity.ValidateConversationUpdate()
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	if command.Image != nil && command.Image.Size > 0 && command.Image.Filename != "" {
+		image, err := media.SaveMedia(command.Image)
+		if err != nil {
+			return nil, response.NewServerFailedError(err.Error())
+		}
+
+		_, err = s.conversationRepo.UpdateOne(ctx, *command.ConversationId, &conversationEntity.ConversationUpdate{
+			Image: &image,
+		})
+
+		if err != nil {
+			return nil, response.NewServerFailedError(err.Error())
+		}
+	}
+
+	conversationFound, err = s.conversationRepo.UpdateOne(ctx, *command.ConversationId, updateConversationEntity)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+	return &conversationCommand.UpdateConversationCommandResult{
+		Conversation: mapper.NewConversationResult(conversationFound),
+	}, nil
 }

@@ -79,11 +79,11 @@ func (s *sConversationDetail) CreateConversationDetail(
 	}, nil
 }
 
-func (s *sConversationDetail) GetConversationDetailByIdList(
+func (s *sConversationDetail) GetConversationDetailByConversationId(
 	ctx context.Context,
 	query *conversationDetailQuery.GetConversationDetailQuery,
 ) (result *conversationDetailQuery.GetConversationDetailResult, err error) {
-	conversationDetailEntities, paging, err := s.conversationDetailRepo.GetConversationDetailByIdList(ctx, query)
+	conversationDetailEntities, paging, err := s.conversationDetailRepo.GetConversationDetailByConversationId(ctx, query)
 	if err != nil {
 		return result, err
 	}
@@ -119,7 +119,10 @@ func (s *sConversationDetail) DeleteConversationDetailById(
 	return nil
 }
 
-func (s *sConversationDetail) UpdateOneStatusConversationDetail(ctx context.Context, command *command.UpdateOneStatusConversationDetailCommand) (err error) {
+func (s *sConversationDetail) UpdateOneStatusConversationDetail(
+	ctx context.Context,
+	command *command.UpdateOneStatusConversationDetailCommand,
+) (err error) {
 	notificationUpdateEntity := &entities.ConversationDetailUpdate{
 		LastMessStatus: pointer.Ptr(false),
 	}
