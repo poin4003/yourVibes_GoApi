@@ -192,43 +192,16 @@ func (s *sCommentUser) GetManyComments(
 	ctx context.Context,
 	query *commentQuery.GetManyCommentQuery,
 ) (result *commentQuery.GetManyCommentsResult, err error) {
-	result = &commentQuery.GetManyCommentsResult{
-		Comments:       nil,
-		PagingResponse: nil,
-	}
-
-	var queryResult []*commentEntity.Comment
-	var paging *response.PagingResponse
+	// 1. Get comment id lít from cache
+	
 	var commentIDs []uuid.UUID
-	// Get next layer of comment by root comment
-	if query.ParentId != uuid.Nil {
-		var parentCommentFound *commentEntity.Comment
-		parentCommentFound, err = s.commentRepo.GetById(ctx, query.ParentId)
-		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
-		}
-
-		if parentCommentFound == nil {
-			return nil, response.NewDataNotFoundError("parent comment not found")
-		}
-
-		queryResult, paging, err = s.commentRepo.GetMany(ctx, query)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, comment := range queryResult {
-			commentIDs = append(commentIDs, comment.ID)
-		}
-	} else {
-		// Get first layer if it don't have parent id
-		queryResult, paging, err = s.commentRepo.GetMany(ctx, query)
-		if err != nil {
-			return nil, response.NewServerFailedError(err.Error())
-		}
-		for _, comment := range queryResult {
-			commentIDs = append(commentIDs, comment.ID)
-		}
+	// Get comment
+	comments, paging, err := s.commentRepo.GetMany(ctx, query)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+	for _, comment := range comments {
+		commentIDs = append(commentIDs, comment.ID)
 	}
 
 	isLikedListQuery := &commentQuery.CheckUserLikeManyCommentQuery{
@@ -242,11 +215,12 @@ func (s *sCommentUser) GetManyComments(
 	}
 
 	var commentResults []*common.CommentResultWithLiked
-	for _, comment := range queryResult {
+	for _, comment := range comments {
 		commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(comment, isLikedList[comment.ID]))
 	}
 
-	result.Comments = commentResults
-	result.PagingResponse = paging
-	return result, nil
+	return &commentQuery.GetManyCommentsResult{
+		Comments:       commentResults,
+		PagingResponse: paging,
+	}, nil
 }

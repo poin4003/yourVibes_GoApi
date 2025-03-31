@@ -184,14 +184,18 @@ func (r *rComment) GetMany(
 	// 1. If query have ParentId
 	if query.ParentId != uuid.Nil {
 		// 1.1. Find parent comment
-		var parentComment models.Comment
+		var count int64
 		if err := r.db.Where("id = ?", query.ParentId).
-			Find(&parentComment).
+			Count(&count).
 			Error; err != nil {
 			return nil, nil, response.NewServerFailedError(err.Error())
 		}
 
-		db = db.Where("parent_id = ?", parentComment.ID)
+		if count == 0 {
+			return nil, nil, response.NewDataNotFoundError("parent comment id does not exist")
+		}
+
+		db = db.Where("parent_id = ?", query.ParentId)
 	} else if query.PostId != uuid.Nil {
 		db = db.Where("post_id = ? AND parent_id IS NULL", query.PostId)
 	}

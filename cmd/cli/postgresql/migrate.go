@@ -10,12 +10,12 @@ import (
 func main() {
 	initialize2.LoadConfig()
 	initialize2.InitLogger()
-	initialize2.InitPostgreSql()
+	db := initialize2.InitPostgreSql()
 
 	logger := global.Logger
 
 	logger.Info("Starting migration process...")
-	if err := initialize2.DBMigrator(global.Pdb); err != nil {
+	if err := initialize2.DBMigrator(db); err != nil {
 		logger.Error("Unable to migrate database", zap.Error(err))
 		log.Fatalln("Migration failed:", err)
 	} else {
