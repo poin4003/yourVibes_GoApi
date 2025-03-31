@@ -26,6 +26,7 @@ type (
 		DeleteLikeUserComment(ctx context.Context, entity *entities.LikeUserComment) error
 		GetLikeUserComment(ctx context.Context, query *query.GetCommentLikeQuery) ([]*entities.User, *response.PagingResponse, error)
 		CheckUserLikeComment(ctx context.Context, entity *entities.LikeUserComment) (bool, error)
+		CheckUserLikeManyComment(ctx context.Context, query *query.CheckUserLikeManyCommentQuery) (map[uuid.UUID]bool, error)
 	}
 )
 

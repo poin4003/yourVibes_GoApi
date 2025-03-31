@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/command"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/query"
 	"net/http"
@@ -12,12 +13,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 )
 
-type cNotification struct{}
+type cNotification struct {
+	notificationSocketHub *socket_hub.NotificationSocketHub
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -25,8 +27,10 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func NewNotificationController() *cNotification {
-	return &cNotification{}
+func NewNotificationController(notificationSocketHub *socket_hub.NotificationSocketHub) *cNotification {
+	return &cNotification{
+		notificationSocketHub: notificationSocketHub,
+	}
 }
 
 // SendNotification documentation
@@ -50,11 +54,11 @@ func (c *cNotification) SendNotification(ctx *gin.Context) {
 		return
 	}
 
-	global.NotificationSocketHub.AddConnection(userId, conn)
+	c.notificationSocketHub.AddConnection(userId, conn)
 	fmt.Println("WebSocket connection established")
 
 	go func() {
-		defer global.NotificationSocketHub.RemoveConnection(userId)
+		defer c.notificationSocketHub.RemoveConnection(userId)
 		defer conn.Close()
 
 		for {

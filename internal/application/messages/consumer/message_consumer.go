@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 )
@@ -15,22 +16,25 @@ type MessageConsumer struct {
 	messageService services.IMessageMQ
 	queueName      string
 	dlqName        string
+	conn           *rabbitmq.Connection
 }
 
 func NewMessageConsumer(
 	service services.IMessageMQ,
 	queueName string,
 	dlqName string,
+	conn *rabbitmq.Connection,
 ) *MessageConsumer {
 	return &MessageConsumer{
 		messageService: service,
 		queueName:      queueName,
 		dlqName:        dlqName,
+		conn:           conn,
 	}
 }
 
 func (c *MessageConsumer) StartMessageConsuming(ctx context.Context) error {
-	ch, err := global.RabbitMQConn.GetChannel()
+	ch, err := c.conn.GetChannel()
 	if err != nil {
 		return err
 	}
@@ -211,7 +215,7 @@ func (c *MessageConsumer) processDLQMessage(ctx context.Context, msg amqp091.Del
 }
 
 func (c *MessageConsumer) republishMessage(msg amqp091.Delivery, queue string) error {
-	ch, err := global.RabbitMQConn.GetChannel()
+	ch, err := c.conn.GetChannel()
 	if err != nil {
 		return err
 	}
@@ -237,8 +241,8 @@ func (c *MessageConsumer) republishMessage(msg amqp091.Delivery, queue string) e
 	return err
 }
 
-func InitMessageConsumer(queueName string, dlq string, messageService services.IMessageMQ) {
-	consumer := NewMessageConsumer(messageService, queueName, dlq)
+func InitMessageConsumer(queueName string, dlq string, messageService services.IMessageMQ, conn *rabbitmq.Connection) {
+	consumer := NewMessageConsumer(messageService, queueName, dlq, conn)
 	go func() {
 		if err := consumer.StartMessageConsuming(context.Background()); err != nil {
 			global.Logger.Error("Failed to start message consuming", zap.Error(err))

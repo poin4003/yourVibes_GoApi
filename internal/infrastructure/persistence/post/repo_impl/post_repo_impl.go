@@ -32,10 +32,11 @@ func (r *rPost) GetById(
 ) (*entities.Post, error) {
 	var postModel models.Post
 	if err := r.db.WithContext(ctx).
+		Where("posts.id = ? AND status = true", id).
+		Preload("Media").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
-		Preload("Media").
 		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
 			return db.Where("status = ?", true)
 		}).
@@ -48,7 +49,7 @@ func (r *rPost) GetById(
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	return mapper.FromPostModel(&postModel), nil
@@ -148,7 +149,7 @@ func (r *rPost) DeleteOne(
 			Select("id, user_id").
 			First(postFound).
 			Error; err != nil {
-			if errors.Is(gorm.ErrRecordNotFound, err) {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return response.NewDataNotFoundError(err.Error())
 			}
 			return response.NewServerFailedError(err.Error())
@@ -222,51 +223,10 @@ func (r *rPost) DeleteOne(
 	})
 }
 
-func (r *rPost) GetOne(
-	ctx context.Context,
-	id uuid.UUID,
-	authenticatedUserId uuid.UUID,
-) (*entities.PostWithLiked, error) {
-	var postModel models.Post
-
-	if err := r.db.WithContext(ctx).
-		Model(&models.Post{}).
-		Where("posts.id = ? AND status = true", id).
-		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, family_name, name, avatar_url")
-		}).
-		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, family_name, name, avatar_url")
-		}).
-		Preload("Media").
-		Preload("ParentPost.Media").
-		First(&postModel).
-		Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var isLiked bool
-	if err := r.db.Raw(`
-		SELECT EXISTS (
-			SELECT 1 
-			FROM like_user_posts
-			WHERE like_user_posts.post_id = ? AND like_user_posts.user_id = ?
-		)`, id, authenticatedUserId).
-		Scan(&isLiked).
-		Error; err != nil {
-		return nil, err
-	}
-
-	return mapper.FromPostWithLikedModel(&postModel, isLiked), nil
-}
-
 func (r *rPost) GetMany(
 	ctx context.Context,
 	query *query.GetManyPostQuery,
-) ([]*entities.PostWithLiked, *response.PagingResponse, error) {
+) ([]*entities.Post, *response.PagingResponse, error) {
 	var postModels []*models.Post
 	var total int64
 
@@ -358,34 +318,15 @@ func (r *rPost) GetMany(
 		return nil, nil, err
 	}
 
-	var postIds []uuid.UUID
-	for _, post := range postModels {
-		postIds = append(postIds, post.ID)
-	}
-
-	var likedPostIds []uuid.UUID
-	if err := r.db.Model(&models.LikeUserPost{}).
-		Select("post_id").
-		Where("user_id = ? AND post_id IN ?", authenticatedUserId, postIds).
-		Find(&likedPostIds).
-		Error; err != nil {
-		return nil, nil, err
-	}
-
-	likedMap := make(map[uuid.UUID]bool)
-	for _, id := range likedPostIds {
-		likedMap[id] = true
-	}
-
 	pagingResponse := &response.PagingResponse{
 		Limit: limit,
 		Page:  page,
 		Total: total,
 	}
 
-	var postEntities []*entities.PostWithLiked
+	var postEntities []*entities.Post
 	for _, post := range postModels {
-		postEntity := mapper.FromPostWithLikedModel(post, likedMap[post.ID])
+		postEntity := mapper.FromPostModel(post)
 		postEntities = append(postEntities, postEntity)
 	}
 
@@ -462,4 +403,20 @@ func (r *rPost) GetTotalPostCount(ctx context.Context) (int, error) {
 	}
 
 	return int(total), nil
+}
+
+func (r *rPost) GetTotalPostCountByUserId(
+	ctx context.Context,
+	userId uuid.UUID,
+) (int64, error) {
+	var total int64
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Where("user_id = ?", userId).
+		Count(&total).
+		Error; err != nil {
+		return 0, response.NewServerFailedError(err.Error())
+	}
+
+	return total, nil
 }

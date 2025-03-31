@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
+
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -15,26 +17,29 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	postRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sPostLike struct {
-	userRepo           postRepo.IUserRepository
-	postRepo           postRepo.IPostRepository
-	postLikeRepo       postRepo.ILikeUserPostRepository
+	userRepo           repository.IUserRepository
+	postRepo           repository.IPostRepository
+	postLikeRepo       repository.ILikeUserPostRepository
+	postCache          cache.IPostCache
 	postEventPublisher *producer.PostEventPublisher
 }
 
 func NewPostLikeImplement(
-	userRepo postRepo.IUserRepository,
-	postRepo postRepo.IPostRepository,
-	postLikeRepo postRepo.ILikeUserPostRepository,
+	userRepo repository.IUserRepository,
+	postRepo repository.IPostRepository,
+	postLikeRepo repository.ILikeUserPostRepository,
+	postCache cache.IPostCache,
 	postEventPublisher *producer.PostEventPublisher,
 ) *sPostLike {
 	return &sPostLike{
 		userRepo:           userRepo,
 		postRepo:           postRepo,
 		postLikeRepo:       postLikeRepo,
+		postCache:          postCache,
 		postEventPublisher: postEventPublisher,
 	}
 }
@@ -47,7 +52,7 @@ func (s *sPostLike) LikePost(
 		Post: nil,
 	}
 	// 1. Find exist post
-	postFound, err := s.postRepo.GetOne(ctx, command.PostId, command.UserId)
+	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
@@ -76,6 +81,8 @@ func (s *sPostLike) LikePost(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
+	s.postCache.DeletePost(ctx, command.PostId)
+
 	// 4. Handle like and dislike
 	if !checkLiked {
 		// 4.1.1 Create new like if it not exist
@@ -102,7 +109,7 @@ func (s *sPostLike) LikePost(
 
 		// 4.1.4. Return if owner like his posts
 		if userLike.ID == postFound.UserId {
-			result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
+			result.Post = mapper.NewPostWithLikedResultFromEntity(postUpdated, isLiked)
 			return result, nil
 		}
 
@@ -122,7 +129,7 @@ func (s *sPostLike) LikePost(
 		}
 
 		// 4.1.7. Map to result
-		result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
+		result.Post = mapper.NewPostWithLikedResultFromEntity(postUpdated, isLiked)
 		// 4.1.8. Response for controller
 		return result, nil
 	} else {
@@ -152,7 +159,7 @@ func (s *sPostLike) LikePost(
 		isLiked, _ := s.postLikeRepo.CheckUserLikePost(ctx, checkLikedToResponse)
 
 		// 4.2.4. Map post to postDto
-		result.Post = mapper.NewPostWithLikedParamResultFromEntity(postUpdated, isLiked)
+		result.Post = mapper.NewPostWithLikedResultFromEntity(postUpdated, isLiked)
 
 		return result, nil
 	}

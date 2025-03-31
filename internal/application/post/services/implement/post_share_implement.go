@@ -10,6 +10,7 @@ import (
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
@@ -21,6 +22,8 @@ type sPostShare struct {
 	postRepo           repository.IPostRepository
 	mediaRepo          repository.IMediaRepository
 	newFeedRepo        repository.INewFeedRepository
+	friendRepo         repository.IFriendRepository
+	postCache          cache.IPostCache
 	postEventPublisher *producer.PostEventPublisher
 }
 
@@ -29,6 +32,8 @@ func NewPostShareImplement(
 	postRepo repository.IPostRepository,
 	mediaRepo repository.IMediaRepository,
 	newFeedRepo repository.INewFeedRepository,
+	friendRepo repository.IFriendRepository,
+	postCache cache.IPostCache,
 	postEventPublisher *producer.PostEventPublisher,
 ) *sPostShare {
 	return &sPostShare{
@@ -36,6 +41,8 @@ func NewPostShareImplement(
 		postRepo:           postRepo,
 		mediaRepo:          mediaRepo,
 		newFeedRepo:        newFeedRepo,
+		friendRepo:         friendRepo,
+		postCache:          postCache,
 		postEventPublisher: postEventPublisher,
 	}
 }
@@ -44,6 +51,10 @@ func (s *sPostShare) SharePost(
 	ctx context.Context,
 	command *postCommand.SharePostCommand,
 ) (result *postCommand.SharePostCommandResult, err error) {
+	result = &postCommand.SharePostCommandResult{
+		Post: nil,
+	}
+
 	// 1. Find post by post_id
 	postFound, err := s.postRepo.GetById(ctx, command.PostId)
 	if err != nil {
@@ -88,13 +99,25 @@ func (s *sPostShare) SharePost(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	// 5. Create new feed for friend
+	// 5. Get friend list
+	friendIds, err := s.friendRepo.GetFriendIds(ctx, validatePost.UserId)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	// 6. Return if user don't have friend
+	if len(friendIds) == 0 {
+		result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
+		return result, nil
+	}
+
+	// 7. Create new feed for friend
 	err = s.newFeedRepo.CreateMany(ctx, newSharePost.ID, newSharePost.User.ID)
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	// 6. Create notification for friend
+	// 8. Create notification for friend
 	notification, err := notificationEntity.NewNotification(
 		newSharePost.User.FamilyName+" "+newSharePost.User.Name,
 		newSharePost.User.AvatarUrl,
@@ -108,11 +131,16 @@ func (s *sPostShare) SharePost(
 		return result, nil
 	}
 
-	// 7. Publish to RabbitMQ to handle Notification
+	// 9. Publish to RabbitMQ to handle Notification
 	notiMsg := mapper.NewNotificationResult(notification)
 	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
+
+	// 10. Delete cache
+	s.postCache.DeleteFeeds(ctx, consts.RK_USER_FEED, validatePost.UserId)
+	s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, validatePost.UserId)
+	s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
 
 	return &postCommand.SharePostCommandResult{
 		Post: mapper.NewPostResultFromValidateEntity(validatePost),

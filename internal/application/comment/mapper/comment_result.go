@@ -36,29 +36,6 @@ func NewCommentResultFromEntity(
 
 func NewCommentWithLikedResultFromEntity(
 	comment *entities.Comment,
-) *common.CommentResultWithLiked {
-	if comment == nil {
-		return nil
-	}
-
-	return &common.CommentResultWithLiked{
-		ID:              comment.ID,
-		PostId:          comment.PostId,
-		UserId:          comment.UserId,
-		User:            NewUserResultFromEntity(comment.User),
-		ParentId:        comment.ParentId,
-		Content:         comment.Content,
-		LikeCount:       comment.LikeCount,
-		RepCommentCount: comment.RepCommentCount,
-		CreatedAt:       comment.CreatedAt,
-		UpdatedAt:       comment.UpdatedAt,
-		Status:          comment.Status,
-		IsLiked:         comment.IsLiked,
-	}
-}
-
-func NewCommentWithLikedResultFromEntityAndIsLiked(
-	comment *entities.Comment,
 	isLiked bool,
 ) *common.CommentResultWithLiked {
 	if comment == nil {

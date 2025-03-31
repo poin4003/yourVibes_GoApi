@@ -16,7 +16,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/global"
 )
 
-func InitPostgreSql() {
+func InitPostgreSql() *gorm.DB {
 	m := global.Config.PostgreSql
 
 	dsn := "host=%s port=%d user=%s password=%s dbname=%s sslmode=%s"
@@ -29,15 +29,18 @@ func InitPostgreSql() {
 
 	checkErrorPanic(err, "InitPostgreSql initialization error")
 
-	global.Pdb = db
 	global.Logger.Info("Initializing PostgreSQL Successfully")
 
-	// err = DBMigrator(db)
-	// if err != nil {
-	// 	global.Logger.Info("Migrate to postgres failed")
-	// }
+	sqlDB, err := db.DB()
+	if err != nil {
+		global.Logger.Error("InitPostgreSql DB error", zap.Error(err))
+	}
 
-	SetPool()
+	sqlDB.SetConnMaxIdleTime(time.Duration(m.MaxIdleConns) * time.Second)
+	sqlDB.SetMaxOpenConns(m.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(m.ConnMaxLifetime) * time.Second)
+
+	return db
 }
 
 func checkErrorPanic(err error, errString string) {
@@ -45,17 +48,6 @@ func checkErrorPanic(err error, errString string) {
 		global.Logger.Error(errString, zap.Error(err))
 		panic(err)
 	}
-}
-
-func SetPool() {
-	m := global.Config.PostgreSql
-
-	sqlDb, err := global.Pdb.DB()
-	checkErrorPanic(err, "Failed to get PostgreSql")
-
-	sqlDb.SetConnMaxIdleTime(time.Duration(m.MaxIdleConns) * time.Second)
-	sqlDb.SetMaxOpenConns(m.MaxOpenConns)
-	sqlDb.SetConnMaxLifetime(time.Duration(m.ConnMaxLifetime) * time.Second)
 }
 
 func DBMigrator(db *gorm.DB) error {

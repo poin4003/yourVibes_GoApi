@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/statistic/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/statistic/services"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
@@ -21,12 +22,14 @@ type StatisticConsumer struct {
 	mu               sync.Mutex
 	cron             *cron.Cron
 	statisticService services.IStatisticMQ
+	conn             *rabbitmq.Connection
 }
 
 func NewStatisticConsumer(
 	queueName string,
 	exchangeName string,
 	statisticService services.IStatisticMQ,
+	conn *rabbitmq.Connection,
 ) *StatisticConsumer {
 	c := &StatisticConsumer{
 		queueName:        queueName,
@@ -34,6 +37,7 @@ func NewStatisticConsumer(
 		batch:            make(map[uuid.UUID]*command.UpsertStatisticCommand),
 		cron:             cron.New(),
 		statisticService: statisticService,
+		conn:             conn,
 	}
 
 	_, err := c.cron.AddFunc("@every 5m", func() {
@@ -47,7 +51,7 @@ func NewStatisticConsumer(
 }
 
 func (c *StatisticConsumer) StartStatisticsConsuming(ctx context.Context) error {
-	ch, err := global.RabbitMQConn.GetChannel()
+	ch, err := c.conn.GetChannel()
 	if err != nil {
 		return err
 	}
@@ -164,11 +168,13 @@ func InitStatisticsConsumer(
 	queueName string,
 	exchangeName string,
 	statisticService services.IStatisticMQ,
+	conn *rabbitmq.Connection,
 ) {
 	consumer := NewStatisticConsumer(
 		queueName,
 		exchangeName,
 		statisticService,
+		conn,
 	)
 	go func() {
 		if err := consumer.StartStatisticsConsuming(context.Background()); err != nil {

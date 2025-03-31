@@ -188,7 +188,7 @@ func (r *rComment) GetMany(
 		if err := r.db.Where("id = ?", query.ParentId).
 			Find(&parentComment).
 			Error; err != nil {
-			return nil, nil, err
+			return nil, nil, response.NewServerFailedError(err.Error())
 		}
 
 		db = db.Where("parent_id = ?", parentComment.ID)
@@ -198,7 +198,7 @@ func (r *rComment) GetMany(
 
 	err := db.Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	limit := query.Limit
@@ -212,33 +212,14 @@ func (r *rComment) GetMany(
 
 	offset := (page - 1) * limit
 
-	if err := db.Offset(offset).Limit(limit).
+	if err = db.Offset(offset).Limit(limit).
 		Order("created_at ASC").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
 		Find(&comments).
 		Error; err != nil {
-		return nil, nil, err
-	}
-
-	var commentIds []uuid.UUID
-	for _, comment := range comments {
-		commentIds = append(commentIds, comment.ID)
-	}
-
-	var likeCommentIds []uuid.UUID
-	if err := r.db.Model(&models.LikeUserComment{}).
-		Select("comment_id").
-		Where("user_id = ? AND comment_id IN ?", query.AuthenticatedUserId, commentIds).
-		Find(&likeCommentIds).
-		Error; err != nil {
-		return nil, nil, err
-	}
-
-	likedMap := make(map[uuid.UUID]bool)
-	for _, id := range likeCommentIds {
-		likedMap[id] = true
+		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
 	pagingResponse := &response.PagingResponse{
@@ -249,7 +230,7 @@ func (r *rComment) GetMany(
 
 	var commentEntities []*entities.Comment
 	for _, comment := range comments {
-		commentEntities = append(commentEntities, mapper.FromCommentModelWithLiked(comment, likedMap[comment.ID]))
+		commentEntities = append(commentEntities, mapper.FromCommentModel(comment))
 	}
 
 	return commentEntities, pagingResponse, nil

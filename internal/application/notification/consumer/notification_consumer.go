@@ -7,6 +7,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/notification/services"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 	"strings"
@@ -16,22 +17,25 @@ type NotificationConsumer struct {
 	queueName           string
 	dlqName             string
 	notificationService services.INotificationMQ
+	conn                *rabbitmq.Connection
 }
 
 func NewNotificationConsumer(
 	queueName string,
 	dlqName string,
 	service services.INotificationMQ,
+	conn *rabbitmq.Connection,
 ) *NotificationConsumer {
 	return &NotificationConsumer{
 		queueName:           queueName,
 		dlqName:             dlqName,
 		notificationService: service,
+		conn:                conn,
 	}
 }
 
 func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) error {
-	ch, err := global.RabbitMQConn.GetChannel()
+	ch, err := c.conn.GetChannel()
 	if err != nil {
 		return err
 	}
@@ -257,7 +261,7 @@ func (c *NotificationConsumer) processDLQMessage(ctx context.Context, msg amqp09
 }
 
 func (c *NotificationConsumer) republishMessage(msg amqp091.Delivery, queue string) error {
-	ch, err := global.RabbitMQConn.GetChannel()
+	ch, err := c.conn.GetChannel()
 	if err != nil {
 		return err
 	}
@@ -283,8 +287,8 @@ func (c *NotificationConsumer) republishMessage(msg amqp091.Delivery, queue stri
 	return err
 }
 
-func InitNotificationConsumer(queueName string, dlq string, service services.INotificationMQ) {
-	consumer := NewNotificationConsumer(queueName, dlq, service)
+func InitNotificationConsumer(queueName string, dlq string, service services.INotificationMQ, conn *rabbitmq.Connection) {
+	consumer := NewNotificationConsumer(queueName, dlq, service, conn)
 	go func() {
 		if err := consumer.StartNotificationConsuming(context.Background()); err != nil {
 			global.Logger.Error("Failed to start notification consumer", zap.Error(err))
