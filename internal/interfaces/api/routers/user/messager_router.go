@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
+	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user"
@@ -14,7 +14,7 @@ type MessagesRouter struct{}
 
 func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 	userConversationController := message_user.NewConversationController()
-	useMessageController := message_user.NewMessageController(socket_hub.NewMessageSocketHub())
+	useMessageController := message_user.NewMessageController(global.MessageSocketHub)
 	useConversationDetailController := message_user.NewConversationDetailController()
 
 	conversationRouter := Router.Group("/conversations")
