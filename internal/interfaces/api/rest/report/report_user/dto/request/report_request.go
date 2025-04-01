@@ -23,7 +23,7 @@ func ValidateReportRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.ReportedId, validation.Required),
-		validation.Field(&dto.Reason, validation.Required, validation.Length(2, 255)),
+		validation.Field(&dto.Reason, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&dto.Type, validation.In(consts.ReportTypes...)),
 	)
 }

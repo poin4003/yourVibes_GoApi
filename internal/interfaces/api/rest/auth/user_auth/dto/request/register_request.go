@@ -2,11 +2,12 @@ package request
 
 import (
 	"fmt"
+	"regexp"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
-	"regexp"
-	"time"
 )
 
 type RegisterRequest struct {
@@ -26,13 +27,13 @@ func ValidateRegisterRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.FamilyName, validation.Required, validation.Length(2, 255)),
-		validation.Field(&dto.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&dto.FamilyName, validation.Required, validation.RuneLength(2, 255)),
+		validation.Field(&dto.Name, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&dto.Email, validation.Required, is.Email),
-		validation.Field(&dto.Password, validation.Required, validation.Length(8, 255)),
-		validation.Field(&dto.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.Password, validation.Required, validation.RuneLength(8, 255)),
+		validation.Field(&dto.PhoneNumber, validation.Required, validation.RuneLength(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Birthday, validation.Required),
-		validation.Field(&dto.Otp, validation.Required, validation.Length(6, 6), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.Otp, validation.Required, validation.RuneLength(6, 6), validation.Match((regexp.MustCompile((`^\d+$`))))),
 	)
 }
 

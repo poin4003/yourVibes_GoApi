@@ -37,14 +37,14 @@ type ConversationUpdate struct {
 
 func (c *CreateConversation) Validate() error {
 	return validation.ValidateStruct(c,
-		validation.Field(&c.Name, validation.Length(1, 30)),
+		validation.Field(&c.Name, validation.RuneLength(1, 30)),
 		validation.Field(&c.Image, is.URL),
 	)
 }
 
 func (c *ConversationUpdate) ValidateConversationUpdate() error {
 	return validation.ValidateStruct(c,
-		validation.Field(&c.Name, validation.Length(1, 30)),
+		validation.Field(&c.Name, validation.RuneLength(1, 30)),
 		validation.Field(&c.Image, is.URL),
 	)
 }

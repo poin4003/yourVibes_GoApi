@@ -330,8 +330,9 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 6. Delete post cache
-	s.postCache.DeletePost(ctx, *command.PostId)
-
+	if err = s.deleteFeedCache(ctx, *command.PostId, postFound.UserId); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -415,20 +416,65 @@ func (s *sPostUser) GetManyPosts(
 		ctx, consts.RK_PERSONAL_POST, query.UserID, query.Limit, query.Page,
 	)
 
-	// 2. Cache miss
-	var posts []*postEntity.Post
+	cacheFailed := false
 	if len(postIDs) == 0 {
-		var postEntities []*postEntity.Post
+		cacheFailed = true
+	}
+	// 2. Cache hit
+	var posts []*postEntity.Post
+	if !cacheFailed {
+		var wg sync.WaitGroup
+		var postMap sync.Map
+		cacheErrorOccurred := false
+
+		for _, postID := range postIDs {
+			wg.Add(1)
+			go func(postID uuid.UUID) {
+				defer wg.Done()
+				post := s.postCache.GetPost(ctx, postID)
+				if post == nil {
+					post, err = s.postRepo.GetById(ctx, postID)
+					if err != nil || post == nil {
+						global.Logger.Warn("Failed to get post", zap.String("postId", postID.String()))
+						cacheErrorOccurred = true
+						if err = s.deleteFeedCache(ctx, postID, query.UserID); err != nil {
+							return
+						}
+						return
+					}
+					s.postCache.SetPost(ctx, post)
+				}
+				postMap.Store(postID, post)
+			}(postID)
+		}
+		wg.Wait()
+
+		if cacheErrorOccurred {
+			cacheFailed = true
+		}
+
+		if !cacheFailed {
+			for _, postID := range postIDs {
+				if post, ok := postMap.Load(postID); ok {
+					posts = append(posts, post.(*postEntity.Post))
+				}
+			}
+		}
+	}
+
+	// 3. Cache miss or cache handle error
+	if cacheFailed {
+		global.Logger.Warn("cache failed to get post, fallback to database")
 		var pagingResp *response.PagingResponse
-		postEntities, pagingResp, err = s.postRepo.GetMany(ctx, query)
+		posts, pagingResp, err = s.postRepo.GetMany(ctx, query)
 		if err != nil {
 			return nil, err
 		}
-		posts = postEntities
 		paging = pagingResp
-		postIDs = make([]uuid.UUID, 0, len(postEntities))
+
+		postIDs = make([]uuid.UUID, 0, len(posts))
 		var wg sync.WaitGroup
-		for _, post := range postEntities {
+		for _, post := range posts {
 			postIDs = append(postIDs, post.ID)
 			wg.Add(1)
 			go func(p *postEntity.Post) {
@@ -439,36 +485,9 @@ func (s *sPostUser) GetManyPosts(
 		wg.Wait()
 
 		s.postCache.SetFeeds(ctx, consts.RK_PERSONAL_POST, query.UserID, postIDs, pagingResp)
-	} else {
-		// cache hit
-		posts = make([]*postEntity.Post, 0, len(postIDs))
-		var wg sync.WaitGroup
-		var postMap sync.Map
-
-		for _, postID := range postIDs {
-			wg.Add(1)
-			go func(postID uuid.UUID) {
-				defer wg.Done()
-				post := s.postCache.GetPost(ctx, postID)
-				if post == nil {
-					post, err = s.postRepo.GetById(ctx, postID)
-					if err == nil || post != nil {
-						s.postCache.SetPost(ctx, post)
-					}
-				}
-				postMap.Store(postID, post)
-			}(postID)
-		}
-		wg.Wait()
-
-		for _, postID := range postIDs {
-			if post, ok := postMap.Load(postID); ok {
-				posts = append(posts, post.(*postEntity.Post))
-			}
-		}
 	}
 
-	// 3. Get list user post like
+	// 4. Get list user post like
 	isLikedListQuery := &postQuery.CheckUserLikeManyPostQuery{
 		PostIds:             postIDs,
 		AuthenticatedUserId: query.AuthenticatedUserId,
@@ -478,7 +497,7 @@ func (s *sPostUser) GetManyPosts(
 		return nil, err
 	}
 
-	// 4. Publish event to rabbitmq for statistic
+	// 5. Publish event to rabbitmq for statistic
 	var wg sync.WaitGroup
 	for _, post := range posts {
 		postId := post.ID
@@ -523,4 +542,20 @@ func (s *sPostUser) CheckPostOwner(
 	return &postQuery.CheckPostOwnerQueryResult{
 		IsOwner: isOwner,
 	}, nil
+}
+
+func (s *sPostUser) deleteFeedCache(ctx context.Context, postID, userID uuid.UUID) error {
+	s.postCache.DeletePost(ctx, postID)
+	s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, userID)
+	s.postCache.DeleteFeeds(ctx, consts.RK_USER_FEED, userID)
+	friends, err := s.friendRepo.GetFriendIds(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if len(friends) == 0 {
+		return nil
+	}
+
+	s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friends)
+	return nil
 }

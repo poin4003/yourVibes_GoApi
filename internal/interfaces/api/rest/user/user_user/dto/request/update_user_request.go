@@ -32,13 +32,13 @@ func ValidateUpdateUserRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.FamilyName, validation.Length(2, 255)),
-		validation.Field(&dto.Name, validation.Length(2, 255)),
-		validation.Field(&dto.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.FamilyName, validation.RuneLength(2, 255)),
+		validation.Field(&dto.Name, validation.RuneLength(2, 255)),
+		validation.Field(&dto.PhoneNumber, validation.RuneLength(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Avatar, validation.By(validateImage)),
 		validation.Field(&dto.Capwall, validation.By(validateImage)),
 		validation.Field(&dto.Privacy, validation.In(consts.PrivacyLevels...)),
-		validation.Field(&dto.Biography, validation.Length(0, 500)),
+		validation.Field(&dto.Biography, validation.RuneLength(0, 500)),
 		validation.Field(&dto.LanguageSetting, validation.In(consts.Languages...)),
 	)
 }

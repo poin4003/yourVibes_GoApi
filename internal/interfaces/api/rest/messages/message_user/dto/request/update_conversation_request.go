@@ -21,7 +21,7 @@ func ValidateUpdateConversationRequest(req interface{}) error {
 		return fmt.Errorf("validate UpdateConversationRequest failed")
 	}
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Name, validation.Length(1, 30)),
+		validation.Field(&dto.Name, validation.RuneLength(1, 30)),
 		validation.Field(&dto.Image, validation.By(validateImage)),
 	)
 }

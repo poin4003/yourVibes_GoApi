@@ -3,10 +3,11 @@ package request
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
-	"time"
 )
 
 type CreateMessageRequest struct {
@@ -33,7 +34,7 @@ func ValidateCreateMessageRequest(req interface{}) error {
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.ConversationId, validation.Required),
-		validation.Field(&dto.Content, validation.Required, validation.Length(1, 500)),
+		validation.Field(&dto.Content, validation.Required, validation.RuneLength(1, 500)),
 		validation.Field(&dto.ParentContent, validation.By(func(value interface{}) error {
 			if dto.ParentId != nil && value == nil {
 				return errors.New("parent content is required when parent id provides")

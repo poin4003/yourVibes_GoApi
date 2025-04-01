@@ -71,35 +71,17 @@ func (s *sPostNewFeed) GetNewFeeds(
 		ctx, consts.RK_USER_FEED, query.UserId, query.Limit, query.Page,
 	)
 
-	// 2. Cache miss
-	var posts []*postEntity.Post
+	cacheFailed := false
 	if len(postIDs) == 0 {
-		var postEntities []*postEntity.Post
-		var pagingResp *response.PagingResponse
-		postEntities, pagingResp, err = s.newFeedRepo.GetMany(ctx, query)
-		if err != nil {
-			return nil, err
-		}
-		posts = postEntities
-		paging = pagingResp
-		postIDs = make([]uuid.UUID, 0, len(postEntities))
-		var wg sync.WaitGroup
-		for _, post := range postEntities {
-			postIDs = append(postIDs, post.ID)
-			wg.Add(1)
-			go func(p *postEntity.Post) {
-				defer wg.Done()
-				s.postCache.SetPost(ctx, p)
-			}(post)
-		}
-		wg.Wait()
+		cacheFailed = true
+	}
 
-		s.postCache.SetFeeds(ctx, consts.RK_USER_FEED, query.UserId, postIDs, pagingResp)
-	} else {
-		// Cache hit
-		posts = make([]*postEntity.Post, 0, len(postIDs))
+	// 2. Cache hit
+	var posts []*postEntity.Post
+	if !cacheFailed {
 		var wg sync.WaitGroup
 		ch := make(chan *postEntity.Post, len(postIDs))
+		cacheErrorOccurred := false
 
 		for _, postID := range postIDs {
 			wg.Add(1)
@@ -108,8 +90,12 @@ func (s *sPostNewFeed) GetNewFeeds(
 				post := s.postCache.GetPost(ctx, postID)
 				if post == nil {
 					post, err = s.postRepo.GetById(ctx, postID)
-					if err == nil || post != nil {
-						s.postCache.SetPost(ctx, post)
+					if err != nil {
+						global.Logger.Warn("Failed to get post from DB", zap.String("post_id", postID.String()), zap.Error(err))
+						cacheErrorOccurred = true
+						s.postCache.DeletePost(ctx, postID)
+						s.postCache.DeleteFeeds(ctx, consts.RK_USER_FEED, postID)
+						return
 					}
 				}
 				ch <- post
@@ -120,9 +106,40 @@ func (s *sPostNewFeed) GetNewFeeds(
 			close(ch)
 		}()
 
-		for post := range ch {
-			posts = append(posts, post)
+		if cacheErrorOccurred {
+			cacheFailed = true
 		}
+
+		if !cacheFailed {
+			for post := range ch {
+				posts = append(posts, post)
+			}
+		}
+	}
+
+	// 3. Cache miss or cache handle error
+	if cacheFailed {
+		global.Logger.Warn("cache failed to get post, fallback to database")
+		var pagingResp *response.PagingResponse
+		posts, pagingResp, err = s.newFeedRepo.GetMany(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		paging = pagingResp
+
+		postIDs = make([]uuid.UUID, 0, len(posts))
+		var wg sync.WaitGroup
+		for _, post := range posts {
+			postIDs = append(postIDs, post.ID)
+			wg.Add(1)
+			go func(p *postEntity.Post) {
+				defer wg.Done()
+				s.postCache.SetPost(ctx, p)
+			}(post)
+		}
+		wg.Wait()
+
+		s.postCache.SetFeeds(ctx, consts.RK_USER_FEED, query.UserId, postIDs, pagingResp)
 	}
 
 	// 3. Get list user post like
