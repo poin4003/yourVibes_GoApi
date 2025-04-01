@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"sync"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
@@ -11,7 +13,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"go.uber.org/zap"
-	"sync"
 
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
@@ -19,7 +20,6 @@ import (
 	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
 	commentValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/validator"
-	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
 	commentRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
@@ -103,21 +103,6 @@ func (s *sCommentUser) CreateComment(
 	)
 
 	commentCreated, err := s.commentRepo.CreateOne(ctx, newComment)
-	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
-	}
-
-	// 5. Update comment count for post
-	updatePost := &postEntity.PostUpdate{
-		CommentCount: pointer.Ptr(postFound.CommentCount + 1),
-	}
-
-	err = updatePost.ValidatePostUpdate()
-	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
-	}
-
-	_, err = s.postRepo.UpdateOne(ctx, postFound.ID, updatePost)
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
@@ -217,7 +202,7 @@ func (s *sCommentUser) GetManyComments(
 	query *commentQuery.GetManyCommentQuery,
 ) (result *commentQuery.GetManyCommentsResult, err error) {
 	// 1. Get comment id lít from cache
-	commentIDs, paging := s.commentCache.GetPostComment(ctx, query.PostId, query.Limit, query.Page)
+	commentIDs, paging := s.commentCache.GetPostComment(ctx, query.PostId, query.ParentId, query.Limit, query.Page)
 
 	cacheFailed := false
 	if len(commentIDs) == 0 {
@@ -287,7 +272,7 @@ func (s *sCommentUser) GetManyComments(
 		}
 		wg.Wait()
 
-		s.commentCache.SetPostComment(ctx, query.PostId, commentIDs, pagingResp)
+		s.commentCache.SetPostComment(ctx, query.PostId, query.ParentId, commentIDs, pagingResp)
 	}
 
 	// 4. Get list user like comment

@@ -2,6 +2,7 @@ package repo_impl
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
@@ -110,12 +111,11 @@ func (r *rLikeUserComment) CheckUserLikeManyComment(
 	ctx context.Context,
 	query *query.CheckUserLikeManyCommentQuery,
 ) (map[uuid.UUID]bool, error) {
-	var commentIds []uuid.UUID
 	var likeCommentIds []uuid.UUID
 	if err := r.db.WithContext(ctx).
 		Model(&models.LikeUserComment{}).
 		Select("comment_id").
-		Where("user_id = ? AND comment_id IN ?", query.AuthenticatedUserId, commentIds).
+		Where("user_id = ? AND comment_id IN ?", query.AuthenticatedUserId, query.CommentIds).
 		Find(&likeCommentIds).
 		Error; err != nil {
 		return nil, response.NewServerFailedError(err.Error())
