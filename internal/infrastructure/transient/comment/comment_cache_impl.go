@@ -44,7 +44,9 @@ func (t *tComment) GetComment(
 	key := fmt.Sprintf("comment:%s", commentID.String())
 	data, err := t.client.Get(ctx, key).Bytes()
 	if err != nil {
-		if errors.Is(err, redis.Nil) { return nil }
+		if errors.Is(err, redis.Nil) {
+			return nil
+		}
 		global.Logger.Warn("Failed to get comment", zap.String("comment_id", commentID.String()), zap.Error(err))
 		return nil
 	}
@@ -80,7 +82,6 @@ func (t *tComment) SetPostComment(
 	}
 	// Save commentIds into list
 	pipe := t.client.Pipeline()
-	pipe.Del(ctx, key)
 	pipe.RPush(ctx, key, commentIdString...)
 	pipe.Expire(ctx, pagingKey, consts.TTL_COMMON)
 
@@ -115,8 +116,8 @@ func (t *tComment) GetPostComment(
 		return nil, nil
 	}
 
-	var paging *response.PagingResponse
-	if err = json.Unmarshal(pagingData, paging); err != nil {
+	var paging response.PagingResponse
+	if err = json.Unmarshal(pagingData, &paging); err != nil {
 		global.Logger.Warn("Failed to unmarshal post comment", zap.String("post_id", postID.String()), zap.Error(err))
 		return nil, nil
 	}
@@ -141,7 +142,7 @@ func (t *tComment) GetPostComment(
 		}
 	}
 
-	return commentUUIDs, paging
+	return commentUUIDs, &paging
 }
 
 func (t *tComment) DeletePostComment(ctx context.Context, postID uuid.UUID) {

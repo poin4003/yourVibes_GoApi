@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -10,8 +11,8 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"go.uber.org/zap"
+	"sync"
 
-	"github.com/google/uuid"
 	commentCommand "github.com/poin4003/yourVibes_GoApi/internal/application/comment/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
@@ -28,6 +29,7 @@ type sCommentUser struct {
 	postRepo              commentRepo.IPostRepository
 	likeUserCommentRepo   commentRepo.ILikeUserCommentRepository
 	commentCache          cache.ICommentCache
+	postCache             cache.IPostCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
@@ -37,6 +39,7 @@ func NewCommentUserImplement(
 	postRepo commentRepo.IPostRepository,
 	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
 	commentCache cache.ICommentCache,
+	postCache cache.IPostCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sCommentUser {
 	return &sCommentUser{
@@ -45,6 +48,7 @@ func NewCommentUserImplement(
 		postRepo:              postRepo,
 		likeUserCommentRepo:   likeUserCommentRepo,
 		commentCache:          commentCache,
+		postCache:             postCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -139,6 +143,10 @@ func (s *sCommentUser) CreateComment(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
+	// 7. Delete cache
+	s.commentCache.DeletePostComment(ctx, command.PostId)
+	s.postCache.DeletePost(ctx, command.PostId)
+
 	return &commentCommand.CreateCommentResult{
 		Comment: mapper.NewCommentResultFromValidateEntity(validateComment),
 	}, nil
@@ -148,6 +156,7 @@ func (s *sCommentUser) UpdateComment(
 	ctx context.Context,
 	command *commentCommand.UpdateCommentCommand,
 ) (result *commentCommand.UpdateCommentResult, err error) {
+	// 1. Find comment
 	commentFound, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
@@ -157,10 +166,10 @@ func (s *sCommentUser) UpdateComment(
 		return nil, response.NewDataNotFoundError("comment not found")
 	}
 
+	// 2. Update comment
 	updateData := &commentEntity.CommentUpdate{
 		Content: command.Content,
 	}
-
 	err = updateData.ValidateCommentUpdate()
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
@@ -171,6 +180,9 @@ func (s *sCommentUser) UpdateComment(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
+	// 3. Delete cache
+	s.commentCache.DeleteComment(ctx, command.CommentId)
+
 	return &commentCommand.UpdateCommentResult{
 		Comment: mapper.NewCommentResultFromEntity(commentUpdate),
 	}, nil
@@ -180,10 +192,22 @@ func (s *sCommentUser) DeleteComment(
 	ctx context.Context,
 	command *commentCommand.DeleteCommentCommand,
 ) error {
-	err := s.commentRepo.DeleteCommentAndChildComment(ctx, command.CommentId)
+	// 1. Get post
+	comment, err := s.commentRepo.GetById(ctx, command.CommentId)
 	if err != nil {
 		return err
 	}
+
+	// 2. Delete comment and child comment in database
+	err = s.commentRepo.DeleteCommentAndChildComment(ctx, command.CommentId)
+	if err != nil {
+		return err
+	}
+
+	// 3. Delete cache
+	s.commentCache.DeleteComment(ctx, command.CommentId)
+	s.commentCache.DeletePostComment(ctx, comment.PostId)
+	s.postCache.DeletePost(ctx, comment.PostId)
 
 	return nil
 }
@@ -193,27 +217,90 @@ func (s *sCommentUser) GetManyComments(
 	query *commentQuery.GetManyCommentQuery,
 ) (result *commentQuery.GetManyCommentsResult, err error) {
 	// 1. Get comment id lít from cache
-	
-	var commentIDs []uuid.UUID
-	// Get comment
-	comments, paging, err := s.commentRepo.GetMany(ctx, query)
-	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
-	}
-	for _, comment := range comments {
-		commentIDs = append(commentIDs, comment.ID)
+	commentIDs, paging := s.commentCache.GetPostComment(ctx, query.PostId, query.Limit, query.Page)
+
+	cacheFailed := false
+	if len(commentIDs) == 0 {
+		cacheFailed = true
 	}
 
+	// 2. Cache hit
+	var comments []*commentEntity.Comment
+	if !cacheFailed {
+		var wg sync.WaitGroup
+		var commentMap sync.Map
+		cacheErrorOccurred := false
+
+		for _, commentID := range commentIDs {
+			wg.Add(1)
+			go func(commentID uuid.UUID) {
+				defer wg.Done()
+				comment := s.commentCache.GetComment(ctx, commentID)
+				if comment == nil {
+					comment, err = s.commentRepo.GetById(ctx, commentID)
+					if err != nil || comment == nil {
+						global.Logger.Warn("Failed to get comment", zap.String("commentID", commentID.String()))
+						cacheErrorOccurred = true
+						s.commentCache.DeleteComment(ctx, commentID)
+						s.commentCache.DeletePostComment(ctx, query.PostId)
+						return
+					}
+					s.commentCache.SetComment(ctx, comment)
+				}
+				commentMap.Store(commentID, comment)
+			}(commentID)
+		}
+		wg.Wait()
+
+		if cacheErrorOccurred {
+			cacheFailed = true
+		}
+
+		if !cacheFailed {
+			for _, commentID := range commentIDs {
+				if comment, ok := commentMap.Load(commentID); ok {
+					comments = append(comments, comment.(*commentEntity.Comment))
+				}
+			}
+		}
+	}
+
+	// 3. Cache miss or handle cache failed
+	if cacheFailed {
+		global.Logger.Warn("cache failed to get comment, fallback to database")
+		var pagingResp *response.PagingResponse
+		comments, pagingResp, err = s.commentRepo.GetMany(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		paging = pagingResp
+
+		commentIDs = make([]uuid.UUID, 0, len(comments))
+		var wg sync.WaitGroup
+		for _, comment := range comments {
+			commentIDs = append(commentIDs, comment.ID)
+			wg.Add(1)
+			go func(c *commentEntity.Comment) {
+				defer wg.Done()
+				s.commentCache.SetComment(ctx, c)
+			}(comment)
+		}
+		wg.Wait()
+
+		s.commentCache.SetPostComment(ctx, query.PostId, commentIDs, pagingResp)
+	}
+
+	// 4. Get list user like comment
 	isLikedListQuery := &commentQuery.CheckUserLikeManyCommentQuery{
 		CommentIds:          commentIDs,
 		AuthenticatedUserId: query.AuthenticatedUserId,
 	}
-
 	isLikedList, err := s.likeUserCommentRepo.CheckUserLikeManyComment(ctx, isLikedListQuery)
 	if err != nil {
 		return nil, err
 	}
 
+	// 5. Map to return
 	var commentResults []*common.CommentResultWithLiked
 	for _, comment := range comments {
 		commentResults = append(commentResults, mapper.NewCommentWithLikedResultFromEntity(comment, isLikedList[comment.ID]))
