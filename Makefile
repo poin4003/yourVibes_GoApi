@@ -17,6 +17,10 @@ prod:
 	@echo "Running in production mode"
 	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=prod&&go run ./cmd/$(APP_NAME)
 
+cloud:
+	@echo "Running in cloud mode"
+	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=cloud&&go run ./cmd/$(APP_NAME)
+
 migrate:
 	@echo "Running migrations with config: $(CONFIG_FILE)"
 	@$(SET_ENV) YOURVIBES_SERVER_CONFIG_FILE=$(CONFIG_FILE)&&go run ./cmd/cli/postgresql/migrate.go
