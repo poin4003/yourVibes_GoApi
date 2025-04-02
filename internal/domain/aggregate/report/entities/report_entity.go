@@ -24,7 +24,7 @@ type ReportEntity struct {
 func (re *ReportEntity) ValidateReportEntity() error {
 	return validation.ValidateStruct(re,
 		validation.Field(&re.UserId, validation.Required),
-		validation.Field(&re.Reason, validation.Required, validation.Length(2, 255)),
+		validation.Field(&re.Reason, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&re.Type, validation.In(consts.ReportTypes...)),
 	)
 }

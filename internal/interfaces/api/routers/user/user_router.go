@@ -99,5 +99,10 @@ func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
 			UserFriendController.GetFriends,
 		)
+
+		userRouterPrivate.GET("/friends/suggestion",
+			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
+			UserFriendController.GetFriendSuggestion,
+		)
 	}
 }

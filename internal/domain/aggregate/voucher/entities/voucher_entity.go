@@ -27,8 +27,8 @@ type VoucherEntity struct {
 
 func (ve *VoucherEntity) ValidateVoucherEntity() error {
 	return validation.ValidateStruct(ve,
-		validation.Field(&ve.Name, validation.Required, validation.Length(2, 50)),
-		validation.Field(&ve.Description, validation.Required, validation.Length(2, 255)),
+		validation.Field(&ve.Name, validation.Required, validation.RuneLength(2, 50)),
+		validation.Field(&ve.Description, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&ve.Type, validation.Required, validation.In(consts.VoucherTypes...)),
 		validation.Field(&ve.Value, validation.Required, validation.By(func(value interface{}) error {
 			v := value.(int)
@@ -43,7 +43,7 @@ func (ve *VoucherEntity) ValidateVoucherEntity() error {
 			}
 			return nil
 		})),
-		validation.Field(&ve.Code, validation.Required, validation.Length(1, 30)),
+		validation.Field(&ve.Code, validation.Required, validation.RuneLength(1, 30)),
 		validation.Field(&ve.MaxUses, validation.Required, validation.Min(0)),
 	)
 }

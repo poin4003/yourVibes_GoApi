@@ -3,7 +3,6 @@ package repo_impl
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/google/uuid"
@@ -58,8 +57,6 @@ func (r *rFriend) GetFriends(
 ) ([]*entities.User, *response.PagingResponse, error) {
 	var users []*models.User
 	var total int64
-
-	fmt.Println(query.UserId)
 
 	limit := query.Limit
 	page := query.Page
@@ -129,4 +126,68 @@ func (r *rFriend) CheckFriendExist(
 	}
 
 	return count > 0, nil
+}
+
+func (r *rFriend) GetFriendSuggestions(
+	ctx context.Context,
+	query *query.FriendQuery,
+) ([]*entities.User, *response.PagingResponse, error) {
+	var users []*models.User
+	var total int64
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	countQuery := `
+		SELECT COUNT(DISTINCT u.id)
+		FROM users u
+		INNER JOIN friends f1 ON u.id = f1.friend_id
+		INNER JOIN friends f2 ON f1.user_id = f2.friend_id
+		WHERE f2.user_id = ?
+		AND u.id != ?
+		AND u.id NOT IN (
+			SELECT friend_id 
+			FROM friends 
+			WHERE user_id = ?
+		)
+	`
+	if err := r.db.WithContext(ctx).Raw(countQuery, query.UserId, query.UserId, query.UserId).Scan(&total).Error; err != nil {
+		return nil, nil, response.NewServerFailedError("can not count friend suggestions")
+	}
+
+	dataQuery := `
+		SELECT DISTINCT u.id, u.family_name, u.name, u.avatar_url
+		FROM users u
+		INNER JOIN friends f1 ON u.id = f1.friend_id
+		INNER JOIN friends f2 ON f1.user_id = f2.friend_id
+		WHERE f2.user_id = ?
+		AND u.id != ?
+		AND u.id NOT IN (
+			SELECT friend_id 
+			FROM friends 
+			WHERE user_id = ?
+		)
+		ORDER BY u.id 
+		LIMIT ? OFFSET ?
+	`
+	if err := r.db.WithContext(ctx).Raw(dataQuery, query.UserId, query.UserId, query.UserId, limit, offset).Scan(&users).Error; err != nil {
+		return nil, nil, response.NewServerFailedError("can not get friend suggestions")
+	}
+
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	userEntities := mapper.FromUserModelList(users)
+
+	return userEntities, pagingResponse, nil
 }

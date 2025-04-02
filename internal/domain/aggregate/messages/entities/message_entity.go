@@ -21,7 +21,7 @@ type Message struct {
 
 func (m *Message) Validate() error {
 	return validation.ValidateStruct(m,
-		validation.Field(&m.Content, validation.Required, validation.Length(1, 1000)),
+		validation.Field(&m.Content, validation.Required, validation.RuneLength(1, 1000)),
 		validation.Field(&m.ConversationId, validation.Required),
 		validation.Field(&m.UserId, validation.Required),
 	)

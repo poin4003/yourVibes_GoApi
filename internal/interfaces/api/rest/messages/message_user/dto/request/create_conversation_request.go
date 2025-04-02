@@ -2,8 +2,9 @@ package request
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"mime/multipart"
+
+	"github.com/google/uuid"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -23,7 +24,7 @@ func ValidateCreateConversationRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Name, validation.Required, validation.Length(1, 30)),
+		validation.Field(&dto.Name, validation.Required, validation.RuneLength(1, 30)),
 		validation.Field(&dto.UserIds, validation.Required),
 	)
 }

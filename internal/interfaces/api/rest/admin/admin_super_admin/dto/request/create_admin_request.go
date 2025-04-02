@@ -2,11 +2,12 @@ package request
 
 import (
 	"fmt"
+	"regexp"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
-	"regexp"
-	"time"
 )
 
 type CreateAdminRequest struct {
@@ -27,12 +28,12 @@ func ValidateCreateAdminRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.FamilyName, validation.Required, validation.Length(2, 255)),
-		validation.Field(&dto.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&dto.FamilyName, validation.Required, validation.RuneLength(2, 255)),
+		validation.Field(&dto.Name, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&dto.Email, validation.Required, is.Email),
-		validation.Field(&dto.Password, validation.Required, validation.Length(2, 255)),
-		validation.Field(&dto.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
-		validation.Field(&dto.IdentityId, validation.Required, validation.Length(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.Password, validation.Required, validation.RuneLength(2, 255)),
+		validation.Field(&dto.PhoneNumber, validation.Required, validation.RuneLength(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&dto.IdentityId, validation.Required, validation.RuneLength(10, 15), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&dto.Birthday, validation.Required),
 	)
 }

@@ -2587,6 +2587,35 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/friends/suggestion/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of friend",
+                "tags": [
+                    "user_friend"
+                ],
+                "summary": "Get a list of friend suggestion",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/friends/{friend_id}/": {
             "delete": {
                 "security": [
@@ -3200,7 +3229,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "localhost:8080",
+	Host:             "yourvibes.duckdns.org:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

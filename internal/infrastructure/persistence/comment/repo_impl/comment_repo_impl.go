@@ -49,9 +49,23 @@ func (r *rComment) CreateOne(
 ) (*entities.Comment, error) {
 	commentModel := mapper.ToCommentModel(entity)
 
-	if err := r.db.WithContext(ctx).
-		Create(commentModel).
-		Error; err != nil {
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Create(commentModel).
+			Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).
+			Model(&models.Post{}).
+			Where("id = ?", entity.PostId).
+			Update("comment_count", gorm.Expr("comment_count + ?", 1)).
+			Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
@@ -103,6 +117,7 @@ func (r *rComment) DeleteOne(
 		// 1. Check if comment exists
 		if err := tx.WithContext(ctx).
 			Model(commentFound).
+			Select("id, parent_id, post_id").
 			First(commentFound, "id = ?", id).
 			Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -111,7 +126,36 @@ func (r *rComment) DeleteOne(
 			return err
 		}
 
-		// 2. Delete related report
+		// 2. Delete comment and child comments
+		commentResult := tx.WithContext(ctx).Exec(`
+            WITH RECURSIVE cte AS (
+                SELECT id FROM comments WHERE id = ?
+                UNION ALL
+                SELECT c.id FROM comments c INNER JOIN cte ON c.parent_id = cte.id
+            )
+            UPDATE comments 
+            SET deleted_at = NOW() 
+            WHERE id IN (SELECT id FROM cte) AND deleted_at IS NULL;
+        `, id)
+
+		if commentResult.Error != nil {
+			return response.NewServerFailedError(commentResult.Error.Error())
+		}
+
+		if commentResult.RowsAffected == 0 {
+			return response.NewDataNotFoundError("no comments found to delete")
+		}
+
+		// 4. Update comment count for post
+		if err := tx.WithContext(ctx).
+			Model(&models.Post{}).
+			Where("id = ?", commentFound.PostId).
+			Update("comment_count", gorm.Expr("comment_count + ?", commentResult.RowsAffected)).
+			Error; err != nil {
+			return err
+		}
+
+		// 3. Delete related report
 		result := tx.WithContext(ctx).
 			Where("id IN (?)",
 				tx.Model(&models.CommentReport{}).
@@ -124,12 +168,6 @@ func (r *rComment) DeleteOne(
 			return response.NewServerFailedError(result.Error.Error())
 		}
 
-		// 3. Delete comment
-		if err := tx.WithContext(ctx).
-			Delete(&models.Comment{}, "id = ?", id).
-			Error; err != nil {
-			return err
-		}
 		return nil
 	})
 }
@@ -185,7 +223,7 @@ func (r *rComment) GetMany(
 	if query.ParentId != uuid.Nil {
 		// 1.1. Find parent comment
 		var count int64
-		if err := r.db.Where("id = ?", query.ParentId).
+		if err := r.db.Model(&models.Comment{}).Where("id = ?", query.ParentId).
 			Count(&count).
 			Error; err != nil {
 			return nil, nil, response.NewServerFailedError(err.Error())

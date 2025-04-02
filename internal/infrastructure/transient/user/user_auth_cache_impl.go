@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/redis/go-redis/v9"
-	"time"
 )
 
 type tUserAuth struct {
@@ -45,11 +46,6 @@ func (t *tUserAuth) GetOtp(
 	case err != nil:
 		global.Logger.Error(err.Error())
 		return nil, response.NewServerFailedError(err.Error())
-	case otpFound != "":
-		return nil, response.NewCustomError(
-			response.ErrCodeOtpNotExists,
-			"otp already exists but not registered",
-		)
 	}
 
 	return &otpFound, nil

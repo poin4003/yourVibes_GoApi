@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -12,7 +14,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"sync"
 )
 
 type tPost struct {
@@ -75,7 +76,6 @@ func (t *tPost) SetFeeds(
 	}
 	// Save postIds into list
 	pipe := t.client.Pipeline()
-	pipe.Del(ctx, key)
 	pipe.RPush(ctx, key, postIdStrings...)
 	pipe.Expire(ctx, key, consts.TTL_COMMON)
 
@@ -155,6 +155,7 @@ func (t *tPost) DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey,
 	sem := make(chan struct{}, maxWorkers)
 
 	for _, id := range friendIDs {
+
 		wg.Add(1)
 		sem <- struct{}{}
 

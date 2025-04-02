@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"mime/multipart"
 	"strings"
-	"unicode/utf8"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
@@ -35,18 +34,7 @@ func ValidateUpdatePostRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.Content, validation.By(func(value interface{}) error {
-			str, ok := value.(string)
-			if !ok {
-				return fmt.Errorf("invalid content type")
-			}
-
-			length := utf8.RuneCountInString(str)
-			if length < 2 || length > 10000 {
-				return fmt.Errorf("content length must be between 2 and 10000 characters, but got %d", length)
-			}
-			return nil
-		})),
+		validation.Field(&dto.Content, validation.RuneLength(2, 10000)),
 		validation.Field(&dto.Privacy, validation.In(consts.PrivacyLevels...)),
 	)
 }

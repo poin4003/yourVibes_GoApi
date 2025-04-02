@@ -3,6 +3,10 @@ package implement
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils"
@@ -12,9 +16,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/random"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/sendto"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/third_party_authentication"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -206,9 +207,16 @@ func (s *sUserAuth) VerifyEmail(
 
 	// 3. Check OTP exists
 	userKey := utils.GetUserKey(hashEmail)
-	_, err = s.userAuthCache.GetOtp(ctx, userKey)
+	otpFound, err := s.userAuthCache.GetOtp(ctx, userKey)
 	if err != nil {
 		return err
+	}
+
+	if *otpFound != "" {
+		return response.NewCustomError(
+			response.ErrCodeOtpNotExists,
+			"otp already exists but not registered",
+		)
 	}
 
 	// 4. Generate OTP
@@ -410,7 +418,8 @@ func (s *sUserAuth) AuthGoogle(
 
 	if userFound == nil {
 		// 2.1. Create new user
-		newUser, err := userEntity.NewUserGoogle(
+		var newUser *userEntity.User
+		newUser, err = userEntity.NewUserGoogle(
 			claims.FamilyName,
 			claims.GivenName,
 			claims.Email,
@@ -421,26 +430,28 @@ func (s *sUserAuth) AuthGoogle(
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
-		createdUser, err := s.userRepo.CreateOne(ctx, newUser)
+		newUser, err = s.userRepo.CreateOne(ctx, newUser)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		// 2.2. Create setting for user
-		newSetting, err := userEntity.NewSetting(createdUser.ID, consts.VI)
+		var newSetting *userEntity.Setting
+		newSetting, err = userEntity.NewSetting(newUser.ID, consts.VI)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
-		createdSetting, err := s.settingRepo.CreateOne(ctx, newSetting)
+		newSetting, err = s.settingRepo.CreateOne(ctx, newSetting)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
-		createdUser.Setting = createdSetting
+		newUser.Setting = newSetting
 
 		// 2.3. Validate user
-		validatedUser, err := userValidator.NewValidatedUserForGoogleAuth(createdUser)
+		var validatedUser *userValidator.ValidatedUser
+		validatedUser, err = userValidator.NewValidatedUserForGoogleAuth(newUser)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
@@ -462,7 +473,8 @@ func (s *sUserAuth) AuthGoogle(
 		}
 
 		// 2.4. Generate token
-		accessTokenGen, err := jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
+		var accessTokenGen string
+		accessTokenGen, err = jwtutil2.GenerateJWT(accessClaims, jwt.SigningMethodHS256, global.Config.Authentication.JwtSecretKey)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}

@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "localhost:8080",
+    "host": "yourvibes.duckdns.org:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -2576,6 +2576,35 @@
                         "name": "friend_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/users/friends/suggestion/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of friend",
+                "tags": [
+                    "user_friend"
+                ],
+                "summary": "Get a list of friend suggestion",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {}

@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"go.uber.org/zap"
@@ -15,26 +16,29 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/comment/mapper"
 	commentQuery "github.com/poin4003/yourVibes_GoApi/internal/application/comment/query"
 	commentEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/comment/entities"
-	commentRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sCommentLike struct {
-	userRepo              commentRepo.IUserRepository
-	commentRepo           commentRepo.ICommentRepository
-	likeUserCommentRepo   commentRepo.ILikeUserCommentRepository
+	userRepo              repository.IUserRepository
+	commentRepo           repository.ICommentRepository
+	likeUserCommentRepo   repository.ILikeUserCommentRepository
+	commentCache          cache.ICommentCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewCommentLikeImplement(
-	userRepo commentRepo.IUserRepository,
-	commentRepo commentRepo.ICommentRepository,
-	likeUserCommentRepo commentRepo.ILikeUserCommentRepository,
+	userRepo repository.IUserRepository,
+	commentRepo repository.ICommentRepository,
+	likeUserCommentRepo repository.ILikeUserCommentRepository,
+	commentCache cache.ICommentCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sCommentLike {
 	return &sCommentLike{
 		userRepo:              userRepo,
 		commentRepo:           commentRepo,
 		likeUserCommentRepo:   likeUserCommentRepo,
+		commentCache:          commentCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -66,6 +70,9 @@ func (s *sCommentLike) LikeComment(
 	if err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
+
+	// Delete cache
+	s.commentCache.DeleteComment(ctx, command.CommentId)
 
 	if !checkLikeComment {
 		// 2.1. Create like if not exits

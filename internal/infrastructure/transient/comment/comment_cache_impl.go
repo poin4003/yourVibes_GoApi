@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -44,16 +45,18 @@ func (t *tComment) GetComment(
 	key := fmt.Sprintf("comment:%s", commentID.String())
 	data, err := t.client.Get(ctx, key).Bytes()
 	if err != nil {
-		if errors.Is(err, redis.Nil) { return nil }
+		if errors.Is(err, redis.Nil) {
+			return nil
+		}
 		global.Logger.Warn("Failed to get comment", zap.String("comment_id", commentID.String()), zap.Error(err))
 		return nil
 	}
-	var comment *entities.Comment
-	if err = json.Unmarshal(data, comment); err != nil {
+	var comment entities.Comment
+	if err = json.Unmarshal(data, &comment); err != nil {
 		global.Logger.Warn("Failed to unmarshal comment", zap.String("comment_id", commentID.String()), zap.Error(err))
 		return nil
 	}
-	return comment
+	return &comment
 }
 
 func (t *tComment) DeleteComment(
@@ -68,10 +71,17 @@ func (t *tComment) DeleteComment(
 
 func (t *tComment) SetPostComment(
 	ctx context.Context,
-	postID uuid.UUID, commentIds []uuid.UUID, paging *response.PagingResponse,
+	postID uuid.UUID, parentID uuid.UUID, commentIds []uuid.UUID,
+	paging *response.PagingResponse,
 ) {
-	key := fmt.Sprintf("post_comment:%s", postID.String())
-	pagingKey := fmt.Sprintf("post_comment:%s:paging", postID.String())
+	var key, pagingKey string
+	if parentID != uuid.Nil {
+		key = fmt.Sprintf("post_comment:%s:%s", postID.String(), parentID.String())
+		pagingKey = fmt.Sprintf("post_comment:%s:%s:paging", postID.String(), parentID.String())
+	} else {
+		key = fmt.Sprintf("post_comment:%s", postID.String())
+		pagingKey = fmt.Sprintf("post_comment:%s:paging", postID.String())
+	}
 
 	// Convert commentIds to string
 	commentIdString := make([]interface{}, len(commentIds))
@@ -80,7 +90,6 @@ func (t *tComment) SetPostComment(
 	}
 	// Save commentIds into list
 	pipe := t.client.Pipeline()
-	pipe.Del(ctx, key)
 	pipe.RPush(ctx, key, commentIdString...)
 	pipe.Expire(ctx, pagingKey, consts.TTL_COMMON)
 
@@ -101,10 +110,16 @@ func (t *tComment) SetPostComment(
 
 func (t *tComment) GetPostComment(
 	ctx context.Context,
-	postID uuid.UUID, limit, page int,
+	postID uuid.UUID, parentID uuid.UUID, limit, page int,
 ) ([]uuid.UUID, *response.PagingResponse) {
-	key := fmt.Sprintf("post_comment:%s", postID.String())
-	pagingKey := fmt.Sprintf("post_comment:%s:paging", postID.String())
+	var key, pagingKey string
+	if parentID != uuid.Nil {
+		key = fmt.Sprintf("post_comment:%s:%s", postID.String(), parentID.String())
+		pagingKey = fmt.Sprintf("post_comment:%s:%s:paging", postID.String(), parentID.String())
+	} else {
+		key = fmt.Sprintf("post_comment:%s", postID.String())
+		pagingKey = fmt.Sprintf("post_comment:%s:paging", postID.String())
+	}
 
 	pagingData, err := t.client.Get(ctx, pagingKey).Bytes()
 	if err != nil {
@@ -115,8 +130,8 @@ func (t *tComment) GetPostComment(
 		return nil, nil
 	}
 
-	var paging *response.PagingResponse
-	if err = json.Unmarshal(pagingData, paging); err != nil {
+	var paging response.PagingResponse
+	if err = json.Unmarshal(pagingData, &paging); err != nil {
 		global.Logger.Warn("Failed to unmarshal post comment", zap.String("post_id", postID.String()), zap.Error(err))
 		return nil, nil
 	}
@@ -141,14 +156,35 @@ func (t *tComment) GetPostComment(
 		}
 	}
 
-	return commentUUIDs, paging
+	return commentUUIDs, &paging
 }
 
 func (t *tComment) DeletePostComment(ctx context.Context, postID uuid.UUID) {
 	key := fmt.Sprintf("post_comment:%s", postID.String())
 	pagingKey := fmt.Sprintf("post_comment:%s:paging", postID.String())
+	childCommentPattern := fmt.Sprintf("post_comment:%s:*", postID.String())
 
-	if err := t.client.Del(ctx, key, pagingKey).Err(); err != nil {
-		global.Logger.Warn("Failed to delete post comment", zap.String("post_id", postID.String()), zap.Error(err))
+	var cursor uint64
+	var keysToDelete []string
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = t.client.Scan(ctx, cursor, childCommentPattern, 10).Result()
+		if err != nil {
+			global.Logger.Warn("Failed to get post comment", zap.String("post_id", postID.String()), zap.Error(err))
+			return
+		}
+		keysToDelete = append(keysToDelete, keys...)
+		if cursor == 0 {
+			break
+		}
+	}
+
+	keysToDelete = append(keysToDelete, key, pagingKey)
+
+	if len(keysToDelete) > 0 {
+		if err := t.client.Del(ctx, keysToDelete...).Err(); err != nil {
+			global.Logger.Warn("Failed to delete post comment", zap.String("post_id", postID.String()), zap.Error(err))
+		}
 	}
 }

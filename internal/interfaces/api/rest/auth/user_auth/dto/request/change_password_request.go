@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/google/uuid"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
@@ -19,8 +20,8 @@ func ValidateChangePasswordRequest(req interface{}) error {
 	}
 
 	return validation.ValidateStruct(dto,
-		validation.Field(&dto.OldPassword, validation.Required, validation.Length(8, 255)),
-		validation.Field(&dto.NewPassword, validation.Required, validation.Length(8, 255)),
+		validation.Field(&dto.OldPassword, validation.Required, validation.RuneLength(8, 255)),
+		validation.Field(&dto.NewPassword, validation.Required, validation.RuneLength(8, 255)),
 	)
 }
 

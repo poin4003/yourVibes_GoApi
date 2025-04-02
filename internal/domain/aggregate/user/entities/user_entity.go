@@ -1,9 +1,10 @@
 package entities
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"regexp"
 	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -53,16 +54,16 @@ type UserUpdate struct {
 
 func (u *User) ValidateUser() error {
 	return validation.ValidateStruct(u,
-		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
-		validation.Field(&u.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.FamilyName, validation.Required, validation.RuneLength(2, 255)),
+		validation.Field(&u.Name, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&u.Email, validation.Required, is.Email),
-		validation.Field(&u.Password, validation.Required, validation.Length(8, 255)),
-		validation.Field(&u.PhoneNumber, validation.Required, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&u.Password, validation.Required, validation.RuneLength(8, 255)),
+		validation.Field(&u.PhoneNumber, validation.Required, validation.RuneLength(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&u.Birthday, validation.Required),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
 		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
-		validation.Field(&u.Biography, validation.Length(0, 500)),
+		validation.Field(&u.Biography, validation.RuneLength(0, 500)),
 		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),
@@ -74,13 +75,13 @@ func (u *User) ValidateUser() error {
 
 func (u *User) ValidateUserForGoogleAuth() error {
 	return validation.ValidateStruct(u,
-		validation.Field(&u.FamilyName, validation.Required, validation.Length(2, 255)),
-		validation.Field(&u.Name, validation.Required, validation.Length(2, 255)),
+		validation.Field(&u.FamilyName, validation.Required, validation.RuneLength(2, 255)),
+		validation.Field(&u.Name, validation.Required, validation.RuneLength(2, 255)),
 		validation.Field(&u.Email, validation.Required, is.Email),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
 		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
-		validation.Field(&u.Biography, validation.Length(0, 500)),
+		validation.Field(&u.Biography, validation.RuneLength(0, 500)),
 		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),
@@ -92,13 +93,13 @@ func (u *User) ValidateUserForGoogleAuth() error {
 
 func (u *UserUpdate) ValidateUserUpdate() error {
 	return validation.ValidateStruct(u,
-		validation.Field(&u.FamilyName, validation.Length(2, 255)),
-		validation.Field(&u.Name, validation.Length(2, 255)),
-		validation.Field(&u.PhoneNumber, validation.Length(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
+		validation.Field(&u.FamilyName, validation.RuneLength(2, 255)),
+		validation.Field(&u.Name, validation.RuneLength(2, 255)),
+		validation.Field(&u.PhoneNumber, validation.RuneLength(10, 14), validation.Match((regexp.MustCompile((`^\d+$`))))),
 		validation.Field(&u.AvatarUrl, is.URL),
 		validation.Field(&u.CapwallUrl, is.URL),
 		validation.Field(&u.Privacy, validation.In(consts.PrivacyLevels...)),
-		validation.Field(&u.Biography, validation.Length(0, 500)),
+		validation.Field(&u.Biography, validation.RuneLength(0, 500)),
 		validation.Field(&u.AuthType, validation.In(consts.AuthTypes...)),
 		validation.Field(&u.PostCount, validation.Min(0)),
 		validation.Field(&u.FriendCount, validation.Min(0)),

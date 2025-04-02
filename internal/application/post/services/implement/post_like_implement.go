@@ -86,7 +86,7 @@ func (s *sPostLike) LikePost(
 	// 4. Handle like and dislike
 	if !checkLiked {
 		// 4.1.1 Create new like if it not exist
-		if err := s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostEntity); err != nil {
+		if err = s.postLikeRepo.CreateLikeUserPost(ctx, likeUserPostEntity); err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
@@ -134,7 +134,7 @@ func (s *sPostLike) LikePost(
 		return result, nil
 	} else {
 		// 4.2.1. Delete like if it exits
-		if err := s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostEntity); err != nil {
+		if err = s.postLikeRepo.DeleteLikeUserPost(ctx, likeUserPostEntity); err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
 

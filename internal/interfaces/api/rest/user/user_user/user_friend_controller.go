@@ -307,3 +307,51 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 
 	response2.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }
+
+// GetFriendSuggestion godoc
+// @Summary Get a list of friend suggestion
+// @Description Get a list of friend
+// @Tags user_friend
+// @Param limit query int false "limit on page"
+// @Param page query int false "current page"
+// @Security ApiKeyAuth
+// @Router /users/friends/suggestion/ [get]
+func (c *cUserFriend) GetFriendSuggestion(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(response2.NewServerFailedError("Missing validated query"))
+		return
+	}
+
+	// 2. Convert to userQueryObject
+	friendQueryObject, ok := queryInput.(*query.FriendQueryObject)
+	if !ok {
+		ctx.Error(response2.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 3. Get user id from param
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(response2.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	// 4. Call services
+	friendQuery, _ := friendQueryObject.ToFriendQuery(userIdClaim)
+
+	result, err := services.UserFriend().GetFriendSuggestion(ctx, friendQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 5. Map to dto
+	var userDtos []*response.UserShortVerDto
+	for _, userResult := range result.Users {
+		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
+	}
+
+	response2.OKWithPaging(ctx, userDtos, *result.PagingResponse)
+}
