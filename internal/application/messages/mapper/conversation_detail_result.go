@@ -20,3 +20,26 @@ func NewConversationDetailResult(
 		LastMess:       conversationDetail.LastMess,
 	}
 }
+
+func NewManyConversationDetailResult(
+	conversationDetails []*conversationDetailEntity.ConversationDetail,
+) []*common.ConversationDetailResult { // ✅ Trả về danh sách thay vì một phần tử
+	if conversationDetails == nil {
+		return nil
+	}
+
+	var results []*common.ConversationDetailResult
+	for _, detail := range conversationDetails {
+		mappedDetail := &common.ConversationDetailResult{
+			UserId:         detail.UserId,
+			ConversationId: detail.ConversationId,
+			User:           NewMessageUserResultFromEntity(detail.User),
+			Conversation:   NewConversationResult(detail.Conversation),
+			LastMessStatus: detail.LastMessStatus,
+			LastMess:       detail.LastMess,
+		}
+		results = append(results, mappedDetail) // ✅ Thêm vào danh sách
+	}
+
+	return results // ✅ Trả về danh sách đầy đủ
+}

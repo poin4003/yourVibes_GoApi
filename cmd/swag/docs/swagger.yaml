@@ -117,10 +117,17 @@ definitions:
     properties:
       conversation_id:
         type: string
-      last_mess:
-        type: string
       user_id:
         type: string
+    type: object
+  request.CreateManyConversationDetailRequest:
+    properties:
+      conversation_id:
+        type: string
+      user_ids:
+        items:
+          type: string
+        type: array
     type: object
   request.CreateMessageRequest:
     properties:
@@ -764,6 +771,26 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: ConversationDetail create ConversationDatail
+      tags:
+      - conversationDetail
+  /conversation_details/create_many:
+    post:
+      consumes:
+      - application/json
+      description: When user create many conversationDetail
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateManyConversationDetailRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create many conversationDetail
       tags:
       - conversationDetail
   /conversation_details/delete/{user_id}/{conversation_id}:

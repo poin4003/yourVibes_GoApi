@@ -62,8 +62,12 @@ func (mr *MessagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 	conversationDetailRouter.Use(middlewares.UserAuthProtected())
 	{
 		conversationDetailRouter.POST("/",
-			helpers.ValidateJsonBody(&conversationRequest.CreateConversationDetailRequest{}, conversationRequest.ValidateCreatCOnversationDetailRequest),
+			helpers.ValidateJsonBody(&conversationRequest.CreateConversationDetailRequest{}, conversationRequest.ValidateCreateConversationDetailRequest),
 			useConversationDetailController.CreateConversationDetail)
+
+		conversationDetailRouter.POST("/create_many",
+			helpers.ValidateFormBody(&conversationRequest.CreateManyConversationDetailRequest{}, conversationRequest.ValidateCreateManyConversationDetailRequest),
+			useConversationDetailController.CreateManyConversationDetail)
 
 		conversationDetailRouter.GET("/get_by_id",
 			helpers.ValidateQuery(&conversationQuery.ConversationDetailObject{}, conversationQuery.ValidateConversationDetailObject),

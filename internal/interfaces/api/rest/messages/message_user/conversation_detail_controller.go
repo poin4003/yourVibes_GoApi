@@ -37,7 +37,7 @@ func (cd *cConversationDetail) CreateConversationDetail(ctx *gin.Context) {
 		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
 	}
-	createConversationDetailCommand, err := createConversationDetail.ToCreateConversationDetailCommand(createConversationDetail.UserId, createConversationDetail.ConversationId)
+	createConversationDetailCommand, err := createConversationDetail.ToCreateConversationDetailCommand()
 
 	if err != nil {
 		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
@@ -206,4 +206,53 @@ func (cd *cConversationDetail) UpdateConversationDetail(ctx *gin.Context) {
 
 	pkgResponse.OK(ctx, nil)
 
+}
+
+// CreateManyConversationDetail documentation
+// @Summary Create many conversationDetail
+// @Description When user create many conversationDetail
+// @Tags conversationDetail
+// @Accept json
+// @Produce json
+// @Param input body request.CreateManyConversationDetailRequest true "input"
+// @Security ApiKeyAuth
+// @Router /conversation_details/create_many [post]
+func (cd *cConversationDetail) CreateManyConversationDetail(ctx *gin.Context) {
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validateRequest request"))
+		return
+	}
+
+	createManyConversation, ok := body.(*request.CreateManyConversationDetailRequest)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	var userIds []uuid.UUID
+	for _, userId := range createManyConversation.UserIds {
+		userUUID, err := uuid.Parse(userId)
+		if err != nil {
+			ctx.Error(pkgResponse.NewValidateError("Invalid user id"))
+			return
+		}
+		userIds = append(userIds, userUUID)
+	}
+
+	createManyConversationCommand, err := createManyConversation.ToCreateManyConversationDetailCommands(
+		userIds,
+	)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+	result, err := services.ConversationDetail().CreateManyConversationDetail(ctx, createManyConversationCommand)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+	conversationDetailDtos := response.ToManyConversationDetailDto(result.ConversationDetails)
+
+	pkgResponse.OK(ctx, conversationDetailDtos)
 }
