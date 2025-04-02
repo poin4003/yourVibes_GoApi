@@ -14,10 +14,8 @@ func Run() *gin.Engine {
 	rdb := InitRedis()
 	rabbitMQConnection := InitRabbitMQ()
 	db := InitPostgreSql()
-	notificationSocketHub := socket_hub.NewNotificationSocketHub()
-	messageSocketHub := socket_hub.NewMessageSocketHub()
-	global.MessageSocketHub = messageSocketHub
-	global.NotificationSocketHub = notificationSocketHub
+	global.MessageSocketHub = socket_hub.NewMessageSocketHub()
+	global.NotificationSocketHub = socket_hub.NewNotificationSocketHub()
 	InitDependencyInjection(db, rabbitMQConnection, rdb, global.NotificationSocketHub, global.MessageSocketHub)
 	response.InitCustomCode()
 
