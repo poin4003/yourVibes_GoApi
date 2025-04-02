@@ -212,7 +212,7 @@ func (s *sUserAuth) VerifyEmail(
 		return err
 	}
 
-	if otpFound != nil {
+	if *otpFound != "" {
 		return response.NewCustomError(
 			response.ErrCodeOtpNotExists,
 			"otp already exists but not registered",
