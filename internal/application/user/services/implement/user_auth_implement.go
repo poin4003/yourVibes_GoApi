@@ -3,6 +3,10 @@ package implement
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils"
@@ -12,9 +16,6 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/random"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/sendto"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/third_party_authentication"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/poin4003/yourVibes_GoApi/global"
@@ -206,9 +207,16 @@ func (s *sUserAuth) VerifyEmail(
 
 	// 3. Check OTP exists
 	userKey := utils.GetUserKey(hashEmail)
-	_, err = s.userAuthCache.GetOtp(ctx, userKey)
+	otpFound, err := s.userAuthCache.GetOtp(ctx, userKey)
 	if err != nil {
 		return err
+	}
+
+	if otpFound != nil {
+		return response.NewCustomError(
+			response.ErrCodeOtpNotExists,
+			"otp already exists but not registered",
+		)
 	}
 
 	// 4. Generate OTP
