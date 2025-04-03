@@ -182,9 +182,17 @@ func (r *rConversatioDetail) CreateMany(
 		return nil, response.NewServerFailedError(res.Error.Error())
 	}
 
-	result, err := r.GetById(ctx, entities[0].UserId, entities[0].ConversationId)
+	// Lấy thông tin chi tiết cuộc trò chuyện sau khi tạo thành công
+	query := &query.GetConversationDetailQuery{
+		ConversationId: entities[0].ConversationId, // Sử dụng conversationId của entity đầu tiên
+		Page:           1,                          // Trang mặc định, có thể thay đổi tùy vào yêu cầu
+		Limit:          10,                         // Giới hạn mặc định, có thể thay đổi
+	}
+	conversationDetailEntities, _, err := r.GetConversationDetailByConversationId(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-	return []*conversationdetail_entity.ConversationDetail{result}, nil
+
+	// Trả về các dữ liệu đã tạo và chi tiết cuộc trò chuyện
+	return conversationDetailEntities, nil
 }
