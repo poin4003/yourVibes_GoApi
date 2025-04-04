@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/settings"
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -31,11 +30,6 @@ func NewConnection(cfg settings.RabbitMQSetting) (*Connection, error) {
 
 	if err := c.connectWithRetry(); err != nil {
 		return nil, err
-	}
-
-	if err := c.Setup(); err != nil {
-		c.Close()
-		return nil, fmt.Errorf("failed to setup RabbitMQ exchanges: %v", err)
 	}
 
 	go c.handleReconnect()
@@ -98,82 +92,6 @@ func (c *Connection) openChannelWithRetry(conn *amqp091.Connection) (*amqp091.Ch
 	return nil, fmt.Errorf("failed to open channel after %d attempts", maxAttempts)
 }
 
-func (c *Connection) Setup() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.channel == nil {
-		return fmt.Errorf("channel is nil, cannot setup")
-	}
-
-	err := c.channel.ExchangeDeclare(
-		consts.NotificationDLXName,
-		"topic",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare notification DLX: %v", err)
-	}
-
-	err = c.channel.ExchangeDeclare(
-		consts.NotificationExName,
-		"topic",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare notification exchange: %v", err)
-	}
-
-	err = c.channel.ExchangeDeclare(
-		consts.MessageDLXName,
-		"direct",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare message DLX: %v", err)
-	}
-
-	err = c.channel.ExchangeDeclare(
-		consts.MessageExName,
-		"direct",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare message exchange: %v", err)
-	}
-
-	err = c.channel.ExchangeDeclare(
-		consts.StatisticsExName,
-		"topic",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare message statistics exchange: %v", err)
-	}
-
-	log.Println("RabbitMQ exchanges setup completed successfully")
-	return nil
-}
-
 func (c *Connection) handleReconnect() {
 	for {
 		select {
@@ -190,10 +108,6 @@ func (c *Connection) handleReconnect() {
 				if err := c.connectWithRetry(); err != nil {
 					log.Printf("Reconnect failed: %v", err)
 				}
-				// Re-setup exchanges sau khi reconnect
-				if err := c.Setup(); err != nil {
-					log.Printf("Failed to re-setup RabbitMQ exchanges: %v", err)
-				}
 			}
 		case err := <-c.notifyChan:
 			if err != nil {
@@ -203,10 +117,6 @@ func (c *Connection) handleReconnect() {
 				c.mu.Unlock()
 				if err := c.connectWithRetry(); err != nil {
 					log.Printf("Reconnect failed: %v", err)
-				}
-				// Re-setup exchanges sau khi reconnect
-				if err := c.Setup(); err != nil {
-					log.Printf("Failed to re-setup RabbitMQ exchanges: %v", err)
 				}
 			}
 		}
@@ -224,7 +134,7 @@ func (c *Connection) Close() {
 	}
 }
 
-func (c *Connection) Publish(ctx context.Context, exchange, routingKey string, body []byte) error {
+func (c *Connection) Publish(ctx context.Context, exchange, routingKey string, body []byte, headers amqp091.Table) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.channel == nil {
@@ -233,6 +143,7 @@ func (c *Connection) Publish(ctx context.Context, exchange, routingKey string, b
 	return c.channel.PublishWithContext(ctx, exchange, routingKey, false, false, amqp091.Publishing{
 		ContentType: "application/json",
 		Body:        body,
+		Headers:     headers,
 	})
 }
 
@@ -244,10 +155,6 @@ func (c *Connection) GetChannel() (*amqp091.Channel, error) {
 		log.Println("RabbitMQ connection or channel closed, attempting to reconnect")
 		if err := c.connectWithRetry(); err != nil {
 			return nil, fmt.Errorf("failed to reconnect to RabbitMQ: %v", err)
-		}
-		// Re-setup exchanges sau khi reconnect
-		if err := c.Setup(); err != nil {
-			return nil, fmt.Errorf("failed to re-setup RabbitMQ exchanges: %v", err)
 		}
 	}
 

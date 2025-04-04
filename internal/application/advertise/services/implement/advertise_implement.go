@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,17 +23,20 @@ type sAdvertise struct {
 	advertiseRepo repository.IAdvertiseRepository
 	billRepo      repository.IBillRepository
 	voucherRepo   repository.IVoucherRepository
+	postCache     cache.IPostCache
 }
 
 func NewAdvertiseImplement(
 	advertiseRepo repository.IAdvertiseRepository,
 	billRepo repository.IBillRepository,
 	voucherRepo repository.IVoucherRepository,
+	postCache cache.IPostCache,
 ) *sAdvertise {
 	return &sAdvertise{
 		advertiseRepo: advertiseRepo,
 		billRepo:      billRepo,
 		voucherRepo:   voucherRepo,
+		postCache:     postCache,
 	}
 }
 
@@ -138,6 +142,9 @@ func (s *sAdvertise) CreateAdvertise(
 	if err != nil {
 		return nil, response2.NewServerFailedError(err.Error())
 	}
+
+	// 6. Delete post cache
+	s.postCache.DeletePost(ctx, command.PostId)
 
 	return &advertiseCommand.CreateAdvertiseResult{
 		PayUrl: payUrl,

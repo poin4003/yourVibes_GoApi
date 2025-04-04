@@ -44,6 +44,7 @@ type (
 		GetMany(ctx context.Context, query *query.GetNewFeedQuery) ([]*entities.Post, *response.PagingResponse, error)
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
+		CreateManyFeaturedPosts(ctx context.Context, numUsers int) error
 	}
 )
 

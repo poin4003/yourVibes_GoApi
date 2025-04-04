@@ -12,7 +12,6 @@ import (
 	reportProducer "github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/statistic/consumer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
-	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
@@ -67,6 +66,7 @@ import (
 	reportRepoImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/report/repo_impl"
 
 	advertiseCronjob "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/cronjob"
+	postCronjob "github.com/poin4003/yourVibes_GoApi/internal/application/post/cronjob"
 )
 
 func InitDependencyInjection(
@@ -145,7 +145,7 @@ func InitDependencyInjection(
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, friendRepo, postCache, postEventPublisher)
 	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentCache, postCache, commentNotificationPublisher)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo, commentCache, commentNotificationPublisher)
-	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo)
+	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo, postCache)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)
 	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo)
@@ -187,11 +187,12 @@ func InitDependencyInjection(
 	statisticService.InitStatistic(statisticServiceInit)
 
 	// Init dependency service
-	notificationConsumer.InitNotificationConsumer(consts.NotificationQueue, consts.NotificationDLQ, notificationServiceInit, rabbitmqConnection)
-	messageConsumer.InitMessageConsumer(consts.MessageQueue, consts.MessageDLQ, messageMQServiceInit, rabbitmqConnection)
-	consumer.InitStatisticsConsumer(consts.StatisticsQueue, consts.StatisticsExName, statisticServiceInit, rabbitmqConnection)
+	notificationConsumer.InitNotificationConsumer(notificationServiceInit, rabbitmqConnection)
+	messageConsumer.InitMessageConsumer(messageMQServiceInit, rabbitmqConnection)
+	consumer.InitStatisticsConsumer(statisticServiceInit, rabbitmqConnection)
 
 	// Init cronjob
 	advertiseCronjob.NewCheckExpiryCronJob(postRepo, newFeedRepo)
 	advertiseCronjob.NewPushToNewFeedCronJob(newFeedRepo)
+	postCronjob.NewPushFeaturePostToNewFeedCronJob(newFeedRepo)
 }
