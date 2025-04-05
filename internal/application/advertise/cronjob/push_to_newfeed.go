@@ -21,7 +21,7 @@ func NewPushToNewFeedCronJob(
 		cron:        cron.New(),
 	}
 
-	_, err := crj.cron.AddFunc("@every 6h", func() {
+	_, err := crj.cron.AddFunc("@every 2m", func() {
 		go crj.Run()
 	})
 
