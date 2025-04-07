@@ -21,7 +21,7 @@ type (
 	}
 	IUserInfo interface {
 		GetInfoByUserId(ctx context.Context, query *query.GetOneUserQuery) (result *query.UserQueryResult, err error)
-		GetUserStatusById(ctx context.Context, id uuid.UUID) (status bool, err error)
+		GetUserStatusById(ctx context.Context, id uuid.UUID) (status *bool, err error)
 		GetManyUsers(ctx context.Context, query *query.GetManyUserQuery) (result *query.UserQueryListResult, err error)
 		UpdateUser(ctx context.Context, command *command.UpdateUserCommand) (result *command.UpdateUserCommandResult, err error)
 	}

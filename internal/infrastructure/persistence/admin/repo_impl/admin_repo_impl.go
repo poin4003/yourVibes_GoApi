@@ -43,7 +43,7 @@ func (r *rAdmin) GetById(
 func (r *rAdmin) GetStatusById(
 	ctx context.Context,
 	id uuid.UUID,
-) (bool, error) {
+) (*bool, error) {
 	var adminStatus bool
 	if err := r.db.WithContext(ctx).
 		Model(&models.Admin{}).
@@ -51,11 +51,11 @@ func (r *rAdmin) GetStatusById(
 		First(&adminStatus, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return false, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
-	return adminStatus, nil
+	return &adminStatus, nil
 }
 
 func (r *rAdmin) CreateOne(

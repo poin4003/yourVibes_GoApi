@@ -64,7 +64,7 @@ func UserAuthProtected() gin.HandlerFunc {
 			return
 		}
 
-		// 5. Check user from db
+		// 5. Check user by check userStatus service
 		userStatus, err := services.UserInfo().GetUserStatusById(ctx, userId)
 		if err != nil {
 			ctx.Error(response.NewInvalidTokenError())
@@ -73,7 +73,7 @@ func UserAuthProtected() gin.HandlerFunc {
 		}
 
 		// 6. Check user status
-		if !userStatus {
+		if !*userStatus {
 			ctx.Error(response.NewInvalidTokenError())
 			ctx.Abort()
 			return

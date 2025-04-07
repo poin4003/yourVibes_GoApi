@@ -60,7 +60,7 @@ func (r *rUser) GetById(
 func (r *rUser) GetStatusById(
 	ctx context.Context,
 	id uuid.UUID,
-) (bool, error) {
+) (*bool, error) {
 	var userStatus bool
 	if err := r.db.WithContext(ctx).
 		Model(&models.User{}).
@@ -68,11 +68,11 @@ func (r *rUser) GetStatusById(
 		First(&userStatus, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
+			return nil, response.NewDataNotFoundError(err.Error())
 		}
-		return false, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
-	return userStatus, nil
+	return &userStatus, nil
 }
 
 func (r *rUser) CreateOne(

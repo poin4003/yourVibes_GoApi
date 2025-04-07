@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/crypto"
 
@@ -11,18 +13,21 @@ import (
 	adminQuery "github.com/poin4003/yourVibes_GoApi/internal/application/admin/query"
 	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
 	adminValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/validator"
-	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sSuperAdmin struct {
-	adminRepo adminRepo.IAdminRepository
+	adminRepo  repository.IAdminRepository
+	adminCache cache.IAdminCache
 }
 
 func NewSuperAdminImplement(
-	adminRepo adminRepo.IAdminRepository,
+	adminRepo repository.IAdminRepository,
+	adminCache cache.IAdminCache,
 ) *sSuperAdmin {
 	return &sSuperAdmin{
-		adminRepo: adminRepo,
+		adminRepo:  adminRepo,
+		adminCache: adminCache,
 	}
 }
 
@@ -108,7 +113,12 @@ func (s *sSuperAdmin) UpdateAdmin(
 		return nil, response2.NewServerFailedError(err.Error())
 	}
 
-	// 2. Map to result
+	// 2. Delete cache
+	go func(adminId uuid.UUID) {
+		s.adminCache.DeleteAdminStatus(ctx, adminId)
+	}(adminEntity.ID)
+
+	// 3. Map to result
 	return &adminCommand.UpdateAdminForSuperAdminCommandResult{
 		Admin: mapper.NewAdminResult(adminEntity),
 	}, nil

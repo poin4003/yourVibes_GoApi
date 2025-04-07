@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/report/common"
@@ -23,17 +25,20 @@ import (
 type sReportFactory struct {
 	reportRepo            repo.IReportRepository
 	voucherRepo           repo.IVoucherRepository
+	userCache             cache.IUserCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewReportFactoryImplment(
 	reportRepo repo.IReportRepository,
 	voucherRepo repo.IVoucherRepository,
+	userCache cache.IUserCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sReportFactory {
 	return &sReportFactory{
 		reportRepo:            reportRepo,
 		voucherRepo:           voucherRepo,
+		userCache:             userCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -196,6 +201,11 @@ func (s *sReportFactory) HandleReport(
 			return response.NewServerFailedError(err.Error())
 		}
 
+		// Delete user status cache
+		go func(userID uuid.UUID) {
+			s.userCache.DeleteUserStatus(ctx, userID)
+		}(userEntity.ID)
+
 		return nil
 	case consts.POST_REPORT:
 		// handle post report
@@ -294,6 +304,11 @@ func (s *sReportFactory) Activate(
 		); err != nil {
 			return response.NewServerFailedError(err.Error())
 		}
+
+		// Delete user status cache
+		go func(userID uuid.UUID) {
+			s.userCache.DeleteUserStatus(ctx, userID)
+		}(userEntity.ID)
 
 		return nil
 	case consts.POST_REPORT:

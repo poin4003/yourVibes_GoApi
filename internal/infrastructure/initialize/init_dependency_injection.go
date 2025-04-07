@@ -15,6 +15,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
+	adminCacheImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/transient/admin"
 	commentCacheImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/transient/comment"
 	postCacheImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/transient/post"
 	userCacheImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/transient/user"
@@ -99,9 +100,11 @@ func InitDependencyInjection(
 	statisticRepo := StatisticRepoImpl.NewStatisticRepository(db)
 
 	// Init cache
-	userCache := userCacheImpl.NewUserAuthCache(redis)
+	userAuthCache := userCacheImpl.NewUserAuthCache(redis)
+	userCache := userCacheImpl.NewUserCache(redis)
 	postCache := postCacheImpl.NewPostCacheImplement(redis)
 	commentCache := commentCacheImpl.NewCommentCacheImplement(redis)
+	adminCache := adminCacheImpl.NewAdminCache(redis)
 
 	// Init publisher
 	postEventPublisher := postProducer.NewPostEventPublisher(rabbitmqConnection)
@@ -131,15 +134,17 @@ func InitDependencyInjection(
 	repository.InitVoucherRepository(voucherRepo)
 	repository.InitStatisticRepository(statisticRepo)
 
-	cache.InitUserAuthCache(userCache)
+	cache.InitUserAuthCache(userAuthCache)
+	cache.InitUserCache(userCache)
 	cache.InitPostCache(postCache)
 	cache.InitCommentCache(commentCache)
+	cache.InitAdminCache(adminCache)
 
 	// Initialize Service
-	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, userCache)
+	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, userAuthCache)
 	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userNotificationPublisher)
 	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo, postCache, postEventPublisher)
-	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo)
+	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo, userCache)
 	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postCache, postEventPublisher)
 	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postCache, postEventPublisher)
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, friendRepo, postCache, postEventPublisher)
@@ -148,9 +153,9 @@ func InitDependencyInjection(
 	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo, postCache)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)
-	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo)
-	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo)
-	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, reportNotificationPublisher)
+	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo, adminCache)
+	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo, adminCache)
+	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, userCache, reportNotificationPublisher)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)

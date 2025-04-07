@@ -73,7 +73,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 		}
 
 		// 6. Check admin status
-		if !adminStatus {
+		if !*adminStatus {
 			ctx.Error(response.NewInvalidTokenError())
 			ctx.Abort()
 			return

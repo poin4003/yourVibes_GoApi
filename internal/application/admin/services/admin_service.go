@@ -16,7 +16,7 @@ type (
 	}
 	IAdminInfo interface {
 		UpdateAdmin(ctx context.Context, command *command.UpdateAdminInfoCommand) (result *command.UpdateAdminInfoCommandResult, err error)
-		GetAdminStatusById(ctx context.Context, id uuid.UUID) (status bool, err error)
+		GetAdminStatusById(ctx context.Context, id uuid.UUID) (status *bool, err error)
 	}
 	ISuperAdmin interface {
 		CreateAdmin(ctx context.Context, command *command.CreateAdminCommand) (result *command.CreateAdminCommandResult, err error)

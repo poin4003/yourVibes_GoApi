@@ -2,8 +2,9 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 
 	"github.com/google/uuid"
@@ -13,27 +14,30 @@ import (
 	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sUserInfo struct {
-	userRepo          userRepo.IUserRepository
-	settingRepo       userRepo.ISettingRepository
-	friendRepo        userRepo.IFriendRepository
-	friendRequestRepo userRepo.IFriendRequestRepository
+	userRepo          repository.IUserRepository
+	settingRepo       repository.ISettingRepository
+	friendRepo        repository.IFriendRepository
+	friendRequestRepo repository.IFriendRequestRepository
+	userCache         cache.IUserCache
 }
 
 func NewUserInfoImplement(
-	userRepo userRepo.IUserRepository,
-	settingRepo userRepo.ISettingRepository,
-	friendRepo userRepo.IFriendRepository,
-	friendRequestRepo userRepo.IFriendRequestRepository,
+	userRepo repository.IUserRepository,
+	settingRepo repository.ISettingRepository,
+	friendRepo repository.IFriendRepository,
+	friendRequestRepo repository.IFriendRequestRepository,
+	userCache cache.IUserCache,
 ) *sUserInfo {
 	return &sUserInfo{
 		userRepo:          userRepo,
 		settingRepo:       settingRepo,
 		friendRepo:        friendRepo,
 		friendRequestRepo: friendRequestRepo,
+		userCache:         userCache,
 	}
 }
 
@@ -43,22 +47,22 @@ func (s *sUserInfo) GetInfoByUserId(
 ) (result *userQuery.UserQueryResult, err error) {
 	result = &userQuery.UserQueryResult{
 		User:       nil,
-		ResultCode: response2.ErrServerFailed,
+		ResultCode: response.ErrServerFailed,
 	}
 	// 1. Find User
 	userFound, err := s.userRepo.GetOne(ctx, "id = ?", query.UserId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return nil, response2.NewDataNotFoundError("user not found")
+		return nil, response.NewDataNotFoundError("user not found")
 	}
 
 	// 2. Return if user fetches his own information
 	if query.AuthenticatedUserId == query.UserId {
 		result.User = userMapper.NewUserResultWithoutSettingEntity(userFound, consts.NOT_FRIEND)
-		result.ResultCode = response2.ErrCodeSuccess
+		result.ResultCode = response.ErrCodeSuccess
 		return result, nil
 	}
 
@@ -69,7 +73,7 @@ func (s *sUserInfo) GetInfoByUserId(
 		FriendId: query.UserId,
 	})
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 3.1. Check friend
@@ -82,7 +86,7 @@ func (s *sUserInfo) GetInfoByUserId(
 			FriendId: query.UserId,
 		})
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 		if isSendFriendRequest {
 			friendStatus = consts.SEND_FRIEND_REQUEST
@@ -93,7 +97,7 @@ func (s *sUserInfo) GetInfoByUserId(
 				FriendId: query.AuthenticatedUserId,
 			})
 			if err != nil {
-				return nil, response2.NewServerFailedError(err.Error())
+				return nil, response.NewServerFailedError(err.Error())
 			}
 			if isReceiveFriendRequest {
 				friendStatus = consts.RECEIVE_FRIEND_REQUEST
@@ -109,21 +113,21 @@ func (s *sUserInfo) GetInfoByUserId(
 	switch userFound.Privacy {
 	case consts.PUBLIC:
 		userResult = userMapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
-		resultCode = response2.ErrCodeSuccess
+		resultCode = response.ErrCodeSuccess
 	case consts.FRIEND_ONLY:
 		if friendStatus == consts.IS_FRIEND {
 			userResult = userMapper.NewUserResultWithoutSettingEntity(userFound, friendStatus)
-			resultCode = response2.ErrCodeSuccess
+			resultCode = response.ErrCodeSuccess
 		} else {
 			userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
-			resultCode = response2.ErrUserFriendAccess
+			resultCode = response.ErrUserFriendAccess
 		}
 	case consts.PRIVATE:
 		userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
-		resultCode = response2.ErrUserPrivateAccess
+		resultCode = response.ErrUserPrivateAccess
 	default:
 		userResult = userMapper.NewUserResultWithoutPrivateInfo(userFound, friendStatus)
-		resultCode = response2.ErrUserPrivateAccess
+		resultCode = response.ErrUserPrivateAccess
 	}
 
 	result.User = userResult
@@ -138,7 +142,7 @@ func (s *sUserInfo) GetManyUsers(
 	userEntities, paging, err := s.userRepo.GetMany(ctx, query)
 
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	var userResultList []*common.UserShortVerResult
@@ -159,22 +163,22 @@ func (s *sUserInfo) UpdateUser(
 	// 1. find user
 	userFound, err := s.userRepo.GetById(ctx, *command.UserId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if userFound == nil {
-		return nil, response2.NewDataNotFoundError("user not found")
+		return nil, response.NewDataNotFoundError("user not found")
 	}
 
 	// 1. update setting language
 	if command.LanguageSetting != nil {
 		settingFound, err := s.settingRepo.GetSetting(ctx, "user_id=?", command.UserId)
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		if settingFound == nil {
-			return nil, response2.NewDataNotFoundError("setting not found")
+			return nil, response.NewDataNotFoundError("setting not found")
 		}
 
 		s.settingRepo.UpdateOne(ctx, settingFound.ID,
@@ -194,21 +198,21 @@ func (s *sUserInfo) UpdateUser(
 
 	err = updateUserEntity.ValidateUserUpdate()
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 3. update Avatar
 	if command.Avatar != nil && command.Avatar.Size > 0 && command.Avatar.Filename != "" {
 		avatarUrl, err := media.SaveMedia(command.Avatar)
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			AvatarUrl: &avatarUrl,
 		})
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 	}
 
@@ -216,20 +220,20 @@ func (s *sUserInfo) UpdateUser(
 	if command.Capwall != nil && command.Capwall.Size > 0 && command.Capwall.Filename != "" {
 		capwallUrl, err := media.SaveMedia(command.Capwall)
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		_, err = s.userRepo.UpdateOne(ctx, *command.UserId, &userEntity.UserUpdate{
 			CapwallUrl: &capwallUrl,
 		})
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 	}
 
 	userFound, err = s.userRepo.UpdateOne(ctx, *command.UserId, updateUserEntity)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	return &userCommand.UpdateUserCommandResult{
@@ -240,10 +244,19 @@ func (s *sUserInfo) UpdateUser(
 func (s *sUserInfo) GetUserStatusById(
 	ctx context.Context,
 	id uuid.UUID,
-) (status bool, err error) {
-	userStatus, err := s.userRepo.GetStatusById(ctx, id)
-	if err != nil {
-		return false, response2.NewServerFailedError(err.Error())
+) (status *bool, err error) {
+	// 1. Get user status from cache
+	userStatus := s.userCache.GetUserStatus(ctx, id)
+	// 2. Check if cache miss
+	if userStatus == nil {
+		userStatus, err = s.userRepo.GetStatusById(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		go func(userId uuid.UUID, userStatus bool) {
+			s.userCache.SetUserStatus(ctx, userId, userStatus)
+		}(id, *userStatus)
 	}
+
 	return userStatus, nil
 }

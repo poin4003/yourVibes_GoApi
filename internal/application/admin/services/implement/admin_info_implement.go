@@ -2,24 +2,28 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 
 	"github.com/google/uuid"
 	adminCommand "github.com/poin4003/yourVibes_GoApi/internal/application/admin/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/mapper"
 	adminEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/admin/entities"
-	adminRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	repository "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sAdminInfo struct {
-	adminRepo adminRepo.IAdminRepository
+	adminRepo  repository.IAdminRepository
+	adminCache cache.IAdminCache
 }
 
 func NewAdminInfoImplement(
-	adminRepo adminRepo.IAdminRepository,
+	adminRepo repository.IAdminRepository,
+	adminCache cache.IAdminCache,
 ) *sAdminInfo {
 	return &sAdminInfo{
-		adminRepo: adminRepo,
+		adminRepo:  adminRepo,
+		adminCache: adminCache,
 	}
 }
 
@@ -58,10 +62,18 @@ func (s *sAdminInfo) UpdateAdmin(
 func (s *sAdminInfo) GetAdminStatusById(
 	ctx context.Context,
 	id uuid.UUID,
-) (status bool, err error) {
-	adminStatus, err := s.adminRepo.GetStatusById(ctx, id)
-	if err != nil {
-		return false, err
+) (status *bool, err error) {
+	// 1. Get admin status from cache
+	adminStatus := s.adminCache.GetAdminStatus(ctx, id)
+	// 2. Check if cache miss
+	if adminStatus == nil {
+		adminStatus, err = s.adminRepo.GetStatusById(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		go func(adminId uuid.UUID, adminStatus bool) {
+			s.adminCache.SetAdminStatus(ctx, adminId, adminStatus)
+		}(id, *adminStatus)
 	}
 
 	return adminStatus, nil
