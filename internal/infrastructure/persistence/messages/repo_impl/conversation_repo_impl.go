@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 	"time"
+
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
@@ -161,15 +162,28 @@ func (r *rConversation) GetManyConversation(
 		// Xác định số lượng thành viên
 		memberCount := len(conversation.ConversationDetail)
 
-		// Nếu là nhóm (từ 3 người trở lên), trả về thông tin nhóm
+		// Lấy tin nhắn cuối cùng của user trong cuộc trò chuyện
+		var lastMess *string
+		var lastMessStatus bool
+
+		for _, detail := range conversation.ConversationDetail {
+			if detail.UserId == userId {
+				lastMess = detail.LastMess
+				lastMessStatus = detail.LastMessStatus
+				break
+			}
+		}
+
 		if memberCount >= 3 {
 			conversationResponses = append(conversationResponses, &entities.Conversation{
-				ID:    conversation.ID,
-				Name:  conversation.Name,
-				Image: conversation.Image,
+				ID:             conversation.ID,
+				Name:           conversation.Name,
+				Image:          conversation.Image,
+				LastMess:       lastMess,
+				LastMessStatus: lastMessStatus,
 			})
 		} else {
-			// Nếu là cuộc trò chuyện giữa 2 người, lấy thông tin của đối phương
+			// Nếu là cuộc trò chuyện 1-1, lấy thông tin của người còn lại
 			var otherUser *entities.User
 			for _, detail := range conversation.ConversationDetail {
 				if detail.UserId != userId {
@@ -183,17 +197,17 @@ func (r *rConversation) GetManyConversation(
 				}
 			}
 
-			// Nếu tìm thấy người khác thì dùng thông tin của họ, nếu không thì bỏ qua
 			if otherUser != nil {
 				conversationResponses = append(conversationResponses, &entities.Conversation{
-					ID:         conversation.ID,
-					Name:       otherUser.Name,
-					FamilyName: otherUser.FamilyName,
-					Avatar:     otherUser.AvatarUrl,
-					UserID:     otherUser.ID,
+					ID:             conversation.ID,
+					Name:           otherUser.Name,
+					FamilyName:     otherUser.FamilyName,
+					Avatar:         otherUser.AvatarUrl,
+					UserID:         &otherUser.ID,
+					LastMess:       lastMess,
+					LastMessStatus: lastMessStatus,
 				})
 			}
-
 		}
 	}
 
