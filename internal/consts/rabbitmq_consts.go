@@ -12,5 +12,7 @@ const (
 	MessageDLQ     string = "message_dlq"
 
 	StatisticsExName string = "statistics_exchange"
+	StatisticDLXName string = "statistics_dlx"
 	StatisticsQueue  string = "statistics_queue"
+	StatisticsDLQ    string = "statistics_dlq"
 )

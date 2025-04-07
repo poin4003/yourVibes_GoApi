@@ -19,7 +19,7 @@ import (
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
-	response "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 	"go.uber.org/zap"
@@ -420,6 +420,15 @@ func (s *sPostUser) GetManyPosts(
 	if len(postIDs) == 0 {
 		cacheFailed = true
 	}
+
+	if query.Content != "" ||
+		query.Location != "" ||
+		query.IsAdvertisement ||
+		!query.CreatedAt.IsZero() ||
+		query.SortBy != "" {
+		cacheFailed = true
+	}
+
 	// 2. Cache hit
 	var posts []*postEntity.Post
 	if !cacheFailed {

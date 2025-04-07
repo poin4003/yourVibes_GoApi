@@ -2,6 +2,8 @@ package repo_impl
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"go.uber.org/zap"
 	"time"
 
 	"github.com/google/uuid"
@@ -267,6 +269,89 @@ func (r *rNewFeed) DeleteExpiredAdvertiseFromNewFeeds(
 		Error; err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (r *rNewFeed) CreateManyFeaturedPosts(
+	ctx context.Context,
+	numUsers int,
+) error {
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		} else if tx.Error != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	query := `
+        WITH 
+            latest_statistics AS (
+                SELECT DISTINCT ON (post_id) post_id, clicks, impression
+                FROM statistics
+                WHERE deleted_at IS NULL
+                ORDER BY post_id, created_at DESC
+            ),
+            featured_posts AS (
+                SELECT p.id AS post_id
+                FROM posts p
+                JOIN latest_statistics ls ON ls.post_id = p.id
+                WHERE p.like_count >= ?
+                  AND p.comment_count >= ?
+                  AND ls.clicks >= ?
+                  AND ls.impression >= ?
+                  AND p.privacy = 'public'
+                  AND p.is_advertisement = 0
+                  AND p.status = true
+                  AND p.deleted_at IS NULL
+            ),
+            inserted AS (
+                INSERT INTO new_feeds (user_id, post_id)
+                SELECT u.id, fp.post_id
+                FROM users u
+                CROSS JOIN featured_posts fp
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM new_feeds nf
+                    WHERE nf.user_id = u.id
+                      AND nf.post_id = fp.post_id
+                )
+                ORDER BY RANDOM()
+                LIMIT ?
+                RETURNING post_id
+            ),
+            reach_counts AS (
+                SELECT post_id, COUNT(*) as reach_count
+                FROM inserted
+                GROUP BY post_id
+            )
+        UPDATE statistics
+        SET reach = statistics.reach + rc.reach_count,
+            updated_at = ?
+        FROM reach_counts rc
+        WHERE statistics.post_id = rc.post_id
+          AND statistics.created_at = (
+              SELECT MAX(created_at)
+              FROM statistics s
+              WHERE s.post_id = rc.post_id
+                AND s.deleted_at IS NULL
+          );
+    `
+	now := time.Now()
+
+	result := tx.Exec(query, 3, 5, 10, 10, numUsers, now)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	global.Logger.Info("Pushed featured posts to newfeed", zap.Int("num_users", numUsers), zap.Int64("rows_affected", result.RowsAffected))
 
 	return nil
 }

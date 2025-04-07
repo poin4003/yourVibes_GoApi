@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
+	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 )
 
@@ -26,8 +27,9 @@ func (p *PostEventPublisher) PublishNotification(ctx context.Context, msg interf
 		return err
 	}
 
-	err = p.conn.Publish(ctx, consts.NotificationExName, routingKey, body)
-	if err != nil {
+	if err = p.conn.Publish(ctx, consts.NotificationExName, routingKey, body,
+		amqp091.Table{"original_routing_key": routingKey},
+	); err != nil {
 		global.Logger.Error("failed to publish notification", zap.Error(err))
 		return err
 	}
@@ -42,7 +44,7 @@ func (p *PostEventPublisher) PublishStatistic(ctx context.Context, msg interface
 		return err
 	}
 
-	err = p.conn.Publish(ctx, consts.StatisticsExName, routingKey, body)
+	err = p.conn.Publish(ctx, consts.StatisticsExName, routingKey, body, nil)
 	if err != nil {
 		global.Logger.Error("failed to publish statistic", zap.Error(err))
 		return err

@@ -14,21 +14,15 @@ import (
 )
 
 type NotificationConsumer struct {
-	queueName           string
-	dlqName             string
 	notificationService services.INotificationMQ
 	conn                *rabbitmq.Connection
 }
 
 func NewNotificationConsumer(
-	queueName string,
-	dlqName string,
 	service services.INotificationMQ,
 	conn *rabbitmq.Connection,
 ) *NotificationConsumer {
 	return &NotificationConsumer{
-		queueName:           queueName,
-		dlqName:             dlqName,
 		notificationService: service,
 		conn:                conn,
 	}
@@ -40,33 +34,49 @@ func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) e
 		return err
 	}
 
-	_, err = ch.QueueDeclare(c.dlqName, true, false, false, false, nil)
+	// Declare DLX
+	if err = ch.ExchangeDeclare(consts.NotificationDLXName,
+		"topic", true, false, false, false, nil,
+	); err != nil {
+		global.Logger.Error("failed to declare notification DLX", zap.Error(err))
+		return err
+	}
+
+	// Declare exchange
+	if err = ch.ExchangeDeclare(consts.NotificationExName,
+		"topic", true, false, false, false, nil,
+	); err != nil {
+		global.Logger.Error("failed to declare notification exchange", zap.Error(err))
+		return err
+	}
+
+	// Declare DLQ
+	_, err = ch.QueueDeclare(consts.NotificationDLQ, true, false, false, false,
+		amqp091.Table{
+			"x-message-ttl": int32(600000),
+			"x-max-length":  int32(10000),
+		},
+	)
 	if err != nil {
 		global.Logger.Error("Failed to declare DLQ", zap.Error(err))
 		return err
 	}
 
-	err = ch.QueueBind(
-		c.dlqName,
-		"dlq_routing_key",
-		consts.NotificationDLXName,
-		false,
-		nil,
-	)
-	if err != nil {
+	if err = ch.QueueBind(consts.NotificationDLQ,
+		"dlq_routing_key", consts.NotificationDLXName, false, nil,
+	); err != nil {
 		global.Logger.Error("Failed to bind DLQ", zap.Error(err))
 		return err
 	}
 
-	_, err = ch.QueueDeclare(
-		c.queueName,
-		true,
-		false,
-		false,
-		false,
+	_, err = ch.QueueDeclare(consts.NotificationQueue,
+		true, false, false, false,
 		amqp091.Table{
+			"x-message-ttl":             int32(600000),
 			"x-dead-letter-exchange":    consts.NotificationDLXName,
 			"x-dead-letter-routing-key": "dlq_routing_key",
+			"x-max-length":              int32(10000),
+			"x-overflow":                "reject-publish-dlx",
 		},
 	)
 	if err != nil {
@@ -79,49 +89,36 @@ func (c *NotificationConsumer) StartNotificationConsuming(ctx context.Context) e
 		"notification.single.db_websocket",
 	}
 	for _, key := range routingKeys {
-		err = ch.QueueBind(
-			c.queueName,
-			key,
-			consts.NotificationExName,
-			false,
-			nil,
-		)
-		if err != nil {
+		if err = ch.QueueBind(consts.NotificationQueue,
+			key, consts.NotificationExName, false, nil,
+		); err != nil {
 			global.Logger.Error("Failed to bind notification queue", zap.Error(err), zap.String("routing_key", key))
 			return err
 		}
 	}
 
-	qMain, err := ch.QueueDeclarePassive(c.queueName, true, false, false, false, nil)
+	msgsMain, err := ch.Consume(consts.NotificationQueue, "", false, false, false, false, nil)
 	if err != nil {
-		return err
-	}
-	msgsMain, err := ch.Consume(qMain.Name, "", false, false, false, false, nil)
-	if err != nil {
-		global.Logger.Error("Failed to consume from main queue", zap.Error(err))
+		global.Logger.Error("Failed to consume messages", zap.Error(err))
 		return err
 	}
 
-	qDLQ, err := ch.QueueDeclarePassive(c.dlqName, true, false, false, false, nil)
+	msgsDLQ, err := ch.Consume(consts.NotificationDLQ, "", false, false, false, false, nil)
 	if err != nil {
-		return err
-	}
-	msgsDLQ, err := ch.Consume(qDLQ.Name, "", false, false, false, false, nil)
-	if err != nil {
-		global.Logger.Error("Failed to consume from DLQ", zap.Error(err))
+		global.Logger.Error("Failed to consume messages", zap.Error(err))
 		return err
 	}
 
-	global.Logger.Info("Notification consumer started successfully", zap.String("queue", c.queueName))
+	global.Logger.Info("Notification consumer started successfully", zap.String("queue", consts.NotificationQueue))
 	go c.consumeMessages(ctx, msgsMain, false)
 	go c.consumeMessages(ctx, msgsDLQ, true)
 	return nil
 }
 
 func (c *NotificationConsumer) consumeMessages(ctx context.Context, msgs <-chan amqp091.Delivery, isDLQ bool) {
-	queueName := c.queueName
+	queueName := consts.NotificationQueue
 	if isDLQ {
-		queueName = c.dlqName
+		queueName = consts.NotificationDLQ
 	}
 	global.Logger.Info("Consumer goroutine started", zap.String("queue", queueName), zap.Bool("isDLQ", isDLQ))
 	for {
@@ -202,7 +199,7 @@ func (c *NotificationConsumer) processDLQMessage(ctx context.Context, msg amqp09
 		}
 	}
 
-	global.Logger.Info("Processing DLQ message", zap.Int("retry_count", count), zap.String("queue", c.dlqName), zap.String("routing_key", msg.RoutingKey))
+	global.Logger.Info("Processing DLQ message", zap.Int("retry_count", count), zap.String("queue", consts.NotificationQueue), zap.String("routing_key", msg.RoutingKey))
 
 	if count < 3 {
 		var notifMsg command.NotificationCommand
@@ -247,7 +244,7 @@ func (c *NotificationConsumer) processDLQMessage(ctx context.Context, msg amqp09
 			return
 		}
 
-		err = c.republishMessage(msg, c.queueName)
+		err = c.republishMessage(msg, consts.NotificationQueue)
 		if err != nil {
 			global.Logger.Error("Failed to republish message to main queue", zap.Error(err))
 			msg.Nack(false, true)
@@ -273,11 +270,8 @@ func (c *NotificationConsumer) republishMessage(msg amqp091.Delivery, queue stri
 		}
 	}
 
-	err = ch.Publish(
-		consts.NotificationExName,
-		routingKey,
-		false,
-		false,
+	err = ch.Publish(consts.NotificationExName,
+		routingKey, false, false,
 		amqp091.Publishing{
 			ContentType: "application/json",
 			Body:        msg.Body,
@@ -287,13 +281,13 @@ func (c *NotificationConsumer) republishMessage(msg amqp091.Delivery, queue stri
 	return err
 }
 
-func InitNotificationConsumer(queueName string, dlq string, service services.INotificationMQ, conn *rabbitmq.Connection) {
-	consumer := NewNotificationConsumer(queueName, dlq, service, conn)
+func InitNotificationConsumer(service services.INotificationMQ, conn *rabbitmq.Connection) {
+	consumer := NewNotificationConsumer(service, conn)
 	go func() {
 		if err := consumer.StartNotificationConsuming(context.Background()); err != nil {
 			global.Logger.Error("Failed to start notification consumer", zap.Error(err))
 		} else {
-			global.Logger.Info("Notification consumer initialized successfully", zap.String("queue", queueName))
+			global.Logger.Info("Notification consumer initialized successfully", zap.String("queue", consts.NotificationQueue))
 		}
 	}()
 }

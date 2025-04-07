@@ -14,21 +14,15 @@ import (
 
 type MessageConsumer struct {
 	messageService services.IMessageMQ
-	queueName      string
-	dlqName        string
 	conn           *rabbitmq.Connection
 }
 
 func NewMessageConsumer(
 	service services.IMessageMQ,
-	queueName string,
-	dlqName string,
 	conn *rabbitmq.Connection,
 ) *MessageConsumer {
 	return &MessageConsumer{
 		messageService: service,
-		queueName:      queueName,
-		dlqName:        dlqName,
 		conn:           conn,
 	}
 }
@@ -39,33 +33,51 @@ func (c *MessageConsumer) StartMessageConsuming(ctx context.Context) error {
 		return err
 	}
 
-	_, err = ch.QueueDeclare(c.dlqName, true, false, false, false, nil)
+	// Declare DLX
+	if err = ch.ExchangeDeclare(consts.MessageDLXName,
+		"direct", true, false, false, false, nil,
+	); err != nil {
+		global.Logger.Error("failed to declare message DLX", zap.Error(err))
+		return err
+	}
+
+	// Declare exchange
+	if err = ch.ExchangeDeclare(consts.MessageExName,
+		"direct", true, false, false, false, nil,
+	); err != nil {
+		global.Logger.Error("failed to declare message exchange", zap.Error(err))
+		return err
+	}
+
+	// Declare DLQ
+	_, err = ch.QueueDeclare(consts.MessageDLQ, true, false, false, false,
+		amqp091.Table{
+			"x-message-ttl": int32(300000),
+			"x-max-length":  int32(10000),
+		},
+	)
 	if err != nil {
 		global.Logger.Error("Failed to declare DLQ", zap.Error(err))
 		return err
 	}
 
-	err = ch.QueueBind(
-		c.dlqName,
-		"dlq_routing_key",
-		consts.MessageDLXName,
-		false,
-		nil,
-	)
-	if err != nil {
+	// Bind DLQ and DLX
+	if err = ch.QueueBind(consts.MessageDLQ,
+		"dlq_routing_key", consts.MessageDLXName, false, nil,
+	); err != nil {
 		global.Logger.Error("Failed to bind DLQ", zap.Error(err))
 		return err
 	}
 
-	_, err = ch.QueueDeclare(
-		c.queueName,
-		true,
-		false,
-		false,
-		false,
+	// Declare queue
+	_, err = ch.QueueDeclare(consts.MessageQueue,
+		true, false, false, false,
 		amqp091.Table{
+			"x-message-ttl":             int32(300000),
 			"x-dead-letter-exchange":    consts.MessageDLXName,
 			"x-dead-letter-routing-key": "dlq_routing_key",
+			"x-max-length":              int32(10000),
+			"x-overflow":                "reject-publish-dlx",
 		},
 	)
 	if err != nil {
@@ -73,48 +85,36 @@ func (c *MessageConsumer) StartMessageConsuming(ctx context.Context) error {
 		return err
 	}
 
-	err = ch.QueueBind(
-		c.queueName,
-		"message.created",
-		consts.MessageExName,
-		false,
-		nil,
-	)
-	if err != nil {
+	// Bind Exchange and queue
+	if err = ch.QueueBind(consts.MessageQueue,
+		"message.created", consts.MessageExName, false, nil,
+	); err != nil {
 		global.Logger.Error("Failed to bind message queue", zap.Error(err))
 		return err
 	}
 
-	qMain, err := ch.QueueDeclarePassive(c.queueName, true, false, false, false, nil)
-	if err != nil {
-		return err
-	}
-	msgsMain, err := ch.Consume(qMain.Name, "", false, false, false, false, nil)
+	msgsMain, err := ch.Consume(consts.MessageQueue, "", false, false, false, false, nil)
 	if err != nil {
 		global.Logger.Error("Failed to consume from main queue", zap.Error(err))
 		return err
 	}
 
-	qDLQ, err := ch.QueueDeclarePassive(c.dlqName, true, false, false, false, nil)
-	if err != nil {
-		return err
-	}
-	msgsDLQ, err := ch.Consume(qDLQ.Name, "", false, false, false, false, nil)
+	msgsDLQ, err := ch.Consume(consts.MessageDLQ, "", false, false, false, false, nil)
 	if err != nil {
 		global.Logger.Error("Failed to consume from DLQ", zap.Error(err))
 		return err
 	}
 
-	global.Logger.Info("Message consumer started successfully", zap.String("queue", c.queueName))
+	global.Logger.Info("Message consumer started successfully", zap.String("queue", consts.MessageQueue))
 	go c.consumeMessages(ctx, msgsMain, false)
 	go c.consumeMessages(ctx, msgsDLQ, true)
 	return nil
 }
 
 func (c *MessageConsumer) consumeMessages(ctx context.Context, msgs <-chan amqp091.Delivery, isDLQ bool) {
-	queueName := c.queueName
+	queueName := consts.MessageQueue
 	if isDLQ {
-		queueName = c.dlqName
+		queueName = consts.MessageDLQ
 	}
 	global.Logger.Info("Consumer goroutine started", zap.String("queue", queueName), zap.Bool("isDLQ", isDLQ))
 	for {
@@ -175,7 +175,7 @@ func (c *MessageConsumer) processDLQMessage(ctx context.Context, msg amqp091.Del
 		}
 	}
 
-	global.Logger.Info("Processing DLQ message", zap.Int("retry_count", count), zap.String("queue", c.dlqName), zap.String("routing_key", msg.RoutingKey))
+	global.Logger.Info("Processing DLQ message", zap.Int("retry_count", count), zap.String("queue", consts.MessageQueue), zap.String("routing_key", msg.RoutingKey))
 
 	if count < 3 {
 		var msgCommand command.CreateMessageCommand
@@ -201,7 +201,7 @@ func (c *MessageConsumer) processDLQMessage(ctx context.Context, msg amqp091.Del
 			return
 		}
 
-		err := c.republishMessage(msg, c.queueName)
+		err := c.republishMessage(msg, consts.MessageQueue)
 		if err != nil {
 			global.Logger.Error("Failed to republish message to main queue", zap.Error(err))
 			msg.Nack(false, true)
@@ -227,11 +227,8 @@ func (c *MessageConsumer) republishMessage(msg amqp091.Delivery, queue string) e
 		}
 	}
 
-	err = ch.Publish(
-		consts.MessageExName,
-		routingKey,
-		false,
-		false,
+	err = ch.Publish(consts.MessageExName,
+		routingKey, false, false,
 		amqp091.Publishing{
 			ContentType: "application/json",
 			Body:        msg.Body,
@@ -241,13 +238,13 @@ func (c *MessageConsumer) republishMessage(msg amqp091.Delivery, queue string) e
 	return err
 }
 
-func InitMessageConsumer(queueName string, dlq string, messageService services.IMessageMQ, conn *rabbitmq.Connection) {
-	consumer := NewMessageConsumer(messageService, queueName, dlq, conn)
+func InitMessageConsumer(messageService services.IMessageMQ, conn *rabbitmq.Connection) {
+	consumer := NewMessageConsumer(messageService, conn)
 	go func() {
 		if err := consumer.StartMessageConsuming(context.Background()); err != nil {
 			global.Logger.Error("Failed to start message consuming", zap.Error(err))
 		} else {
-			global.Logger.Info("Message consumer initialized successfully", zap.String("queue", queueName))
+			global.Logger.Info("Message consumer initialized successfully", zap.String("queue", consts.MessageQueue))
 		}
 	}()
 }
