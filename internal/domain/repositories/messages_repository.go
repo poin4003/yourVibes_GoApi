@@ -31,6 +31,7 @@ type (
 		DeleteById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) error
 		GetListUserIdByConversationId(ctx context.Context, conversationId uuid.UUID) ([]uuid.UUID, error)
 		UpdateOneStatus(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID, updateData *entities.ConversationDetailUpdate) (*entities.ConversationDetail, error)
+		CreateMany(ctx context.Context, entities []*entities.ConversationDetail) ([]*entities.ConversationDetail, error)
 	}
 )
 

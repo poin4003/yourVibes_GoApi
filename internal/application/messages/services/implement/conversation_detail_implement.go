@@ -138,3 +138,32 @@ func (s *sConversationDetail) UpdateOneStatusConversationDetail(
 	return nil
 
 }
+
+func (s *sConversationDetail) CreateManyConversationDetail(
+	ctx context.Context,
+	command *conversationDetailCommand.CreateManyConversationDetailCommand,
+) (result *conversationDetailCommand.CreateManyConversationDetailResult, err error) {
+	conversation, err := s.conversationRepo.GetById(ctx, command.ConversationId)
+	if err != nil {
+		return nil, err
+	}
+	if conversation == nil {
+		return nil, err
+	}
+	var conversationDetails []*entities.ConversationDetail
+	for _, userId := range command.UserIds {
+		newConversationDetail, _ := entities.NewConversationDetail(userId, command.ConversationId)
+		conversationDetails = append(conversationDetails, newConversationDetail)
+	}
+	createConversationDetail, err := s.conversationDetailRepo.CreateMany(ctx, conversationDetails)
+	if err != nil {
+		return nil, err
+	}
+	var conversationDetailResults []*common.ConversationDetailResult
+	for _, detail := range createConversationDetail {
+		conversationDetailResults = append(conversationDetailResults, mapper.NewConversationDetailResult(detail))
+	}
+	return &conversationDetailCommand.CreateManyConversationDetailResult{
+		ConversationDetails: conversationDetailResults,
+	}, nil
+}

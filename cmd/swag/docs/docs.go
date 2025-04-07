@@ -798,6 +798,38 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/conversation_details/create_many": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When user create many conversationDetail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "Create many conversationDetail",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateManyConversationDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/conversation_details/delete/{user_id}/{conversation_id}": {
             "delete": {
                 "security": [
@@ -2958,11 +2990,22 @@ const docTemplate = `{
                 "conversation_id": {
                     "type": "string"
                 },
-                "last_mess": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "request.CreateManyConversationDetailRequest": {
+            "type": "object",
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "user_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -3186,7 +3229,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibes.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

@@ -11,10 +11,14 @@ import (
 type CreateConversationDetailRequest struct {
 	UserId         uuid.UUID `json:"user_id"`
 	ConversationId uuid.UUID `json:"conversation_id"`
-	LastMess       *string   `json:"last_mess"`
 }
 
-func ValidateCreatCOnversationDetailRequest(req interface{}) error {
+type CreateManyConversationDetailRequest struct {
+	UserIds        []string  `json:"user_ids"`
+	ConversationId uuid.UUID `json:"conversation_id"`
+}
+
+func ValidateCreateConversationDetailRequest(req interface{}) error {
 	dto, ok := req.(*CreateConversationDetailRequest)
 
 	if !ok {
@@ -27,13 +31,35 @@ func ValidateCreatCOnversationDetailRequest(req interface{}) error {
 	)
 }
 
-func (req *CreateConversationDetailRequest) ToCreateConversationDetailCommand(
-	userId uuid.UUID,
-	conversationId uuid.UUID,
-) (*command.CreateConversationDetailCommand, error) {
+func ValidateCreateManyConversationDetailRequest(req interface{}) error {
+	dto, ok := req.(*CreateManyConversationDetailRequest)
+
+	if !ok {
+		return fmt.Errorf("input is not CreatCOnversationDetailRequest")
+	}
+
+	return validation.ValidateStruct(dto,
+		validation.Field(&dto.UserIds, validation.Required, validation.Length(1, 0)), // Phải có ít nhất 1 user
+		validation.Field(&dto.ConversationId, validation.Required),
+	)
+}
+
+func (req *CreateConversationDetailRequest) ToCreateConversationDetailCommand() (*command.CreateConversationDetailCommand, error) {
 
 	return &command.CreateConversationDetailCommand{
 		UserId:         req.UserId,
 		ConversationId: req.ConversationId,
 	}, nil
+}
+func (req *CreateManyConversationDetailRequest) ToCreateManyConversationDetailCommands(
+	userIds []uuid.UUID,
+) (*command.CreateManyConversationDetailCommand, error) {
+	if len(req.UserIds) == 0 {
+		return nil, fmt.Errorf("user_ids is empty")
+	}
+	return &command.CreateManyConversationDetailCommand{
+		UserIds:        userIds,
+		ConversationId: req.ConversationId,
+	}, nil
+
 }
