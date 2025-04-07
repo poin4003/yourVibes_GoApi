@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
+	conversationdetail_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -26,7 +26,7 @@ func (r *rConversatioDetail) GetById(
 	ctx context.Context,
 	userId uuid.UUID,
 	conversationId uuid.UUID,
-) (*entities.ConversationDetail, error) {
+) (*conversationdetail_entity.ConversationDetail, error) {
 	var conversationDetailModel models.ConversationDetail
 
 	if err := r.db.WithContext(ctx).
@@ -47,8 +47,8 @@ func (r *rConversatioDetail) GetById(
 
 func (r *rConversatioDetail) CreateOne(
 	ctx context.Context,
-	entity *entities.ConversationDetail,
-) (*entities.ConversationDetail, error) {
+	entity *conversationdetail_entity.ConversationDetail,
+) (*conversationdetail_entity.ConversationDetail, error) {
 	conversationDetailModel := mapper.ToConversationDetailModel(entity)
 	res := r.db.WithContext(ctx).Create(conversationDetailModel)
 
@@ -62,7 +62,7 @@ func (r *rConversatioDetail) CreateOne(
 func (r *rConversatioDetail) GetConversationDetailByConversationId(
 	ctx context.Context,
 	query *query.GetConversationDetailQuery,
-) ([]*entities.ConversationDetail, *response.PagingResponse, error) {
+) ([]*conversationdetail_entity.ConversationDetail, *response.PagingResponse, error) {
 	var conversationDetails []*models.ConversationDetail
 	var total int64
 
@@ -102,7 +102,7 @@ func (r *rConversatioDetail) GetConversationDetailByConversationId(
 		Page:  page,
 	}
 
-	var conversationDetailEntities []*entities.ConversationDetail
+	var conversationDetailEntities []*conversationdetail_entity.ConversationDetail
 	for _, conversationDetail := range conversationDetails {
 		conversationDetailEntities = append(conversationDetailEntities, mapper.FromConversationDetailModel(conversationDetail))
 	}
@@ -117,7 +117,7 @@ func (r *rConversatioDetail) DeleteById(
 ) error {
 	res := r.db.WithContext(ctx).
 		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
-		Delete(&entities.ConversationDetail{})
+		Delete(&conversationdetail_entity.ConversationDetail{})
 
 	if res.Error != nil {
 		return response.NewServerFailedError(res.Error.Error())
@@ -149,8 +149,8 @@ func (r *rConversatioDetail) UpdateOneStatus(
 	ctx context.Context,
 	userId uuid.UUID,
 	conversationId uuid.UUID,
-	updateData *entities.ConversationDetailUpdate,
-) (*entities.ConversationDetail, error) {
+	updateData *conversationdetail_entity.ConversationDetailUpdate,
+) (*conversationdetail_entity.ConversationDetail, error) {
 	updates := converter.StructToMap(updateData)
 	if len(updates) == 0 {
 		return nil, errors.New("no field to update")
@@ -166,4 +166,30 @@ func (r *rConversatioDetail) UpdateOneStatus(
 	}
 
 	return r.GetById(ctx, userId, conversationId)
+}
+
+func (r *rConversatioDetail) CreateMany(
+	ctx context.Context,
+	entities []*conversationdetail_entity.ConversationDetail,
+) ([]*conversationdetail_entity.ConversationDetail, error) {
+	var conversationDetails []*models.ConversationDetail
+	for _, entity := range entities {
+		conversationDetails = append(conversationDetails, mapper.ToConversationDetailModel(entity))
+	}
+
+	res := r.db.WithContext(ctx).Create(conversationDetails)
+	if res.Error != nil {
+		return nil, response.NewServerFailedError(res.Error.Error())
+	}
+
+	query := &query.GetConversationDetailQuery{
+		ConversationId: entities[0].ConversationId,
+		Page:           1,
+		Limit:          10,
+	}
+	conversationDetailEntities, _, err := r.GetConversationDetailByConversationId(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return conversationDetailEntities, nil
 }

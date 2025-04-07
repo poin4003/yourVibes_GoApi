@@ -15,3 +15,13 @@ type CreateConversationDetailCommand struct {
 type CreateConversationDetailResult struct {
 	ConversationDetail *common.ConversationDetailResult
 }
+
+type CreateManyConversationDetailCommand struct {
+	UserIds        []uuid.UUID
+	ConversationId uuid.UUID
+	LastMessStatus bool
+	LastMess       string
+}
+type CreateManyConversationDetailResult struct {
+	ConversationDetails []*common.ConversationDetailResult
+}

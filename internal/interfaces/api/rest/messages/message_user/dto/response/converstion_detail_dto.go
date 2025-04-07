@@ -28,3 +28,17 @@ func ToConversationDetailDto(conversationDetailResult *common.ConversationDetail
 		LastMess:       conversationDetailResult.LastMess,
 	}
 }
+
+// ✅ Hàm chuyển đổi danh sách
+func ToManyConversationDetailDto(conversationDetailResults []*common.ConversationDetailResult) []*ConversationDetailDto {
+	if conversationDetailResults == nil {
+		return nil
+	}
+
+	var dtos []*ConversationDetailDto
+	for _, result := range conversationDetailResults {
+		dtos = append(dtos, ToConversationDetailDto(result))
+	}
+
+	return dtos
+}
