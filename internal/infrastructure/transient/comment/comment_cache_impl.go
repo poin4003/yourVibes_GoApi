@@ -83,15 +83,19 @@ func (t *tComment) SetPostComment(
 		pagingKey = fmt.Sprintf("post_comment:%s:paging", postID.String())
 	}
 
-	// Convert commentIds to string
-	commentIdString := make([]interface{}, len(commentIds))
-	for i, id := range commentIds {
-		commentIdString[i] = id.String()
-	}
-	// Save commentIds into list
 	pipe := t.client.Pipeline()
-	pipe.RPush(ctx, key, commentIdString...)
-	pipe.Expire(ctx, pagingKey, consts.TTL_COMMON)
+
+	if len(commentIds) > 0 {
+		commentIdString := make([]interface{}, len(commentIds))
+		for i, id := range commentIds {
+			commentIdString[i] = id.String()
+		}
+		pipe.RPush(ctx, key, commentIdString...)
+		pipe.Expire(ctx, key, consts.TTL_COMMON)
+	} else {
+		pipe.Del(ctx, key)
+		pipe.Expire(ctx, key, consts.TTL_COMMON)
+	}
 
 	// Save paging data into redis
 	pagingData, err := json.Marshal(paging)

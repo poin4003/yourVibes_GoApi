@@ -69,15 +69,21 @@ func (t *tPost) SetFeeds(
 	key := fmt.Sprintf("%s:%s", inputKey, userID.String())
 	pagingKey := fmt.Sprintf("%s:%s:paging", inputKey, userID.String())
 
-	// Convert postIds to string
-	postIdStrings := make([]interface{}, len(postIds))
-	for i, id := range postIds {
-		postIdStrings[i] = id.String()
-	}
-	// Save postIds into list
 	pipe := t.client.Pipeline()
-	pipe.RPush(ctx, key, postIdStrings...)
-	pipe.Expire(ctx, key, consts.TTL_COMMON)
+
+	if len(postIds) > 0 {
+		// Convert postIds to string
+		postIdStrings := make([]interface{}, len(postIds))
+		for i, id := range postIds {
+			postIdStrings[i] = id.String()
+		}
+		// Save postIds into list
+		pipe.RPush(ctx, key, postIdStrings...)
+		pipe.Expire(ctx, key, consts.TTL_COMMON)
+	} else {
+		pipe.Del(ctx, key)
+		pipe.Expire(ctx, key, consts.TTL_COMMON)
+	}
 
 	// Save paging data into redis
 	pagingData, err := json.Marshal(paging)
