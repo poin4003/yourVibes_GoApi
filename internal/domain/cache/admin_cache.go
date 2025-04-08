@@ -12,11 +12,3 @@ type (
 		DeleteAdminStatus(ctx context.Context, adminId uuid.UUID)
 	}
 )
-
-var (
-	localAdminCache IAdminCache
-)
-
-func InitAdminCache(i IAdminCache) {
-	localAdminCache = i
-}

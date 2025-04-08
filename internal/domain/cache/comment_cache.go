@@ -18,19 +18,3 @@ type (
 		DeletePostComment(ctx context.Context, postID uuid.UUID)
 	}
 )
-
-var (
-	localCommentCache ICommentCache
-)
-
-func CommentCache() ICommentCache {
-	if localCommentCache == nil {
-		panic("repository_implement localComment not found for interface IComment")
-	}
-
-	return localCommentCache
-}
-
-func InitCommentCache(i ICommentCache) {
-	localCommentCache = i
-}

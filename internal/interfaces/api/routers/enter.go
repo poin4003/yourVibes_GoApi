@@ -10,4 +10,12 @@ type RouterGroup struct {
 	Admin admin.AdminRouterGroup
 }
 
-var RouterGroupApp = new(RouterGroup)
+func NewRouterGroup(
+	user user.UserRouterGroup,
+	admin admin.AdminRouterGroup,
+) *RouterGroup {
+	return &RouterGroup{
+		User:  user,
+		Admin: admin,
+	}
+}

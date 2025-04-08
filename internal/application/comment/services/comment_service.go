@@ -19,32 +19,3 @@ type (
 		GetUsersOnLikeComment(ctx context.Context, query *query.GetCommentLikeQuery) (result *query.GetCommentLikeResult, err error)
 	}
 )
-
-var (
-	localCommentUser ICommentUser
-	localCommentLike ICommentLike
-)
-
-func CommentUser() ICommentUser {
-	if localCommentUser == nil {
-		panic("repository_implement localCommentUser not found for interface ICommentUser")
-	}
-
-	return localCommentUser
-}
-
-func CommentLike() ICommentLike {
-	if localCommentLike == nil {
-		panic("repository_implement localCommentLike not found for interface ICommentLike")
-	}
-
-	return localCommentLike
-}
-
-func InitCommentUser(i ICommentUser) {
-	localCommentUser = i
-}
-
-func InitCommentLike(i ICommentLike) {
-	localCommentLike = i
-}

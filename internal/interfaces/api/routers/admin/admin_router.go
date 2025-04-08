@@ -4,77 +4,92 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin"
+	cAdminInfo "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/controller"
 	adminRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_admin/dto/request"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin"
+	cSuperAdmin "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/controller"
 	superAdminRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/dto/request"
 	superAdminQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/admin/admin_super_admin/query"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth"
+	cAdminAuth "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/controller"
 	authRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/dto/request"
 )
 
-type AdminRouter struct{}
+type adminRouter struct {
+	adminAuthController      cAdminAuth.IAdminAuthController
+	adminController          cAdminInfo.IAdminInfoController
+	superAdminController     cSuperAdmin.ISuperAdminController
+	adminProtectedMiddleware middlewares.IAdminAuthProtectedMiddleware
+}
 
-func (ar *AdminRouter) InitAdminRouter(Router *gin.RouterGroup) {
-	AdminAuthController := admin_auth.NewAdminAuthController()
-	SuperAdminController := admin_super_admin.NewSuperAdminController()
-	AdminController := admin_admin.NewAdminController()
+func NewAdminRouter(
+	adminAuthController cAdminAuth.IAdminAuthController,
+	adminController cAdminInfo.IAdminInfoController,
+	superAdminController cSuperAdmin.ISuperAdminController,
+	adminProtectedMiddleware middlewares.IAdminAuthProtectedMiddleware,
+) *adminRouter {
+	return &adminRouter{
+		adminAuthController:      adminAuthController,
+		adminController:          adminController,
+		superAdminController:     superAdminController,
+		adminProtectedMiddleware: adminProtectedMiddleware,
+	}
+}
 
+func (r *adminRouter) InitAdminRouter(Router *gin.RouterGroup) {
 	// Public router
 	adminRouterPublic := Router.Group("/admins")
 	{
 		// admin auth
 		adminRouterPublic.POST("/login",
 			helpers.ValidateJsonBody(&authRequest.AdminLoginRequest{}, authRequest.ValidateLoginRequest),
-			AdminAuthController.Login,
+			r.adminAuthController.Login,
 		)
 	}
 
 	// Private router
 	adminRouterPrivate := Router.Group("/admins")
-	adminRouterPrivate.Use(middlewares.AdminAuthProtected())
+	adminRouterPrivate.Use(r.adminProtectedMiddleware.AdminAuthProtected())
 	{
 		// admin auth
 		adminRouterPrivate.PATCH("/change_password",
 			helpers.ValidateJsonBody(&authRequest.ChangeAdminPasswordRequest{}, authRequest.ValidateChangePasswordRequest),
-			AdminAuthController.ChangeAdminPassword,
+			r.adminAuthController.ChangeAdminPassword,
 		)
 
 		// admin info
 		adminRouterPrivate.PATCH("/",
 			helpers.ValidateJsonBody(&adminRequest.UpdateAdminInfoRequest{}, adminRequest.ValidateUpdateAdminInfoRequest),
-			AdminController.UpdateAdminInfo,
+			r.adminController.UpdateAdminInfo,
 		)
 
 		// super admin
 		adminRouterPrivate.POST("/super_admin",
 			middlewares.CheckSuperAdminRole(),
 			helpers.ValidateJsonBody(&superAdminRequest.CreateAdminRequest{}, superAdminRequest.ValidateCreateAdminRequest),
-			SuperAdminController.CreateAdmin,
+			r.superAdminController.CreateAdmin,
 		)
 
 		// Change admin password
 		adminRouterPrivate.POST("/super_admin/forgot_admin_password",
 			middlewares.CheckSuperAdminRole(),
 			helpers.ValidateJsonBody(&superAdminRequest.ForgotAdminPasswordRequest{}, superAdminRequest.ValidateForgotAdminPasswordRequest),
-			SuperAdminController.ForgotAdminPassword,
+			r.superAdminController.ForgotAdminPassword,
 		)
 
 		adminRouterPrivate.GET("/:admin_id",
 			middlewares.CheckSuperAdminRole(),
-			SuperAdminController.GetAdminById,
+			r.superAdminController.GetAdminById,
 		)
 
 		adminRouterPrivate.GET("/",
 			middlewares.CheckSuperAdminRole(),
 			helpers.ValidateQuery(&superAdminQuery.AdminQueryObject{}, superAdminQuery.ValidateAdminQueryObject),
-			SuperAdminController.GetManyAdmins,
+			r.superAdminController.GetManyAdmins,
 		)
 
 		adminRouterPrivate.PATCH("/super_admin",
 			middlewares.CheckSuperAdminRole(),
 			helpers.ValidateJsonBody(&superAdminRequest.UpdateAdminForSuperAdminRequest{}, superAdminRequest.ValidateUpdateAdminForSuperAdminRequest),
-			SuperAdminController.UpdateAdmin,
+			r.superAdminController.UpdateAdmin,
 		)
 	}
 }

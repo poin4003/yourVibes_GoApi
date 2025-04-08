@@ -4,105 +4,119 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth"
+	cUserAuth "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/controller"
 	authRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/user_auth/dto/request"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user"
+	cUser "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/controller"
 	userRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/dto/request"
 	userQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/user/user_user/query"
 )
 
-type UserRouter struct{}
+type userRouter struct {
+	userInfoController      cUser.IUserInfoController
+	userFriendController    cUser.IUserFriendController
+	userAuthController      cUserAuth.IUserAuthController
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware
+}
 
-func (pr *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
-	UserAuthController := user_auth.NewUserAuthController()
-	UserInfoController := user_user.NewUserInfoController()
-	UserFriendController := user_user.NewUserFriendController()
+func NewUserRouter(
+	userController cUser.IUserInfoController,
+	userFriendController cUser.IUserFriendController,
+	userAuthController cUserAuth.IUserAuthController,
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware,
+) *userRouter {
+	return &userRouter{
+		userInfoController:      userController,
+		userFriendController:    userFriendController,
+		userAuthController:      userAuthController,
+		userProtectedMiddleware: userProtectedMiddleware,
+	}
+}
 
+func (r *userRouter) InitUserRouter(Router *gin.RouterGroup) {
 	// Public router
-
 	userRouterPublic := Router.Group("/users")
 	{
 		// user_auth
 		userRouterPublic.POST("/register",
 			helpers.ValidateJsonBody(&authRequest.RegisterRequest{}, authRequest.ValidateRegisterRequest),
-			UserAuthController.Register,
+			r.userAuthController.Register,
 		)
 
 		userRouterPublic.POST("/verifyemail",
 			helpers.ValidateJsonBody(&authRequest.VerifyEmailRequest{}, authRequest.ValidateVerifyEmailRequest),
-			UserAuthController.VerifyEmail,
+			r.userAuthController.VerifyEmail,
 		)
 
 		userRouterPublic.POST("/login",
 			helpers.ValidateJsonBody(&authRequest.LoginRequest{}, authRequest.ValidateLoginRequest),
-			UserAuthController.Login,
+			r.userAuthController.Login,
 		)
 
 		userRouterPublic.POST("/app_auth_google",
 			helpers.ValidateJsonBody(&authRequest.AppAuthGoogleRequest{}, authRequest.ValidateAppAuthGoogleRequest),
-			UserAuthController.AppAuthGoogle,
+			r.userAuthController.AppAuthGoogle,
 		)
 
 		userRouterPublic.POST("/auth_google",
 			helpers.ValidateJsonBody(&authRequest.AuthGoogleRequest{}, authRequest.ValidateAuthGoogleRequest),
-			UserAuthController.AuthGoogle,
+			r.userAuthController.AuthGoogle,
 		)
 
 		userRouterPublic.POST("/get_otp_forgot_user_password",
 			helpers.ValidateJsonBody(&authRequest.GetOtpForgotUserPasswordRequest{}, authRequest.ValidateGetOtpForgotUserPasswordRequest),
-			UserAuthController.GetOtpForgotUserPassword,
+			r.userAuthController.GetOtpForgotUserPassword,
 		)
 
 		userRouterPublic.POST("/forgot_user_password",
 			helpers.ValidateJsonBody(&authRequest.ForgotUserPasswordRequest{}, authRequest.ValidateForgotUserPasswordRequest),
-			UserAuthController.ForgotUserPassword,
+			r.userAuthController.ForgotUserPassword,
 		)
 	}
 
 	// Private router
 	userRouterPrivate := Router.Group("/users")
-	userRouterPrivate.Use(middlewares.UserAuthProtected())
+	userRouterPrivate.Use(r.userProtectedMiddleware.UserAuthProtected())
 	{
 		// user authentication
 		userRouterPrivate.PATCH("/change_password",
 			helpers.ValidateJsonBody(&authRequest.ChangePasswordRequest{}, authRequest.ValidateChangePasswordRequest),
-			UserAuthController.ChangePassword,
+			r.userAuthController.ChangePassword,
 		)
 
 		// user_info
-		userRouterPrivate.GET("/:userId", UserInfoController.GetInfoByUserId)
+		userRouterPrivate.GET("/:userId", r.userInfoController.GetInfoByUserId)
 
 		userRouterPrivate.GET("/",
 			helpers.ValidateQuery(&userQuery.UserQueryObject{}, userQuery.ValidateUserQueryObject),
-			UserInfoController.GetManyUsers,
+			r.userInfoController.GetManyUsers,
 		)
 
 		userRouterPrivate.PATCH("/",
 			helpers.ValidateFormBody(&userRequest.UpdateUserRequest{}, userRequest.ValidateUpdateUserRequest),
-			UserInfoController.UpdateUser,
+			r.userInfoController.UpdateUser,
 		)
 
 		// user_friend
-		userRouterPrivate.POST("/friends/friend_request/:friend_id", UserFriendController.SendAddFriendRequest)
-		userRouterPrivate.DELETE("/friends/friend_request/:friend_id", UserFriendController.UndoFriendRequest)
+		userRouterPrivate.POST("/friends/friend_request/:friend_id", r.userFriendController.SendAddFriendRequest)
+		userRouterPrivate.DELETE("/friends/friend_request/:friend_id", r.userFriendController.UndoFriendRequest)
 
 		userRouterPrivate.GET("/friends/friend_request",
 			helpers.ValidateQuery(&userQuery.FriendRequestQueryObject{}, userQuery.ValidateFriendRequestQueryObject),
-			UserFriendController.GetFriendRequests,
+			r.userFriendController.GetFriendRequests,
 		)
 
-		userRouterPrivate.POST("/friends/friend_response/:friend_id", UserFriendController.AcceptFriendRequest)
-		userRouterPrivate.DELETE("/friends/friend_response/:friend_id", UserFriendController.RejectFriendRequest)
-		userRouterPrivate.DELETE("/friends/:friend_id", UserFriendController.UnFriend)
+		userRouterPrivate.POST("/friends/friend_response/:friend_id", r.userFriendController.AcceptFriendRequest)
+		userRouterPrivate.DELETE("/friends/friend_response/:friend_id", r.userFriendController.RejectFriendRequest)
+		userRouterPrivate.DELETE("/friends/:friend_id", r.userFriendController.UnFriend)
 
 		userRouterPrivate.GET("/friends/:user_id",
 			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
-			UserFriendController.GetFriends,
+			r.userFriendController.GetFriends,
 		)
 
 		userRouterPrivate.GET("/friends/suggestion",
 			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
-			UserFriendController.GetFriendSuggestion,
+			r.userFriendController.GetFriendSuggestion,
 		)
 	}
 }

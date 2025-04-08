@@ -4,23 +4,35 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	reportUser "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/report/report_user"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/report/report_user/controller"
 	reportRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/report/report_user/dto/request"
 )
 
-type ReportRouter struct{}
+type reportRouter struct {
+	reportController        controller.IUserReportController
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware
+}
 
-func (rr *ReportRouter) InitReportRouter(Router *gin.RouterGroup) {
+func NewReportRouter(
+	reportController controller.IUserReportController,
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware,
+) *reportRouter {
+	return &reportRouter{
+		reportController:        reportController,
+		userProtectedMiddleware: userProtectedMiddleware,
+	}
+}
+
+func (r *reportRouter) InitReportRouter(Router *gin.RouterGroup) {
 	// Public router
-	reportUserController := reportUser.NewReportController()
 
 	// Private router
 	reportRouterPrivate := Router.Group("/report")
-	reportRouterPrivate.Use(middlewares.UserAuthProtected())
+	reportRouterPrivate.Use(r.userProtectedMiddleware.UserAuthProtected())
 	{
 		reportRouterPrivate.POST("/",
 			helpers.ValidateJsonBody(&reportRequest.ReportRequest{}, reportRequest.ValidateReportRequest),
-			reportUserController.Report,
+			r.reportController.Report,
 		)
 	}
 }

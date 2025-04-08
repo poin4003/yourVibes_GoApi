@@ -13,7 +13,23 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/services"
 )
 
-func UserAuthProtected() gin.HandlerFunc {
+type userAuthProtectedMiddleware struct {
+	userInfoService services.IUserInfo
+}
+
+func NewUserAuthProtectedMiddleware(
+	userInfoService services.IUserInfo,
+) *userAuthProtectedMiddleware {
+	return &userAuthProtectedMiddleware{
+		userInfoService: userInfoService,
+	}
+}
+
+type IUserAuthProtectedMiddleware interface {
+	UserAuthProtected() gin.HandlerFunc
+}
+
+func (m *userAuthProtectedMiddleware) UserAuthProtected() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 
@@ -65,7 +81,7 @@ func UserAuthProtected() gin.HandlerFunc {
 		}
 
 		// 5. Check user by check userStatus service
-		userStatus, err := services.UserInfo().GetUserStatusById(ctx, userId)
+		userStatus, err := m.userInfoService.GetUserStatusById(ctx, userId)
 		if err != nil {
 			ctx.Error(response.NewInvalidTokenError())
 			ctx.Abort()

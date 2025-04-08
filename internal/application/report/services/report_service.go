@@ -17,19 +17,3 @@ type (
 		GetManyReport(ctx context.Context, query *query.GetManyReportQuery) (result *query.ReportQueryListResult, err error)
 	}
 )
-
-var (
-	localReport IReport
-)
-
-func Report() IReport {
-	if localReport == nil {
-		panic("repository_implement localReport not found for interface IReport")
-	}
-
-	return localReport
-}
-
-func InitReport(i IReport) {
-	localReport = i
-}

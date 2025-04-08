@@ -20,19 +20,3 @@ type (
 		DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey, friendIDs []uuid.UUID)
 	}
 )
-
-var (
-	localPostCache IPostCache
-)
-
-func PostCache() IPostCache {
-	if localPostCache == nil {
-		panic("repository_implement localPost not found for interface IPost")
-	}
-
-	return localPostCache
-}
-
-func InitPostCache(i IPostCache) {
-	localPostCache = i
-}

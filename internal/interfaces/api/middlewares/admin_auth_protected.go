@@ -13,7 +13,23 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/admin/services"
 )
 
-func AdminAuthProtected() gin.HandlerFunc {
+type adminAuthProtectedMiddleware struct {
+	adminInfoService services.IAdminInfo
+}
+
+func NewAdminAuthProtectedMiddleware(
+	adminInfoService services.IAdminInfo,
+) *adminAuthProtectedMiddleware {
+	return &adminAuthProtectedMiddleware{
+		adminInfoService: adminInfoService,
+	}
+}
+
+type IAdminAuthProtectedMiddleware interface {
+	AdminAuthProtected() gin.HandlerFunc
+}
+
+func (m *adminAuthProtectedMiddleware) AdminAuthProtected() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 
@@ -65,7 +81,7 @@ func AdminAuthProtected() gin.HandlerFunc {
 		}
 
 		// 5. Check admin form db
-		adminStatus, err := services.AdminInfo().GetAdminStatusById(ctx, adminId)
+		adminStatus, err := m.adminInfoService.GetAdminStatusById(ctx, adminId)
 		if err != nil {
 			ctx.Error(response.NewServerFailedError())
 			ctx.Abort()

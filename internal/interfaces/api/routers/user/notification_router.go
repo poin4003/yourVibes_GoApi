@@ -2,34 +2,45 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/controller"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/notification/notification_user/query"
 )
 
-type NotificationRouter struct{}
+type notificationRouter struct {
+	notificationController  controller.IUserNotificationController
+	userProtectedController middlewares.IUserAuthProtectedMiddleware
+}
 
-func (nr *NotificationRouter) InitNotificationRouter(Router *gin.RouterGroup) {
-	notificationController := notification_user.NewNotificationController(global.NotificationSocketHub)
+func NewNotificationRouter(
+	notificationController controller.IUserNotificationController,
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware,
+) *notificationRouter {
+	return &notificationRouter{
+		notificationController:  notificationController,
+		userProtectedController: userProtectedMiddleware,
+	}
+}
+
+func (r *notificationRouter) InitNotificationRouter(Router *gin.RouterGroup) {
 	// Public router
 	notificationRouterPublic := Router.Group("/notification")
 	{
-		notificationRouterPublic.GET("/ws/:user_id", notificationController.SendNotification)
+		notificationRouterPublic.GET("/ws/:user_id", r.notificationController.SendNotification)
 	}
 
 	// Private router
 	notificationRouterPrivate := Router.Group("/notification")
-	notificationRouterPrivate.Use(middlewares.UserAuthProtected())
+	notificationRouterPrivate.Use(r.userProtectedController.UserAuthProtected())
 	{
 		// notification
 		notificationRouterPrivate.GET("/",
 			helpers.ValidateQuery(&query.NotificationQueryObject{}, query.ValidateNotificationQueryObject),
-			notificationController.GetNotification,
+			r.notificationController.GetNotification,
 		)
 
-		notificationRouterPrivate.PATCH("/:notification_id", notificationController.UpdateOneStatusNotifications)
-		notificationRouterPrivate.PATCH("/", notificationController.UpdateManyStatusNotifications)
+		notificationRouterPrivate.PATCH("/:notification_id", r.notificationController.UpdateOneStatusNotifications)
+		notificationRouterPrivate.PATCH("/", r.notificationController.UpdateManyStatusNotifications)
 	}
 }

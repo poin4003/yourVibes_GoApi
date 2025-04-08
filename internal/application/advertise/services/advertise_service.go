@@ -20,31 +20,3 @@ type (
 		ConfirmPayment(ctx context.Context, command *command.ConfirmPaymentCommand) error
 	}
 )
-
-var (
-	localAdvertise IAdvertise
-	localBill      IBill
-)
-
-func Advertise() IAdvertise {
-	if localAdvertise == nil {
-		panic("service_implement localAdvertise not found for interface IAdvertise")
-	}
-	return localAdvertise
-}
-
-func Bill() IBill {
-	if localBill == nil {
-		panic("service_implement localBill not found for interface IBill")
-	}
-
-	return localBill
-}
-
-func InitAdvertise(i IAdvertise) {
-	localAdvertise = i
-}
-
-func InitBill(i IBill) {
-	localBill = i
-}

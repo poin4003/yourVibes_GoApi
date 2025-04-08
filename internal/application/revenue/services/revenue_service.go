@@ -11,18 +11,3 @@ type (
 		GetSystemStats(ctx context.Context, query *query.GetSystemStatsQuery) (result *query.GetSystemStatsQueryResult, err error)
 	}
 )
-
-var (
-	localRevenue IRevenue
-)
-
-func Revenue() IRevenue {
-	if localRevenue == nil {
-		panic("service implement local IRevenue not found for interface")
-	}
-	return localRevenue
-}
-
-func InitRevenue(i IRevenue) {
-	localRevenue = i
-}

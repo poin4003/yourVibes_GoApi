@@ -17,32 +17,3 @@ type (
 		UpdateManyStatusNotification(ctx context.Context, command *command.UpdateManyStatusNotificationCommand) (err error)
 	}
 )
-
-var (
-	localNotificationMQ   INotificationMQ
-	localNotificationUser INotificationUser
-)
-
-func NotificationMQ() INotificationMQ {
-	if localNotificationMQ == nil {
-		panic("service_implement localNotificationMQ not found for interface INotificationMQ")
-	}
-
-	return localNotificationMQ
-}
-
-func NotificationUser() INotificationUser {
-	if localNotificationUser == nil {
-		panic("service_implement localNotificationUser not found for interface INotificationUser")
-	}
-
-	return localNotificationUser
-}
-
-func InitNotificationMQ(i INotificationMQ) {
-	localNotificationMQ = i
-}
-
-func InitNotificationUser(i INotificationUser) {
-	localNotificationUser = i
-}

@@ -1,25 +1,24 @@
 package initialize
 
 import (
-	"github.com/poin4003/yourVibes_GoApi/global"
+	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
-
-	"github.com/gin-gonic/gin"
 )
 
 func Run() *gin.Engine {
 	LoadConfig()
 	InitLogger()
-	rdb := InitRedis()
-	rabbitMQConnection := InitRabbitMQ()
-	db := InitPostgreSql()
-	global.MessageSocketHub = socket_hub.NewMessageSocketHub()
-	global.NotificationSocketHub = socket_hub.NewNotificationSocketHub()
-	InitDependencyInjection(db, rabbitMQConnection, rdb, global.NotificationSocketHub, global.MessageSocketHub)
+	routerGroup := InitDependencyInjection(
+		InitPostgreSql(),
+		InitRabbitMQ(),
+		InitRedis(),
+		socket_hub.NewNotificationSocketHub(),
+		socket_hub.NewMessageSocketHub(),
+	)
 	response.InitCustomCode()
 
-	r := InitRouter()
+	r := InitRouter(*routerGroup)
 
 	return r
 }

@@ -29,19 +29,3 @@ type (
 		DeleteReportById(ctx context.Context, reportId uuid.UUID) error
 	}
 )
-
-var (
-	localReport IReportRepository
-)
-
-func Report() IReportRepository {
-	if localReport == nil {
-		panic("repository_implement localReport not found for interface IReport")
-	}
-
-	return localReport
-}
-
-func InitReportRepository(i IReportRepository) {
-	localReport = i
-}

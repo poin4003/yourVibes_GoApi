@@ -4,40 +4,53 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/helpers"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
-	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/controller"
 	advertiseRequest "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/dto/request"
 	advertiseQuery "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/advertise/advertise_user/query"
 )
 
-type AdvertiseRouter struct{}
+type advertiseRouter struct {
+	advertiseController     controller.IAdvertiseController
+	billController          controller.IBillController
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware
+}
 
-func (ar *AdvertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
+func NewAdvertiseRouter(
+	advertiseController controller.IAdvertiseController,
+	billController controller.IBillController,
+	userProtectedMiddleware middlewares.IUserAuthProtectedMiddleware,
+) *advertiseRouter {
+	return &advertiseRouter{
+		advertiseController:     advertiseController,
+		billController:          billController,
+		userProtectedMiddleware: userProtectedMiddleware,
+	}
+}
+
+func (r *advertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 	// Public router
-	advertiseController := advertise_user.NewAdvertiseController()
-	billController := advertise_user.NewBillController()
-
 	billRouterPublic := Router.Group("/bill")
 	{
 		billRouterPublic.GET("/",
 			helpers.ValidateQuery(&advertiseRequest.ConfirmPaymentRequest{}, advertiseRequest.ValidateConfirmPaymentRequest),
-			billController.ConfirmPayment,
+			r.billController.ConfirmPayment,
 		)
 	}
 
 	// Private router
 	advertiseRouterPrivate := Router.Group("/advertise")
-	advertiseRouterPrivate.Use(middlewares.UserAuthProtected())
+	advertiseRouterPrivate.Use(r.userProtectedMiddleware.UserAuthProtected())
 	{
 		advertiseRouterPrivate.POST("/",
 			helpers.ValidateJsonBody(&advertiseRequest.CreateAdvertiseRequest{}, advertiseRequest.ValidateCreateAdvertiseRequest),
-			advertiseController.CreateAdvertise,
+			r.advertiseController.CreateAdvertise,
 		)
 
 		advertiseRouterPrivate.GET("/",
 			helpers.ValidateQuery(&advertiseQuery.AdvertiseQueryObject{}, advertiseQuery.ValidateAdvertiseQueryObject),
-			advertiseController.GetManyAdvertise,
+			r.advertiseController.GetManyAdvertise,
 		)
 
-		advertiseRouterPrivate.GET("/statistic/:advertise_id", advertiseController.GetAdvertiseWithStatistic)
+		advertiseRouterPrivate.GET("/statistic/:advertise_id", r.advertiseController.GetAdvertiseWithStatistic)
 	}
 }

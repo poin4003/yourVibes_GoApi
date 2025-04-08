@@ -8,7 +8,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/routers"
 )
 
-func InitRouter() *gin.Engine {
+func InitRouter(routerGroup routers.RouterGroup) *gin.Engine {
 	var r *gin.Engine
 
 	if global.Config.Server.Mode == "dev" {
@@ -32,8 +32,8 @@ func InitRouter() *gin.Engine {
 
 	r.Use(middlewares.ErrorHandlerMiddleware())
 
-	adminRouter := routers.RouterGroupApp.Admin
-	userRouter := routers.RouterGroupApp.User
+	adminRouter := routerGroup.Admin
+	userRouter := routerGroup.User
 
 	MainGroup := r.Group("/v1/2024")
 	{

@@ -35,32 +35,3 @@ type (
 		GetRevenueForDay(ctx context.Context, date time.Time) (int64, error)
 	}
 )
-
-var (
-	localAdvertise IAdvertiseRepository
-	localBill      IBillRepository
-)
-
-func Advertise() IAdvertiseRepository {
-	if localAdvertise == nil {
-		panic("repository_implement localAdvertise not found for interface IAdvertiseRepository")
-	}
-
-	return localAdvertise
-}
-
-func Bill() IBillRepository {
-	if localBill == nil {
-		panic("repository_implement localBill not found for interface IBillRepository")
-	}
-
-	return localBill
-}
-
-func InitAdvertiseRepository(i IAdvertiseRepository) {
-	localAdvertise = i
-}
-
-func InitBillRepository(i IBillRepository) {
-	localBill = i
-}

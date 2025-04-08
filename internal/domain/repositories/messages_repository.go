@@ -17,7 +17,6 @@ type (
 		DeleteById(ctx context.Context, id uuid.UUID) error
 		UpdateOne(ctx context.Context, id uuid.UUID, updateData *entities.ConversationUpdate) (*entities.Conversation, error)
 	}
-
 	IMessageRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Message, error)
 		CreateOne(ctx context.Context, entity *entities.Message) error
@@ -34,42 +33,3 @@ type (
 		CreateMany(ctx context.Context, entities []*entities.ConversationDetail) ([]*entities.ConversationDetail, error)
 	}
 )
-
-var (
-	localConversation       IConversationRepository
-	localMessage            IMessageRepository
-	localConversationDetail IConversationDetailRepository
-)
-
-func Conversation() IConversationRepository {
-	if localConversation == nil {
-		panic("repository_implement localConversation not found for interface IConversationRepository")
-	}
-	return localConversation
-}
-
-func InitConversationRepository(i IConversationRepository) {
-	localConversation = i
-}
-
-func Message() IMessageRepository {
-	if localMessage == nil {
-		panic("repository_implement localMessage not found for interface IMessageRepository")
-	}
-	return localMessage
-}
-
-func InitMessageRepository(i IMessageRepository) {
-	localMessage = i
-}
-
-func ConversationDetail() IConversationDetailRepository {
-	if localConversationDetail == nil {
-		panic("repository_implement localConversationDetail not found for interface IConversationDetailRepository")
-	}
-	return localConversationDetail
-}
-
-func InitConversationDetailRepository(i IConversationDetailRepository) {
-	localConversationDetail = i
-}

@@ -19,19 +19,3 @@ type (
 		CheckAdminExistByEmail(ctx context.Context, email string) (bool, error)
 	}
 )
-
-var (
-	localAdmin IAdminRepository
-)
-
-func Admin() IAdminRepository {
-	if localAdmin == nil {
-		panic("repository_implement localAdmin not found for interface IAdminRepository")
-	}
-
-	return localAdmin
-}
-
-func InitAdminRepository(i IAdminRepository) {
-	localAdmin = i
-}

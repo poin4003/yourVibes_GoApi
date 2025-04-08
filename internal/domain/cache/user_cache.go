@@ -17,32 +17,3 @@ type (
 		GetOtp(ctx context.Context, userKey string) (*string, error)
 	}
 )
-
-var (
-	localUserAuthCache IUserAuthCache
-	localUserCache     IUserCache
-)
-
-func UserAuthCache() IUserAuthCache {
-	if localUserAuthCache == nil {
-		panic("repository_implement localUserAuth not found for interface IUserAuthCache")
-	}
-
-	return localUserAuthCache
-}
-
-func UserCache() IUserCache {
-	if localUserCache == nil {
-		panic("repository_implement localUserAuth not found for interface IUserAuthCache")
-	}
-
-	return localUserCache
-}
-
-func InitUserAuthCache(i IUserAuthCache) {
-	localUserAuthCache = i
-}
-
-func InitUserCache(i IUserCache) {
-	localUserCache = i
-}

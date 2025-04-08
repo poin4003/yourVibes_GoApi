@@ -19,19 +19,3 @@ type (
 		GetMany(ctx context.Context, query *query.GetManyNotificationQuery) ([]*entities.Notification, *response.PagingResponse, error)
 	}
 )
-
-var (
-	localNotification INotificationRepository
-)
-
-func Notification() INotificationRepository {
-	if localNotification == nil {
-		panic("repository_implement localNotification not found for interface INotification")
-	}
-
-	return localNotification
-}
-
-func InitNotificationRepository(i INotificationRepository) {
-	localNotification = i
-}

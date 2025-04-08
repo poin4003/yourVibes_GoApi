@@ -29,32 +29,3 @@ type (
 		CheckUserLikeManyComment(ctx context.Context, query *query.CheckUserLikeManyCommentQuery) (map[uuid.UUID]bool, error)
 	}
 )
-
-var (
-	localComment         ICommentRepository
-	localLikeUserComment ILikeUserCommentRepository
-)
-
-func Comment() ICommentRepository {
-	if localComment == nil {
-		panic("repository_implement localComment not found for interface IComment")
-	}
-
-	return localComment
-}
-
-func LikeUserComment() ILikeUserCommentRepository {
-	if localLikeUserComment == nil {
-		panic("repository_implement localLikeUserComment not found for interface ILikeUserComment")
-	}
-
-	return localLikeUserComment
-}
-
-func InitCommentRepository(i ICommentRepository) {
-	localComment = i
-}
-
-func InitLikeUserCommentRepository(i ILikeUserCommentRepository) {
-	localLikeUserComment = i
-}
