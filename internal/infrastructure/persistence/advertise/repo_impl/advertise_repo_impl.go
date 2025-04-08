@@ -98,6 +98,7 @@ func (r *rAdvertise) GetDetailAndStatisticOfAdvertise(
 		TotalImpressions int
 	}
 	var statsSummary StatsSummary
+	now := time.Now()
 	if err := r.db.WithContext(ctx).
 		Model(&models.Statistics{}).
 		Select(
@@ -109,7 +110,7 @@ func (r *rAdvertise) GetDetailAndStatisticOfAdvertise(
 			"post_id = ? AND created_at BETWEEN ? AND ?",
 			advertiseModel.PostId,
 			advertiseModel.StartDate,
-			advertiseModel.EndDate,
+			now,
 		).
 		Scan(&statsSummary).
 		Error; err != nil {
@@ -119,7 +120,7 @@ func (r *rAdvertise) GetDetailAndStatisticOfAdvertise(
 	statEntities := r.getAverageStatistics(
 		ctx,
 		advertiseModel.PostId,
-		&advertiseModel.StartDate, &advertiseModel.EndDate,
+		&advertiseModel.StartDate, &now,
 		10,
 	)
 
@@ -355,40 +356,62 @@ func (r *rAdvertise) getAverageStatistics(
 
 	intervalDuration := duration / time.Duration(numIntervals)
 
-	statEntities := make([]*entities.StatisticEntity, numIntervals)
-	for i := 0; i < numIntervals; i++ {
-		intervalStart := startDate.Add(time.Duration(i) * intervalDuration)
-		intervalEnd := startDate.Add(time.Duration(i+1) * intervalDuration)
-		if i == numIntervals-1 {
-			intervalEnd = *endDate
-		}
+	type IntervalStats struct {
+		IntervalStart  time.Time
+		AvgReach       float64
+		AvgClicks      float64
+		AvgImpressions float64
+	}
 
-		type AvgStats struct {
-			AvgReach       float64
-			AvgClicks      float64
-			AvgImpressions float64
-		}
-		var avgStats AvgStats
-		if err := r.db.WithContext(ctx).
-			Model(&models.Statistics{}).
-			Select(
-				"COALESCE(AVG(reach), 0) as avg_reach, "+
-					"COALESCE(AVG(clicks), 0) as avg_clicks, "+
-					"COALESCE(AVG(impression), 0) as avg_impressions",
-			).
-			Where("post_id = ? AND deleted_at IS NULL AND created_at BETWEEN ? AND ?", postId, intervalStart, intervalEnd).
-			Scan(&avgStats).
-			Error; err != nil {
-			global.Logger.Error("Failed to calculate average statistic", zap.Error(err))
-			continue
-		}
+	var intervalStats []IntervalStats
+	query := `
+        WITH intervals AS (
+            SELECT 
+                generate_series(
+                    ?::timestamp,
+                    ?::timestamp - INTERVAL '1 second',
+                    ?::interval
+                ) AS interval_start
+        ),
+        stats_with_intervals AS (
+            SELECT 
+                i.interval_start,
+                COALESCE(AVG(s.reach), 0) AS avg_reach,
+                COALESCE(AVG(s.clicks), 0) AS avg_clicks,
+                COALESCE(AVG(s.impression), 0) AS avg_impressions
+            FROM intervals i
+            LEFT JOIN statistics s
+                ON s.post_id = ?
+                AND s.deleted_at IS NULL
+                AND s.created_at >= i.interval_start
+                AND s.created_at < i.interval_start + ?::interval
+            GROUP BY i.interval_start
+            ORDER BY i.interval_start
+        )
+        SELECT 
+            interval_start,
+            avg_reach,
+            avg_clicks,
+            avg_impressions
+        FROM stats_with_intervals;
+    `
 
+	if err := r.db.WithContext(ctx).
+		Raw(query, startDate, *endDate, intervalDuration, postId, intervalDuration).
+		Scan(&intervalStats).
+		Error; err != nil {
+		global.Logger.Error("Failed to calculate average statistics", zap.Error(err))
+		return nil
+	}
+
+	statEntities := make([]*entities.StatisticEntity, len(intervalStats))
+	for i, stat := range intervalStats {
 		statEntities[i] = &entities.StatisticEntity{
 			PostId:          postId,
-			Reach:           int(avgStats.AvgReach),
-			Clicks:          int(avgStats.AvgClicks),
-			Impression:      int(avgStats.AvgImpressions),
-			AggregationDate: intervalStart,
+			Reach:           int(stat.AvgReach),
+			Clicks:          int(stat.AvgClicks),
+			Impression:      int(stat.AvgImpressions),
+			AggregationDate: stat.IntervalStart,
 		}
 	}
 
