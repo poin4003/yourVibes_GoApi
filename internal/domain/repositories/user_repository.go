@@ -39,6 +39,6 @@ type (
 		GetFriends(ctx context.Context, query *query.FriendQuery) ([]*entities.User, *response.PagingResponse, error)
 		GetFriendIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
-		GetFriendSuggestions(ctx context.Context, query *query.FriendQuery) ([]*entities.User, *response.PagingResponse, error)
+		GetFriendSuggestions(ctx context.Context, query *query.FriendQuery) ([]*entities.UserWithSendFriendRequest, *response.PagingResponse, error)
 	}
 )

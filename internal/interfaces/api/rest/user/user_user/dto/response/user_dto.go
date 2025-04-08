@@ -34,6 +34,14 @@ type UserShortVerDto struct {
 	AvatarUrl  string    `json:"avatar_url"`
 }
 
+type UserShortVerWithFriendSuggestionDto struct {
+	ID                  uuid.UUID `json:"id"`
+	FamilyName          string    `json:"family_name"`
+	Name                string    `json:"name"`
+	AvatarUrl           string    `json:"avatar_url"`
+	IsSendFriendRequest bool      `json:"is_send_friend_request"`
+}
+
 type UserWithSettingDto struct {
 	ID          uuid.UUID           `json:"id"`
 	FamilyName  string              `json:"family_name"`
@@ -136,5 +144,17 @@ func ToUserShortVerDto(
 		FamilyName: userResult.FamilyName,
 		Name:       userResult.Name,
 		AvatarUrl:  userResult.AvatarUrl,
+	}
+}
+
+func ToUserShortWithSendFriendRequestVerDto(
+	userResult *common.UserShortVerWithSendFriendRequestResult,
+) *UserShortVerWithFriendSuggestionDto {
+	return &UserShortVerWithFriendSuggestionDto{
+		ID:                  userResult.ID,
+		FamilyName:          userResult.FamilyName,
+		Name:                userResult.Name,
+		AvatarUrl:           userResult.AvatarUrl,
+		IsSendFriendRequest: userResult.IsSendFriendRequest,
 	}
 }

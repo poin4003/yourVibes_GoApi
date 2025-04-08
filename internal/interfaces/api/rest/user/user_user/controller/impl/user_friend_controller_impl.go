@@ -354,9 +354,9 @@ func (c *cUserFriend) GetFriendSuggestion(ctx *gin.Context) {
 	}
 
 	// 5. Map to dto
-	var userDtos []*response.UserShortVerDto
+	var userDtos []*response.UserShortVerWithFriendSuggestionDto
 	for _, userResult := range result.Users {
-		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
+		userDtos = append(userDtos, response.ToUserShortWithSendFriendRequestVerDto(userResult))
 	}
 
 	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)

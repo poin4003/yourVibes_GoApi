@@ -422,7 +422,7 @@ func (s *sUserFriend) GetFriends(
 func (s *sUserFriend) GetFriendSuggestion(
 	ctx context.Context,
 	query *userQuery.FriendQuery,
-) (result *userQuery.FriendQueryResult, err error) {
+) (result *userQuery.FriendSuggestionQueryResult, err error) {
 	// 1. Get list friend suggestion
 	userEntities, paging, err := s.friendRepo.GetFriendSuggestions(ctx, query)
 	if err != nil {
@@ -430,12 +430,12 @@ func (s *sUserFriend) GetFriendSuggestion(
 	}
 
 	// 2. Map userEntity to userDtoShortVer
-	var userResults []*common.UserShortVerResult
+	var userResults []*common.UserShortVerWithSendFriendRequestResult
 	for _, user := range userEntities {
-		userResults = append(userResults, mapper.NewUserShortVerEntity(user))
+		userResults = append(userResults, mapper.NewUserShortVerWithSendFriendRequestEntity(user))
 	}
 
-	return &userQuery.FriendQueryResult{
+	return &userQuery.FriendSuggestionQueryResult{
 		Users:          userResults,
 		PagingResponse: paging,
 	}, nil

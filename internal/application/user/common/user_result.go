@@ -61,3 +61,11 @@ type UserShortVerResult struct {
 	Name       string
 	AvatarUrl  string
 }
+
+type UserShortVerWithSendFriendRequestResult struct {
+	ID                  uuid.UUID
+	FamilyName          string
+	Name                string
+	AvatarUrl           string
+	IsSendFriendRequest bool
+}

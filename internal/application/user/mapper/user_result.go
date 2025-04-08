@@ -30,6 +30,22 @@ func NewUserShortVerEntity(
 	}
 }
 
+func NewUserShortVerWithSendFriendRequestEntity(
+	user *userEntity.UserWithSendFriendRequest,
+) *common.UserShortVerWithSendFriendRequestResult {
+	if user == nil {
+		return nil
+	}
+
+	return &common.UserShortVerWithSendFriendRequestResult{
+		ID:                  user.ID,
+		FamilyName:          user.FamilyName,
+		Name:                user.Name,
+		AvatarUrl:           user.AvatarUrl,
+		IsSendFriendRequest: user.IsSendFriendRequest,
+	}
+}
+
 func NewUserResultWithoutSettingEntity(
 	user *userEntity.User,
 	friendStatus consts.FriendStatus,

@@ -66,10 +66,25 @@ func FromUserModel(userModel *models.User) *userEntity.User {
 }
 
 func FromUserModelList(userModelList []*models.User) []*userEntity.User {
-	userEntityList := []*userEntity.User{}
+	var userEntityList []*userEntity.User
 	for _, userModel := range userModelList {
 		userEntityList = append(userEntityList, FromUserModel(userModel))
 	}
 
 	return userEntityList
+}
+
+func FromUserModelWithSendFriendRequest(
+	userModel *models.User,
+	isSendFriendRequest bool,
+) *userEntity.UserWithSendFriendRequest {
+	var user = &userEntity.UserWithSendFriendRequest{
+		FamilyName:          userModel.FamilyName,
+		Name:                userModel.Name,
+		AvatarUrl:           userModel.AvatarUrl,
+		IsSendFriendRequest: isSendFriendRequest,
+	}
+	user.ID = userModel.ID
+
+	return user
 }

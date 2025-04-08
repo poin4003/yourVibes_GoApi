@@ -131,8 +131,8 @@ func (r *rFriend) CheckFriendExist(
 func (r *rFriend) GetFriendSuggestions(
 	ctx context.Context,
 	query *query.FriendQuery,
-) ([]*entities.User, *response.PagingResponse, error) {
-	var users []*models.User
+) ([]*entities.UserWithSendFriendRequest, *response.PagingResponse, error) {
+	var suggestions []*models.User
 	var total int64
 
 	limit := query.Limit
@@ -145,40 +145,65 @@ func (r *rFriend) GetFriendSuggestions(
 	}
 	offset := (page - 1) * limit
 
-	countQuery := `
-		SELECT COUNT(DISTINCT u.id)
-		FROM users u
-		INNER JOIN friends f1 ON u.id = f1.friend_id
-		INNER JOIN friends f2 ON f1.user_id = f2.friend_id
-		WHERE f2.user_id = ?
-		AND u.id != ?
-		AND u.id NOT IN (
-			SELECT friend_id 
-			FROM friends 
-			WHERE user_id = ?
+	// Total record of friend suggestion
+	dbCount := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Select("DISTINCT users.id").
+		Joins("INNER JOIN friends f1 ON users.id = f1.friend_id").
+		Joins("INNER JOIN friends f2 ON f1.user_id = f2.friend_id").
+		Where("f2.user_id = ?", query.UserId).
+		Where("users.id != ?", query.UserId).
+		Where("users.id NOT IN (?)",
+			r.db.Model(&models.Friend{}).
+				Select("friend_id").
+				Where("user_id = ?", query.UserId),
 		)
-	`
-	if err := r.db.WithContext(ctx).Raw(countQuery, query.UserId, query.UserId, query.UserId).Scan(&total).Error; err != nil {
+	if err := dbCount.Count(&total).Error; err != nil {
 		return nil, nil, response.NewServerFailedError("can not count friend suggestions")
 	}
 
-	dataQuery := `
-		SELECT DISTINCT u.id, u.family_name, u.name, u.avatar_url
-		FROM users u
-		INNER JOIN friends f1 ON u.id = f1.friend_id
-		INNER JOIN friends f2 ON f1.user_id = f2.friend_id
-		WHERE f2.user_id = ?
-		AND u.id != ?
-		AND u.id NOT IN (
-			SELECT friend_id 
-			FROM friends 
-			WHERE user_id = ?
-		)
-		ORDER BY u.id 
-		LIMIT ? OFFSET ?
-	`
-	if err := r.db.WithContext(ctx).Raw(dataQuery, query.UserId, query.UserId, query.UserId, limit, offset).Scan(&users).Error; err != nil {
+	// Get list of suggestion
+	dbData := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Select("DISTINCT users.id, users.family_name, users.name, users.avatar_url").
+		Joins("INNER JOIN friends f1 ON users.id = f1.friend_id").
+		Joins("INNER JOIN friends f2 ON f1.user_id = f2.friend_id").
+		Where("f2.user_id = ?", query.UserId).
+		Where("users.id != ?", query.UserId).
+		Where("users.id NOT IN (?)",
+			r.db.Model(&models.Friend{}).
+				Select("friend_id").
+				Where("user_id = ?", query.UserId),
+		).
+		Order("users.id").
+		Limit(limit).
+		Offset(offset)
+	if err := dbData.Scan(&suggestions).Error; err != nil {
 		return nil, nil, response.NewServerFailedError("can not get friend suggestions")
+	}
+
+	// Get UserId list from suggestion
+	userIDs := make([]uuid.UUID, len(suggestions))
+	for i, s := range suggestions {
+		userIDs[i] = s.ID
+	}
+
+	// Check send friend request status
+	var friendRequestResults []models.FriendRequest
+	if len(userIDs) > 0 {
+		if err := r.db.WithContext(ctx).
+			Model(&models.FriendRequest{}).
+			Select("friend_id").
+			Where("user_id = ?", query.UserId).
+			Where("friend_id IN (?)", userIDs).
+			Find(&friendRequestResults).Error; err != nil {
+			return nil, nil, response.NewServerFailedError("can not check friend request status")
+		}
+	}
+
+	friendRequestStatus := make(map[uuid.UUID]bool)
+	for _, fr := range friendRequestResults {
+		friendRequestStatus[fr.FriendId] = true
 	}
 
 	pagingResponse := &response.PagingResponse{
@@ -187,7 +212,11 @@ func (r *rFriend) GetFriendSuggestions(
 		Total: total,
 	}
 
-	userEntities := mapper.FromUserModelList(users)
+	var userEntities []*entities.UserWithSendFriendRequest
+	for _, sg := range suggestions {
+		userEntity := mapper.FromUserModelWithSendFriendRequest(sg, friendRequestStatus[sg.ID])
+		userEntities = append(userEntities, userEntity)
+	}
 
 	return userEntities, pagingResponse, nil
 }

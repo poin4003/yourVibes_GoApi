@@ -52,6 +52,14 @@ type UserUpdate struct {
 	UpdatedAt    *time.Time
 }
 
+type UserWithSendFriendRequest struct {
+	ID                  uuid.UUID
+	FamilyName          string
+	Name                string
+	AvatarUrl           string
+	IsSendFriendRequest bool
+}
+
 func (u *User) ValidateUser() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.FamilyName, validation.Required, validation.RuneLength(2, 255)),
