@@ -1513,7 +1513,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
+                        "type": "integer",
                         "description": "Filter by advertisement",
                         "name": "is_advertisement",
                         "in": "query"
@@ -1763,6 +1763,41 @@ const docTemplate = `{
                         "description": "Location of the post",
                         "name": "location",
                         "in": "formData"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/trending": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve multiple trending posts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post_user"
+                ],
+                "summary": "Get trending posts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit of posts per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {}
@@ -3229,7 +3264,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibes.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",

@@ -423,7 +423,7 @@ func (s *sPostUser) GetManyPosts(
 
 	if query.Content != "" ||
 		query.Location != "" ||
-		query.IsAdvertisement ||
+		query.IsAdvertisement != nil ||
 		!query.CreatedAt.IsZero() ||
 		query.SortBy != "" {
 		cacheFailed = true
@@ -536,6 +536,44 @@ func (s *sPostUser) GetManyPosts(
 	return &postQuery.GetManyPostQueryResult{
 		Posts:          postResults,
 		PagingResponse: paging,
+	}, nil
+}
+
+func (s *sPostUser) GetTrendingPost(
+	ctx context.Context,
+	query *postQuery.GetTrendingPostQuery,
+) (result *postQuery.GetManyPostQueryResult, err error) {
+	// 1. Get Trending post
+	posts, pagingResp, err := s.postRepo.GetTrendingPost(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Get list user post like
+	postIDs := make([]uuid.UUID, 0, len(posts))
+	for _, post := range posts {
+		postIDs = append(postIDs, post.ID)
+	}
+
+	isLikedListQuery := &postQuery.CheckUserLikeManyPostQuery{
+		PostIds:             postIDs,
+		AuthenticatedUserId: query.AuthenticatedUserId,
+	}
+	isLikedList, err := s.likeUserPostRepo.CheckUserLikeManyPost(ctx, isLikedListQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// Map to return
+	var postResults []*common.PostResultWithLiked
+	for _, post := range posts {
+		postResult := mapper.NewPostWithLikedResultFromEntity(post, isLikedList[post.ID])
+		postResults = append(postResults, postResult)
+	}
+
+	return &postQuery.GetManyPostQueryResult{
+		Posts:          postResults,
+		PagingResponse: pagingResp,
 	}, nil
 }
 

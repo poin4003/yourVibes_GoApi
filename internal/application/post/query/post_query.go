@@ -18,10 +18,16 @@ type GetManyPostQuery struct {
 	UserID              uuid.UUID
 	Content             string
 	Location            string
-	IsAdvertisement     bool
+	IsAdvertisement     *int
 	CreatedAt           time.Time
 	SortBy              string
 	IsDescending        bool
+	Limit               int
+	Page                int
+}
+
+type GetTrendingPostQuery struct {
+	AuthenticatedUserId uuid.UUID
 	Limit               int
 	Page                int
 }

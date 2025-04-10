@@ -17,6 +17,7 @@ type (
 		UpdateMany(ctx context.Context, condition map[string]interface{}, updateData *entities.PostUpdate) error
 		DeleteOne(ctx context.Context, id uuid.UUID) (*entities.Post, error)
 		GetMany(ctx context.Context, query *query.GetManyPostQuery) ([]*entities.Post, *response.PagingResponse, error)
+		GetTrendingPost(ctx context.Context, query *query.GetTrendingPostQuery) ([]*entities.Post, *response.PagingResponse, error)
 		UpdateExpiredAdvertisements(ctx context.Context) error
 		CheckPostOwner(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (bool, error)
 		GetTotalPostCount(ctx context.Context) (int, error)

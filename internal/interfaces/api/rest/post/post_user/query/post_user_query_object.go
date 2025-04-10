@@ -12,12 +12,17 @@ type PostQueryObject struct {
 	UserID          string    `form:"user_id,omitempty"`
 	Content         string    `form:"content,omitempty"`
 	Location        string    `form:"location,omitempty"`
-	IsAdvertisement bool      `form:"is_advertisement,omitempty"`
+	IsAdvertisement *int      `form:"is_advertisement,omitempty"`
 	CreatedAt       time.Time `form:"created_at,omitempty"`
 	SortBy          string    `form:"sort_by,omitempty"`
 	IsDescending    bool      `form:"isDescending,omitempty"`
 	Limit           int       `form:"limit,omitempty"`
 	Page            int       `form:"page,omitempty"`
+}
+
+type TrendingPostQueryObject struct {
+	Limit int `form:"limit,omitempty"`
+	Page  int `form:"page,omitempty"`
 }
 
 func ValidatePostQueryObject(input interface{}) error {
@@ -33,6 +38,18 @@ func ValidatePostQueryObject(input interface{}) error {
 	)
 }
 
+func ValidateTrendingPostQueryObject(input interface{}) error {
+	query, ok := input.(*TrendingPostQueryObject)
+	if !ok {
+		return fmt.Errorf("validate PostQueryObject failed")
+	}
+
+	return validation.ValidateStruct(query,
+		validation.Field(&query.Limit, validation.Min(0)),
+		validation.Field(&query.Page, validation.Min(0)),
+	)
+}
+
 func (req *PostQueryObject) ToGetOnePostQuery(
 	postId uuid.UUID,
 	authenticatedUserId uuid.UUID,
@@ -40,6 +57,16 @@ func (req *PostQueryObject) ToGetOnePostQuery(
 	return &postQuery.GetOnePostQuery{
 		PostId:              postId,
 		AuthenticatedUserId: authenticatedUserId,
+	}, nil
+}
+
+func (req *TrendingPostQueryObject) ToGetTrendingQuery(
+	authenticatedUserId uuid.UUID,
+) (*postQuery.GetTrendingPostQuery, error) {
+	return &postQuery.GetTrendingPostQuery{
+		AuthenticatedUserId: authenticatedUserId,
+		Limit:               req.Limit,
+		Page:                req.Page,
 	}, nil
 }
 

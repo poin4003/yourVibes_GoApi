@@ -49,6 +49,11 @@ func (r *postRouter) InitPostRouter(Router *gin.RouterGroup) {
 			r.postUserController.GetManyPost,
 		)
 
+		postRouterPrivate.GET("/trending",
+			helpers.ValidateQuery(&postQuery.TrendingPostQueryObject{}, postQuery.ValidateTrendingPostQueryObject),
+			r.postUserController.GetTrendingPost,
+		)
+
 		postRouterPrivate.GET("/:post_id", r.postUserController.GetPostById)
 
 		postRouterPrivate.PATCH("/:post_id",

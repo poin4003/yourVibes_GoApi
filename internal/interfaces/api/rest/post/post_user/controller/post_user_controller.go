@@ -18,6 +18,7 @@ type (
 		CreatePost(ctx *gin.Context)
 		UpdatePost(ctx *gin.Context)
 		GetManyPost(ctx *gin.Context)
+		GetTrendingPost(ctx *gin.Context)
 		GetPostById(ctx *gin.Context)
 		DeletePost(ctx *gin.Context)
 	}

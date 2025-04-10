@@ -11,7 +11,7 @@
         },
         "version": "1.0.0"
     },
-    "host": "yourvibes.duckdns.org:8080",
+    "host": "localhost:8080",
     "basePath": "/v1/2024",
     "paths": {
         "/admins": {
@@ -1507,7 +1507,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
+                        "type": "integer",
                         "description": "Filter by advertisement",
                         "name": "is_advertisement",
                         "in": "query"
@@ -1757,6 +1757,41 @@
                         "description": "Location of the post",
                         "name": "location",
                         "in": "formData"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/posts/trending": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve multiple trending posts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post_user"
+                ],
+                "summary": "Get trending posts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit of posts per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {}

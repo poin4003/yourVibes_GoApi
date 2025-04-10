@@ -182,7 +182,7 @@ func (c *cPostUser) UpdatePost(ctx *gin.Context) {
 // @Param user_id query string false "User ID to filter posts"
 // @Param content query string false "Filter by content"
 // @Param location query string false "Filter by location"
-// @Param is_advertisement query boolean false "Filter by advertisement"
+// @Param is_advertisement query int false "Filter by advertisement"
 // @Param created_at query string false "Filter by creation time"
 // @Param sort_by query string false "Which column to sort by"
 // @Param isDescending query boolean false "Order by descending if true"
@@ -216,6 +216,56 @@ func (c *cPostUser) GetManyPost(ctx *gin.Context) {
 	getManyPostQuery, _ := postQueryObject.ToGetManyPostQuery(userIdClaim)
 
 	result, err := c.postService.GetManyPosts(ctx, getManyPostQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 5. Map to dto
+	var postDtos []*response.PostWithLikedDto
+	for _, postResult := range result.Posts {
+		postDtos = append(postDtos, response.ToPostWithLikedDto(*postResult))
+	}
+
+	pkgResponse.OKWithPaging(ctx, postDtos, *result.PagingResponse)
+}
+
+// GetTrendingPost documentation
+// @Summary Get trending posts
+// @Description Retrieve multiple trending posts
+// @Tags post_user
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit of posts per page"
+// @Param page query int false "Page number for pagination"
+// @Security ApiKeyAuth
+// @Router /posts/trending [get]
+func (c *cPostUser) GetTrendingPost(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		return
+	}
+
+	// 2. Convert to TrendingPostQueryObject
+	trendingPostQueryObject, ok := queryInput.(*query.TrendingPostQueryObject)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 3. Get user id from token
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	// 4. Call service to handle get many
+	getTrendingPostQuery, _ := trendingPostQueryObject.ToGetTrendingQuery(userIdClaim)
+
+	result, err := c.postService.GetTrendingPost(ctx, getTrendingPostQuery)
 	if err != nil {
 		ctx.Error(err)
 		return

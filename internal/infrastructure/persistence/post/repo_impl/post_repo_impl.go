@@ -261,6 +261,10 @@ func (r *rPost) GetMany(
 		db = db.Where("LOWER(location) LIKE LOWER(?)", "%"+query.Location+"%")
 	}
 
+	if query.IsAdvertisement != nil {
+		db = db.Where("is_advertisement = ?", query.IsAdvertisement)
+	}
+
 	if query.SortBy != "" {
 		sortColumn := ""
 		switch query.SortBy {
@@ -301,7 +305,7 @@ func (r *rPost) GetMany(
 
 	offset := (page - 1) * limit
 
-	if err := db.Offset(offset).Limit(limit).
+	if err = db.Offset(offset).Limit(limit).
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).
@@ -328,6 +332,96 @@ func (r *rPost) GetMany(
 	for _, post := range postModels {
 		postEntity := mapper.FromPostModel(post)
 		postEntities = append(postEntities, postEntity)
+	}
+
+	return postEntities, pagingResponse, nil
+}
+
+func (r *rPost) GetTrendingPost(
+	ctx context.Context,
+	query *query.GetTrendingPostQuery,
+) ([]*entities.Post, *response.PagingResponse, error) {
+	var postModels []*models.Post
+	var total int64
+
+	// 1. Paging
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	// 2. Get total record
+	if err := r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Where("status = ?", true).
+		Where("is_advertisement = ?", 0).
+		Where("privacy = ?", consts.PUBLIC).
+		Count(&total).
+		Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	// 3. subquery/CTE to calculate score
+	subQuery := r.db.WithContext(ctx).
+		Model(&models.Statistics{}).
+		Select(`
+			post_id, 
+			COALESCE(SUM(reach), 0) AS total_reach, 
+			COALESCE(SUM(clicks), 0) AS total_clicks, 
+			COALESCE(SUM(impression), 0) AS total_impression`,
+		).
+		Group("post_id")
+
+	if err := r.db.WithContext(ctx).
+		Unscoped().
+		Table("(?) AS s", subQuery).
+		Select(
+			"p.*, "+
+				"(COALESCE(s.total_impression, 0) * 0.3 + "+
+				"p.like_count * 0.25 + "+
+				"p.comment_count * 0.2 + "+
+				"COALESCE(s.total_clicks, 0) * 0.15 + "+
+				"COALESCE(s.total_reach, 0) * 0.1) AS score",
+		).
+		Joins("RIGHT JOIN posts p ON p.id = s.post_id").
+		Where("p.status = ?", true).
+		Where("p.is_advertisement = ?", 0).
+		Where("p.privacy = ?", consts.PUBLIC).
+		Order("score DESC").
+		Offset(offset).
+		Limit(limit).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("Media").
+		Preload("ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
+		Preload("ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
+		}).
+		Preload("ParentPost.Media").
+		Find(&postModels).
+		Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	// 5. Map to entity
+	var postEntities []*entities.Post
+	for _, post := range postModels {
+		postEntity := mapper.FromPostModel(post)
+		postEntities = append(postEntities, postEntity)
+	}
+
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
 	}
 
 	return postEntities, pagingResponse, nil

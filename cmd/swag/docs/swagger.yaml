@@ -264,7 +264,7 @@ definitions:
       name:
         type: string
     type: object
-host: yourvibes.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -1228,7 +1228,7 @@ paths:
       - description: Filter by advertisement
         in: query
         name: is_advertisement
-        type: boolean
+        type: integer
       - description: Filter by creation time
         in: query
         name: created_at
@@ -1470,6 +1470,28 @@ paths:
       summary: share post
       tags:
       - post_share
+  /posts/trending:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve multiple trending posts
+      parameters:
+      - description: Limit of posts per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get trending posts
+      tags:
+      - post_user
   /report:
     get:
       consumes:
