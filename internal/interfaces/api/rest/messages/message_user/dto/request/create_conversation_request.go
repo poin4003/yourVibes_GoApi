@@ -18,15 +18,34 @@ type CreateConversationRequest struct {
 
 func ValidateCreateConversationRequest(req interface{}) error {
 	dto, ok := req.(*CreateConversationRequest)
-
 	if !ok {
 		return fmt.Errorf("input is not CreateConversationRequest")
 	}
 
 	return validation.ValidateStruct(dto,
 		validation.Field(&dto.Name, validation.Required, validation.RuneLength(1, 30)),
-		validation.Field(&dto.UserIds, validation.Required),
+		validation.Field(&dto.UserIds,
+			validation.Required,
+			validation.By(checkDuplicateUserIds),
+		),
 	)
+}
+
+func checkDuplicateUserIds(value interface{}) error {
+	userIds, ok := value.([]string)
+	if !ok {
+		return fmt.Errorf("invalid type for user_ids")
+	}
+
+	seen := make(map[string]bool)
+	for _, id := range userIds {
+		if seen[id] {
+			return fmt.Errorf("duplicate user id found: %s", id)
+		}
+		seen[id] = true
+	}
+
+	return nil
 }
 
 func (req *CreateConversationRequest) ToCreateConversationCommand(
