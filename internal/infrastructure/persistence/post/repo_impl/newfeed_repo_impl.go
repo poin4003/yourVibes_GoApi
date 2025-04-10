@@ -291,6 +291,9 @@ func (r *rNewFeed) CreateManyFeaturedPosts(
 		}
 	}()
 
+	now := time.Now()
+	averageTimeToPush := now.AddDate(0, 0, -7)
+
 	query := `
         WITH 
             latest_statistics AS (
@@ -310,6 +313,8 @@ func (r *rNewFeed) CreateManyFeaturedPosts(
                   AND p.privacy = 'public'
                   AND p.is_advertisement = 0
                   AND p.status = true
+				  AND p.created_at >= ?
+				  AND p.created_at <= ?
                   AND p.deleted_at IS NULL
             ),
             inserted AS (
@@ -344,9 +349,8 @@ func (r *rNewFeed) CreateManyFeaturedPosts(
                 AND s.deleted_at IS NULL
           );
     `
-	now := time.Now()
 
-	result := tx.Exec(query, 3, 5, 10, 10, numUsers, now)
+	result := tx.Exec(query, 3, 5, 10, 10, averageTimeToPush, now, numUsers, now)
 	if result.Error != nil {
 		return result.Error
 	}

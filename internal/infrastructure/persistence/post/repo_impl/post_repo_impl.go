@@ -355,6 +355,9 @@ func (r *rPost) GetTrendingPost(
 	}
 	offset := (page - 1) * limit
 
+	now := time.Now()
+	averageTimeToGet := now.AddDate(0, 0, -7)
+
 	// 2. Get total record
 	if err := r.db.WithContext(ctx).
 		Model(&models.Post{}).
@@ -392,6 +395,7 @@ func (r *rPost) GetTrendingPost(
 		Where("p.status = ?", true).
 		Where("p.is_advertisement = ?", 0).
 		Where("p.privacy = ?", consts.PUBLIC).
+		Where("p.created_at => ? AND p.created_at <= ?", averageTimeToGet, now).
 		Order("score DESC").
 		Offset(offset).
 		Limit(limit).
