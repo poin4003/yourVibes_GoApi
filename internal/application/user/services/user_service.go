@@ -32,7 +32,8 @@ type (
 		RemoveFriendRequest(ctx context.Context, command *command.RemoveFriendRequestCommand) (err error)
 		UnFriend(ctx context.Context, command *command.UnFriendCommand) (err error)
 		GetFriends(ctx context.Context, query *query.FriendQuery) (result *query.FriendQueryResult, err error)
-		GetFriendSuggestion(ctx context.Context, query *query.FriendQuery) (result *query.FriendSuggestionQueryResult, err error)
+		GetFriendSuggestion(ctx context.Context, query *query.FriendQuery) (result *query.FriendWithIsSendFriendRequestQueryResult, err error)
 		GetFriendByBirthday(ctx context.Context, query *query.FriendQuery) (result *query.FriendWithBirthdayQueryResult, err error)
+		GetNonFriends(ctx context.Context, query *query.FriendQuery) (result *query.FriendWithIsSendFriendRequestQueryResult, err error)
 	}
 )

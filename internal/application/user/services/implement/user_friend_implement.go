@@ -422,7 +422,7 @@ func (s *sUserFriend) GetFriends(
 func (s *sUserFriend) GetFriendSuggestion(
 	ctx context.Context,
 	query *userQuery.FriendQuery,
-) (result *userQuery.FriendSuggestionQueryResult, err error) {
+) (result *userQuery.FriendWithIsSendFriendRequestQueryResult, err error) {
 	// 1. Get list friend suggestion
 	userEntities, paging, err := s.friendRepo.GetFriendSuggestions(ctx, query)
 	if err != nil {
@@ -435,7 +435,7 @@ func (s *sUserFriend) GetFriendSuggestion(
 		userResults = append(userResults, mapper.NewUserShortVerWithSendFriendRequestEntity(user))
 	}
 
-	return &userQuery.FriendSuggestionQueryResult{
+	return &userQuery.FriendWithIsSendFriendRequestQueryResult{
 		Users:          userResults,
 		PagingResponse: paging,
 	}, nil
@@ -458,6 +458,28 @@ func (s *sUserFriend) GetFriendByBirthday(
 	}
 
 	return &userQuery.FriendWithBirthdayQueryResult{
+		Users:          userResults,
+		PagingResponse: paging,
+	}, nil
+}
+
+func (s *sUserFriend) GetNonFriends(
+	ctx context.Context,
+	query *userQuery.FriendQuery,
+) (result *userQuery.FriendWithIsSendFriendRequestQueryResult, err error) {
+	// 1. Get list non friend
+	userEntities, paging, err := s.friendRepo.GetNonFriends(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Map to return
+	var userResults []*common.UserShortVerWithSendFriendRequestResult
+	for _, user := range userEntities {
+		userResults = append(userResults, mapper.NewUserShortVerWithSendFriendRequestEntity(user))
+	}
+
+	return &userQuery.FriendWithIsSendFriendRequestQueryResult{
 		Users:          userResults,
 		PagingResponse: paging,
 	}, nil

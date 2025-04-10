@@ -41,5 +41,6 @@ type (
 		CheckFriendExist(ctx context.Context, entity *entities.Friend) (bool, error)
 		GetFriendSuggestions(ctx context.Context, query *query.FriendQuery) ([]*entities.UserWithSendFriendRequest, *response.PagingResponse, error)
 		GetFriendByBirthday(ctx context.Context, query *query.FriendQuery) ([]*entities.UserWithBirthday, *response.PagingResponse, error)
+		GetNonFriends(ctx context.Context, query *query.FriendQuery) ([]*entities.UserWithSendFriendRequest, *response.PagingResponse, error)
 	}
 )

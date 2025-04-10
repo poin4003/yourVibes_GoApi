@@ -123,5 +123,10 @@ func (r *userRouter) InitUserRouter(Router *gin.RouterGroup) {
 			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
 			r.userFriendController.GetFriendByBirthday,
 		)
+
+		userRouterPrivate.GET("/friends/non_friend",
+			helpers.ValidateQuery(&userQuery.FriendQueryObject{}, userQuery.ValidateFriendQueryObject),
+			r.userFriendController.GetNonFriend,
+		)
 	}
 }

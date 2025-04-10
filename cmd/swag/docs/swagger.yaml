@@ -2022,6 +2022,24 @@ paths:
       summary: Accept friend request
       tags:
       - user_friend
+  /users/friends/non_friend/:
+    get:
+      description: Get a list of non friend
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of user not your friend
+      tags:
+      - user_friend
   /users/friends/suggestion/:
     get:
       description: Get a list of friend

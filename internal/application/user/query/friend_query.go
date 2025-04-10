@@ -17,7 +17,7 @@ type FriendQueryResult struct {
 	PagingResponse *response.PagingResponse
 }
 
-type FriendSuggestionQueryResult struct {
+type FriendWithIsSendFriendRequestQueryResult struct {
 	Users          []*common.UserShortVerWithSendFriendRequestResult
 	PagingResponse *response.PagingResponse
 }

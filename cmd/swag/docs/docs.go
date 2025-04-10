@@ -2651,6 +2651,35 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/users/friends/non_friend/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of non friend",
+                "tags": [
+                    "user_friend"
+                ],
+                "summary": "Get a list of user not your friend",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit on page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/friends/suggestion/": {
             "get": {
                 "security": [

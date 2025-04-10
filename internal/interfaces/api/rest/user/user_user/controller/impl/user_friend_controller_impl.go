@@ -354,7 +354,7 @@ func (c *cUserFriend) GetFriendSuggestion(ctx *gin.Context) {
 	}
 
 	// 5. Map to dto
-	var userDtos []*response.UserShortVerWithFriendSuggestionDto
+	var userDtos []*response.UserShortVerWithSendFriendRequestDto
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserShortWithSendFriendRequestVerDto(userResult))
 	}
@@ -405,6 +405,54 @@ func (c *cUserFriend) GetFriendByBirthday(ctx *gin.Context) {
 	var userDtos []*response.UserShortVerWithBirthday
 	for _, userResult := range result.Users {
 		userDtos = append(userDtos, response.ToUserShortVerWithBirthdayDto(userResult))
+	}
+
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
+}
+
+// GetNonFriend godoc
+// @Summary Get a list of user not your friend
+// @Description Get a list of non friend
+// @Tags user_friend
+// @Param limit query int false "limit on page"
+// @Param page query int false "current page"
+// @Security ApiKeyAuth
+// @Router /users/friends/non_friend/ [get]
+func (c *cUserFriend) GetNonFriend(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		return
+	}
+
+	// 2. Convert to userQueryObject
+	friendQueryObject, ok := queryInput.(*query.FriendQueryObject)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 3. Get user id from param
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	// 4. Call services
+	friendQuery, _ := friendQueryObject.ToFriendQuery(userIdClaim)
+
+	result, err := c.userFriendService.GetNonFriends(ctx, friendQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 5. Map to dto
+	var userDtos []*response.UserShortVerWithSendFriendRequestDto
+	for _, userResult := range result.Users {
+		userDtos = append(userDtos, response.ToUserShortWithSendFriendRequestVerDto(userResult))
 	}
 
 	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)

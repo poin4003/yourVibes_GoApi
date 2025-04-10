@@ -18,5 +18,6 @@ type (
 		GetFriends(ctx *gin.Context)
 		GetFriendSuggestion(ctx *gin.Context)
 		GetFriendByBirthday(ctx *gin.Context)
+		GetNonFriend(ctx *gin.Context)
 	}
 )
