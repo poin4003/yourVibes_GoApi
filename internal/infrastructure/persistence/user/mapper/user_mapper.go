@@ -88,3 +88,17 @@ func FromUserModelWithSendFriendRequest(
 
 	return user
 }
+
+func FromUserModelWithBirthday(
+	userModel *models.User,
+) *userEntity.UserWithBirthday {
+	var user = &userEntity.UserWithBirthday{
+		FamilyName: userModel.FamilyName,
+		Name:       userModel.Name,
+		AvatarUrl:  userModel.AvatarUrl,
+		Birthday:   *userModel.Birthday,
+	}
+	user.ID = userModel.ID
+
+	return user
+}

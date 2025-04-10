@@ -361,3 +361,51 @@ func (c *cUserFriend) GetFriendSuggestion(ctx *gin.Context) {
 
 	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
 }
+
+// GetFriendByBirthday godoc
+// @Summary Get a list of friend by birthday
+// @Description Get a list of friend
+// @Tags user_friend
+// @Param limit query int false "limit on page"
+// @Param page query int false "current page"
+// @Security ApiKeyAuth
+// @Router /users/friends/birthday/ [get]
+func (c *cUserFriend) GetFriendByBirthday(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		return
+	}
+
+	// 2. Convert to userQueryObject
+	friendQueryObject, ok := queryInput.(*query.FriendQueryObject)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 3. Get user id from param
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	// 4. Call services
+	friendQuery, _ := friendQueryObject.ToFriendQuery(userIdClaim)
+
+	result, err := c.userFriendService.GetFriendByBirthday(ctx, friendQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 5. Map to dto
+	var userDtos []*response.UserShortVerWithBirthday
+	for _, userResult := range result.Users {
+		userDtos = append(userDtos, response.ToUserShortVerWithBirthdayDto(userResult))
+	}
+
+	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
+}

@@ -110,7 +110,7 @@ func (s *sUserAuth) Register(
 		)
 	}
 
-	// 3. Get Otp from Redis
+	// 2. Get Otp from Redis
 	hashEmail := crypto2.GetHash(strings.ToLower(command.Email))
 	userKey := utils.GetUserKey(hashEmail)
 	otpFound, err := s.userAuthCache.GetOtp(ctx, userKey)

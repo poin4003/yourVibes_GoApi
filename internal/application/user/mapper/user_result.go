@@ -46,6 +46,22 @@ func NewUserShortVerWithSendFriendRequestEntity(
 	}
 }
 
+func NewUserShortVerWithBirthdayEntity(
+	user *userEntity.UserWithBirthday,
+) *common.UserShortVerWithBirthdayResult {
+	if user == nil {
+		return nil
+	}
+
+	return &common.UserShortVerWithBirthdayResult{
+		ID:         user.ID,
+		FamilyName: user.FamilyName,
+		Name:       user.Name,
+		AvatarUrl:  user.AvatarUrl,
+		Birthday:   user.Birthday,
+	}
+}
+
 func NewUserResultWithoutSettingEntity(
 	user *userEntity.User,
 	friendStatus consts.FriendStatus,

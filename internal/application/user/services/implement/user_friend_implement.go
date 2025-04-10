@@ -429,13 +429,35 @@ func (s *sUserFriend) GetFriendSuggestion(
 		return nil, err
 	}
 
-	// 2. Map userEntity to userDtoShortVer
+	// 2. Map to return
 	var userResults []*common.UserShortVerWithSendFriendRequestResult
 	for _, user := range userEntities {
 		userResults = append(userResults, mapper.NewUserShortVerWithSendFriendRequestEntity(user))
 	}
 
 	return &userQuery.FriendSuggestionQueryResult{
+		Users:          userResults,
+		PagingResponse: paging,
+	}, nil
+}
+
+func (s *sUserFriend) GetFriendByBirthday(
+	ctx context.Context,
+	query *userQuery.FriendQuery,
+) (result *userQuery.FriendWithBirthdayQueryResult, err error) {
+	// 1. Get list friend with birthday
+	userEntities, paging, err := s.friendRepo.GetFriendByBirthday(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Map to return
+	var userResults []*common.UserShortVerWithBirthdayResult
+	for _, user := range userEntities {
+		userResults = append(userResults, mapper.NewUserShortVerWithBirthdayEntity(user))
+	}
+
+	return &userQuery.FriendWithBirthdayQueryResult{
 		Users:          userResults,
 		PagingResponse: paging,
 	}, nil

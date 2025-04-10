@@ -151,7 +151,7 @@ func (r *rUser) GetMany(
 	}
 
 	if query.PhoneNumber != "" {
-		db = db.Where("phonenumber = ?", query.PhoneNumber)
+		db = db.Where("phone_number = ?", query.PhoneNumber)
 	}
 
 	if !query.Birthday.IsZero() {
@@ -206,7 +206,7 @@ func (r *rUser) GetMany(
 
 	offset := (page - 1) * limit
 
-	if err := db.WithContext(ctx).
+	if err = db.WithContext(ctx).
 		Select("id, family_name, name, avatar_url").
 		Offset(offset).
 		Limit(limit).

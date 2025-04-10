@@ -42,6 +42,14 @@ type UserShortVerWithFriendSuggestionDto struct {
 	IsSendFriendRequest bool      `json:"is_send_friend_request"`
 }
 
+type UserShortVerWithBirthday struct {
+	ID         uuid.UUID `json:"id"`
+	FamilyName string    `json:"family_name"`
+	Name       string    `json:"name"`
+	AvatarUrl  string    `json:"avatar_url"`
+	Birthday   time.Time `json:"birthday"`
+}
+
 type UserWithSettingDto struct {
 	ID          uuid.UUID           `json:"id"`
 	FamilyName  string              `json:"family_name"`
@@ -156,5 +164,17 @@ func ToUserShortWithSendFriendRequestVerDto(
 		Name:                userResult.Name,
 		AvatarUrl:           userResult.AvatarUrl,
 		IsSendFriendRequest: userResult.IsSendFriendRequest,
+	}
+}
+
+func ToUserShortVerWithBirthdayDto(
+	userResult *common.UserShortVerWithBirthdayResult,
+) *UserShortVerWithBirthday {
+	return &UserShortVerWithBirthday{
+		ID:         userResult.ID,
+		FamilyName: userResult.FamilyName,
+		Name:       userResult.Name,
+		AvatarUrl:  userResult.AvatarUrl,
+		Birthday:   userResult.Birthday,
 	}
 }

@@ -21,3 +21,8 @@ type FriendSuggestionQueryResult struct {
 	Users          []*common.UserShortVerWithSendFriendRequestResult
 	PagingResponse *response.PagingResponse
 }
+
+type FriendWithBirthdayQueryResult struct {
+	Users          []*common.UserShortVerWithBirthdayResult
+	PagingResponse *response.PagingResponse
+}

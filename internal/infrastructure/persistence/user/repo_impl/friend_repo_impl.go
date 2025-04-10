@@ -3,14 +3,14 @@ package repo_impl
 import (
 	"context"
 	"errors"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
-
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"gorm.io/gorm"
+	"time"
 )
 
 type rFriend struct {
@@ -68,17 +68,18 @@ func (r *rFriend) GetFriends(
 	}
 	offset := (page - 1) * limit
 
-	db := r.db.WithContext(ctx).Model(&models.User{})
+	db := r.db.WithContext(ctx).Model(&models.User{}).
+		Joins("JOIN friends ON friends.user_id = users.id").
+		Where("friends.friend_id = ?", query.UserId)
 
-	err := db.Joins("JOIN friends ON friends.user_id = users.id").
-		Where("friends.friend_id = ?", query.UserId).
-		Select("id, family_name, name, avatar_url").
-		Count(&total).
+	if err := db.Count(&total).Error; err != nil {
+		return nil, nil, err
+	}
+
+	if err := db.Select("id, family_name, name, avatar_url").
 		Offset(offset).
 		Limit(limit).
-		Find(&users).Error
-
-	if err != nil {
+		Find(&users).Error; err != nil {
 		return nil, nil, err
 	}
 
@@ -215,6 +216,69 @@ func (r *rFriend) GetFriendSuggestions(
 	var userEntities []*entities.UserWithSendFriendRequest
 	for _, sg := range suggestions {
 		userEntity := mapper.FromUserModelWithSendFriendRequest(sg, friendRequestStatus[sg.ID])
+		userEntities = append(userEntities, userEntity)
+	}
+
+	return userEntities, pagingResponse, nil
+}
+
+func (r *rFriend) GetFriendByBirthday(
+	ctx context.Context,
+	query *query.FriendQuery,
+) ([]*entities.UserWithBirthday, *response.PagingResponse, error) {
+	var users []*models.User
+	var total int64
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	db := r.db.WithContext(ctx).Model(&models.User{}).
+		Joins("JOIN friends ON friends.user_id = users.id").
+		Where("friends.friend_id = ?", query.UserId)
+
+	now := time.Now()
+	currentMonth := int(now.Month())
+	currentDay := now.Day()
+
+	// Get total record
+	countDb := db.Where("birthday IS NOT NULL").
+		Where("EXTRACT(MONTH FROM birthday) > ? OR (EXTRACT(MONTH FROM birthday) = ? AND EXTRACT(DAY FROM birthday) >= ?)",
+			currentMonth, currentMonth, currentDay,
+		)
+
+	if err := countDb.Count(&total).Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	// Get list friend prepare to birthday
+	if err := db.Select("users.id, users.family_name, users.name, users.avatar_url, users.birthday").
+		Where("birthday IS NOT NULL").
+		Where("EXTRACT(MONTH FROM birthday) > ? OR (EXTRACT(MONTH FROM birthday) = ? AND EXTRACT(DAY FROM birthday) >= ?)",
+			currentMonth, currentMonth, currentDay).
+		Order("EXTRACT(MONTH FROM birthday) ASC, EXTRACT(DAY FROM birthday) ASC").
+		Offset(offset).
+		Limit(limit).
+		Find(&users).
+		Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	var userEntities []*entities.UserWithBirthday
+	for _, user := range users {
+		userEntity := mapper.FromUserModelWithBirthday(user)
 		userEntities = append(userEntities, userEntity)
 	}
 

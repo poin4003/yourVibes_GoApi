@@ -69,3 +69,11 @@ type UserShortVerWithSendFriendRequestResult struct {
 	AvatarUrl           string
 	IsSendFriendRequest bool
 }
+
+type UserShortVerWithBirthdayResult struct {
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
+	Birthday   time.Time
+}

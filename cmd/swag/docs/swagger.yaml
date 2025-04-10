@@ -264,7 +264,7 @@ definitions:
       name:
         type: string
     type: object
-host: yourvibes.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -1926,6 +1926,24 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get a list of friend
+      tags:
+      - user_friend
+  /users/friends/birthday/:
+    get:
+      description: Get a list of friend
+      parameters:
+      - description: limit on page
+        in: query
+        name: limit
+        type: integer
+      - description: current page
+        in: query
+        name: page
+        type: integer
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of friend by birthday
       tags:
       - user_friend
   /users/friends/friend_request:

@@ -60,6 +60,14 @@ type UserWithSendFriendRequest struct {
 	IsSendFriendRequest bool
 }
 
+type UserWithBirthday struct {
+	ID         uuid.UUID
+	FamilyName string
+	Name       string
+	AvatarUrl  string
+	Birthday   time.Time
+}
+
 func (u *User) ValidateUser() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.FamilyName, validation.Required, validation.RuneLength(2, 255)),
