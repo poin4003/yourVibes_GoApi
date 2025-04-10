@@ -48,7 +48,14 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 		return
 	}
 
+	userIdClaims, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
 	var userIds []uuid.UUID
+	userIds = append(userIds, userIdClaims)
 	for _, userId := range creatConsersation.UserIds {
 		userUUID, err := uuid.Parse(userId)
 		if err != nil {
