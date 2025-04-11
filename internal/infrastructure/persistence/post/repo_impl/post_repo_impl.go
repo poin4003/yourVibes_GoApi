@@ -395,7 +395,7 @@ func (r *rPost) GetTrendingPost(
 		Where("p.status = ?", true).
 		Where("p.is_advertisement = ?", 0).
 		Where("p.privacy = ?", consts.PUBLIC).
-		Where("p.created_at => ? AND p.created_at <= ?", averageTimeToGet, now).
+		Where("p.created_at >= ? AND p.created_at <= ?", averageTimeToGet, now).
 		Order("score DESC").
 		Offset(offset).
 		Limit(limit).
