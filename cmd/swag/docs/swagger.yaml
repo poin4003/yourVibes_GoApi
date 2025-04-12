@@ -264,7 +264,7 @@ definitions:
       name:
         type: string
     type: object
-host: 192.168.20.113:8080
+host: yourvibes.duckdns.org:8080
 info:
   contact:
     email: pchuy4003@gmail.com
