@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/IP"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -71,8 +72,13 @@ func AddUrlIntoMedia(fileName string) string {
 }
 
 func GetUrlMedia() string {
-	fileUrl := fmt.Sprintf("%s:%d/v1/2024/media/",
-		global.Config.Server.ServerEndpoint,
+	ipv4, err := IP.GetLocalIP()
+	if err != nil {
+		ipv4 = global.Config.Server.ServerEndpoint
+	}
+
+	fileUrl := fmt.Sprintf("http://%s:%d/v1/2024/media/",
+		ipv4,
 		global.Config.Server.Port,
 	)
 
