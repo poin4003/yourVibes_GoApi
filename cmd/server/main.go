@@ -16,9 +16,9 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host yourvibes.duckdns.org:8080
+// @host localhost:8080
 // @BasePath /v1/2024
-// @schema https
+// @schema http
 
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in header

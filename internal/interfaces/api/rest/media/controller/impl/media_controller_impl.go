@@ -35,6 +35,8 @@ func (c *cMedia) GetMedia(ctx *gin.Context) {
 		return
 	}
 
+	defer result.File.Close()
+
 	// 3. Set headers and serve content
 	for key, value := range result.Headers {
 		ctx.Header(key, value)

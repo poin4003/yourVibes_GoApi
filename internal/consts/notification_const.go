@@ -10,6 +10,7 @@ type NotificationType string
 
 const (
 	NEW_POST              NotificationType = "new_post"
+	NEW_POST_PERSONAL     NotificationType = "new_post_personal"
 	NEW_COMMENT           NotificationType = "new_comment"
 	LIKE_POST             NotificationType = "like_post"
 	LIKE_COMMENT          NotificationType = "like_comment"
@@ -20,10 +21,12 @@ const (
 	ACTIVATE_POST         NotificationType = "activate_post"
 	DEACTIVATE_COMMENT    NotificationType = "deactivate_comment"
 	ACTIVATE_COMMENT      NotificationType = "activate_comment"
+	BLOCK_CREATE_POST     NotificationType = "block_create_post"
 )
 
 var NotificationTypes = []interface{}{
 	NEW_POST,
+	NEW_POST_PERSONAL,
 	NEW_COMMENT,
 	LIKE_POST,
 	LIKE_COMMENT,
@@ -34,6 +37,7 @@ var NotificationTypes = []interface{}{
 	ACTIVATE_POST,
 	DEACTIVATE_COMMENT,
 	ACTIVATE_COMMENT,
+	BLOCK_CREATE_POST,
 }
 
 type NotificationSocketResponse struct {

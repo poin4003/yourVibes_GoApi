@@ -6,6 +6,17 @@ import (
 )
 
 func ToPostModel(post *post_entity.Post) *models.Post {
+	var medias []models.Media
+	for _, media := range post.Media {
+		medias = append(medias, models.Media{
+			MediaUrl:  media.MediaUrl,
+			PostId:    media.PostId,
+			Status:    media.Status,
+			CreatedAt: media.CreatedAt,
+			UpdatedAt: media.UpdatedAt,
+		})
+	}
+
 	p := &models.Post{
 		ID:              post.ID,
 		UserId:          post.UserId,
@@ -19,6 +30,7 @@ func ToPostModel(post *post_entity.Post) *models.Post {
 		Status:          post.Status,
 		CreatedAt:       post.CreatedAt,
 		UpdatedAt:       post.UpdatedAt,
+		Media:           medias,
 	}
 
 	return p
