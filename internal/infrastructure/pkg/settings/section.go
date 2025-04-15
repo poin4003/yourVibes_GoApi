@@ -1,16 +1,17 @@
 package settings
 
 type Config struct {
-	Server          ServerSetting         `mapstructure:"server"`
-	PostgreSql      PostgreSqlSetting     `mapstructure:"postgresql"`
-	Logger          LoggerSetting         `mapstructure:"logger"`
-	Media           MediaSetting          `mapstructure:"media"`
-	Redis           RedisSetting          `mapstructure:"redis"`
-	Authentication  AuthenticationSetting `mapstructure:"authentication"`
-	MailService     MailServiceSetting    `mapstructure:"mail_service"`
-	MomoSetting     MomoSetting           `mapstructure:"momo"`
-	GoogleSetting   GoogleSetting         `mapstructure:"google"`
-	RabbitMQSetting RabbitMQSetting       `mapstructure:"rabbitmq"`
+	Server          ServerSetting          `mapstructure:"server"`
+	PostgreSql      PostgreSqlSetting      `mapstructure:"postgresql"`
+	Logger          LoggerSetting          `mapstructure:"logger"`
+	Media           MediaSetting           `mapstructure:"media"`
+	Redis           RedisSetting           `mapstructure:"redis"`
+	Authentication  AuthenticationSetting  `mapstructure:"authentication"`
+	MailService     MailServiceSetting     `mapstructure:"mail_service"`
+	MomoSetting     MomoSetting            `mapstructure:"momo"`
+	GoogleSetting   GoogleSetting          `mapstructure:"google"`
+	RabbitMQSetting RabbitMQSetting        `mapstructure:"rabbitmq"`
+	ModerateService ModerateServiceSetting `mapstructure:"moderate_service"`
 }
 
 type ServerSetting struct {
@@ -88,4 +89,8 @@ type RabbitMQSetting struct {
 	Vhost                string `mapstructure:"vhost"`
 	ConnectionTimeout    int    `mapstructure:"connection_timeout"`
 	MaxReconnectAttempts int    `mapstructure:"max_reconnect_attempts"`
+}
+
+type ModerateServiceSetting struct {
+	HealthURL string `mapstructure:"health_url"`
 }

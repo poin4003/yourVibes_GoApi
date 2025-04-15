@@ -51,3 +51,18 @@ func (p *PostEventPublisher) PublishStatistic(ctx context.Context, msg interface
 	}
 	return nil
 }
+
+func (p *PostEventPublisher) PublishAIModerate(ctx context.Context, msg interface{}, routingKey string) error {
+	body, err := json.Marshal(msg)
+	if err != nil {
+		global.Logger.Error("failed to marshal statistic payload", zap.Error(err))
+		return err
+	}
+
+	err = p.conn.Publish(ctx, consts.AiExchange, routingKey, body, nil)
+	if err != nil {
+		global.Logger.Error("failed to publish ai_exchange", zap.Error(err))
+		return err
+	}
+	return nil
+}

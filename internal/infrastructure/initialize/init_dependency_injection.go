@@ -6,9 +6,10 @@ import (
 	commentProducer "github.com/poin4003/yourVibes_GoApi/internal/application/comment/producer"
 	messageConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/consumer"
 	messageProducer "github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/post/consumer"
 	postProducer "github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	reportProducer "github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/statistic/consumer"
+	statisticConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/statistic/consumer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
@@ -218,7 +219,8 @@ func InitDependencyInjection(
 	// Init broker consumer
 	notificationConsumer.InitNotificationConsumer(notificationServiceInit, rabbitmqConnection)
 	messageConsumer.InitMessageConsumer(messageMQServiceInit, rabbitmqConnection)
-	consumer.InitStatisticsConsumer(statisticServiceInit, rabbitmqConnection)
+	statisticConsumer.InitStatisticsConsumer(statisticServiceInit, rabbitmqConnection)
+	consumer.InitPostModerationConsumer(postUserServiceInit, rabbitmqConnection)
 
 	// Init cronjob
 	advertiseCronjob.NewCheckExpiryCronJob(postRepo, newFeedRepo)

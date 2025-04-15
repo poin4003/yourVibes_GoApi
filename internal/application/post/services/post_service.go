@@ -2,14 +2,15 @@ package services
 
 import (
 	"context"
-
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 )
 
 type (
 	IPostUser interface {
-		CreatePost(ctx context.Context, command *command.CreatePostCommand) (result *command.CreatePostCommandResult, err error)
+		CreatePost(ctx context.Context, command *command.CreatePostCommand) error
+		ApprovePost(ctx context.Context, command *command.ApprovePostCommand) error
+		RejectPost(ctx context.Context, command *command.RejectPostCommand) error
 		UpdatePost(ctx context.Context, command *command.UpdatePostCommand) (result *command.UpdatePostCommandResult, err error)
 		DeletePost(ctx context.Context, command *command.DeletePostCommand) (err error)
 		GetPost(ctx context.Context, query *query.GetOnePostQuery) (result *query.GetOnePostQueryResult, err error)

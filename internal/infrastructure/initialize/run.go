@@ -17,6 +17,7 @@ func Run() *gin.Engine {
 		socket_hub.NewMessageSocketHub(),
 	)
 	response.InitCustomCode()
+	InitWatchDog()
 
 	r := InitRouter(*routerGroup)
 

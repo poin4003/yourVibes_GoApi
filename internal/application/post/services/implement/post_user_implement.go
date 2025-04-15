@@ -2,6 +2,9 @@ package implement
 
 import (
 	"context"
+	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
+	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 	"sync"
 	"time"
 
@@ -13,15 +16,12 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/producer"
 	postQuery "github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
-	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	postEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/entities"
-	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
 	"go.uber.org/zap"
 )
 
@@ -64,96 +64,127 @@ func NewPostUserImplement(
 func (s *sPostUser) CreatePost(
 	ctx context.Context,
 	command *postCommand.CreatePostCommand,
-) (result *postCommand.CreatePostCommandResult, err error) {
-	result = &postCommand.CreatePostCommandResult{
-		Post: nil,
+) error {
+	// 1. Create Media and save media
+	mediaUrls, err := media.SaveManyMedia(command.Media)
+	if err != nil {
+		return response.NewServerFailedError(err.Error())
 	}
-	// 1. CreatePost
+
+	// 2. Save temp to Redis
+	postForCreateEntity := &postEntity.PostForCreate{
+		UserId:   command.UserId,
+		Content:  command.Content,
+		Privacy:  command.Privacy,
+		Location: command.Location,
+		Media:    mediaUrls,
+	}
+
+	postId := uuid.New()
+	if err = s.postCache.SetPostForCreate(ctx, postId, postForCreateEntity); err != nil {
+		return err
+	}
+
+	// 4. Send message to Python server via RabbitMQ
+	moderateMessage := &common.PostModerationRequest{
+		PostID:  postId,
+		Content: command.Content,
+		BaseURL: media.GetUrlMedia(),
+		Media:   mediaUrls,
+	}
+
+	if err = s.postEventPublisher.PublishAIModerate(ctx, moderateMessage, consts.AiQueue); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
+}
+
+func (s *sPostUser) ApprovePost(
+	ctx context.Context,
+	command *postCommand.ApprovePostCommand,
+) error {
+	post, err := s.postCache.GetPostForCreate(ctx, command.PostId)
+	if err != nil {
+		global.Logger.Error("get post from cache failed", zap.Error(err))
+		return err
+	}
+
+	if err = s.postCache.DeletePostForCreate(ctx, command.PostId); err != nil {
+		global.Logger.Error("delete post from cache failed", zap.Error(err))
+		return err
+	}
+
+	var medias []*postEntity.Media
+	if len(post.Media) >= 0 {
+		for _, mediaTemp := range post.Media {
+			var mediaEntity *postEntity.Media
+			mediaEntity, err = postEntity.NewMedia(command.PostId, media.AddUrlIntoMedia(mediaTemp))
+			if err != nil {
+				global.Logger.Error("create media entity failed", zap.Error(err))
+				return err
+			}
+			medias = append(medias, mediaEntity)
+		}
+	}
+
 	newPost, err := postEntity.NewPost(
-		command.UserId,
-		command.Content,
-		command.Privacy,
-		command.Location,
+		post.UserId,
+		command.CensoredText,
+		post.Privacy,
+		post.Location,
+		medias,
 	)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("create post entity failed", zap.Error(err))
+		return err
 	}
 
 	postCreated, err := s.postRepo.CreateOne(ctx, newPost)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
-	}
-
-	// 2. Create Media and upload media
-	if len(command.Media) > 0 {
-		for _, file := range command.Media {
-			// 2.1. Save file and get mediaUrl
-			mediaUrl, err := media.SaveMedia(&file)
-
-			if err != nil {
-				return nil, response.NewServerFailedError(err.Error())
-			}
-
-			// 2.2. create Media model and save to database
-			mediaEntity, err := postEntity.NewMedia(postCreated.ID, mediaUrl)
-			if err != nil {
-				return nil, response.NewServerFailedError(err.Error())
-			}
-
-			_, err = s.mediaRepo.CreateOne(ctx, mediaEntity)
-			if err != nil {
-				return nil, response.NewServerFailedError(err.Error())
-			}
-		}
+		global.Logger.Error("create post failed", zap.Error(err))
+		return err
 	}
 
 	// 3. Find user
-	userFound, err := s.userRepo.GetById(ctx, command.UserId)
+	userFound, err := s.userRepo.GetById(ctx, post.UserId)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("failed to get user by id", zap.Error(err))
+		return err
 	}
 
 	if userFound == nil {
-		return nil, response.NewDataNotFoundError("user not found")
-	}
-
-	// 4. Update post count for user
-	userFound.PostCount++
-	userUpdate := &userEntity.UserUpdate{
-		PostCount: &userFound.PostCount,
-	}
-	_, err = s.userRepo.UpdateOne(ctx, userFound.ID, userUpdate)
-	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("user not found", zap.Error(err))
+		return err
 	}
 
 	// 5. Check privacy of post
 	if postCreated.Privacy == consts.PRIVATE {
-		result.Post = mapper.NewPostResultFromEntity(postCreated)
-		return result, nil
+		return nil
 	}
 
 	// 6. Create new feed for user friend
 	// 6.1. Get friend id of user friend list
 	friendIds, err := s.friendRepo.GetFriendIds(ctx, userFound.ID)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("failed to get friend ids", zap.Error(err))
+		return err
 	}
 
 	// 6.2. If user don't have friend, return
 	if len(friendIds) == 0 {
-		result.Post = mapper.NewPostResultFromEntity(postCreated)
-		return result, nil
+		return nil
 	}
 
 	// 7. Create new feed for friend
 	err = s.newFeedRepo.CreateMany(ctx, newPost.ID, userFound.ID)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("failed to create new feed for friend", zap.Error(err))
+		return err
 	}
 
 	// 8. Create notification for friend
-	notification, err := notificationEntity.NewNotification(
+	notificationFriend, err := notificationEntity.NewNotification(
 		userFound.FamilyName+" "+userFound.Name,
 		userFound.AvatarUrl,
 		userFound.ID,
@@ -163,19 +194,39 @@ func (s *sPostUser) CreatePost(
 	)
 	if err != nil {
 		global.Logger.Error("Failed to create notification entity", zap.Error(err))
-		return result, nil
+		return err
+	}
+
+	// 9. Create notification for user
+	notificationUser, err := notificationEntity.NewNotification(
+		userFound.FamilyName+" "+userFound.Name,
+		userFound.AvatarUrl,
+		userFound.ID,
+		consts.NEW_POST_PERSONAL,
+		command.PostId.String(),
+		truncate.TruncateContent(newPost.Content, 20),
+	)
+	if err != nil {
+		global.Logger.Error("Failed to create notification entity", zap.Error(err))
+		return err
 	}
 
 	// 9. Publish to RabbitMQ to handle Notification
-	notiMsg := mapper.NewNotificationResult(notification)
+	notiMsg := mapper.NewNotificationResult(notificationFriend)
 	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.bulk.db_websocket"); err != nil {
 		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 	}
 
+	notiMsg = mapper.NewNotificationResult(notificationUser)
+	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+	}
+
 	// 10. Validate post after create
-	validatePost, err := postValidator.NewValidatedPost(postCreated)
+	_, err = postValidator.NewValidatedPost(postCreated)
 	if err != nil {
-		return nil, response.NewServerFailedError(err.Error())
+		global.Logger.Error("Failed to validate post", zap.Error(err))
+		return err
 	}
 
 	// 11. Delete feed cache
@@ -183,8 +234,67 @@ func (s *sPostUser) CreatePost(
 	s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, userFound.ID)
 	s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
 
-	result.Post = mapper.NewPostResultFromValidateEntity(validatePost)
-	return result, nil
+	return nil
+}
+
+func (s *sPostUser) RejectPost(
+	ctx context.Context,
+	command *postCommand.RejectPostCommand,
+) error {
+	// 1. Get post from cache
+	post, err := s.postCache.GetPostForCreate(ctx, command.PostId)
+	if err != nil {
+		global.Logger.Error("get post from cache failed", zap.Error(err))
+		return err
+	}
+
+	// 2. Delete image
+	for _, mediaTemp := range post.Media {
+		if err = media.DeleteMediaByFilename(mediaTemp); err != nil {
+			global.Logger.Error("delete media failed", zap.Error(err))
+			return err
+		}
+	}
+
+	// 3. Get user data
+	userFound, err := s.userRepo.GetById(ctx, post.UserId)
+	if err != nil {
+		global.Logger.Error("failed to get user by id", zap.Error(err))
+		return err
+	}
+
+	if userFound == nil {
+		global.Logger.Error("user not found", zap.Error(err))
+		return err
+	}
+
+	// 4. Notification for user
+	notification, err := notificationEntity.NewNotification(
+		userFound.FamilyName+" "+userFound.Name,
+		userFound.AvatarUrl,
+		userFound.ID,
+		consts.BLOCK_CREATE_POST,
+		command.PostId.String(),
+		command.Label,
+	)
+	if err != nil {
+		global.Logger.Error("Failed to create notification entity", zap.Error(err))
+		return err
+	}
+
+	// 5. Publish to RabbitMQ to handle Notification
+	notiMsg := mapper.NewNotificationResult(notification)
+	if err = s.postEventPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
+		global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
+	}
+
+	// 6. Delete cache
+	if err = s.postCache.DeletePostForCreate(ctx, command.PostId); err != nil {
+		global.Logger.Error("delete post from cache failed", zap.Error(err))
+		return err
+	}
+
+	return nil
 }
 
 func (s *sPostUser) UpdatePost(
@@ -297,12 +407,12 @@ func (s *sPostUser) DeletePost(
 	// 2. Delete media from database and folder
 	for _, mediaRecord := range medias {
 		// 2.1. Delete media from folder
-		if err := media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
+		if err = media.DeleteMedia(mediaRecord.MediaUrl); err != nil {
 			return response.NewServerFailedError(err.Error())
 		}
 
 		// 2.1. Delete media from databases
-		if err := s.mediaRepo.DeleteOne(ctx, mediaRecord.ID); err != nil {
+		if err = s.mediaRepo.DeleteOne(ctx, mediaRecord.ID); err != nil {
 			return response.NewServerFailedError(err.Error())
 		}
 	}

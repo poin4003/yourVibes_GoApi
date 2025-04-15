@@ -178,3 +178,54 @@ func (t *tPost) DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey,
 	}
 	wg.Wait()
 }
+
+func (t *tPost) SetPostForCreate(
+	ctx context.Context,
+	postID uuid.UUID,
+	post *entities.PostForCreate,
+) error {
+	key := fmt.Sprintf("create_post:%s", postID.String())
+	data, err := json.Marshal(&post)
+	if err != nil {
+		global.Logger.Warn("Failed to marshal create post", zap.String("post_id", postID.String()), zap.Error(err))
+		return response.NewServerFailedError(err.Error())
+	}
+	if err = t.client.Set(ctx, key, string(data), consts.TTL_COMMON).Err(); err != nil {
+		global.Logger.Warn("Failed to set create post to redis", zap.String("post_id", postID.String()), zap.Error(err))
+		return response.NewServerFailedError(err.Error())
+	}
+	return nil
+}
+
+func (t *tPost) GetPostForCreate(
+	ctx context.Context,
+	postID uuid.UUID,
+) (*entities.PostForCreate, error) {
+	key := fmt.Sprintf("create_post:%s", postID.String())
+	data, err := t.client.Get(ctx, key).Bytes()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, err
+		}
+		global.Logger.Warn("Failed to get post for create from redis", zap.Error(err))
+		return nil, err
+	}
+	post := &entities.PostForCreate{}
+	if err = json.Unmarshal(data, post); err != nil {
+		global.Logger.Warn("Failed to unmarshal post for create", zap.String("post_id", postID.String()), zap.Error(err))
+		return nil, err
+	}
+	return post, nil
+}
+
+func (t *tPost) DeletePostForCreate(
+	ctx context.Context,
+	postID uuid.UUID,
+) error {
+	key := fmt.Sprintf("create_post:%s", postID.String())
+	if err := t.client.Del(ctx, key).Err(); err != nil {
+		global.Logger.Warn("Failed to delete post for create from redis", zap.Error(err))
+		return response.NewServerFailedError(err.Error())
+	}
+	return nil
+}

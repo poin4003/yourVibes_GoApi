@@ -77,12 +77,34 @@ func (r *rPost) CreateOne(
 			return err
 		}
 
+		if err := r.updatePostCountByUserId(ctx, tx, entity.UserId, 1); err != nil {
+			return err
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
 	}
 
 	return r.GetById(ctx, postModel.ID)
+}
+
+func (r *rPost) updatePostCountByUserId(
+	ctx context.Context,
+	tx *gorm.DB,
+	id uuid.UUID,
+	countChange int,
+) error {
+	if err := tx.WithContext(ctx).
+		Model(&models.User{}).
+		Where("id = ?", id).
+		UpdateColumn(
+			"post_count", gorm.Expr("GREATEST(post_count + ?, 0)", countChange),
+		).Error; err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
 }
 
 func (r *rPost) UpdateOne(
@@ -169,12 +191,8 @@ func (r *rPost) DeleteOne(
 		}
 
 		// 3. Update postCount -1 in User table
-		if err := tx.WithContext(ctx).
-			Model(&models.User{}).
-			Where("id = ?", postFound.UserId).
-			Update("post_count", gorm.Expr("post_count - ?", 1)).
-			Error; err != nil {
-			return response.NewServerFailedError(err.Error())
+		if err := r.updatePostCountByUserId(ctx, tx, postFound.UserId, -1); err != nil {
+			return err
 		}
 
 		// 4. Delete related comment

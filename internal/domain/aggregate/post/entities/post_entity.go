@@ -37,6 +37,14 @@ type PostUpdate struct {
 	UpdatedAt       *time.Time
 }
 
+type PostForCreate struct {
+	UserId   uuid.UUID
+	Content  string
+	Privacy  consts.PrivacyLevel
+	Location string
+	Media    []string
+}
+
 func (p *Post) ValidatePost() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Content, validation.RuneLength(2, 10000)),
@@ -63,6 +71,7 @@ func NewPost(
 	content string,
 	privacy consts.PrivacyLevel,
 	location string,
+	media []*Media,
 ) (*Post, error) {
 	post := &Post{
 		ID:              uuid.New(),
@@ -76,6 +85,7 @@ func NewPost(
 		Status:          true,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
+		Media:           media,
 	}
 	if err := post.ValidatePost(); err != nil {
 		return nil, err

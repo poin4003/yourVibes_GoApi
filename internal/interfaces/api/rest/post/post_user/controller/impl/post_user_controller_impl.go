@@ -69,16 +69,13 @@ func (c *cPostUser) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.postService.CreatePost(context.Background(), createPostCommand)
+	err = c.postService.CreatePost(context.Background(), createPostCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
 	}
 
-	// 5. Map result to dto
-	postDto := response.ToPostDto(*result.Post)
-
-	pkgResponse.OK(ctx, postDto)
+	pkgResponse.OK(ctx, nil)
 }
 
 // UpdatePost documentation

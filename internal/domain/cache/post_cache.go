@@ -18,5 +18,8 @@ type (
 		GetFeeds(ctx context.Context, inputKey consts.RedisKey, userID uuid.UUID, limit, page int) ([]uuid.UUID, *response.PagingResponse)
 		DeleteFeeds(ctx context.Context, inputKey consts.RedisKey, userID uuid.UUID)
 		DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey, friendIDs []uuid.UUID)
+		SetPostForCreate(ctx context.Context, postID uuid.UUID, post *entities.PostForCreate) error
+		GetPostForCreate(ctx context.Context, postID uuid.UUID) (*entities.PostForCreate, error)
+		DeletePostForCreate(ctx context.Context, postID uuid.UUID) error
 	}
 )
