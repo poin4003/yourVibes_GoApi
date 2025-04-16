@@ -92,7 +92,6 @@ func (s *sPostUser) CreatePost(
 		BaseURL: media.GetUrlMedia(),
 		Media:   mediaUrls,
 	}
-
 	if err = s.postEventPublisher.PublishAIModerate(ctx, moderateMessage, consts.AiQueue); err != nil {
 		return response.NewServerFailedError(err.Error())
 	}
