@@ -90,7 +90,7 @@ func (s *sPostNewFeed) GetNewFeeds(
 				post := s.postCache.GetPost(ctx, postID)
 				if post == nil {
 					post, err = s.postRepo.GetById(ctx, postID)
-					if err != nil {
+					if err != nil || post == nil {
 						global.Logger.Warn("Failed to get post from DB", zap.String("post_id", postID.String()), zap.Error(err))
 						cacheErrorOccurred = true
 						s.postCache.DeletePost(ctx, postID)
@@ -112,7 +112,9 @@ func (s *sPostNewFeed) GetNewFeeds(
 
 		if !cacheFailed {
 			for post := range ch {
+				//if post != nil {
 				posts = append(posts, post)
+				//}
 			}
 		}
 	}

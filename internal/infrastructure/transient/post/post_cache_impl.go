@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
-
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
@@ -14,6 +12,8 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	"strconv"
+	"sync"
 )
 
 type tPost struct {
@@ -64,39 +64,28 @@ func (t *tPost) DeletePost(ctx context.Context, postID uuid.UUID) {
 func (t *tPost) SetFeeds(
 	ctx context.Context,
 	inputKey consts.RedisKey,
-	userID uuid.UUID, postIds []uuid.UUID, paging *response.PagingResponse,
+	userID uuid.UUID,
+	postIDs []uuid.UUID,
+	paging *response.PagingResponse,
 ) {
 	key := fmt.Sprintf("%s:%s", inputKey, userID.String())
-	pagingKey := fmt.Sprintf("%s:%s:paging", inputKey, userID.String())
 
-	pipe := t.client.Pipeline()
-
-	if len(postIds) > 0 {
-		// Convert postIds to string
-		postIdStrings := make([]interface{}, len(postIds))
-		for i, id := range postIds {
-			postIdStrings[i] = id.String()
+	zMembers := make([]redis.Z, len(postIDs))
+	for i, id := range postIDs {
+		zMembers[i] = redis.Z{
+			Score:  float64(len(postIDs) - i),
+			Member: id.String(),
 		}
-		// Save postIds into list
-		pipe.RPush(ctx, key, postIdStrings...)
-		pipe.Expire(ctx, key, consts.TTL_COMMON)
-	} else {
-		pipe.Del(ctx, key)
-		pipe.Expire(ctx, key, consts.TTL_COMMON)
 	}
 
-	// Save paging data into redis
-	pagingData, err := json.Marshal(paging)
-	if err != nil {
-		global.Logger.Warn("Failed to marshal paging", zap.String("user_id", userID.String()), zap.Error(err))
+	if err := t.client.ZAdd(ctx, key, zMembers...).Err(); err != nil {
+		global.Logger.Warn("Failed to set feeds", zap.String("key", key), zap.Error(err))
 		return
 	}
-	pipe.Set(ctx, pagingKey, string(pagingData), consts.TTL_COMMON)
 
-	// Execute
-	_, err = pipe.Exec(ctx)
-	if err != nil {
-		global.Logger.Warn("Failed to set personal posts to redis", zap.String("user_id", userID.String()), zap.Error(err))
+	totalKey := fmt.Sprintf("%s:total:%s", inputKey, userID.String())
+	if err := t.client.Set(ctx, totalKey, paging.Total, 0).Err(); err != nil {
+		global.Logger.Warn("Failed to set total paging", zap.String("key", totalKey), zap.Error(err))
 	}
 }
 
@@ -106,53 +95,55 @@ func (t *tPost) GetFeeds(
 	userID uuid.UUID, limit, page int,
 ) ([]uuid.UUID, *response.PagingResponse) {
 	key := fmt.Sprintf("%s:%s", inputKey, userID.String())
-	pagingKey := fmt.Sprintf("%s:%s:paging", inputKey, userID.String())
+	totalKey := fmt.Sprintf("%s:total:%s", inputKey, userID.String())
 
-	pagingData, err := t.client.Get(ctx, pagingKey).Bytes()
+	start := int64((page - 1) * limit)
+	stop := start + int64(limit) - 1
+
+	idStrings, err := t.client.ZRevRange(ctx, key, start, stop).Result()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, nil
-		}
-		global.Logger.Warn("Failed to get paging from redis", zap.String("user_id", userID.String()), zap.String("paging_key", pagingKey))
+		global.Logger.Warn("Failed to get post feeds", zap.String("user_id", userID.String()), zap.Error(err))
 		return nil, nil
 	}
 
-	var paging response.PagingResponse
-	if err = json.Unmarshal(pagingData, &paging); err != nil {
-		global.Logger.Warn("Failed to unmarshal paging from redis", zap.String("user_id", userID.String()), zap.Error(err))
-		return nil, nil
-	}
-
-	offset := (page - 1) * limit
-	postIds, err := t.client.LRange(ctx, key, int64(offset), int64(offset+limit-1)).Result()
+	totalStr, err := t.client.Get(ctx, totalKey).Result()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, nil
-		}
-		global.Logger.Warn("Failed to get personal posts from redis", zap.String("user_id", userID.String()), zap.Error(err))
+		global.Logger.Warn("Failed to get total from cache", zap.String("user_id", userID.String()), zap.Error(err))
 		return nil, nil
 	}
 
-	var postUUIDs []uuid.UUID
-	for _, postIdString := range postIds {
-		var postID uuid.UUID
-		if postID, err = uuid.Parse(postIdString); err != nil {
-			global.Logger.Warn("Failed to parse post id", zap.String("post_id", postIdString))
+	total, err := strconv.ParseInt(totalStr, 10, 64)
+	if err != nil {
+		global.Logger.Warn("Failed to parse total", zap.String("totalStr", totalStr), zap.Error(err))
+		return nil, nil
+	}
+
+	var ids []uuid.UUID
+	for _, str := range idStrings {
+		var id uuid.UUID
+		id, err = uuid.Parse(str)
+		if err == nil {
+			ids = append(ids, id)
 		} else {
-			postUUIDs = append(postUUIDs, postID)
+			global.Logger.Warn("Failed to parse id", zap.String("id", str), zap.Error(err))
 		}
 	}
 
-	return postUUIDs, &paging
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	return ids, pagingResponse
 }
 
 func (t *tPost) DeleteFeeds(ctx context.Context, inputKey consts.RedisKey, userID uuid.UUID) {
 	key := fmt.Sprintf("%s:%s", inputKey, userID.String())
-	pagingKey := fmt.Sprintf("%s:%s:paging", inputKey, userID.String())
+	totalKey := fmt.Sprintf("%s:total:%s", inputKey, userID.String())
 
-	if err := t.client.Del(ctx, key, pagingKey).Err(); err != nil {
-		global.Logger.Warn("Failed to delete feeds from redis", zap.String("user_id", userID.String()), zap.Error(err))
-	}
+	t.client.Del(ctx, key)
+	t.client.Del(ctx, totalKey)
 }
 
 func (t *tPost) DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey, friendIDs []uuid.UUID) {
@@ -161,22 +152,46 @@ func (t *tPost) DeleteFriendFeeds(ctx context.Context, inputKey consts.RedisKey,
 	sem := make(chan struct{}, maxWorkers)
 
 	for _, id := range friendIDs {
-
 		wg.Add(1)
 		sem <- struct{}{}
 
 		go func(userID uuid.UUID) {
 			defer wg.Done()
 			defer func() { <-sem }()
-
-			key := fmt.Sprintf("%s:%s", inputKey, userID.String())
-			pagingKey := fmt.Sprintf("%s:%s:paging", inputKey, userID.String())
-			if err := t.client.Del(ctx, key, pagingKey).Err(); err != nil {
-				global.Logger.Warn("Failed to delete feeds from redis", zap.String("user_id", userID.String()), zap.Error(err))
-			}
+			t.DeleteFeeds(ctx, inputKey, userID)
 		}(id)
 	}
 	wg.Wait()
+}
+
+func (t *tPost) DeleteRelatedPost(
+	ctx context.Context,
+	inputKey consts.RedisKey,
+	userID uuid.UUID,
+) {
+	listKey := fmt.Sprintf("%s:%s", inputKey, userID.String())
+	totalKey := fmt.Sprintf("%s:total:%s", inputKey, userID.String())
+
+	postIDs, err := t.client.ZRange(ctx, listKey, 0, -1).Result()
+	if err != nil {
+		global.Logger.Warn("Failed to get related post from redis", zap.String("user_id", userID.String()), zap.Error(err))
+		return
+	}
+
+	if len(postIDs) == 0 {
+		return
+	}
+
+	var keysToDelete []string
+	for _, id := range postIDs {
+		keysToDelete = append(keysToDelete, fmt.Sprintf("post:%s", id))
+	}
+
+	keysToDelete = append(keysToDelete, listKey, totalKey)
+
+	if err = t.client.Del(ctx, keysToDelete...).Err(); err != nil {
+		global.Logger.Warn("Failed to delete post from redis", zap.String("user_id", userID.String()), zap.Error(err))
+	}
 }
 
 func (t *tPost) SetPostForCreate(

@@ -439,9 +439,7 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 6. Delete post cache
-	if err = s.deleteFeedCache(ctx, *command.PostId, postFound.UserId); err != nil {
-		return err
-	}
+	s.postCache.DeletePost(ctx, *command.PostId)
 	return nil
 }
 
@@ -555,9 +553,8 @@ func (s *sPostUser) GetManyPosts(
 					if err != nil || post == nil {
 						global.Logger.Warn("Failed to get post", zap.String("postId", postID.String()))
 						cacheErrorOccurred = true
-						if err = s.deleteFeedCache(ctx, postID, query.UserID); err != nil {
-							return
-						}
+						s.postCache.DeletePost(ctx, postID)
+						s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, postID)
 						return
 					}
 					s.postCache.SetPost(ctx, post)
@@ -698,20 +695,4 @@ func (s *sPostUser) CheckPostOwner(
 	return &postQuery.CheckPostOwnerQueryResult{
 		IsOwner: isOwner,
 	}, nil
-}
-
-func (s *sPostUser) deleteFeedCache(ctx context.Context, postID, userID uuid.UUID) error {
-	s.postCache.DeletePost(ctx, postID)
-	s.postCache.DeleteFeeds(ctx, consts.RK_PERSONAL_POST, userID)
-	s.postCache.DeleteFeeds(ctx, consts.RK_USER_FEED, userID)
-	friends, err := s.friendRepo.GetFriendIds(ctx, userID)
-	if err != nil {
-		return err
-	}
-	if len(friends) == 0 {
-		return nil
-	}
-
-	s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friends)
-	return nil
 }

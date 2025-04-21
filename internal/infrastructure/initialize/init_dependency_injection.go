@@ -138,7 +138,7 @@ func InitDependencyInjection(
 	adminAuthServiceInit := adminServiceImpl.NewAdminAuthImplement(adminRepo)
 	adminInfoServiceInit := adminServiceImpl.NewAdminInfoImplement(adminRepo, adminCache)
 	superAdminServiceInit := adminServiceImpl.NewSuperAdminImplement(adminRepo, adminCache)
-	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, userCache, reportNotificationPublisher)
+	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, friendRepo, userCache, postCache, commentCache, reportNotificationPublisher)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)

@@ -25,20 +25,29 @@ import (
 type sReportFactory struct {
 	reportRepo            repo.IReportRepository
 	voucherRepo           repo.IVoucherRepository
+	friendRepo            repo.IFriendRepository
 	userCache             cache.IUserCache
+	postCache             cache.IPostCache
+	commentCache          cache.ICommentCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewReportFactoryImplment(
 	reportRepo repo.IReportRepository,
 	voucherRepo repo.IVoucherRepository,
+	friendRepo repo.IFriendRepository,
 	userCache cache.IUserCache,
+	postCache cache.IPostCache,
+	commentCache cache.ICommentCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sReportFactory {
 	return &sReportFactory{
 		reportRepo:            reportRepo,
 		voucherRepo:           voucherRepo,
+		friendRepo:            friendRepo,
 		userCache:             userCache,
+		postCache:             postCache,
+		commentCache:          commentCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -204,6 +213,16 @@ func (s *sReportFactory) HandleReport(
 		// Delete user status cache
 		go func(userID uuid.UUID) {
 			s.userCache.DeleteUserStatus(ctx, userID)
+			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userID)
+			friendIds, err := s.friendRepo.GetFriendIds(ctx, userID)
+			if err != nil {
+				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userID.String()), zap.Error(err))
+				return
+			}
+			if len(friendIds) == 0 {
+				return
+			}
+			s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
 		}(userEntity.ID)
 
 		return nil
@@ -234,6 +253,21 @@ func (s *sReportFactory) HandleReport(
 			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 		}
 
+		// Delete cache
+		go func(postId, userId uuid.UUID) {
+			s.postCache.DeletePost(ctx, postId)
+			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userId)
+			friendIds, err := s.friendRepo.GetFriendIds(ctx, userId)
+			if err != nil {
+				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userId.String()), zap.Error(err))
+				return
+			}
+			if len(friendIds) == 0 {
+				return
+			}
+			s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
+		}(postEntity.ID, postEntity.UserId)
+
 		return nil
 	case consts.COMMENT_REPORT:
 		// Handle comment report
@@ -261,6 +295,8 @@ func (s *sReportFactory) HandleReport(
 		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
 			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 		}
+
+		//s.commentCache.DeleteComment(ctx, commentEntity.ID)
 
 		return nil
 	default:
@@ -308,6 +344,16 @@ func (s *sReportFactory) Activate(
 		// Delete user status cache
 		go func(userID uuid.UUID) {
 			s.userCache.DeleteUserStatus(ctx, userID)
+			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userID)
+			friendIds, err := s.friendRepo.GetFriendIds(ctx, userID)
+			if err != nil {
+				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userID.String()), zap.Error(err))
+				return
+			}
+			if len(friendIds) == 0 {
+				return
+			}
+			s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
 		}(userEntity.ID)
 
 		return nil
@@ -358,6 +404,20 @@ func (s *sReportFactory) Activate(
 		if err = s.notificationPublisher.PublishNotification(ctx, notiMsg, "notification.single.db_websocket"); err != nil {
 			global.Logger.Error("Failed to publish notification for friend", zap.Error(err))
 		}
+
+		go func(postId, userId uuid.UUID) {
+			s.postCache.DeletePost(ctx, postId)
+			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userId)
+			friendIds, err := s.friendRepo.GetFriendIds(ctx, userId)
+			if err != nil {
+				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userId.String()), zap.Error(err))
+				return
+			}
+			if len(friendIds) == 0 {
+				return
+			}
+			s.postCache.DeleteFriendFeeds(ctx, consts.RK_USER_FEED, friendIds)
+		}(postEntity.ID, postEntity.UserId)
 
 		return nil
 	case consts.COMMENT_REPORT:

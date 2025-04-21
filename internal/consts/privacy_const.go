@@ -1,6 +1,5 @@
 package consts
 
-// Define enum for validator
 type PrivacyLevel string
 
 const (
@@ -13,13 +12,4 @@ var PrivacyLevels = []interface{}{
 	PUBLIC,
 	FRIEND_ONLY,
 	PRIVATE,
-}
-
-func IsValidPrivacyLevel(level PrivacyLevel) bool {
-	switch level {
-	case PUBLIC, FRIEND_ONLY, PRIVATE:
-		return true
-	default:
-		return false
-	}
 }
