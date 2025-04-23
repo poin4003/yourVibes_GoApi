@@ -1,281 +1,285 @@
 package impl
 
-// import (
-// 	"context"
-// 	"net/http/httptest"
-// 	"testing"
-// 	"time"
+import (
+	"bytes"
+	"context"
+	"errors"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/google/uuid"
-// 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
-// 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
-// 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
-// )
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
 
-// // Mock service implements IConversation
-// type MockConversationService struct {
-// 	mock.Mock
-// }
+type MockConversationService struct {
+	mock.Mock
+}
 
-// func (m *MockConversationService) GetConversationById(ctx context.Context, conversationId uuid.UUID) (*common.ConversationResult, error) {
-// 	args := m.Called(ctx, conversationId)
-// 	if args.Get(0) != nil {
-// 		return args.Get(0).(*common.ConversationResult), args.Error(1)
-// 	}
-// 	return nil, args.Error(1)
-// }
+func (m *MockConversationService) CreateConversation(ctx context.Context, cmd *command.CreateConversationCommand) (*command.CreateConversationResult, error) {
+	args := m.Called(ctx, cmd)
+	if res, ok := args.Get(0).(*command.CreateConversationResult); ok {
+		return res, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
 
-// func (m *MockConversationService) CreateConversation(ctx context.Context, cmd *command.CreateConversationCommand) (*command.CreateConversationResult, error) {
-// 	args := m.Called(ctx, cmd)
-// 	if args.Get(0) != nil {
-// 		return args.Get(0).(*command.CreateConversationResult), args.Error(1)
-// 	}
-// 	return nil, args.Error(1)
-// }
+func (m *MockConversationService) GetConversationById(ctx context.Context, conversationId uuid.UUID) (*common.ConversationResult, error) {
+	args := m.Called(ctx, conversationId)
+	if res, ok := args.Get(0).(*common.ConversationResult); ok {
+		return res, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
 
-// // func (m *MockConversationService) GetManyConversation(ctx context.Context, userId uuid.UUID, query *query.GetManyConversationQuery) (*query.GetManyConversationQueryResult, error) {
-// // 	args := m.Called(ctx, userId, query)
-// // 	if args.Get(0) != nil {
-// // 		return args.Get(0).(*query.GetManyConversationQueryResult), args.Error(1)
-// // 	}
-// // 	return nil, args.Error(1)
-// // }
+func (m *MockConversationService) GetManyConversation(ctx context.Context, userId uuid.UUID, query *query.GetManyConversationQuery) (*query.GetManyConversationQueryResult, error) {
+	// args := m.Called(ctx, userId, query)
+	// if res, ok := args.Get(0).(*query.GetManyConversationQueryResult); ok {
+	// 	return res, args.Error(1)
+	// }
+	// return nil, args.Error(1)
+	return nil, nil
+}
 
-// func (m *MockConversationService) DeleteConversationById(ctx context.Context, cmd *command.DeleteConversationCommand) error {
-// 	args := m.Called(ctx, cmd)
-// 	return args.Error(0)
-// }
+func (m *MockConversationService) DeleteConversationById(ctx context.Context, cmd *command.DeleteConversationCommand) error {
+	args := m.Called(ctx, cmd)
+	return args.Error(0)
+}
 
-// func (m *MockConversationService) UpdateConversationById(ctx context.Context, cmd *command.UpdateConversationCommand) (*command.UpdateConversationCommandResult, error) {
-// 	args := m.Called(ctx, cmd)
-// 	if args.Get(0) != nil {
-// 		return args.Get(0).(*command.UpdateConversationCommandResult), args.Error(1)
-// 	}
-// 	return nil, args.Error(1)
-// }
+func (m *MockConversationService) UpdateConversationById(ctx context.Context, cmd *command.UpdateConversationCommand) (*command.UpdateConversationCommandResult, error) {
+	args := m.Called(ctx, cmd)
+	if res, ok := args.Get(0).(*command.UpdateConversationCommandResult); ok {
+		return res, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
 
-// func TestGetConversationById(t *testing.T) {
-// 	gin.SetMode(gin.TestMode)
+func TestCreateConversation_Success(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 	mockService := new(MockConversationService)
-// 	controller := NewConversationController(mockService)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("name", "Test Chat")
+	writer.WriteField("user_ids", uuid.New().String())
+	writer.Close()
 
-// 	t.Run("success", func(t *testing.T) {
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		conversationId := uuid.New()
-// 		ctx.Set("conversationId", conversationId)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/conversations", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("userID", uuid.New())
+	c.Set("validatedRequest", &request.CreateConversationRequest{
+		Name:    "Test Chat",
+		UserIds: []string{uuid.New().String()},
+	})
 
-// 		expectedResult := &common.ConversationResult{
-// 			ID:             conversationId,
-// 			Name:           "Test Conversation",
-// 			Image:          "",
-// 			Avatar:         "",
-// 			UserID:         nil,
-// 			FamilyName:     "",
-// 			CreatedAt:      time.Now(),
-// 			UpdatedAt:      time.Now(),
-// 			LastMess:       nil,
-// 			LastMessStatus: false,
-// 		}
+	expected := &command.CreateConversationResult{
+		Conversation: &common.ConversationResult{
+			ID:   uuid.New(),
+			Name: "Test Chat",
+		},
+	}
+	mockService.On("CreateConversation", mock.Anything, mock.AnythingOfType("*command.CreateConversationCommand")).Return(expected, nil)
 
-// 		mockService.On("GetConversationById", mock.Anything, conversationId).Return(expectedResult, nil)
+	controller.CreateConversation(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-// 		// Act
-// 		controller.GetConversationById(ctx)
+func TestCreateConversation_Fail(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 		// Assert
-// 		assert.Equal(t, 200, w.Code)
-// 		mockService.AssertExpectations(t)
-// 	})
-// 	t.Run("fail - invalid conversation ID", func(t *testing.T) {
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		ctx.Params = gin.Params{gin.Param{Key: "conversationId", Value: "invalid-id"}}
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("name", "")
+	writer.WriteField("user_ids", "")
+	writer.Close()
 
-// 		// Act
-// 		controller.GetConversationById(ctx)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/conversations", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("userID", uuid.New())
+	c.Set("validatedRequest", &request.CreateConversationRequest{
+		Name:    "",
+		UserIds: []string{},
+	})
 
-// 		// Assert
-// 		assert.Equal(t, 400, w.Code)
+	mockService.On("CreateConversation", mock.Anything, mock.AnythingOfType("*command.CreateConversationCommand")).Return(nil, errors.New("cannot create"))
 
-// 	})
-// 	t.Run("fail - conversation not found", func(t *testing.T) {
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		conversationId := uuid.New()
-// 		ctx.Set("conversationId", conversationId)
+	controller.CreateConversation(c)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Missing validatedRequest request")
+}
 
-// 		mockService.On("GetConversationById", mock.Anything, conversationId).Return(nil, assert.AnError)
+func TestGetConversationById_Success(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 		// Act
-// 		controller.GetConversationById(ctx)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/conversations/{id}", nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("userID", uuid.New())
 
-// 		// Assert
-// 		assert.Equal(t, 404, w.Code)
-// 		mockService.AssertExpectations(t)
-// 	})
+	mockService.On("GetConversationById", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(&common.ConversationResult{
+		ID:   uuid.New(),
+		Name: "Test Chat",
+	}, nil)
 
-// 	t.Run("fail - service error", func(t *testing.T) {
-// 		// Given
-// 		conversationID := uuid.New()
+	controller.GetConversationById(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-// 		mockService.On("GetConversationById", mock.Anything, conversationID).Return(nil, assert.AnError)
+func TestGetConversationById_Fail_NotFound(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		ctx.Params = gin.Params{gin.Param{Key: "conversationId", Value: conversationID.String()}}
+	id := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/conversations/"+id.String(), nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Params = []gin.Param{{Key: "conversationId", Value: id.String()}}
+	mockService.On("GetConversationById", mock.Anything, id).Return(nil, errors.New("not found"))
 
-// 		// When
-// 		controller.GetConversationById(ctx)
+	controller.GetConversationById(c)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
 
-// 		// Then
-// 		assert.Equal(t, 500, w.Code)
-// 		mockService.AssertExpectations(t)
-// 	})
-// }
+func TestDeleteConversationById_Success(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// func TestCreateConversation(t *testing.T) {
-// 	gin.SetMode(gin.TestMode)
+	id := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/conversations/"+id.String(), nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Params = []gin.Param{{Key: "conversationId", Value: id.String()}}
+	mockService.On("DeleteConversationById", mock.Anything, mock.AnythingOfType("*command.DeleteConversationCommand")).Return(nil)
 
-// 	mockService := new(MockConversationService)
-// 	controller := NewConversationController(mockService)
+	controller.DeleteConversationById(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-// 	userId := uuid.New()
-// 	userIds := []string{userId.String()}
+func TestDeleteConversationById_Fail(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 	req := &request.CreateConversationRequest{
-// 		Name:    "Test Conversation",
-// 		UserIds: userIds,
-// 	}
+	id := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/conversations/"+id.String(), nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Params = []gin.Param{{Key: "conversationId", Value: id.String()}}
+	mockService.On("DeleteConversationById", mock.Anything, mock.AnythingOfType("*command.DeleteConversationCommand")).Return(errors.New("delete failed"))
 
-// 	cmd := &command.CreateConversationCommand{
-// 		Name:    req.Name,
-// 		Image:   "",
-// 		UserIds: []uuid.UUID{userId, userId}, // ví dụ thêm chính mình và 1 người khác
-// 	}
+	controller.DeleteConversationById(c)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
 
-// 	expectedResult := &command.CreateConversationResult{
-// 		Conversation: &common.ConversationResult{
-// 			ID:             uuid.New(),
-// 			Name:           "Test Conversation",
-// 			Image:          "",
-// 			Avatar:         "",
-// 			UserID:         &userId,
-// 			FamilyName:     "",
-// 			CreatedAt:      time.Now(),
-// 			UpdatedAt:      time.Now(),
-// 			LastMess:       nil,
-// 			LastMessStatus: false,
-// 		},
-// 	}
+func TestUpdateConversationById_Success(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 	t.Run("success", func(t *testing.T) {
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		ctx.Set("validatedRequest", req)
-// 		ctx.Set("userId", userId)
+	id := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PATCH", "/conversations/"+id.String(), nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Params = []gin.Param{{Key: "conversationId", Value: id.String()}}
+	name := "Updated Name"
+	c.Set("validatedRequest", &request.UpdateConversationRequest{Name: &name})
 
-// 		mockService.On("CreateConversation", mock.Anything, cmd).Return(expectedResult, nil)
+	expected := &command.UpdateConversationCommandResult{
+		Conversation: &common.ConversationResult{
+			ID:   id,
+			Name: "Updated Name",
+		},
+	}
+	mockService.On("UpdateConversationById", mock.Anything, mock.AnythingOfType("*command.UpdateConversationCommand")).Return(expected, nil)
 
-// 		// Act
-// 		controller.CreateConversation(ctx)
+	controller.UpdateConversation(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-// 		// Assert
-// 		assert.Equal(t, 200, w.Code)
-// 		mockService.AssertExpectations(t)
-// 	})
+func TestUpdateConversationById_Fail(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// 	t.Run("fail - service error", func(t *testing.T) {
-// 		// Setup
-// 		w := httptest.NewRecorder()
-// 		ctx, _ := gin.CreateTestContext(w)
-// 		ctx.Set("validatedRequest", req)
-// 		ctx.Set("userId", userId)
+	id := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PATCH", "/conversations/"+id.String(), nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Params = []gin.Param{{Key: "conversationId", Value: id.String()}}
+	name := "Error Update"
+	c.Set("validatedRequest", &request.UpdateConversationRequest{Name: &name})
 
-// 		// Mocking service error
-// 		mockService.On("CreateConversation", mock.Anything, cmd).Return(nil, assert.AnError)
+	mockService.On("UpdateConversationById", mock.Anything, mock.AnythingOfType("*command.UpdateConversationCommand")).Return(nil, errors.New("update failed"))
 
-// 		// Act
-// 		controller.CreateConversation(ctx)
+	controller.UpdateConversation(c)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
 
-// 		// Assert
-// 		// Check if the response code is 500 due to error in service
-// 		assert.Equal(t, 500, w.Code)
-// 		mockService.AssertExpectations(t)
-// 	})
-// }
+func TestGetManyConversation_Success(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// // func TestGetManyConversation(t *testing.T) {
-// // 	gin.SetMode(gin.TestMode)
+	userID := uuid.New()
+	queryData := &query.GetManyConversationQuery{Limit: 10, Page: 1}
+	expected := &query.GetManyConversationQueryResult{
+		Conversation: []*common.ConversationResult{
+			{ID: uuid.New(), Name: "Chat 1"},
+			{ID: uuid.New(), Name: "Chat 2"},
+		},
+		PagingResponse: &response.PagingResponse{
+			Total: 2,
+			Limit: 10,
+			Page:  1,
+		},
+	}
 
-// // 	mockService := new(MockConversationService)
-// // 	controller := NewConversationController(mockService)
+	mockService.On("GetManyConversation", mock.Anything, userID, queryData).Return(expected, nil)
 
-// // 	userId := uuid.New()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/conversations", nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("userID", userID)
+	c.Set("query", queryData)
 
-// // 	queryRequest := &query.GetManyConversationQuery{
-// // 		Page:  1,
-// // 		Limit: 10,
-// // 	}
+	controller.GetConversation(c)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
 
-// // 	ConversaionResult := &common.ConversationResult{
-// // 		ID:             uuid.New(),
-// // 		Name:           "Test Conversation",
-// // 		Image:          "",
-// // 		Avatar:         "",
-// // 		UserID:         nil,
-// // 		FamilyName:     "",
-// // 		CreatedAt:      time.Now(),
-// // 		UpdatedAt:      time.Now(),
-// // 		LastMess:       nil,
-// // 		LastMessStatus: false,
-// // 	}
+func TestGetManyConversation_Fail(t *testing.T) {
+	mockService := new(MockConversationService)
+	controller := NewConversationController(mockService)
 
-// // 	PagingResponse := &response.PagingResponse{
-// // 		Page:  1,
-// // 		Limit: 10,
-// // 		Total: 1,
-// // 	}
+	userID := uuid.New()
+	queryData := &query.GetManyConversationQuery{Limit: 10, Page: 1}
+	mockService.On("GetManyConversation", mock.Anything, userID, queryData).Return(nil, errors.New("failed to fetch"))
 
-// // 	expectedResult := &query.GetManyConversationQueryResult{
-// // 		Conversation:   []*common.ConversationResult{ConversaionResult},
-// // 		PagingResponse: PagingResponse,
-// // 	}
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/conversations", nil)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("userID", userID)
+	c.Set("query", queryData)
 
-// // 	t.Run("success", func(t *testing.T) {
-// // 		w := httptest.NewRecorder()
-// // 		ctx, _ := gin.CreateTestContext(w)
-// // 		ctx.Set("userId", userId)
-// // 		ctx.Set("validatedQuery", queryRequest)
-
-// // 		mockService.On("GetManyConversation", mock.Anything, userId, queryRequest).Return(expectedResult, nil)
-
-// // 		controller.GetConversation(ctx)
-
-// // 		assert.Equal(t, 200, w.Code)
-// // 		mockService.AssertExpectations(t)
-// // 	})
-
-// // 	t.Run("fail - service error", func(t *testing.T) {
-// // 		w := httptest.NewRecorder()
-// // 		ctx, _ := gin.CreateTestContext(w)
-// // 		ctx.Set("userId", userId)
-// // 		ctx.Set("validatedQuery", queryRequest) // Sửa "query" thành "validatedQuery" để khớp với case success
-
-// // 		mockService.On("GetManyConversation", mock.Anything, userId, queryRequest).Return(nil, assert.AnError)
-
-// // 		controller.GetConversation(ctx)
-
-// // 		assert.Equal(t, 500, w.Code)
-// // 		mockService.AssertExpectations(t)
-// // 	})
-// // }
+	controller.GetConversation(c)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}

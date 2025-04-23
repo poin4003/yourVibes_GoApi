@@ -1,6 +1,8 @@
 package impl
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -68,7 +70,7 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 
 	result, err := c.conversationService.CreateConversation(ctx, createConversation)
 	if err != nil {
-		ctx.Error(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
