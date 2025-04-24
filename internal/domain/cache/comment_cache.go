@@ -16,5 +16,6 @@ type (
 		SetPostComment(ctx context.Context, postID uuid.UUID, parentID uuid.UUID, commentIds []uuid.UUID, paging *response.PagingResponse)
 		GetPostComment(ctx context.Context, postID uuid.UUID, parentID uuid.UUID, limit, page int) ([]uuid.UUID, *response.PagingResponse)
 		DeletePostComment(ctx context.Context, postID uuid.UUID)
+		DeleteAllUserComments(ctx context.Context, userID uuid.UUID)
 	}
 )

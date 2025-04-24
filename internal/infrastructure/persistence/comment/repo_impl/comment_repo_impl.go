@@ -29,6 +29,7 @@ func (r *rComment) GetById(
 ) (*entities.Comment, error) {
 	var commentModel models.Comment
 	if err := r.db.WithContext(ctx).
+		Where("status = true").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
 		}).

@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 
@@ -214,6 +215,7 @@ func (s *sReportFactory) HandleReport(
 		go func(userID uuid.UUID) {
 			s.userCache.DeleteUserStatus(ctx, userID)
 			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userID)
+			s.commentCache.DeleteAllUserComments(ctx, userID)
 			friendIds, err := s.friendRepo.GetFriendIds(ctx, userID)
 			if err != nil {
 				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userID.String()), zap.Error(err))
@@ -257,6 +259,7 @@ func (s *sReportFactory) HandleReport(
 		go func(postId, userId uuid.UUID) {
 			s.postCache.DeletePost(ctx, postId)
 			s.postCache.DeleteRelatedPost(ctx, consts.RK_PERSONAL_POST, userId)
+			s.commentCache.DeletePostComment(ctx, postId)
 			friendIds, err := s.friendRepo.GetFriendIds(ctx, userId)
 			if err != nil {
 				global.Logger.Error("Failed to get friendIds", zap.String("user_id", userId.String()), zap.Error(err))

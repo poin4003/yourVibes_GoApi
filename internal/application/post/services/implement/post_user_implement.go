@@ -34,6 +34,7 @@ type sPostUser struct {
 	likeUserPostRepo   repositories.ILikeUserPostRepository
 	advertiseRepo      repositories.IAdvertiseRepository
 	postCache          cache.IPostCache
+	commentCache       cache.ICommentCache
 	postEventPublisher *producer.PostEventPublisher
 }
 
@@ -46,6 +47,7 @@ func NewPostUserImplement(
 	likeUserPostRepo repositories.ILikeUserPostRepository,
 	advertiseRepo repositories.IAdvertiseRepository,
 	postCache cache.IPostCache,
+	commentCache cache.ICommentCache,
 	postEventPublisher *producer.PostEventPublisher,
 ) *sPostUser {
 	return &sPostUser{
@@ -57,6 +59,7 @@ func NewPostUserImplement(
 		likeUserPostRepo:   likeUserPostRepo,
 		advertiseRepo:      advertiseRepo,
 		postCache:          postCache,
+		commentCache:       commentCache,
 		postEventPublisher: postEventPublisher,
 	}
 }
@@ -439,7 +442,11 @@ func (s *sPostUser) DeletePost(
 	}
 
 	// 6. Delete post cache
-	s.postCache.DeletePost(ctx, *command.PostId)
+	go func(postId uuid.UUID) {
+		s.postCache.DeletePost(ctx, postId)
+		s.commentCache.DeletePostComment(ctx, postId)
+	}(*command.PostId)
+
 	return nil
 }
 
