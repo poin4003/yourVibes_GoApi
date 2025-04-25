@@ -86,6 +86,14 @@ type UserForReportDto struct {
 	AvatarUrl  string    `json:"avatar_url"`
 }
 
+type UserShortVerWithActiveStatusDto struct {
+	ID               uuid.UUID `json:"id"`
+	FamilyName       string    `json:"family_name"`
+	Name             string    `json:"name"`
+	AvatarUrl        string    `json:"avatar_url"`
+	UserActiveStatus bool      `json:"active_status"`
+}
+
 func ToSettingDto(settingResult *common.SettingResult) *SettingDto {
 	return &SettingDto{
 		ID:        settingResult.ID,
@@ -152,6 +160,18 @@ func ToUserShortVerDto(
 		FamilyName: userResult.FamilyName,
 		Name:       userResult.Name,
 		AvatarUrl:  userResult.AvatarUrl,
+	}
+}
+
+func ToUserShortVerWithActiveStatusDto(
+	userResult *common.UserShortVerWithActiveStatusResult,
+) *UserShortVerWithActiveStatusDto {
+	return &UserShortVerWithActiveStatusDto{
+		ID:               userResult.ID,
+		FamilyName:       userResult.FamilyName,
+		Name:             userResult.Name,
+		AvatarUrl:        userResult.AvatarUrl,
+		UserActiveStatus: userResult.UserActiveStatus,
 	}
 }
 

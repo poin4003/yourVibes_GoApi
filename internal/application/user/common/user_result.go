@@ -62,6 +62,14 @@ type UserShortVerResult struct {
 	AvatarUrl  string
 }
 
+type UserShortVerWithActiveStatusResult struct {
+	ID               uuid.UUID
+	FamilyName       string
+	Name             string
+	AvatarUrl        string
+	UserActiveStatus bool
+}
+
 type UserShortVerWithSendFriendRequestResult struct {
 	ID                  uuid.UUID
 	FamilyName          string

@@ -30,6 +30,23 @@ func NewUserShortVerEntity(
 	}
 }
 
+func NewUserShortVerWithActiveStatus(
+	user *userEntity.User,
+	activatedStatus bool,
+) *common.UserShortVerWithActiveStatusResult {
+	if user == nil {
+		return nil
+	}
+
+	return &common.UserShortVerWithActiveStatusResult{
+		ID:               user.ID,
+		FamilyName:       user.FamilyName,
+		Name:             user.Name,
+		AvatarUrl:        user.AvatarUrl,
+		UserActiveStatus: activatedStatus,
+	}
+}
+
 func NewUserShortVerWithSendFriendRequestEntity(
 	user *userEntity.UserWithSendFriendRequest,
 ) *common.UserShortVerWithSendFriendRequestResult {

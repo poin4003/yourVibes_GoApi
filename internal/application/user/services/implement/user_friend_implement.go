@@ -2,39 +2,43 @@ package implement
 
 import (
 	"context"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
-	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
-	"go.uber.org/zap"
-
 	"github.com/poin4003/yourVibes_GoApi/global"
 	userCommand "github.com/poin4003/yourVibes_GoApi/internal/application/user/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/common"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/user/mapper"
+	"github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
 	userQuery "github.com/poin4003/yourVibes_GoApi/internal/application/user/query"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	userEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/user/entities"
-	userRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
+	"go.uber.org/zap"
+	"sync"
 )
 
 type sUserFriend struct {
-	userRepo              userRepo.IUserRepository
-	friendRequestRepo     userRepo.IFriendRequestRepository
-	friendRepo            userRepo.IFriendRepository
+	userRepo              repositories.IUserRepository
+	friendRequestRepo     repositories.IFriendRequestRepository
+	friendRepo            repositories.IFriendRepository
+	userCache             cache.IUserCache
 	notificationPublisher *producer.NotificationPublisher
 }
 
 func NewUserFriendImplement(
-	userRepo userRepo.IUserRepository,
-	friendRequestRepo userRepo.IFriendRequestRepository,
-	friendRepo userRepo.IFriendRepository,
+	userRepo repositories.IUserRepository,
+	friendRequestRepo repositories.IFriendRequestRepository,
+	friendRepo repositories.IFriendRepository,
+	userCache cache.IUserCache,
 	notificationPublisher *producer.NotificationPublisher,
 ) *sUserFriend {
 	return &sUserFriend{
 		userRepo:              userRepo,
 		friendRequestRepo:     friendRequestRepo,
 		friendRepo:            friendRepo,
+		userCache:             userCache,
 		notificationPublisher: notificationPublisher,
 	}
 }
@@ -407,10 +411,24 @@ func (s *sUserFriend) GetFriends(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	// 2. Map userModel to userResultShortVer
-	var userResults []*common.UserShortVerResult
+	// 2. Map userModel to userResultShortVerWithActiveStatus
+	var wg sync.WaitGroup
+	userResultsChan := make(chan *common.UserShortVerWithActiveStatusResult, len(userEntities))
 	for _, user := range userEntities {
-		userResults = append(userResults, mapper.NewUserShortVerEntity(user))
+		wg.Add(1)
+		go func(user *userEntity.User) {
+			defer wg.Done()
+			userActiveStatus := s.userCache.IsOnline(ctx, user.ID)
+			userResultsChan <- mapper.NewUserShortVerWithActiveStatus(user, userActiveStatus)
+		}(user)
+	}
+
+	wg.Wait()
+	close(userResultsChan)
+
+	var userResults []*common.UserShortVerWithActiveStatusResult
+	for userResult := range userResultsChan {
+		userResults = append(userResults, userResult)
 	}
 
 	return &userQuery.FriendQueryResult{

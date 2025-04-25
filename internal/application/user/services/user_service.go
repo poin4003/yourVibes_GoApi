@@ -24,6 +24,8 @@ type (
 		GetUserStatusById(ctx context.Context, id uuid.UUID) (status *bool, err error)
 		GetManyUsers(ctx context.Context, query *query.GetManyUserQuery) (result *query.UserQueryListResult, err error)
 		UpdateUser(ctx context.Context, command *command.UpdateUserCommand) (result *command.UpdateUserCommandResult, err error)
+		SetUserOnline(ctx context.Context, userId uuid.UUID)
+		SetUserOffline(ctx context.Context, userId uuid.UUID)
 	}
 	IUserFriend interface {
 		SendAddFriendRequest(ctx context.Context, command *command.SendAddFriendRequestCommand) (err error)

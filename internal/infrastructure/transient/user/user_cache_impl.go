@@ -9,6 +9,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	"time"
 )
 
 type tUser struct {
@@ -56,4 +57,40 @@ func (t *tUser) DeleteUserStatus(
 	if err := t.client.Del(ctx, key).Err(); err != nil {
 		global.Logger.Warn("Failed to delete user status from redis", zap.Error(err))
 	}
+}
+
+func (t *tUser) SetOnline(
+	ctx context.Context,
+	userId uuid.UUID,
+) {
+	key := fmt.Sprintf("user:online:%s", userId.String())
+
+	err := t.client.Set(ctx, key, "1", 5*time.Minute).Err()
+	if err != nil {
+		global.Logger.Warn("Failed to set online in redis", zap.Error(err))
+	}
+}
+
+func (t *tUser) SetOffline(
+	ctx context.Context,
+	userId uuid.UUID,
+) {
+	key := fmt.Sprintf("user:online:%s", userId.String())
+
+	err := t.client.Del(ctx, key).Err()
+	if err != nil {
+		global.Logger.Warn("Failed to delete user online key", zap.String("user_id", userId.String()), zap.Error(err))
+	}
+}
+
+func (t *tUser) IsOnline(
+	ctx context.Context,
+	userId uuid.UUID,
+) bool {
+	key := fmt.Sprintf("user:online:%s", userId.String())
+	val, err := t.client.Get(ctx, key).Result()
+	if err != nil {
+		return false
+	}
+	return val == "1"
 }

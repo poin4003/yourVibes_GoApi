@@ -260,3 +260,17 @@ func (s *sUserInfo) GetUserStatusById(
 
 	return userStatus, nil
 }
+
+func (s *sUserInfo) SetUserOnline(
+	ctx context.Context,
+	userId uuid.UUID,
+) {
+	s.userCache.SetOnline(ctx, userId)
+}
+
+func (s *sUserInfo) SetUserOffline(
+	ctx context.Context,
+	userId uuid.UUID,
+) {
+	s.userCache.SetOffline(ctx, userId)
+}

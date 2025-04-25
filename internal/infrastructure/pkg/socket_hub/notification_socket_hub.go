@@ -29,35 +29,23 @@ func (hub *NotificationSocketHub) AddConnection(userId string, conn *websocket.C
 
 	hub.connections[userId] = conn
 	log.Printf("WebSocket connection added for user_id: %s", userId)
-
-	go hub.monitorConnection(userId, conn)
 }
 
 // remove connection to hub
 func (hub *NotificationSocketHub) RemoveConnection(userId string) {
 	hub.mu.Lock()
 	defer hub.mu.Unlock()
-	if conn, ok := hub.connections[userId]; ok {
+
+	conn, ok := hub.connections[userId]
+	if !ok {
+		return
+	}
+
+	delete(hub.connections, userId)
+	if conn != nil {
 		conn.Close()
-		delete(hub.connections, userId)
-		log.Printf("WebSocket connection removed for user_id: %s", userId)
 	}
-}
-
-// monitor connection
-func (hub *NotificationSocketHub) monitorConnection(userId string, conn *websocket.Conn) {
-	defer hub.RemoveConnection(userId)
-
-	// Read message to keep connection alive
-	for {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket disconnected closed unexpected for user_id: %s, error: %v", userId, err)
-			}
-			return
-		}
-	}
+	log.Printf("WebSocket connection removed for user_id: %s", userId)
 }
 
 // Send notification to User

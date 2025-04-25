@@ -125,7 +125,7 @@ func InitDependencyInjection(
 
 	// Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, userAuthCache)
-	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userNotificationPublisher)
+	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userCache, userNotificationPublisher)
 	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo, postCache, postEventPublisher)
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo, userCache)
 	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postCache, commentCache, postEventPublisher)
@@ -162,7 +162,7 @@ func InitDependencyInjection(
 	userPostLikeControllerInit := userPostControllerImpl.NewPostLikeController(postLikeServiceInit)
 	userPostShareControllerInit := userPostControllerImpl.NewPostShareController(postShareServiceInit)
 	userPostNewFeedControllerInit := userPostControllerImpl.NewPostNewFeedController(userNewFeedServiceInit)
-	userNotificationControllerInit := userNotificationControllerImpl.NewNotificationController(notificationUserInit, notificationSocketHub)
+	userNotificationControllerInit := userNotificationControllerImpl.NewNotificationController(notificationUserInit, userInfoServiceInit, notificationSocketHub)
 	userMessageControllerInit := userMessageControllerImpl.NewMessageController(messageServiceInit, messageSocketHub)
 	userConversationControllerInit := userMessageControllerImpl.NewConversationController(conversationServiceInit)
 	userConversationDetailControllerInit := userMessageControllerImpl.NewConversationDetailController(conversationDetailServiceInit)

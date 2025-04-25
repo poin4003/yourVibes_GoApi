@@ -13,7 +13,7 @@ type FriendQuery struct {
 }
 
 type FriendQueryResult struct {
-	Users          []*common.UserShortVerResult
+	Users          []*common.UserShortVerWithActiveStatusResult
 	PagingResponse *response.PagingResponse
 }
 

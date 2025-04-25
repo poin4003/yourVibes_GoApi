@@ -11,6 +11,9 @@ type (
 		SetUserStatus(ctx context.Context, userId uuid.UUID, status bool)
 		GetUserStatus(ctx context.Context, userId uuid.UUID) *bool
 		DeleteUserStatus(ctx context.Context, userId uuid.UUID)
+		SetOnline(ctx context.Context, userId uuid.UUID)
+		SetOffline(ctx context.Context, userId uuid.UUID)
+		IsOnline(ctx context.Context, userId uuid.UUID) bool
 	}
 	IUserAuthCache interface {
 		SetOtp(ctx context.Context, userKey, otp string, ttl time.Duration) error

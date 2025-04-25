@@ -306,9 +306,9 @@ func (c *cUserFriend) GetFriends(ctx *gin.Context) {
 	}
 
 	// 5. Map to dto
-	var userDtos []*response.UserShortVerDto
+	var userDtos []*response.UserShortVerWithActiveStatusDto
 	for _, userResult := range result.Users {
-		userDtos = append(userDtos, response.ToUserShortVerDto(userResult))
+		userDtos = append(userDtos, response.ToUserShortVerWithActiveStatusDto(userResult))
 	}
 
 	pkgResponse.OKWithPaging(ctx, userDtos, *result.PagingResponse)
