@@ -141,7 +141,7 @@ func InitDependencyInjection(
 	reportServiceInit := reportServiceImpl.NewReportFactoryImplment(reportRepo, voucherRepo, friendRepo, userCache, postCache, commentCache, reportNotificationPublisher)
 	revenueServiceInit := revenueServiceImpl.NewRevenueImplement(billRepo, userRepo, postRepo)
 	mediaServiceInit := mediaServiceImpl.NewMediaImplement()
-	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo)
+	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo, userCache)
 	messageServiceInit := messageServiceImpl.NewMessageImplement(messageRepo, messagePublisher)
 	messageMQServiceInit := messageServiceImpl.NewMessageMQImplement(conversationDetailRepo, messageSocketHub)
 	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)

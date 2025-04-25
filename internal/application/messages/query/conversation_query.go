@@ -22,6 +22,6 @@ type GetManyConversationQuery struct {
 }
 
 type GetManyConversationQueryResult struct {
-	Conversation   []*common.ConversationResult
+	Conversation   []*common.ConversationWithActiveStatusResult
 	PagingResponse *response.PagingResponse
 }

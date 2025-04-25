@@ -175,13 +175,12 @@ func (c *cConversation) GetConversation(ctx *gin.Context) {
 		return
 	}
 
-	var conversationDtos []*response.ConversationDto
+	var conversationDtos []*response.ConversationWithActiveStatus
 	for _, conversationResults := range result.Conversation {
-		conversationDtos = append(conversationDtos, response.ToConversationDto(conversationResults))
+		conversationDtos = append(conversationDtos, response.ToConversationWithActiveStatusDto(conversationResults))
 	}
 
 	pkgResponse.OKWithPaging(ctx, conversationDtos, *result.PagingResponse)
-
 }
 
 // UpdateConversation documentation

@@ -2,8 +2,10 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
+	"sync"
 
 	"github.com/google/uuid"
 	conversationCommand "github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -11,18 +13,21 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/mapper"
 	conversationQuery "github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
 	conversationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
-	conversationRepo "github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
+	"github.com/poin4003/yourVibes_GoApi/internal/domain/repositories"
 )
 
 type sConversation struct {
-	conversationRepo conversationRepo.IConversationRepository
+	conversationRepo repositories.IConversationRepository
+	userCache        cache.IUserCache
 }
 
 func NewConversationImplement(
-	conversationRepo conversationRepo.IConversationRepository,
+	conversationRepo repositories.IConversationRepository,
+	userCache cache.IUserCache,
 ) *sConversation {
 	return &sConversation{
 		conversationRepo: conversationRepo,
+		userCache:        userCache,
 	}
 }
 
@@ -66,14 +71,33 @@ func (s *sConversation) GetManyConversation(
 	userId uuid.UUID,
 	query *conversationQuery.GetManyConversationQuery,
 ) (result *conversationQuery.GetManyConversationQueryResult, err error) {
+	// 1. Get list conversation from db
 	conversationEntities, paging, err := s.conversationRepo.GetManyConversation(ctx, userId, query)
 	if err != nil {
 		return result, err
 	}
 
-	var conversationResults []*common.ConversationResult
-	for _, conversationEntity := range conversationEntities {
-		conversationResults = append(conversationResults, mapper.NewConversationResult(conversationEntity))
+	// 2. Map
+	var wg sync.WaitGroup
+	conversationResultsChan := make(chan *common.ConversationWithActiveStatusResult, len(conversationEntities))
+	for _, conversation := range conversationEntities {
+		wg.Add(1)
+		go func(conversation *conversationEntity.Conversation) {
+			defer wg.Done()
+			userActiveStatus := false
+			if conversation.UserID != nil {
+				userActiveStatus = s.userCache.IsOnline(ctx, *conversation.UserID)
+			}
+			conversationResultsChan <- mapper.NewConversationWithActiveStatusResult(conversation, userActiveStatus)
+		}(conversation)
+	}
+
+	wg.Wait()
+	close(conversationResultsChan)
+
+	var conversationResults []*common.ConversationWithActiveStatusResult
+	for conversationResult := range conversationResultsChan {
+		conversationResults = append(conversationResults, conversationResult)
 	}
 
 	return &conversationQuery.GetManyConversationQueryResult{
@@ -84,8 +108,8 @@ func (s *sConversation) GetManyConversation(
 
 func (s *sConversation) DeleteConversationById(
 	ctx context.Context,
-	command *conversationCommand.DeleteConversationCommand) error {
-
+	command *conversationCommand.DeleteConversationCommand,
+) error {
 	//1. Find conversation
 	conversationFound, err := s.conversationRepo.GetById(ctx, *command.ConversationId)
 	if err != nil {

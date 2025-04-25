@@ -28,7 +28,7 @@ import (
 func main() {
 	r := initialize.Run()
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
-		ginSwagger.URL("http://localhost:8080/swagger/doc.json"),
+		//ginSwagger.URL("http://localhost:8080/swagger/doc.json"),
 		ginSwagger.DocExpansion("none"),
 		ginSwagger.DefaultModelsExpandDepth(-1),
 	))

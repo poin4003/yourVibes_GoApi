@@ -25,3 +25,26 @@ func NewConversationResult(
 		LastMess:       conversation.LastMess,
 	}
 }
+
+func NewConversationWithActiveStatusResult(
+	conversation *conversationEntity.Conversation,
+	activeStatus bool,
+) *common.ConversationWithActiveStatusResult {
+	if conversation == nil {
+		return nil
+	}
+
+	return &common.ConversationWithActiveStatusResult{
+		ID:             conversation.ID,
+		Name:           conversation.Name,
+		Image:          conversation.Image,
+		UserID:         conversation.UserID,
+		Avatar:         conversation.Avatar,
+		FamilyName:     conversation.FamilyName,
+		CreatedAt:      conversation.CreatedAt,
+		UpdatedAt:      conversation.UpdatedAt,
+		LastMessStatus: conversation.LastMessStatus,
+		LastMess:       conversation.LastMess,
+		ActiveStatus:   activeStatus,
+	}
+}
