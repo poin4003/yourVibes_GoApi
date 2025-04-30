@@ -100,5 +100,10 @@ func (r *messagesRouter) InitMessagesRouter(Router *gin.RouterGroup) {
 			helpers.ValidateJsonBody(&conversationRequest.UpdateConversationDetail{}, conversationRequest.ValidateUpdateConversationDetail),
 			r.conversationDetailController.UpdateConversationDetail,
 		)
+
+		conversationDetailRouter.PATCH("/transfer_owner_role",
+			helpers.ValidateJsonBody(&conversationRequest.TransferOwnerRoleDto{}, conversationRequest.ValidateTransferOwnerRole),
+			r.conversationDetailController.TransferOwnerRole,
+		)
 	}
 }

@@ -212,6 +212,13 @@ definitions:
       type:
         $ref: '#/definitions/consts.ReportType'
     type: object
+  request.TransferOwnerRoleDto:
+    properties:
+      conversation_id:
+        type: string
+      user_id:
+        type: string
+    type: object
   request.UpdateAdminForSuperAdminRequest:
     properties:
       admin_id:
@@ -866,6 +873,25 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get conversationDetail by ID
+      tags:
+      - conversationDetail
+  /conversation_details/transfer_owner_role:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.TransferOwnerRoleDto'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: transfer owner role
       tags:
       - conversationDetail
   /conversation_details/update:

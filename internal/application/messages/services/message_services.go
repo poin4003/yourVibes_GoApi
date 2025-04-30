@@ -25,11 +25,12 @@ type (
 	}
 	IConversationDetail interface {
 		GetConversationDetailById(ctx context.Context, userId uuid.UUID, conversationId uuid.UUID) (result *common.ConversationDetailResult, err error)
-		CreateConversationDetail(ctx context.Context, command *command.CreateConversationDetailCommand) (result *command.CreateConversationDetailResult, err error)
+		CreateConversationDetail(ctx context.Context, command *command.CreateConversationDetailCommand) error
 		GetConversationDetailByConversationId(ctx context.Context, query *query.GetConversationDetailQuery) (result *query.GetConversationDetailResult, err error)
 		DeleteConversationDetailById(ctx context.Context, command *command.DeleteConversationDetailCommand) error
 		UpdateOneStatusConversationDetail(ctx context.Context, command *command.UpdateOneStatusConversationDetailCommand) (err error)
-		CreateManyConversationDetail(ctx context.Context, command *command.CreateManyConversationDetailCommand) (result *command.CreateManyConversationDetailResult, err error)
+		CreateManyConversationDetail(ctx context.Context, command *command.CreateManyConversationDetailCommand) error
+		TransferOwnerRole(ctx context.Context, command *command.TransferOwnerRoleCommand) (err error)
 	}
 	IMessageMQ interface {
 		HandleMessage(ctx context.Context, message *command.CreateMessageCommand) error

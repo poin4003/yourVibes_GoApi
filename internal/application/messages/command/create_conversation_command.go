@@ -9,6 +9,7 @@ type CreateConversationCommand struct {
 	Name    string
 	Image   string
 	UserIds []uuid.UUID
+	OwnerId uuid.UUID
 }
 
 type CreateConversationResult struct {

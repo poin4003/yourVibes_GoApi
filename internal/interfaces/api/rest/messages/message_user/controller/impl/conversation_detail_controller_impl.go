@@ -6,6 +6,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/services"
 	pkgResponse "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/extensions"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/request"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/dto/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/messages/message_user/query"
@@ -50,15 +51,13 @@ func (c *cConversationDetail) CreateConversationDetail(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.conversationDetailService.CreateConversationDetail(ctx, createConversationDetailCommand)
+	err = c.conversationDetailService.CreateConversationDetail(ctx, createConversationDetailCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
 	}
 
-	conversationDetailDto := response.ToConversationDetailDto(result.ConversationDetail)
-
-	pkgResponse.OK(ctx, conversationDetailDto)
+	pkgResponse.OK(ctx, nil)
 }
 
 // GetConversationDetailByConversationId documentation
@@ -93,9 +92,9 @@ func (c *cConversationDetail) GetConversationDetailByConversationId(ctx *gin.Con
 		return
 	}
 
-	var conversationDetailDtos []*response.ConversationDetailDto
+	var conversationDetailDtos []*response.ConversationDetailWithRoleDto
 	for _, conversationDetailResults := range result.ConversationDetail {
-		conversationDetailDtos = append(conversationDetailDtos, response.ToConversationDetailDto(conversationDetailResults))
+		conversationDetailDtos = append(conversationDetailDtos, response.ToConversationDetailWithRoleDto(conversationDetailResults))
 	}
 
 	pkgResponse.OKWithPaging(ctx, conversationDetailDtos, *result.PagingResponse)
@@ -158,13 +157,24 @@ func (c *cConversationDetail) DeleteConversationDetailById(ctx *gin.Context) {
 		return
 	}
 
+	// 1. Get userid from token
+	userIdClaims, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
 	conversationID, err := uuid.Parse(conversationIdStr)
 	if err != nil {
 		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
 
-	deleteConversationDetailCommand := &command.DeleteConversationDetailCommand{UserId: &userID, ConversationId: &conversationID}
+	deleteConversationDetailCommand := &command.DeleteConversationDetailCommand{
+		UserId:              &userID,
+		ConversationId:      &conversationID,
+		AuthenticatedUserId: userIdClaims,
+	}
 	err = c.conversationDetailService.DeleteConversationDetailById(ctx, deleteConversationDetailCommand)
 	if err != nil {
 		ctx.Error(err)
@@ -252,12 +262,53 @@ func (c *cConversationDetail) CreateManyConversationDetail(ctx *gin.Context) {
 		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
 		return
 	}
-	result, err := c.conversationDetailService.CreateManyConversationDetail(ctx, createManyConversationCommand)
+	err = c.conversationDetailService.CreateManyConversationDetail(ctx, createManyConversationCommand)
 	if err != nil {
 		ctx.Error(err)
 		return
 	}
-	conversationDetailDtos := response.ToManyConversationDetailDto(result.ConversationDetails)
 
-	pkgResponse.OK(ctx, conversationDetailDtos)
+	pkgResponse.OK(ctx, nil)
+}
+
+// TransferOwnerRole transfer owner role godoc
+// @Summary transfer owner role
+// @Tags conversationDetail
+// @Accept json
+// @Produce json
+// @Param input body request.TransferOwnerRoleDto true "input"
+// @Security ApiKeyAuth
+// @Router /conversation_details/transfer_owner_role [patch]
+func (c *cConversationDetail) TransferOwnerRole(ctx *gin.Context) {
+	body, exists := ctx.Get("validatedRequest")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validateRequest request"))
+		return
+	}
+
+	transferOwnerRoleDto, ok := body.(*request.TransferOwnerRoleDto)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 1. Get userid from token
+	userIdClaims, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	transferOwnerRoleCommand, err := transferOwnerRoleDto.ToTransferOwnerRoleCommand(userIdClaims)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+	}
+
+	err = c.conversationDetailService.TransferOwnerRole(ctx, transferOwnerRoleCommand)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	pkgResponse.OK(ctx, nil)
 }

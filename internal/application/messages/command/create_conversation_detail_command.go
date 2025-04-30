@@ -2,7 +2,6 @@ package command
 
 import (
 	"github.com/google/uuid"
-	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/common"
 )
 
 type CreateConversationDetailCommand struct {
@@ -12,16 +11,9 @@ type CreateConversationDetailCommand struct {
 	LastMess       string
 }
 
-type CreateConversationDetailResult struct {
-	ConversationDetail *common.ConversationDetailResult
-}
-
 type CreateManyConversationDetailCommand struct {
 	UserIds        []uuid.UUID
 	ConversationId uuid.UUID
 	LastMessStatus bool
 	LastMess       string
-}
-type CreateManyConversationDetailResult struct {
-	ConversationDetails []*common.ConversationDetailResult
 }

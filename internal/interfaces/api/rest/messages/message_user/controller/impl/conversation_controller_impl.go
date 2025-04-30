@@ -42,7 +42,7 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 		return
 	}
 
-	creatConsersation, ok := body.(*request.CreateConversationRequest)
+	createConversation, ok := body.(*request.CreateConversationRequest)
 	if !ok {
 		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
 		return
@@ -55,8 +55,7 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 	}
 
 	var userIds []uuid.UUID
-	userIds = append(userIds, userIdClaims)
-	for _, userId := range creatConsersation.UserIds {
+	for _, userId := range createConversation.UserIds {
 		userUUID, err := uuid.Parse(userId)
 		if err != nil {
 			ctx.Error(pkgResponse.NewValidateError("Invalid user id"))
@@ -64,9 +63,9 @@ func (c *cConversation) CreateConversation(ctx *gin.Context) {
 		userIds = append(userIds, userUUID)
 	}
 
-	createConversation := creatConsersation.ToCreateConversationCommand(creatConsersation.Name, userIds)
+	newConversation := createConversation.ToCreateConversationCommand(createConversation.Name, userIds, userIdClaims)
 
-	result, err := c.conversationService.CreateConversation(ctx, createConversation)
+	result, err := c.conversationService.CreateConversation(ctx, newConversation)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -124,7 +123,17 @@ func (c *cConversation) DeleteConversationById(ctx *gin.Context) {
 		return
 	}
 
-	deleteConversationCommand := &command.DeleteConversationCommand{ConversationId: &conversationId}
+	// 2. Get userid from token
+	userIdClaims, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	deleteConversationCommand := &command.DeleteConversationCommand{
+		ConversationId: &conversationId,
+		UserId:         &userIdClaims,
+	}
 	err = c.conversationService.DeleteConversationById(ctx, deleteConversationCommand)
 	if err != nil {
 		ctx.Error(err)

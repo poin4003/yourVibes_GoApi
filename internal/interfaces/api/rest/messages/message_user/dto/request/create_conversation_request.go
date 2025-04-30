@@ -51,9 +51,11 @@ func checkDuplicateUserIds(value interface{}) error {
 func (req *CreateConversationRequest) ToCreateConversationCommand(
 	Name string,
 	userIds []uuid.UUID,
+	ownerId uuid.UUID,
 ) *command.CreateConversationCommand {
 	return &command.CreateConversationCommand{
 		Name:    Name,
 		UserIds: userIds,
+		OwnerId: ownerId,
 	}
 }

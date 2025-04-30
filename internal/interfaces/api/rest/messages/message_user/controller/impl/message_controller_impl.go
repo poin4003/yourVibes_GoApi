@@ -212,8 +212,16 @@ func (c *cMessage) DeleteMessageById(ctx *gin.Context) {
 		return
 	}
 
+	// 1. Get userid from token
+	userIdClaims, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
 	deleteMessageCommand := &command.DeleteMessageCommand{
-		MessageId: &messageId,
+		MessageId:           &messageId,
+		AuthenticatedUserId: userIdClaims,
 	}
 
 	err = c.messageService.DeleteMessageById(ctx, deleteMessageCommand)

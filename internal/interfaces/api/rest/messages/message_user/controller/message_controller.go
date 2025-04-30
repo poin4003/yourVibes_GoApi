@@ -17,6 +17,7 @@ type (
 		DeleteConversationDetailById(ctx *gin.Context)
 		UpdateConversationDetail(ctx *gin.Context)
 		CreateManyConversationDetail(ctx *gin.Context)
+		TransferOwnerRole(ctx *gin.Context)
 	}
 	IMessageController interface {
 		SendMessageWebSocket(ctx *gin.Context)

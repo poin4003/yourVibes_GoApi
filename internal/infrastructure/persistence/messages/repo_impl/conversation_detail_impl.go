@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/query"
-	conversationdetail_entity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
+	conversationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/messages/entities"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/models"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/persistence/messages/mapper"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
@@ -14,19 +16,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type rConversatioDetail struct {
+type rConversationDetail struct {
 	db *gorm.DB
 }
 
-func NewConversationDetailRepositoryImplement(db *gorm.DB) *rConversatioDetail {
-	return &rConversatioDetail{db: db}
+func NewConversationDetailRepositoryImplement(db *gorm.DB) *rConversationDetail {
+	return &rConversationDetail{db: db}
 }
 
-func (r *rConversatioDetail) GetById(
+func (r *rConversationDetail) GetById(
 	ctx context.Context,
 	userId uuid.UUID,
 	conversationId uuid.UUID,
-) (*conversationdetail_entity.ConversationDetail, error) {
+) (*conversationEntity.ConversationDetail, error) {
 	var conversationDetailModel models.ConversationDetail
 
 	if err := r.db.WithContext(ctx).
@@ -41,14 +43,14 @@ func (r *rConversatioDetail) GetById(
 		}
 		return nil, response.NewServerFailedError(err.Error())
 	}
-	return mapper.FromConversationDetailModel(&conversationDetailModel), nil
 
+	return mapper.FromConversationDetailModel(&conversationDetailModel), nil
 }
 
-func (r *rConversatioDetail) CreateOne(
+func (r *rConversationDetail) CreateOne(
 	ctx context.Context,
-	entity *conversationdetail_entity.ConversationDetail,
-) (*conversationdetail_entity.ConversationDetail, error) {
+	entity *conversationEntity.ConversationDetail,
+) (*conversationEntity.ConversationDetail, error) {
 	conversationDetailModel := mapper.ToConversationDetailModel(entity)
 	res := r.db.WithContext(ctx).Create(conversationDetailModel)
 
@@ -59,15 +61,15 @@ func (r *rConversatioDetail) CreateOne(
 	return r.GetById(ctx, entity.UserId, entity.ConversationId)
 }
 
-func (r *rConversatioDetail) GetConversationDetailByConversationId(
+func (r *rConversationDetail) GetConversationDetailByConversationId(
 	ctx context.Context,
 	query *query.GetConversationDetailQuery,
-) ([]*conversationdetail_entity.ConversationDetail, *response.PagingResponse, error) {
+) ([]*conversationEntity.ConversationDetail, *response.PagingResponse, error) {
 	var conversationDetails []*models.ConversationDetail
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(&models.ConversationDetail{}).
-		Where(" conversation_id = ?", query.ConversationId).
+		Where("conversation_id = ?", query.ConversationId).
 		Preload("User").
 		Preload("Conversation")
 
@@ -92,7 +94,7 @@ func (r *rConversatioDetail) GetConversationDetailByConversationId(
 
 	offset := (page - 1) * limit
 
-	if err := db.WithContext(ctx).Offset(offset).Limit(limit).Find(&conversationDetails).Error; err != nil {
+	if err = db.WithContext(ctx).Offset(offset).Limit(limit).Find(&conversationDetails).Error; err != nil {
 		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
@@ -102,30 +104,83 @@ func (r *rConversatioDetail) GetConversationDetailByConversationId(
 		Page:  page,
 	}
 
-	var conversationDetailEntities []*conversationdetail_entity.ConversationDetail
+	var conversationDetailEntities []*conversationEntity.ConversationDetail
 	for _, conversationDetail := range conversationDetails {
-		conversationDetailEntities = append(conversationDetailEntities, mapper.FromConversationDetailModel(conversationDetail))
+		conversationDetailEntities = append(
+			conversationDetailEntities,
+			mapper.FromConversationDetailModel(conversationDetail),
+		)
 	}
 
 	return conversationDetailEntities, &pagingResponse, nil
-
 }
-func (r *rConversatioDetail) DeleteById(
+
+func (r *rConversationDetail) DeleteById(
 	ctx context.Context,
 	userId uuid.UUID,
+	authenticationUserId uuid.UUID,
 	conversationId uuid.UUID,
 ) error {
-	res := r.db.WithContext(ctx).
-		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
-		Delete(&conversationdetail_entity.ConversationDetail{})
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Check conversation detail exist
+		var count int64
+		if err := tx.WithContext(ctx).
+			Model(&models.ConversationDetail{}).
+			Where("conversation_id = ?", conversationId).
+			Count(&count).Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+		if count == 0 {
+			return response.NewDataNotFoundError("member or conversation not found")
+		}
 
-	if res.Error != nil {
-		return response.NewServerFailedError(res.Error.Error())
+		if count <= 2 {
+			return response.NewCustomError(
+				response.ErrCantLeaveConversationIfOnly2Members,
+				"Conversation need minimum 2 members",
+			)
+		}
+
+		// 2. Check role of authenticated userId in conversation
+		isOwner, err := r.checkOwnerRole(ctx, conversationId, authenticationUserId)
+		if err != nil {
+			return err
+		}
+
+		// Check Owner of conversation or his own user_id
+		if authenticationUserId != userId && !isOwner {
+			return response.NewCustomError(
+				response.ErrConversationOwnerPermissionRequired,
+				"You need to be a owner of this conversation to kick member of group",
+			)
+		}
+
+		// Check if owner leave conversation
+		if isOwner {
+			return response.NewCustomError(
+				response.ErrCantLeaveConversationIfIsOwners,
+				"Owners can't leave conversation",
+			)
+		}
+
+		// Delete conversation detail
+		res := r.db.WithContext(ctx).
+			Where("user_id = ? AND conversation_id = ?", userId, conversationId).
+			Delete(&conversationEntity.ConversationDetail{})
+
+		if res.Error != nil {
+			return response.NewServerFailedError(res.Error.Error())
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
+
 	return nil
 }
 
-func (r *rConversatioDetail) GetListUserIdByConversationId(
+func (r *rConversationDetail) GetListUserIdByConversationId(
 	ctx context.Context,
 	conversationId uuid.UUID,
 ) ([]uuid.UUID, error) {
@@ -145,12 +200,12 @@ func (r *rConversatioDetail) GetListUserIdByConversationId(
 	return userIds, nil
 }
 
-func (r *rConversatioDetail) UpdateOneStatus(
+func (r *rConversationDetail) UpdateOneStatus(
 	ctx context.Context,
 	userId uuid.UUID,
 	conversationId uuid.UUID,
-	updateData *conversationdetail_entity.ConversationDetailUpdate,
-) (*conversationdetail_entity.ConversationDetail, error) {
+	updateData *conversationEntity.ConversationDetailUpdate,
+) (*conversationEntity.ConversationDetail, error) {
 	updates := converter.StructToMap(updateData)
 	if len(updates) == 0 {
 		return nil, errors.New("no field to update")
@@ -168,10 +223,10 @@ func (r *rConversatioDetail) UpdateOneStatus(
 	return r.GetById(ctx, userId, conversationId)
 }
 
-func (r *rConversatioDetail) CreateMany(
+func (r *rConversationDetail) CreateMany(
 	ctx context.Context,
-	entities []*conversationdetail_entity.ConversationDetail,
-) ([]*conversationdetail_entity.ConversationDetail, error) {
+	entities []*conversationEntity.ConversationDetail,
+) error {
 	var conversationDetails []*models.ConversationDetail
 	for _, entity := range entities {
 		conversationDetails = append(conversationDetails, mapper.ToConversationDetailModel(entity))
@@ -179,17 +234,127 @@ func (r *rConversatioDetail) CreateMany(
 
 	res := r.db.WithContext(ctx).Create(conversationDetails)
 	if res.Error != nil {
-		return nil, response.NewServerFailedError(res.Error.Error())
+		return response.NewServerFailedError(res.Error.Error())
 	}
 
-	query := &query.GetConversationDetailQuery{
-		ConversationId: entities[0].ConversationId,
-		Page:           1,
-		Limit:          10,
-	}
-	conversationDetailEntities, _, err := r.GetConversationDetailByConversationId(ctx, query)
+	return nil
+}
+
+func (r *rConversationDetail) TransferOwnerRole(
+	ctx context.Context,
+	userId, authenticatedUserId, conversationId uuid.UUID,
+) error {
+	// 1. Check conversation exists
+	isConversationExist, err := r.checkConversationExist(ctx, conversationId)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return conversationDetailEntities, nil
+	if !isConversationExist {
+		return response.NewDataNotFoundError("conversation does not exist")
+	}
+	// 2. Check userId and authenticatedUserId is a member of conversation
+	isUserIsMemberOfConversation, err := r.checkMemberExistInConversation(ctx, userId, conversationId)
+	if err != nil {
+		return err
+	}
+	if !isUserIsMemberOfConversation {
+		return response.NewDataNotFoundError("user is not a member of conversation")
+	}
+
+	isAuthenticatedUserIsMemberOfConversation, err := r.checkMemberExistInConversation(ctx, authenticatedUserId, conversationId)
+	if err != nil {
+		return err
+	}
+	if !isAuthenticatedUserIsMemberOfConversation {
+		return response.NewDataNotFoundError("authenticatedUser is not a member of conversation")
+	}
+
+	// 3. Check authenticatedUserId is owner
+	isAuthenticatedUserIsOwner, err := r.checkOwnerRole(ctx, conversationId, authenticatedUserId)
+	if err != nil {
+		return err
+	}
+	if !isAuthenticatedUserIsOwner {
+		return response.NewCustomError(
+			response.ErrConversationOwnerPermissionRequired,
+			"You need to be a owner of conversation transfer owner role",
+		)
+	}
+
+	// 4. Transaction to transfer owner role userId <-> authenticatedUserId (make sure conversation only have 1 owner)
+	if err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err = tx.Model(&models.ConversationDetail{}).
+			Where("conversation_id = ? AND user_id = ?", conversationId, authenticatedUserId).
+			Update("conversation_role", consts.CONVERSATION_MEMBER).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		if err = tx.Model(&models.ConversationDetail{}).
+			Where("conversation_id = ? AND user_id = ?", conversationId, userId).
+			Update("conversation_role", consts.CONVERSATION_OWNER).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *rConversationDetail) checkOwnerRole(
+	ctx context.Context,
+	conversationId uuid.UUID,
+	userId uuid.UUID,
+) (isOwner bool, err error) {
+	var conversationDetail *models.ConversationDetail
+	if err = r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("conversation_id = ? AND user_id = ?", conversationId, userId).
+		First(&conversationDetail).
+		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, response.NewDataNotFoundError(err.Error())
+		}
+		return false, response.NewServerFailedError(err.Error())
+	}
+
+	if conversationDetail.ConversationRole != consts.CONVERSATION_OWNER {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (r *rConversationDetail) checkConversationExist(
+	ctx context.Context,
+	conversationId uuid.UUID,
+) (isExist bool, err error) {
+	var count int64
+	if err = r.db.WithContext(ctx).
+		Model(&models.Conversation{}).
+		Where("id = ?", conversationId).
+		Count(&count).
+		Error; err != nil {
+	}
+
+	return count > 0, nil
+}
+
+func (r *rConversationDetail) checkMemberExistInConversation(
+	ctx context.Context,
+	userId, conversationId uuid.UUID,
+) (isExist bool, err error) {
+	var count int64
+	if err = r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("user_id = ? AND conversation_id = ?", userId, conversationId).
+		Count(&count).
+		Error; err != nil {
+	}
+
+	return count > 0, nil
 }

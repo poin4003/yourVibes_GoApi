@@ -154,10 +154,15 @@ func (r *rMessage) GetMessagesByConversationId(
 func (r *rMessage) DeleteById(
 	ctx context.Context,
 	id uuid.UUID,
+	authenticatedUserId uuid.UUID,
 ) error {
 	message, err := r.GetById(ctx, id)
 	if err != nil {
 		return response.NewDataNotFoundError(err.Error())
+	}
+
+	if authenticatedUserId != message.UserId {
+		return response.NewCustomError(response.ErrCantDeleteAnotherMessage)
 	}
 
 	res := r.db.WithContext(ctx).Delete(message)

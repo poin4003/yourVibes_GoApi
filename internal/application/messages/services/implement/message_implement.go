@@ -102,7 +102,7 @@ func (s *sMessage) DeleteMessageById(
 		return err
 	}
 
-	if err := s.messageRepo.DeleteById(ctx, *command.MessageId); err != nil {
+	if err = s.messageRepo.DeleteById(ctx, *command.MessageId, command.AuthenticatedUserId); err != nil {
 		return err
 	}
 

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/converter"
 
 	"github.com/google/uuid"
@@ -45,8 +47,10 @@ func (r *rConversation) CreateOne(
 	ctx context.Context,
 	entity *entities.CreateConversation,
 ) (*entities.Conversation, error) {
-	if len(entity.UserIds) == 2 {
-		conversationFound, err := r.findExistingTwoUserConversation(ctx, entity.UserIds[0], entity.UserIds[1])
+	if len(entity.ConversationDetail) == 2 {
+		conversationFound, err := r.findExistingTwoUserConversation(
+			ctx, entity.ConversationDetail[0].UserId, entity.ConversationDetail[1].UserId,
+		)
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
@@ -55,30 +59,10 @@ func (r *rConversation) CreateOne(
 		}
 	}
 
-	var conversationModel *models.Conversation
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		conversationModel = mapper.ToConversationModel(entity)
-		if err := tx.Create(conversationModel).Error; err != nil {
-			return response.NewServerFailedError(err.Error())
-		}
-
-		for _, userId := range entity.UserIds {
-			conversationDetail := &models.ConversationDetail{
-				UserId:         userId,
-				ConversationId: conversationModel.ID,
-				LastMessStatus: true,
-				LastMess:       nil,
-			}
-
-			if err := tx.Create(conversationDetail).Error; err != nil {
-				return response.NewServerFailedError(err.Error())
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
+	conversationModel := mapper.ToConversationModel(entity)
+	if err := r.db.WithContext(ctx).
+		Create(&conversationModel).
+		Error; err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
@@ -98,18 +82,18 @@ func (r *rConversation) GetManyConversation(
 		Where("conversation_details.user_id = ?", userId).
 		Preload("ConversationDetail.User")
 
-	// Lọc theo thời gian tạo
+	// Filter by created_at
 	if !query.CreatedAt.IsZero() {
 		createdAt := query.CreatedAt.Truncate(24 * time.Hour)
 		db = db.Where("created_at = ?", createdAt)
 	}
 
-	// Lọc theo tên nhóm
+	// Filter by group name
 	if query.Name != "" {
 		db = db.Where("name ILIKE ?", "%"+query.Name+"%")
 	}
 
-	// Sắp xếp theo cột
+	// Sort by input column
 	if query.SortBy != "" {
 		sortColumn := ""
 		switch query.SortBy {
@@ -128,13 +112,13 @@ func (r *rConversation) GetManyConversation(
 		}
 	}
 
-	// Đếm tổng số bản ghi
+	// Count total record
 	err := db.Count(&total).Error
 	if err != nil {
 		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
-	// Xử lý phân trang
+	// Paging
 	limit := query.Limit
 	page := query.Page
 	if limit <= 0 {
@@ -145,12 +129,12 @@ func (r *rConversation) GetManyConversation(
 	}
 	offset := (page - 1) * limit
 
-	// Lấy danh sách cuộc trò chuyện
-	if err := db.Offset(offset).Limit(limit).Find(&conversationModels).Error; err != nil {
+	// Get list conversation
+	if err = db.Offset(offset).Limit(limit).Find(&conversationModels).Error; err != nil {
 		return nil, nil, response.NewServerFailedError(err.Error())
 	}
 
-	// Chuẩn bị phản hồi
+	// Paging
 	pagingResponse := response.PagingResponse{
 		Total: total,
 		Limit: limit,
@@ -159,10 +143,10 @@ func (r *rConversation) GetManyConversation(
 
 	var conversationResponses []*entities.Conversation
 	for _, conversation := range conversationModels {
-		// Xác định số lượng thành viên
+		// Count members in group
 		memberCount := len(conversation.ConversationDetail)
 
-		// Lấy tin nhắn cuối cùng của user trong cuộc trò chuyện
+		// Get last messages in conversation
 		var lastMess *string
 		var lastMessStatus bool
 
@@ -183,7 +167,7 @@ func (r *rConversation) GetManyConversation(
 				LastMessStatus: lastMessStatus,
 			})
 		} else {
-			// Nếu là cuộc trò chuyện 1-1, lấy thông tin của người còn lại
+			// If is conversation 1-1, get the order person information instead of group conversation
 			var otherUser *entities.User
 			for _, detail := range conversation.ConversationDetail {
 				if detail.UserId != userId {
@@ -216,16 +200,68 @@ func (r *rConversation) GetManyConversation(
 
 func (r *rConversation) DeleteById(
 	ctx context.Context,
-	id uuid.UUID,
+	conversationId uuid.UUID,
+	userId uuid.UUID,
 ) error {
-	conversation, err := r.GetById(ctx, id)
-	if err != nil {
-		return response.NewDataNotFoundError(err.Error())
-	}
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Check conversation exist
+		isConversationExist, totalMembers, err := r.getConversationAndMembers(ctx, conversationId)
+		if err != nil {
+			return err
+		}
 
-	res := r.db.WithContext(ctx).Delete(conversation)
-	if res.Error != nil {
-		return response.NewServerFailedError(res.Error.Error())
+		if !isConversationExist {
+			return response.NewDataNotFoundError("conversation not found")
+		}
+
+		// 2. Check total of conversation
+		if totalMembers >= 3 {
+			// Check owner of conversation
+			var isOwner bool
+			isOwner, err = r.checkOwnerRole(ctx, conversationId, userId)
+			if err != nil {
+				return err
+			}
+
+			// 2. Check Owner of conversation
+			if !isOwner {
+				return response.NewCustomError(
+					response.ErrConversationOwnerPermissionRequired,
+					"You need to be a owner of this conversation to delete group",
+				)
+			}
+		}
+
+		// Delete all messages in conversation
+		if err = tx.WithContext(ctx).
+			Where("conversation_id = ?", conversationId).
+			Unscoped().
+			Delete(&entities.Message{}).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// Delete all conversation details
+		if err = tx.WithContext(ctx).
+			Where("conversation_id = ?", conversationId).
+			Unscoped().
+			Delete(&entities.ConversationDetail{}).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		// Delete conversation
+		if err = tx.WithContext(ctx).
+			Where("id = ?", conversationId).
+			Unscoped().
+			Delete(&entities.Conversation{}).
+			Error; err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -274,5 +310,53 @@ func (r *rConversation) UpdateOne(
 		Error; err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
+
 	return r.GetById(ctx, id)
+}
+
+func (r *rConversation) getConversationAndMembers(
+	ctx context.Context,
+	conversationId uuid.UUID,
+) (isExist bool, totalMembers int64, err error) {
+	var totalMember int64
+	var count int64
+	if err = r.db.WithContext(ctx).
+		Model(&models.Conversation{}).
+		Where("id = ?", conversationId).
+		Count(&count).
+		Error; err != nil {
+	}
+
+	if err = r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("conversation_id = ?", conversationId).
+		Count(&totalMember).
+		Error; err != nil {
+	}
+
+	return count > 0, totalMember, nil
+}
+
+func (r *rConversation) checkOwnerRole(
+	ctx context.Context,
+	conversationId uuid.UUID,
+	userId uuid.UUID,
+) (isOwner bool, err error) {
+	var conversationDetail *models.ConversationDetail
+	if err = r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("conversation_id = ? AND user_id = ?", conversationId, userId).
+		First(&conversationDetail).
+		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, response.NewDataNotFoundError(err.Error())
+		}
+		return false, response.NewServerFailedError(err.Error())
+	}
+
+	if conversationDetail.ConversationRole != consts.CONVERSATION_OWNER {
+		return false, nil
+	}
+
+	return true, nil
 }

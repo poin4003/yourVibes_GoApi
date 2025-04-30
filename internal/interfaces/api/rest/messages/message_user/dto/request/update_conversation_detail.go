@@ -13,11 +13,28 @@ type UpdateConversationDetail struct {
 	UserId         uuid.UUID `json:"user_id"`
 }
 
+type TransferOwnerRoleDto struct {
+	ConversationId uuid.UUID `json:"conversation_id"`
+	UserId         uuid.UUID `json:"user_id"`
+}
+
 func ValidateUpdateConversationDetail(req interface{}) error {
 	dto, ok := req.(*UpdateConversationDetail)
 
 	if !ok {
 		return fmt.Errorf("input is not UpdateConversationDetail")
+	}
+
+	return validation.ValidateStruct(dto,
+		validation.Field(&dto.UserId, validation.Required),
+		validation.Field(&dto.ConversationId, validation.Required),
+	)
+}
+
+func ValidateTransferOwnerRole(req interface{}) error {
+	dto, ok := req.(*TransferOwnerRoleDto)
+	if !ok {
+		return fmt.Errorf("input is not TransferOwnerRole")
 	}
 
 	return validation.ValidateStruct(dto,
@@ -33,5 +50,15 @@ func (req *UpdateConversationDetail) ToUpdateConversationDetailCommand(
 	return &command.UpdateOneStatusConversationDetailCommand{
 		UserId:         userId,
 		ConversationId: conversationId,
+	}, nil
+}
+
+func (req *TransferOwnerRoleDto) ToTransferOwnerRoleCommand(
+	authenticatedUserId uuid.UUID,
+) (*command.TransferOwnerRoleCommand, error) {
+	return &command.TransferOwnerRoleCommand{
+		AuthenticatedUserId: authenticatedUserId,
+		ConversationId:      req.ConversationId,
+		UserId:              req.UserId,
 	}, nil
 }

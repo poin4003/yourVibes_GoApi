@@ -946,6 +946,37 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/conversation_details/transfer_owner_role": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversationDetail"
+                ],
+                "summary": "transfer owner role",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.TransferOwnerRoleDto"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/conversation_details/update": {
             "patch": {
                 "security": [
@@ -3224,6 +3255,17 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/consts.ReportType"
+                }
+            }
+        },
+        "request.TransferOwnerRoleDto": {
+            "type": "object",
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

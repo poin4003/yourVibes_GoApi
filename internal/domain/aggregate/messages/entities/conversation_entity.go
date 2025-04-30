@@ -10,12 +10,12 @@ import (
 )
 
 type CreateConversation struct {
-	ID        uuid.UUID
-	Name      string
-	Image     string
-	UserIds   []uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID                 uuid.UUID
+	Name               string
+	Image              string
+	ConversationDetail []*ConversationDetail
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 type Conversation struct {
@@ -54,18 +54,36 @@ func (c *ConversationUpdate) ValidateConversationUpdate() error {
 func NewConversation(
 	name string,
 	userIds []uuid.UUID,
+	ownerId uuid.UUID,
 ) (*CreateConversation, error) {
-	conversation := &CreateConversation{
-		ID:        uuid.New(),
-		Name:      name,
-		Image:     consts.IMAGE_MESSAGE,
-		UserIds:   userIds,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	if err := conversation.Validate(); err != nil {
+	conversationID := uuid.New()
+
+	var conversationDetails []*ConversationDetail
+	newConversationDetail, err := NewConversationDetail(ownerId, conversationID, consts.CONVERSATION_OWNER)
+	if err != nil {
 		return nil, err
 	}
-	return conversation, nil
+	conversationDetails = append(conversationDetails, newConversationDetail)
 
+	for _, userId := range userIds {
+		newConversationDetail, err = NewConversationDetail(userId, conversationID, consts.CONVERSATION_MEMBER)
+		if err != nil {
+			return nil, err
+		}
+		conversationDetails = append(conversationDetails, newConversationDetail)
+	}
+
+	conversation := &CreateConversation{
+		ID:                 conversationID,
+		Name:               name,
+		Image:              consts.IMAGE_MESSAGE,
+		ConversationDetail: conversationDetails,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
+	}
+	if err = conversation.Validate(); err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
 }

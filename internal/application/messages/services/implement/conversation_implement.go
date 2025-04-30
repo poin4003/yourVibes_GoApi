@@ -51,12 +51,12 @@ func (s *sConversation) CreateConversation(
 	ctx context.Context,
 	command *conversationCommand.CreateConversationCommand,
 ) (result *conversationCommand.CreateConversationResult, err error) {
-	conversationEntity, err := conversationEntity.NewConversation(command.Name, command.UserIds)
+	newConversation, err := conversationEntity.NewConversation(command.Name, command.UserIds, command.OwnerId)
 	if err != nil {
 		return nil, err
 	}
 
-	conversation, err := s.conversationRepo.CreateOne(ctx, conversationEntity)
+	conversation, err := s.conversationRepo.CreateOne(ctx, newConversation)
 	if err != nil {
 		return nil, err
 	}
@@ -110,18 +110,8 @@ func (s *sConversation) DeleteConversationById(
 	ctx context.Context,
 	command *conversationCommand.DeleteConversationCommand,
 ) error {
-	//1. Find conversation
-	conversationFound, err := s.conversationRepo.GetById(ctx, *command.ConversationId)
-	if err != nil {
-		return err
-	}
-
-	if conversationFound == nil {
-		return err
-	}
-
-	//2. Delete conversation
-	if err = s.conversationRepo.DeleteById(ctx, *command.ConversationId); err != nil {
+	// 1. Delete conversation
+	if err := s.conversationRepo.DeleteById(ctx, *command.ConversationId, *command.UserId); err != nil {
 		return err
 	}
 

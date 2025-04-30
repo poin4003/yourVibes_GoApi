@@ -6,13 +6,27 @@ import (
 )
 
 func ToConversationModel(conversation *entities.CreateConversation) *models.Conversation {
-	var c = &models.Conversation{
-		ID:        conversation.ID,
-		Name:      conversation.Name,
-		Image:     conversation.Image,
-		CreatedAt: conversation.CreatedAt,
-		UpdatedAt: conversation.UpdatedAt,
+	var conversationDetailModels []*models.ConversationDetail
+	for _, conversationDetail := range conversation.ConversationDetail {
+		conversationDetailModel := &models.ConversationDetail{
+			UserId:           conversationDetail.UserId,
+			ConversationId:   conversationDetail.ConversationId,
+			LastMessStatus:   false,
+			LastMess:         nil,
+			ConversationRole: conversationDetail.ConversationRole,
+		}
+		conversationDetailModels = append(conversationDetailModels, conversationDetailModel)
 	}
+
+	var c = &models.Conversation{
+		ID:                 conversation.ID,
+		Name:               conversation.Name,
+		Image:              conversation.Image,
+		CreatedAt:          conversation.CreatedAt,
+		UpdatedAt:          conversation.UpdatedAt,
+		ConversationDetail: conversationDetailModels,
+	}
+
 	return c
 }
 

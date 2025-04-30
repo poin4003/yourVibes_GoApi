@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/command"
@@ -53,30 +54,28 @@ func (s *sConversationDetail) GetConversationDetailById(
 func (s *sConversationDetail) CreateConversationDetail(
 	ctx context.Context,
 	command *conversationDetailCommand.CreateConversationDetailCommand,
-) (result *conversationDetailCommand.CreateConversationDetailResult, err error) {
-
+) error {
 	conversation, err := s.conversationRepo.GetById(ctx, command.ConversationId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if conversation == nil {
-		return nil, err
+		return err
 	}
 
-	newconversationDertail, _ := entities.NewConversationDetail(
+	newConversationDetail, _ := entities.NewConversationDetail(
 		command.UserId,
 		command.ConversationId,
+		consts.CONVERSATION_MEMBER,
 	)
 
-	conversationCreate, err := s.conversationDetailRepo.CreateOne(ctx, newconversationDertail)
+	_, err = s.conversationDetailRepo.CreateOne(ctx, newConversationDetail)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &conversationDetailCommand.CreateConversationDetailResult{
-		ConversationDetail: mapper.NewConversationDetailResult(conversationCreate),
-	}, nil
+	return nil
 }
 
 func (s *sConversationDetail) GetConversationDetailByConversationId(
@@ -103,16 +102,7 @@ func (s *sConversationDetail) DeleteConversationDetailById(
 	ctx context.Context,
 	command *conversationDetailCommand.DeleteConversationDetailCommand,
 ) error {
-	conversationDetailFound, err := s.conversationDetailRepo.GetById(ctx, *command.UserId, *command.ConversationId)
-	if err != nil {
-		return err
-	}
-
-	if conversationDetailFound == nil {
-		return err
-	}
-
-	if err := s.conversationDetailRepo.DeleteById(ctx, *command.UserId, *command.ConversationId); err != nil {
+	if err := s.conversationDetailRepo.DeleteById(ctx, *command.UserId, command.AuthenticatedUserId, *command.ConversationId); err != nil {
 		return err
 	}
 
@@ -136,34 +126,41 @@ func (s *sConversationDetail) UpdateOneStatusConversationDetail(
 	}
 
 	return nil
-
 }
 
 func (s *sConversationDetail) CreateManyConversationDetail(
 	ctx context.Context,
 	command *conversationDetailCommand.CreateManyConversationDetailCommand,
-) (result *conversationDetailCommand.CreateManyConversationDetailResult, err error) {
+) error {
 	conversation, err := s.conversationRepo.GetById(ctx, command.ConversationId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if conversation == nil {
-		return nil, err
+		return err
 	}
 	var conversationDetails []*entities.ConversationDetail
 	for _, userId := range command.UserIds {
-		newConversationDetail, _ := entities.NewConversationDetail(userId, command.ConversationId)
+		newConversationDetail, _ := entities.NewConversationDetail(userId, command.ConversationId, consts.CONVERSATION_MEMBER)
 		conversationDetails = append(conversationDetails, newConversationDetail)
 	}
-	createConversationDetail, err := s.conversationDetailRepo.CreateMany(ctx, conversationDetails)
+	err = s.conversationDetailRepo.CreateMany(ctx, conversationDetails)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var conversationDetailResults []*common.ConversationDetailResult
-	for _, detail := range createConversationDetail {
-		conversationDetailResults = append(conversationDetailResults, mapper.NewConversationDetailResult(detail))
+
+	return nil
+}
+
+func (s *sConversationDetail) TransferOwnerRole(
+	ctx context.Context,
+	command *command.TransferOwnerRoleCommand,
+) (err error) {
+	if err = s.conversationDetailRepo.TransferOwnerRole(ctx,
+		command.UserId, command.AuthenticatedUserId, command.ConversationId,
+	); err != nil {
+		return err
 	}
-	return &conversationDetailCommand.CreateManyConversationDetailResult{
-		ConversationDetails: conversationDetailResults,
-	}, nil
+
+	return nil
 }

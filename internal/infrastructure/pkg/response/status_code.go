@@ -37,34 +37,38 @@ const (
 	ErrCodeOldPasswordIsWrong         = 30009
 
 	// Register Code
-	ErrCodeUserHasExists                = 50001
-	ErrCodeValidateParamRegister        = 50002
-	ErrCodeValidateParamEmail           = 50003
-	ErrCodeValidate                     = 50004
-	ErrDataNotFound                     = 50005
-	ErrFriendRequestHasAlreadyExists    = 50006
-	ErrFriendHasAlreadyExists           = 50007
-	ErrFriendRequestNotExists           = 50008
-	ErrFriendNotExist                   = 50009
-	ErrMakeFriendWithYourSelf           = 50010
-	ErrAdsExpired                       = 50011
-	ErrPostFriendAccess                 = 50012
-	ErrPostPrivateAccess                = 50013
-	ErrAdMustBePublic                   = 50014
-	ErrUserFriendAccess                 = 50015
-	ErrUserPrivateAccess                = 50016
-	ErrCodeAdminHasExist                = 50017
-	ErrCodeUserReportHasAlreadyExist    = 50018
-	ErrCodePostReportHasAlreadyExist    = 50019
-	ErrCodeCommentReportHasAlreadyExist = 50020
-	ErrCodeReportIsAlreadyHandled       = 50021
-	ErrCodeUserIsAlreadyActivated       = 50022
-	ErrCodePostIsAlreadyActivated       = 50023
-	ErrCodeCommentIsAlreadyActivated    = 50024
-	ErrCodeGoogleAuth                   = 50025
-	ErrDataHasAlreadyExist              = 50026
-	ErrVoucherExpired                   = 50027
-	ErrConversationAlreadyExist         = 50028
+	ErrCodeUserHasExists                   = 50001
+	ErrCodeValidateParamRegister           = 50002
+	ErrCodeValidateParamEmail              = 50003
+	ErrCodeValidate                        = 50004
+	ErrDataNotFound                        = 50005
+	ErrFriendRequestHasAlreadyExists       = 50006
+	ErrFriendHasAlreadyExists              = 50007
+	ErrFriendRequestNotExists              = 50008
+	ErrFriendNotExist                      = 50009
+	ErrMakeFriendWithYourSelf              = 50010
+	ErrAdsExpired                          = 50011
+	ErrPostFriendAccess                    = 50012
+	ErrPostPrivateAccess                   = 50013
+	ErrAdMustBePublic                      = 50014
+	ErrUserFriendAccess                    = 50015
+	ErrUserPrivateAccess                   = 50016
+	ErrCodeAdminHasExist                   = 50017
+	ErrCodeUserReportHasAlreadyExist       = 50018
+	ErrCodePostReportHasAlreadyExist       = 50019
+	ErrCodeCommentReportHasAlreadyExist    = 50020
+	ErrCodeReportIsAlreadyHandled          = 50021
+	ErrCodeUserIsAlreadyActivated          = 50022
+	ErrCodePostIsAlreadyActivated          = 50023
+	ErrCodeCommentIsAlreadyActivated       = 50024
+	ErrCodeGoogleAuth                      = 50025
+	ErrDataHasAlreadyExist                 = 50026
+	ErrVoucherExpired                      = 50027
+	ErrConversationAlreadyExist            = 50028
+	ErrConversationOwnerPermissionRequired = 50029
+	ErrCantLeaveConversationIfOnly2Members = 50030
+	ErrCantLeaveConversationIfIsOwners     = 50031
+	ErrCantDeleteAnotherMessage            = 50032
 
 	// Err Decentralization
 	ErrCodeLoginFailed        = 60001
@@ -125,6 +129,10 @@ func InitCustomCode() {
 	registerCode(ErrDataHasAlreadyExist, "Data has already exist", http.StatusBadRequest)
 	registerCode(ErrVoucherExpired, "Voucher has expired", http.StatusBadRequest)
 	registerCode(ErrConversationAlreadyExist, "Conversation has already exist", http.StatusBadRequest)
+	registerCode(ErrConversationOwnerPermissionRequired, "Conversation owner permission required", http.StatusBadRequest)
+	registerCode(ErrCantLeaveConversationIfOnly2Members, "Conversation required at least 2 members", http.StatusBadRequest)
+	registerCode(ErrCantLeaveConversationIfIsOwners, "Conversation required 1 owner, you need to transfer permission to another member", http.StatusBadRequest)
+	registerCode(ErrCantDeleteAnotherMessage, "Can not delete another person messages", http.StatusBadRequest)
 
 	registerCode(ErrCodeLoginFailed, "Account or Password is not correct", http.StatusBadRequest)
 	registerCode(ErrCodeValidateParamLogin, "Validate param login", http.StatusBadRequest)

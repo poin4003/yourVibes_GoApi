@@ -17,21 +17,14 @@ func ToConversationDetailModel(conversationDetail *entities.ConversationDetail) 
 
 func FromConversationDetailModel(cd *models.ConversationDetail) *entities.ConversationDetail {
 	var conversationDetail = &entities.ConversationDetail{
-		UserId:         cd.UserId,
-		ConversationId: cd.ConversationId,
-		User:           FromUserModel(&cd.User),
-		Conversation:   FromConversationModel(&cd.Conversation),
-		LastMessStatus: cd.LastMessStatus,
-		LastMess:       cd.LastMess,
+		UserId:           cd.UserId,
+		ConversationId:   cd.ConversationId,
+		User:             FromUserModel(&cd.User),
+		Conversation:     FromConversationModel(&cd.Conversation),
+		LastMessStatus:   cd.LastMessStatus,
+		LastMess:         cd.LastMess,
+		ConversationRole: cd.ConversationRole,
 	}
 
 	return conversationDetail
-}
-
-func FromConversationDetailModelList(conversationDetailModelList []*models.ConversationDetail) []*entities.ConversationDetail {
-	conversationDetailEntityList := []*entities.ConversationDetail{}
-	for _, conversationDetailModel := range conversationDetailModelList {
-		conversationDetailEntityList = append(conversationDetailEntityList, FromConversationDetailModel(conversationDetailModel))
-	}
-	return conversationDetailEntityList
 }
