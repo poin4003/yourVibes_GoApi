@@ -67,7 +67,6 @@ pipeline {
                        ${WORKSPACE}/config/prod.yaml \
                        "${PROD_USER}"@${PROD_SERVER_NAME}:/home/pchuy/documents/yourVibes_GoApi/config/
 
-                       echo 'Executing remaining commands over single SSH connection...'
                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} << 'EOF'
                            echo 'Stopping and removing existing container...'
                            docker stop yourvibes_api_server || echo 'Container not running'
