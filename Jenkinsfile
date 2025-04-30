@@ -53,60 +53,50 @@ pipeline {
             }
         }
 
-        stage('Deploy to Production on Acer Archlinux server') {
-            steps {
-                script {
-                    echo 'Deploying to Production...'
+       stage('Deploy to Production on Acer Archlinux server') {
+           steps {
+               script {
+                   echo 'Deploying to Production...'
 
-                    sh '''
-                        echo 'Stopping and removing existing container...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker stop yourvibes_api_server || echo 'Container not running' && \
-                            docker rm yourvibes_api_server || echo 'Container not found'
-                        "
-                    '''
+                   sh '''
+                       echo 'Removing old prod.yaml before copying new one...'
+                       sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "rm -f /home/pchuy/documents/yourVibes_GoApi/config/prod.yaml"
 
-                    sh '''
-                        echo 'Removing old Docker image...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker rmi 400034/yourvibes_api_server:latest || echo 'Image not found'
-                        "
-                    '''
+                       echo 'Copying prod.yaml to production server...'
+                       sshpass -p "${PROD_PASSWORD}" scp -P "${PROD_SERVER_PORT}" \
+                       ${WORKSPACE}/config/prod.yaml \
+                       "${PROD_USER}"@${PROD_SERVER_NAME}:/home/pchuy/documents/yourVibes_GoApi/config/
 
-                    sh '''
-                        echo 'Copying prod.yaml to production server...'
-                        sshpass -p "${PROD_PASSWORD}" scp -P "${PROD_SERVER_PORT}" \
-                        ${WORKSPACE}/config/prod.yaml \
-                        "${PROD_USER}"@${PROD_SERVER_NAME}:/home/pchuy/documents/yourVibes_GoApi/config/
-                    '''
+                       echo 'Executing remaining commands over single SSH connection...'
+                       sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} << 'EOF'
+                           echo 'Stopping and removing existing container...'
+                           docker stop yourvibes_api_server || echo 'Container not running'
+                           docker rm yourvibes_api_server || echo 'Container not found'
 
-                    sh '''
-                        echo 'Setting up Docker volume for production configuration...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists' && \
-                            docker run --rm -v yourvibes_config:/config -v /home/pchuy/documents/yourVibes_GoApi/config:/host busybox sh -c 'cp /host/prod.yaml /config/prod.yaml'
-                        "
-                    '''
+                           echo 'Removing old Docker image...'
+                           docker rmi 400034/yourvibes_api_server:latest || echo 'Image not found'
 
-                    sh '''
-                        echo 'Deploying application to production server...'
-                        sshpass -p "${PROD_PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PROD_SERVER_PORT}" "${PROD_USER}"@${PROD_SERVER_NAME} "
-                            docker pull 400034/yourvibes_api_server:latest && \
-                            docker network connect yourvibes_goapi_default yourvibes_api_server || echo 'Network already connected' && \
-                            docker run -d --name yourvibes_api_server -p 8080:8080 \
-                                -e YOURVIBES_SERVER_CONFIG_FILE=prod \
-                                -v yourvibes_config:/config \
-                                -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro \
-                                -v yourvibes_goapi_yourvibes_storage:/storages \
-                                -v yourvibes_goapi_tmp_volume:/tmp \
-                                --dns=8.8.8.8 --dns=8.8.4.4 \
-                                --network yourvibes_goapi_default \
-                                400034/yourvibes_api_server:latest
-                        "
-                    '''
-                }
-            }
-        }
+                           echo 'Setting up Docker volume for production configuration...'
+                           docker volume create yourvibes_config || echo 'Volume yourvibes_config already exists'
+                           docker run --rm -v yourvibes_config:/config -v /home/pchuy/documents/yourVibes_GoApi/config:/host busybox sh -c 'cp /host/prod.yaml /config/prod.yaml'
+
+                           echo 'Deploying application...'
+                           docker pull 400034/yourvibes_api_server:latest
+                           docker network connect yourvibes_goapi_default yourvibes_api_server || echo 'Network already connected'
+                           docker run -d --name yourvibes_api_server -p 8080:8080 \
+                               -e YOURVIBES_SERVER_CONFIG_FILE=prod \
+                               -v yourvibes_config:/config \
+                               -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro \
+                               -v yourvibes_goapi_yourvibes_storage:/storages \
+                               -v yourvibes_goapi_tmp_volume:/tmp \
+                               --dns=8.8.8.8 --dns=8.8.4.4 \
+                               --network yourvibes_goapi_default \
+                               400034/yourvibes_api_server:latest
+                       EOF
+                   '''
+               }
+           }
+       }
     }
 
     post {
