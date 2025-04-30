@@ -91,7 +91,6 @@ pipeline {
                                --dns=8.8.8.8 --dns=8.8.4.4 \
                                --network yourvibes_goapi_default \
                                400034/yourvibes_api_server:latest
-                       EOF
                    '''
                }
            }
