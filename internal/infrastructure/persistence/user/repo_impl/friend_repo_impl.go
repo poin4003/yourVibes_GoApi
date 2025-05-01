@@ -339,7 +339,7 @@ func (r *rFriend) GetNonFriends(
 		if err := r.db.WithContext(ctx).
 			Model(&models.FriendRequest{}).
 			Where("user_id = ?", query.UserId).
-			Where("friend_id IN (?)", userIDs).
+			Where("friend_id IN ?", userIDs).
 			Find(&friendRequestResults).
 			Error; err != nil {
 			return nil, nil, response.NewServerFailedError(err.Error())
