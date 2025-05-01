@@ -338,7 +338,6 @@ func (r *rFriend) GetNonFriends(
 	if len(userIDs) > 0 {
 		if err := r.db.WithContext(ctx).
 			Model(&models.FriendRequest{}).
-			Select("user_id = ?", query.UserId).
 			Where("user_id = ?", query.UserId).
 			Where("friend_id IN (?)", userIDs).
 			Find(&friendRequestResults).
