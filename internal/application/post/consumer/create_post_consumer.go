@@ -272,11 +272,9 @@ func (c *PostModerationConsumer) republishMessage(msg amqp091.Delivery, queue st
 
 func InitPostModerationConsumer(postService services.IPostUser, conn *rabbitmq.Connection) {
 	consumer := NewPostModerationConsumer(postService, conn)
-	go func() {
-		if err := consumer.StartPostModerationConsuming(context.Background()); err != nil {
-			global.Logger.Error("Failed to start post moderation consumer", zap.Error(err))
-		} else {
-			global.Logger.Info("Post moderation consumer initialized successfully", zap.String("queue", consts.CreatePostQueue))
-		}
-	}()
+	if err := consumer.StartPostModerationConsuming(context.Background()); err != nil {
+		global.Logger.Error("Failed to start post moderation consumer", zap.Error(err))
+	} else {
+		global.Logger.Info("Post moderation consumer initialized successfully", zap.String("queue", consts.CreatePostQueue))
+	}
 }

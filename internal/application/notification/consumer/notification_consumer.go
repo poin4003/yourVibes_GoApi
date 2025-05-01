@@ -283,11 +283,9 @@ func (c *NotificationConsumer) republishMessage(msg amqp091.Delivery, queue stri
 
 func InitNotificationConsumer(service services.INotificationMQ, conn *rabbitmq.Connection) {
 	consumer := NewNotificationConsumer(service, conn)
-	go func() {
-		if err := consumer.StartNotificationConsuming(context.Background()); err != nil {
-			global.Logger.Error("Failed to start notification consumer", zap.Error(err))
-		} else {
-			global.Logger.Info("Notification consumer initialized successfully", zap.String("queue", consts.NotificationQueue))
-		}
-	}()
+	if err := consumer.StartNotificationConsuming(context.Background()); err != nil {
+		global.Logger.Error("Failed to start notification consumer", zap.Error(err))
+	} else {
+		global.Logger.Info("Notification consumer initialized successfully", zap.String("queue", consts.NotificationQueue))
+	}
 }

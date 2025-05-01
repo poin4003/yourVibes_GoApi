@@ -224,11 +224,9 @@ func InitStatisticsConsumer(
 		statisticService,
 		conn,
 	)
-	go func() {
-		if err := consumer.StartStatisticsConsuming(context.Background()); err != nil {
-			global.Logger.Error("Failed to start statistics consuming", zap.Error(err))
-		} else {
-			global.Logger.Info("Statistics consumer initialized successfully", zap.String("queue", consts.StatisticsQueue))
-		}
-	}()
+	if err := consumer.StartStatisticsConsuming(context.Background()); err != nil {
+		global.Logger.Error("Failed to start statistics consuming", zap.Error(err))
+	} else {
+		global.Logger.Info("Statistics consumer initialized successfully", zap.String("queue", consts.StatisticsQueue))
+	}
 }

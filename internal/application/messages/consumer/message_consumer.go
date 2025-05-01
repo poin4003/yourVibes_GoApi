@@ -240,11 +240,9 @@ func (c *MessageConsumer) republishMessage(msg amqp091.Delivery, queue string) e
 
 func InitMessageConsumer(messageService services.IMessageMQ, conn *rabbitmq.Connection) {
 	consumer := NewMessageConsumer(messageService, conn)
-	go func() {
-		if err := consumer.StartMessageConsuming(context.Background()); err != nil {
-			global.Logger.Error("Failed to start message consuming", zap.Error(err))
-		} else {
-			global.Logger.Info("Message consumer initialized successfully", zap.String("queue", consts.MessageQueue))
-		}
-	}()
+	if err := consumer.StartMessageConsuming(context.Background()); err != nil {
+		global.Logger.Error("Failed to start message consuming", zap.Error(err))
+	} else {
+		global.Logger.Info("Message consumer initialized successfully", zap.String("queue", consts.MessageQueue))
+	}
 }
