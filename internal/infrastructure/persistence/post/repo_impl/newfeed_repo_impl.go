@@ -131,6 +131,7 @@ func (r *rNewFeed) GetMany(
 	if err := db.Model(&models.Post{}).
 		Joins("JOIN new_feeds ON new_feeds.post_id = posts.id").
 		Where("status = true").
+		Where("deleted_at IS NULL").
 		Where("new_feeds.user_id = ?", query.UserId).
 		Where(`
 			(posts.privacy = ? OR 
@@ -156,7 +157,7 @@ func (r *rNewFeed) GetMany(
 			return db.Select("id, family_name, name, avatar_url")
 		}).
 		Preload("ParentPost.Media").
-		Order("posts.created_at desc").
+		Order("posts.updated_at desc").
 		Offset(offset).
 		Limit(limit).
 		Find(&posts).

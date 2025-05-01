@@ -30,6 +30,8 @@ func NewPushToNewFeedCronJob(
 		return crj
 	}
 
+	go crj.Run()
+
 	go func() {
 		crj.cron.Start()
 		fmt.Println("Push advertise to new feed cronjob start")

@@ -33,6 +33,7 @@ func (r *rPost) GetById(
 	var postModel models.Post
 	if err := r.db.WithContext(ctx).
 		Where("posts.id = ? AND status = true", id).
+		Where("deleted_at IS NULL").
 		Preload("Media").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, family_name, name, avatar_url")
@@ -380,6 +381,7 @@ func (r *rPost) GetTrendingPost(
 	if err := r.db.WithContext(ctx).
 		Model(&models.Post{}).
 		Where("status = ?", true).
+		Where("deleted_at is NULL").
 		Where("is_advertisement = ?", 0).
 		Where("privacy = ?", consts.PUBLIC).
 		Count(&total).
@@ -414,6 +416,7 @@ func (r *rPost) GetTrendingPost(
 		Where("p.is_advertisement = ?", 0).
 		Where("p.privacy = ?", consts.PUBLIC).
 		Where("p.created_at >= ? AND p.created_at <= ?", averageTimeToGet, now).
+		Where("deleted_at is NULL").
 		Order("score DESC").
 		Offset(offset).
 		Limit(limit).

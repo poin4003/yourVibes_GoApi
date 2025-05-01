@@ -32,6 +32,8 @@ func NewCheckExpiryCronJob(
 		return crj
 	}
 
+	go crj.Run()
+
 	go func() {
 		crj.cron.Start()
 		fmt.Println("Check expiry of advertises cronjob started")

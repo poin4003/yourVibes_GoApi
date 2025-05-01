@@ -656,18 +656,83 @@ func (s *sPostUser) GetTrendingPost(
 	ctx context.Context,
 	query *postQuery.GetTrendingPostQuery,
 ) (result *postQuery.GetManyPostQueryResult, err error) {
-	// 1. Get Trending post
-	posts, pagingResp, err := s.postRepo.GetTrendingPost(ctx, query)
-	if err != nil {
-		return nil, err
+	// 1. Get Trending post from cache
+	postIDs, paging := s.postCache.GetFeeds(
+		ctx, consts.RK_TRENDING, uuid.Nil, query.Limit, query.Page,
+	)
+
+	cacheFailed := false
+	if len(postIDs) == 0 {
+		cacheFailed = true
 	}
 
-	// 2. Get list user post like
-	postIDs := make([]uuid.UUID, 0, len(posts))
-	for _, post := range posts {
-		postIDs = append(postIDs, post.ID)
+	// 2. Cache hit
+	var posts []*postEntity.Post
+	if !cacheFailed {
+		var wg sync.WaitGroup
+		var postMap sync.Map
+		cacheErrorOccurred := false
+
+		for _, postID := range postIDs {
+			wg.Add(1)
+			go func(postID uuid.UUID) {
+				defer wg.Done()
+				post := s.postCache.GetPost(ctx, postID)
+				if post == nil {
+					post, err = s.postRepo.GetById(ctx, postID)
+					if err != nil || post == nil {
+						global.Logger.Warn("Failed to get post", zap.String("postId", postID.String()))
+						cacheErrorOccurred = true
+						s.postCache.DeletePost(ctx, postID)
+						s.postCache.DeleteFeeds(ctx, consts.RK_TRENDING, postID)
+						return
+					}
+					s.postCache.SetPost(ctx, post)
+				}
+				postMap.Store(postID, post)
+			}(postID)
+		}
+		wg.Wait()
+
+		if cacheErrorOccurred {
+			cacheFailed = true
+		}
+
+		if !cacheFailed {
+			for _, postID := range postIDs {
+				if post, ok := postMap.Load(postID); ok {
+					posts = append(posts, post.(*postEntity.Post))
+				}
+			}
+		}
 	}
 
+	// 3. Cache miss or cache handle error
+	if cacheFailed {
+		global.Logger.Warn("cache failed to get post, fallback to database")
+		var pagingResp *response.PagingResponse
+		posts, pagingResp, err = s.postRepo.GetTrendingPost(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		paging = pagingResp
+
+		postIDs = make([]uuid.UUID, 0, len(posts))
+		var wg sync.WaitGroup
+		for _, post := range posts {
+			postIDs = append(postIDs, post.ID)
+			wg.Add(1)
+			go func(p *postEntity.Post) {
+				defer wg.Done()
+				s.postCache.SetPost(ctx, p)
+			}(post)
+		}
+		wg.Wait()
+
+		s.postCache.SetFeeds(ctx, consts.RK_TRENDING, uuid.Nil, postIDs, pagingResp)
+	}
+
+	// 4. Get list user post like
 	isLikedListQuery := &postQuery.CheckUserLikeManyPostQuery{
 		PostIds:             postIDs,
 		AuthenticatedUserId: query.AuthenticatedUserId,
@@ -676,6 +741,26 @@ func (s *sPostUser) GetTrendingPost(
 	if err != nil {
 		return nil, err
 	}
+
+	// 5. Publish event to rabbitmq for statistic
+	var wg sync.WaitGroup
+	for _, post := range posts {
+		postId := post.ID
+		wg.Add(1)
+		go func(postId uuid.UUID) {
+			defer wg.Done()
+			statisticEvent := common.StatisticEventResult{
+				PostId:    postId,
+				EventType: "impression",
+				Count:     1,
+				Timestamp: time.Now(),
+			}
+			if err = s.postEventPublisher.PublishStatistic(ctx, statisticEvent, "stats.post"); err != nil {
+				global.Logger.Error("Failed to publish statistic", zap.Error(err))
+			}
+		}(postId)
+	}
+	wg.Wait()
 
 	// Map to return
 	var postResults []*common.PostResultWithLiked
@@ -686,7 +771,7 @@ func (s *sPostUser) GetTrendingPost(
 
 	return &postQuery.GetManyPostQueryResult{
 		Posts:          postResults,
-		PagingResponse: pagingResp,
+		PagingResponse: paging,
 	}, nil
 }
 

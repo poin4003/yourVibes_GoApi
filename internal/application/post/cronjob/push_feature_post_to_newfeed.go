@@ -29,6 +29,8 @@ func NewPushFeaturePostToNewFeedCronJob(
 		return crj
 	}
 
+	go crj.Run()
+
 	go func() {
 		crj.cron.Start()
 		fmt.Println("Push feature post cron job started")
