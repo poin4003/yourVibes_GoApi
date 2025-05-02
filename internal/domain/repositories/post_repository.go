@@ -51,5 +51,7 @@ type (
 		CreateManyFeaturedPosts(ctx context.Context, numUsers int) error
 		DeleteExpiredFeaturedPostsFromNewFeeds(ctx context.Context) error
 		ExpireAdvertiseByPostID(ctx context.Context, postID uuid.UUID) error
+		CreateAdvertisePostsForUser(ctx context.Context, userId uuid.UUID) error
+		CreateFeaturedPostsForUser(ctx context.Context, userId uuid.UUID) error
 	}
 )

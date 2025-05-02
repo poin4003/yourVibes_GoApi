@@ -125,7 +125,7 @@ func InitDependencyInjection(
 	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
 	// Initialize Service
-	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, userAuthCache)
+	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, newFeedRepo, userAuthCache)
 	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userCache, userNotificationPublisher)
 	userNewFeedServiceInit := postServiceImpl.NewPostNewFeedImplement(userRepo, postRepo, postLikeRepo, newFeedRepo, postCache, postEventPublisher)
 	userInfoServiceInit := userServiceImpl.NewUserInfoImplement(userRepo, settingRepo, friendRepo, friendRequestRepo, userCache)

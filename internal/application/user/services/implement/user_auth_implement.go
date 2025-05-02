@@ -3,6 +3,7 @@ package implement
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"strconv"
 	"strings"
 	"time"
@@ -30,17 +31,20 @@ import (
 type sUserAuth struct {
 	userRepo      repository.IUserRepository
 	settingRepo   repository.ISettingRepository
+	newFeedRepo   repository.INewFeedRepository
 	userAuthCache cache.IUserAuthCache
 }
 
 func NewUserLoginImplement(
 	userRepo repository.IUserRepository,
 	settingRepo repository.ISettingRepository,
+	newFeedRepo repository.INewFeedRepository,
 	userAuthCache cache.IUserAuthCache,
 ) *sUserAuth {
 	return &sUserAuth{
 		userRepo:      userRepo,
 		settingRepo:   settingRepo,
+		newFeedRepo:   newFeedRepo,
 		userAuthCache: userAuthCache,
 	}
 }
@@ -179,6 +183,16 @@ func (s *sUserAuth) Register(
 	); err != nil {
 		return nil, response.NewServerFailedError(err.Error())
 	}
+
+	// 9. Push post into new feed for user
+	go func(userId uuid.UUID) {
+		if err = s.newFeedRepo.CreateAdvertisePostsForUser(ctx, userId); err != nil {
+			global.Logger.Error("Failed to push advertise for new user")
+		}
+		if err = s.newFeedRepo.CreateFeaturedPostsForUser(ctx, userId); err != nil {
+			global.Logger.Error("Failed to push feature post for new user")
+		}
+	}(validatedUser.ID)
 
 	return &userCommand.RegisterCommandResult{
 		User: mapper.NewUserResultFromValidateEntity(validatedUser),
@@ -479,6 +493,16 @@ func (s *sUserAuth) AuthGoogle(
 			return nil, response.NewServerFailedError(err.Error())
 		}
 
+		// 9. Push post into new feed for user
+		go func(userId uuid.UUID) {
+			if err = s.newFeedRepo.CreateAdvertisePostsForUser(ctx, userId); err != nil {
+				global.Logger.Error("Failed to push advertise for new user")
+			}
+			if err = s.newFeedRepo.CreateFeaturedPostsForUser(ctx, userId); err != nil {
+				global.Logger.Error("Failed to push feature post for new user")
+			}
+		}(validatedUser.ID)
+
 		return &userCommand.AuthGoogleCommandResult{
 			User:        mapper.NewUserResultFromValidateEntity(validatedUser),
 			AccessToken: &accessTokenGen,
@@ -587,6 +611,16 @@ func (s *sUserAuth) AppAuthGoogle(
 		if err != nil {
 			return nil, response.NewServerFailedError(err.Error())
 		}
+
+		// 9. Push post into new feed for user
+		go func(userId uuid.UUID) {
+			if err = s.newFeedRepo.CreateAdvertisePostsForUser(ctx, userId); err != nil {
+				global.Logger.Error("Failed to push advertise for new user")
+			}
+			if err = s.newFeedRepo.CreateFeaturedPostsForUser(ctx, userId); err != nil {
+				global.Logger.Error("Failed to push feature post for new user")
+			}
+		}(validatedUser.ID)
 
 		return &userCommand.AuthGoogleCommandResult{
 			User:        mapper.NewUserResultFromValidateEntity(validatedUser),

@@ -416,3 +416,157 @@ func (r *rNewFeed) ExpireAdvertiseByPostID(ctx context.Context, postID uuid.UUID
 		return nil
 	})
 }
+
+func (r *rNewFeed) CreateAdvertisePostsForUser(
+	ctx context.Context,
+	userId uuid.UUID,
+) error {
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		} else if tx.Error != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	now := time.Now().Truncate(24 * time.Hour)
+
+	query := `
+		WITH 
+			inserted AS (
+				INSERT INTO new_feeds (user_id, post_id)
+				SELECT ?, a.post_id
+				FROM (
+					SELECT advertises.id AS advertise_id, advertises.post_id
+					FROM advertises
+					JOIN bills ON bills.advertise_id = advertises.id
+					WHERE bills.status = true
+					AND advertises.start_date <= ?
+					AND advertises.end_date >= ?
+					AND advertises.deleted_at IS NULL
+					AND bills.deleted_at IS NULL
+				) a
+				WHERE NOT EXISTS (
+					SELECT 1
+					FROM new_feeds nf
+					WHERE nf.user_id = ?
+					AND nf.post_id = a.post_id
+				)
+				RETURNING post_id
+			),
+			reach_counts AS (
+				SELECT post_id, COUNT(*) as reach_count
+				FROM inserted
+				GROUP BY post_id
+			)
+		UPDATE statistics
+		SET reach = statistics.reach + rc.reach_count,
+			updated_at = ?
+		FROM reach_counts rc
+		WHERE statistics.post_id = rc.post_id;
+	`
+
+	result := tx.Exec(query, userId, now, now, userId, now)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	global.Logger.Info("Pushed advertise posts to one user newfeed", zap.String("user_id", userId.String()), zap.Int64("rows_affected", result.RowsAffected))
+	return nil
+}
+
+func (r *rNewFeed) CreateFeaturedPostsForUser(
+	ctx context.Context,
+	userId uuid.UUID,
+) error {
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		} else if tx.Error != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	now := time.Now()
+	averageTimeToPush := now.AddDate(0, 0, -7)
+
+	query := `
+		WITH
+			latest_statistics AS (
+				SELECT DISTINCT ON (post_id) post_id, clicks, impression
+				FROM statistics
+				WHERE deleted_at IS NULL
+				ORDER BY post_id, created_at DESC
+			),
+			featured_posts AS (
+				SELECT p.id AS post_id
+				FROM posts p
+				JOIN latest_statistics ls ON ls.post_id = p.id
+				WHERE p.like_count >= ?
+				  AND p.comment_count >= ?
+				  AND ls.clicks >= ?
+				  AND ls.impression >= ?
+				  AND p.privacy = 'public'
+				  AND p.is_advertisement = 0
+				  AND p.status = true
+				  AND p.created_at >= ?
+				  AND p.created_at <= ?
+				  AND p.deleted_at IS NULL
+			),
+			inserted AS (
+				INSERT INTO new_feeds (user_id, post_id)
+				SELECT ?, fp.post_id
+				FROM featured_posts fp
+				WHERE NOT EXISTS (
+					SELECT 1
+					FROM new_feeds nf
+					WHERE nf.user_id = ?
+					  AND nf.post_id = fp.post_id
+				)
+				RETURNING post_id
+			),
+			reach_counts AS (
+				SELECT post_id, COUNT(*) as reach_count
+				FROM inserted
+				GROUP BY post_id
+			),
+			update_stats AS (
+				UPDATE statistics
+				SET reach = statistics.reach + rc.reach_count,
+					updated_at = ?
+				FROM reach_counts rc
+				WHERE statistics.post_id = rc.post_id
+				  AND statistics.created_at = (
+					  SELECT MAX(created_at)
+					  FROM statistics s
+					  WHERE s.post_id = rc.post_id
+						AND s.deleted_at IS NULL
+				  )
+				RETURNING rc.post_id
+			)
+		UPDATE posts
+		SET is_featured_post = true,
+			updated_at = ?
+		WHERE id IN (SELECT post_id FROM inserted);
+	`
+
+	result := tx.Exec(query, 3, 5, 10, 10, averageTimeToPush, now, userId, userId, now, now)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	global.Logger.Info("Pushed featured posts to one user newfeed", zap.String("user_id", userId.String()), zap.Int64("rows_affected", result.RowsAffected))
+	return nil
+}
