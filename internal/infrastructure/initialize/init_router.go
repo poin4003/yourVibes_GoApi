@@ -58,6 +58,7 @@ func InitRouter(routerGroup routers.RouterGroup) *gin.Engine {
 		adminRouter.InitAdvertiseAdminRouter(MainGroup)
 		adminRouter.InitRevenueAdminRouter(MainGroup)
 		adminRouter.InitAdminReportRouter(MainGroup)
+		adminRouter.InitSystemRouter(MainGroup)
 	}
 	return r
 }

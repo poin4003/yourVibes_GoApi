@@ -13,6 +13,7 @@ type (
 		UpdateComment(ctx context.Context, command *command.UpdateCommentCommand) (result *command.UpdateCommentResult, err error)
 		DeleteComment(ctx context.Context, command *command.DeleteCommentCommand) error
 		GetManyComments(ctx context.Context, query *query.GetManyCommentQuery) (result *query.GetManyCommentsResult, err error)
+		ClearAllCommentCaches(ctx context.Context) error
 	}
 	ICommentLike interface {
 		LikeComment(ctx context.Context, command *command.LikeCommentCommand) (result *command.LikeCommentResult, err error)

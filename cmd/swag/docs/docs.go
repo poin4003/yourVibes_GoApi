@@ -2267,6 +2267,265 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/systems/all_cache": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to clear all system cache",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_cache"
+                ],
+                "summary": "system cache clear",
+                "responses": {}
+            }
+        },
+        "/systems/check_expiry_of_advertisement": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "System check and delete expiry advertisement from new feed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system push check expiry of advertisement",
+                "responses": {}
+            }
+        },
+        "/systems/check_expiry_of_feature_post": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "System check and delete expiry feature post from new feed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system push check expiry of feature post",
+                "responses": {}
+            }
+        },
+        "/systems/comment_cache": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to clear all comment system cache",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_cache"
+                ],
+                "summary": "system comment cache clear",
+                "responses": {}
+            }
+        },
+        "/systems/delay_post_created_at/{post_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "system hack to update created_at of post delay to 7 days ago",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system update created_at of post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "PostId",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/systems/expired_advertise/{post_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "system hack to expired 1 of advertise by post id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system expired advertise by post id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "PostId",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/systems/post_cache": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "When admin need to clear all post system cache",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_cache"
+                ],
+                "summary": "system post cache clear",
+                "responses": {}
+            }
+        },
+        "/systems/push_advertise_to_new_feed": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "System push advertisement to new feed by numUsers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system push advertise to new feed",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.NumUsers"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/systems/push_feature_post_to_new_feed": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "System push feature post to new feed by numUsers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system push feature post to new feed",
+                "parameters": [
+                    {
+                        "description": "input",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.NumUsers"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/systems/update_post_and_statistics/{post_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "system hack to update immediately like, comment, statistic of post to viral",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system_post"
+                ],
+                "summary": "system update like, comment, statistics count",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "PostId",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -3206,6 +3465,14 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "request.NumUsers": {
+            "type": "object",
+            "properties": {
+                "num_users": {
+                    "type": "integer"
                 }
             }
         },

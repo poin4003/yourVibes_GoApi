@@ -22,5 +22,6 @@ type (
 		SetPostForCreate(ctx context.Context, postID uuid.UUID, post *entities.PostForCreate) error
 		GetPostForCreate(ctx context.Context, postID uuid.UUID) (*entities.PostForCreate, error)
 		DeletePostForCreate(ctx context.Context, postID uuid.UUID) error
+		DeleteAllPostCache(ctx context.Context) error
 	}
 )

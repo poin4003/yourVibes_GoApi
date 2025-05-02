@@ -274,3 +274,12 @@ func (s *sUserInfo) SetUserOffline(
 ) {
 	s.userCache.SetOffline(ctx, userId)
 }
+
+func (s *sUserInfo) DeleteAllCache(
+	ctx context.Context,
+) error {
+	if err := s.userCache.ClearAllCaches(ctx); err != nil {
+		return err
+	}
+	return nil
+}

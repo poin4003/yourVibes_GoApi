@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/application/post/query"
@@ -22,6 +23,8 @@ type (
 		CheckPostOwner(ctx context.Context, postId uuid.UUID, userId uuid.UUID) (bool, error)
 		GetTotalPostCount(ctx context.Context) (int, error)
 		GetTotalPostCountByUserId(ctx context.Context, userId uuid.UUID) (int64, error)
+		UpdatePostAndStatistics(ctx context.Context, postID uuid.UUID, likeDelta, commentDelta, clicksDelta, impressionDelta, reachDelta int) error
+		DelayPostCreatedAt(ctx context.Context, postID uuid.UUID, delay time.Duration) error
 	}
 	IMediaRepository interface {
 		GetById(ctx context.Context, id uint) (*entities.Media, error)
@@ -46,5 +49,7 @@ type (
 		CreateManyWithRandomUser(ctx context.Context, numUsers int) error
 		DeleteExpiredAdvertiseFromNewFeeds(ctx context.Context) error
 		CreateManyFeaturedPosts(ctx context.Context, numUsers int) error
+		DeleteExpiredFeaturedPostsFromNewFeeds(ctx context.Context) error
+		ExpireAdvertiseByPostID(ctx context.Context, postID uuid.UUID) error
 	}
 )

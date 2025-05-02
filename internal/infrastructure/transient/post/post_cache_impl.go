@@ -244,3 +244,33 @@ func (t *tPost) DeletePostForCreate(
 	}
 	return nil
 }
+
+func (t *tPost) DeleteAllPostCache(ctx context.Context) error {
+	patterns := []string{
+		"post:*",
+		"user_feed:*",
+		"userfeed:*",
+		"personal_posts:*",
+		"trending:*",
+	}
+
+	for _, pattern := range patterns {
+		iter := t.client.Scan(ctx, 0, pattern, 0).Iterator()
+		var keysToDelete []string
+
+		for iter.Next(ctx) {
+			keysToDelete = append(keysToDelete, iter.Val())
+		}
+
+		if err := iter.Err(); err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		if len(keysToDelete) > 0 {
+			if err := t.client.Del(ctx, keysToDelete...).Err(); err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+		}
+	}
+	return nil
+}

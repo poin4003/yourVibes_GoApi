@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"time"
@@ -93,4 +94,12 @@ func (t *tUser) IsOnline(
 		return false
 	}
 	return val == "1"
+}
+
+func (t *tUser) ClearAllCaches(ctx context.Context) error {
+	if err := t.client.FlushDB(ctx).Err(); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+	global.Logger.Info("Clear all caches in redis")
+	return nil
 }

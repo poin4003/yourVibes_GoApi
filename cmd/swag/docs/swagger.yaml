@@ -178,6 +178,11 @@ definitions:
     - email
     - password
     type: object
+  request.NumUsers:
+    properties:
+      num_users:
+        type: integer
+    type: object
   request.RegisterRequest:
     properties:
       birthday:
@@ -1722,6 +1727,169 @@ paths:
       summary: Get system stats
       tags:
       - revenue_admin
+  /systems/all_cache:
+    post:
+      consumes:
+      - application/json
+      description: When admin need to clear all system cache
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system cache clear
+      tags:
+      - system_cache
+  /systems/check_expiry_of_advertisement:
+    post:
+      consumes:
+      - application/json
+      description: System check and delete expiry advertisement from new feed
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system push check expiry of advertisement
+      tags:
+      - system_post
+  /systems/check_expiry_of_feature_post:
+    post:
+      consumes:
+      - application/json
+      description: System check and delete expiry feature post from new feed
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system push check expiry of feature post
+      tags:
+      - system_post
+  /systems/comment_cache:
+    post:
+      consumes:
+      - application/json
+      description: When admin need to clear all comment system cache
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system comment cache clear
+      tags:
+      - system_cache
+  /systems/delay_post_created_at/{post_id}:
+    post:
+      consumes:
+      - application/json
+      description: system hack to update created_at of post delay to 7 days ago
+      parameters:
+      - description: PostId
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system update created_at of post
+      tags:
+      - system_post
+  /systems/expired_advertise/{post_id}:
+    post:
+      consumes:
+      - application/json
+      description: system hack to expired 1 of advertise by post id
+      parameters:
+      - description: PostId
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system expired advertise by post id
+      tags:
+      - system_post
+  /systems/post_cache:
+    post:
+      consumes:
+      - application/json
+      description: When admin need to clear all post system cache
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system post cache clear
+      tags:
+      - system_cache
+  /systems/push_advertise_to_new_feed:
+    post:
+      consumes:
+      - application/json
+      description: System push advertisement to new feed by numUsers
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.NumUsers'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system push advertise to new feed
+      tags:
+      - system_post
+  /systems/push_feature_post_to_new_feed:
+    post:
+      consumes:
+      - application/json
+      description: System push feature post to new feed by numUsers
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.NumUsers'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system push feature post to new feed
+      tags:
+      - system_post
+  /systems/update_post_and_statistics/{post_id}:
+    post:
+      consumes:
+      - application/json
+      description: system hack to update immediately like, comment, statistic of post
+        to viral
+      parameters:
+      - description: PostId
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: system update like, comment, statistics count
+      tags:
+      - system_post
   /users/:
     get:
       consumes:

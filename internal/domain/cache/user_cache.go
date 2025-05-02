@@ -14,6 +14,7 @@ type (
 		SetOnline(ctx context.Context, userId uuid.UUID)
 		SetOffline(ctx context.Context, userId uuid.UUID)
 		IsOnline(ctx context.Context, userId uuid.UUID) bool
+		ClearAllCaches(ctx context.Context) error
 	}
 	IUserAuthCache interface {
 		SetOtp(ctx context.Context, userKey, otp string, ttl time.Duration) error

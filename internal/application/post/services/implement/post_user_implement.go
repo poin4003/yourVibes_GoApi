@@ -788,3 +788,12 @@ func (s *sPostUser) CheckPostOwner(
 		IsOwner: isOwner,
 	}, nil
 }
+
+func (s *sPostUser) ClearAllPostCaches(
+	ctx context.Context,
+) error {
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		return err
+	}
+	return nil
+}

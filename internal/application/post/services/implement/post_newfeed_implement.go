@@ -185,3 +185,104 @@ func (s *sPostNewFeed) GetNewFeeds(
 		PagingResponse: paging,
 	}, nil
 }
+
+func (s *sPostNewFeed) UpdatePostAndStatistics(
+	ctx context.Context,
+	postId uuid.UUID,
+) error {
+	if err := s.postRepo.UpdatePostAndStatistics(ctx, postId,
+		10, 5, 15, 15, 0,
+	); err != nil {
+		return err
+	}
+
+	s.postCache.DeletePost(ctx, postId)
+
+	return nil
+}
+
+func (s *sPostNewFeed) DelayPostCreatedAt(
+	ctx context.Context,
+	postId uuid.UUID,
+) error {
+	if err := s.postRepo.DelayPostCreatedAt(ctx, postId, 192*time.Hour); err != nil {
+		return err
+	}
+
+	s.postCache.DeletePost(ctx, postId)
+
+	return nil
+}
+
+func (s *sPostNewFeed) ExpireAdvertiseByPostId(
+	ctx context.Context,
+	postId uuid.UUID,
+) error {
+	if err := s.newFeedRepo.ExpireAdvertiseByPostID(ctx, postId); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		global.Logger.Error("Failed to delete all post cache", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *sPostNewFeed) PushAdvertisementToNewFeed(
+	ctx context.Context,
+	numUsers int,
+) error {
+	if err := s.newFeedRepo.CreateManyWithRandomUser(ctx, numUsers); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		global.Logger.Error("Failed to delete all post cache", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *sPostNewFeed) CheckExpiryOfAdvertisement(
+	ctx context.Context,
+) error {
+	if err := s.newFeedRepo.DeleteExpiredAdvertiseFromNewFeeds(ctx); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		global.Logger.Error("Failed to delete all post cache", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *sPostNewFeed) PushFeaturePostToNewFeed(
+	ctx context.Context,
+	numUsers int,
+) error {
+	if err := s.newFeedRepo.CreateManyFeaturedPosts(ctx, numUsers); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		global.Logger.Error("Error when deleting all post cache", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *sPostNewFeed) CheckExpiryOfFeaturePost(
+	ctx context.Context,
+) error {
+	if err := s.newFeedRepo.DeleteExpiredAdvertiseFromNewFeeds(ctx); err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	if err := s.postCache.DeleteAllPostCache(ctx); err != nil {
+		global.Logger.Error("Error when deleting all post cache", zap.Error(err))
+	}
+
+	return nil
+}

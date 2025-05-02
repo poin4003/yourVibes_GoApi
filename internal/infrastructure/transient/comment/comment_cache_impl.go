@@ -220,3 +220,32 @@ func (t *tComment) DeleteAllUserComments(ctx context.Context, userID uuid.UUID) 
 		global.Logger.Error("Failed to delete user comments from redis", zap.String("user_id", userID.String()), zap.Error(err))
 	}
 }
+
+func (t *tComment) DeleteAllCommentCache(ctx context.Context) error {
+	patterns := []string{
+		"comment:*",
+		"post_comment:*",
+		"personal_post:*",
+		"comment_ids_by_user:*",
+	}
+
+	for _, pattern := range patterns {
+		iter := t.client.Scan(ctx, 0, pattern, 0).Iterator()
+		var keysToDelete []string
+
+		for iter.Next(ctx) {
+			keysToDelete = append(keysToDelete, iter.Val())
+		}
+
+		if err := iter.Err(); err != nil {
+			return response.NewServerFailedError(err.Error())
+		}
+
+		if len(keysToDelete) > 0 {
+			if err := t.client.Del(ctx, keysToDelete...).Err(); err != nil {
+				return response.NewServerFailedError(err.Error())
+			}
+		}
+	}
+	return nil
+}

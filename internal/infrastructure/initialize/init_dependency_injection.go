@@ -72,6 +72,7 @@ import (
 	adminAuthControllerImpl "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/auth/admin_auth/controller/impl"
 	adminReportControllerImpl "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/report/report_admin/controller/impl"
 	adminRevenueControllerImpl "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/revenue/revenue_admin/controller/impl"
+	adminSystemControllerImpl "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/rest/system/system_admin/controller/impl"
 
 	adminRouter "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/routers/admin"
 	userRouter "github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/routers/user"
@@ -179,6 +180,8 @@ func InitDependencyInjection(
 	adminControllerInit := adminControllerImpl.NewAdminController(adminInfoServiceInit)
 	superAdminControllerInit := superAdminControllerImpl.NewSuperAdminController(superAdminServiceInit, adminAuthServiceInit)
 	adminAdvertiseControllerInit := adminAdvertiseControllerImpl.NewAdvertiseAdminController(advertiseServiceInit)
+	adminSystemCacheControllerInit := adminSystemControllerImpl.NewSystemAdminCacheController(userInfoServiceInit, postUserServiceInit, commentUserServiceInit)
+	adminSystemPostControllerInit := adminSystemControllerImpl.NewSystemAdminPostController(userNewFeedServiceInit)
 
 	// Init router
 	userRouterInit := userRouter.NewUserRouter(userControllerInit, userFriendControllerInit, userAuthControllerInit, userAuthProtectMiddleware)
@@ -194,6 +197,7 @@ func InitDependencyInjection(
 	adminReportRouterInit := adminRouter.NewAdminReportRouter(adminReportControllerInit, adminAuthProtectMiddleware)
 	adminRouterInit := adminRouter.NewAdminRouter(adminAuthControllerInit, adminControllerInit, superAdminControllerInit, adminAuthProtectMiddleware)
 	adminAdvertiesRouterInit := adminRouter.NewAdvertiseAdminRouter(adminAdvertiseControllerInit, adminAuthProtectMiddleware)
+	adminSystemRouterInit := adminRouter.NewSystemRouter(adminSystemCacheControllerInit, adminSystemPostControllerInit, adminAuthProtectMiddleware)
 
 	// Init router group
 	userRouterGroup := userRouter.NewUserRouterGroup(
@@ -212,6 +216,7 @@ func InitDependencyInjection(
 		*adminAdvertiesRouterInit,
 		*adminRevenueRouterInit,
 		*adminReportRouterInit,
+		*adminSystemRouterInit,
 	)
 
 	routerGroup := routers.NewRouterGroup(*userRouterGroup, *adminRouterGroup)
@@ -223,9 +228,10 @@ func InitDependencyInjection(
 	consumer.InitPostModerationConsumer(postUserServiceInit, rabbitmqConnection)
 
 	// Init cronjob
-	advertiseCronjob.NewCheckExpiryCronJob(postRepo, newFeedRepo)
-	advertiseCronjob.NewPushToNewFeedCronJob(newFeedRepo)
-	postCronjob.NewPushFeaturePostToNewFeedCronJob(newFeedRepo)
+	advertiseCronjob.NewCheckExpiryCronJob(postRepo, newFeedRepo, postCache)
+	advertiseCronjob.NewPushToNewFeedCronJob(newFeedRepo, postCache)
+	postCronjob.NewPushFeaturePostToNewFeedCronJob(newFeedRepo, postCache)
+	postCronjob.NewCheckExpiryFeaturePostCronJob(newFeedRepo, postCache)
 
 	return routerGroup
 }

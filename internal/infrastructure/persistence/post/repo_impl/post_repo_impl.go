@@ -539,3 +539,88 @@ func (r *rPost) GetTotalPostCountByUserId(
 
 	return total, nil
 }
+
+func (r *rPost) UpdatePostAndStatistics(
+	ctx context.Context,
+	postID uuid.UUID,
+	likeDelta, commentDelta, clicksDelta, impressionDelta, reachDelta int,
+) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.Post{}).
+			Where("id = ? AND deleted_at IS NULL", postID).
+			Updates(map[string]interface{}{
+				"like_count":    gorm.Expr("like_count + ?", likeDelta),
+				"comment_count": gorm.Expr("comment_count + ?", commentDelta),
+				"updated_at":    time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		var exists bool
+		err := tx.Raw(`
+			SELECT EXISTS (
+				SELECT 1 FROM statistics
+				WHERE post_id = ? 
+				  AND created_at >= NOW() - INTERVAL '1 day'
+				  AND deleted_at IS NULL
+			)`, postID).Scan(&exists).Error
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			newStatistic := &models.Statistics{
+				ID:         uuid.New(),
+				PostId:     postID,
+				Reach:      0,
+				Clicks:     0,
+				Impression: 0,
+				Status:     true,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
+			}
+			if err = tx.Create(newStatistic).Error; err != nil {
+				return err
+			}
+		}
+
+		if err = tx.Exec(`
+			UPDATE statistics
+			SET
+				clicks = clicks + ?,
+				impression = impression + ?,
+				reach = reach + ?,
+				updated_at = NOW()
+			WHERE post_id = ?
+			  AND created_at = (
+				  SELECT MAX(created_at)
+				  FROM statistics
+				  WHERE post_id = ?
+				    AND deleted_at IS NULL
+			  )
+			  AND deleted_at IS NULL
+		`, clicksDelta, impressionDelta, reachDelta, postID, postID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *rPost) DelayPostCreatedAt(
+	ctx context.Context,
+	postID uuid.UUID,
+	delay time.Duration,
+) error {
+	intervalStr := fmt.Sprintf("'%d seconds'", int(delay.Seconds()))
+
+	expr := fmt.Sprintf("NOW() - INTERVAL %s", intervalStr)
+
+	return r.db.WithContext(ctx).
+		Model(&models.Post{}).
+		Where("id = ? AND deleted_at IS NULL", postID).
+		Updates(map[string]interface{}{
+			"created_at": gorm.Expr(expr),
+			"updated_at": time.Now(),
+		}).Error
+}

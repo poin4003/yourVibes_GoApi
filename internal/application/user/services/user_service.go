@@ -26,6 +26,7 @@ type (
 		UpdateUser(ctx context.Context, command *command.UpdateUserCommand) (result *command.UpdateUserCommandResult, err error)
 		SetUserOnline(ctx context.Context, userId uuid.UUID)
 		SetUserOffline(ctx context.Context, userId uuid.UUID)
+		DeleteAllCache(ctx context.Context) error
 	}
 	IUserFriend interface {
 		SendAddFriendRequest(ctx context.Context, command *command.SendAddFriendRequestCommand) (err error)

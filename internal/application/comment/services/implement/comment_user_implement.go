@@ -296,3 +296,12 @@ func (s *sCommentUser) GetManyComments(
 		PagingResponse: paging,
 	}, nil
 }
+
+func (s *sCommentUser) ClearAllCommentCaches(
+	ctx context.Context,
+) error {
+	if err := s.commentCache.DeleteAllCommentCache(ctx); err != nil {
+		return err
+	}
+	return nil
+}

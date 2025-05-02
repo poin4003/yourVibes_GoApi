@@ -20,6 +20,7 @@ type Post struct {
 	Privacy         consts.PrivacyLevel    `gorm:"type:varchar(20);default:'public';index:idx_posts_privacy"`
 	Location        string                 `gorm:"type:varchar(255);default:null"`
 	IsAdvertisement consts.AdvertiseStatus `gorm:"type:smallint;default:0;index:idx_posts_is_advertisement"`
+	IsFeaturedPost  bool                   `gorm:"type:boolean;default:false"`
 	Status          bool                   `gorm:"type:boolean;default:false;index:idx_posts_status_user_id,priority:1"`
 	CreatedAt       time.Time              `gorm:"autoCreateTime;index:idx_posts_created_at"`
 	UpdatedAt       time.Time              `gorm:"autoUpdateTime"`

@@ -235,7 +235,7 @@ func (r *rNewFeed) CreateManyWithRandomUser(
         FROM reach_counts rc
         WHERE statistics.post_id = rc.post_id;
     `
-	now := time.Now()
+	now := time.Now().Truncate(24 * time.Hour)
 
 	result := tx.Exec(query, now, now, numUsers, now)
 	if result.Error != nil {
@@ -296,62 +296,69 @@ func (r *rNewFeed) CreateManyFeaturedPosts(
 	averageTimeToPush := now.AddDate(0, 0, -7)
 
 	query := `
-        WITH 
-            latest_statistics AS (
-                SELECT DISTINCT ON (post_id) post_id, clicks, impression
-                FROM statistics
-                WHERE deleted_at IS NULL
-                ORDER BY post_id, created_at DESC
-            ),
-            featured_posts AS (
-                SELECT p.id AS post_id
-                FROM posts p
-                JOIN latest_statistics ls ON ls.post_id = p.id
-                WHERE p.like_count >= ?
-                  AND p.comment_count >= ?
-                  AND ls.clicks >= ?
-                  AND ls.impression >= ?
-                  AND p.privacy = 'public'
-                  AND p.is_advertisement = 0
-                  AND p.status = true
+       	WITH
+			latest_statistics AS (
+				SELECT DISTINCT ON (post_id) post_id, clicks, impression
+				FROM statistics
+				WHERE deleted_at IS NULL
+				ORDER BY post_id, created_at DESC
+			),
+			featured_posts AS (
+				SELECT p.id AS post_id
+				FROM posts p
+				JOIN latest_statistics ls ON ls.post_id = p.id
+				WHERE p.like_count >= ?
+				  AND p.comment_count >= ?
+				  AND ls.clicks >= ?
+				  AND ls.impression >= ?
+				  AND p.privacy = 'public'
+				  AND p.is_advertisement = 0
+				  AND p.status = true
 				  AND p.created_at >= ?
 				  AND p.created_at <= ?
-                  AND p.deleted_at IS NULL
-            ),
-            inserted AS (
-                INSERT INTO new_feeds (user_id, post_id)
-                SELECT u.id, fp.post_id
-                FROM users u
-                CROSS JOIN featured_posts fp
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM new_feeds nf
-                    WHERE nf.user_id = u.id
-                      AND nf.post_id = fp.post_id
-                )
-                ORDER BY RANDOM()
-                LIMIT ?
-                RETURNING post_id
-            ),
-            reach_counts AS (
-                SELECT post_id, COUNT(*) as reach_count
-                FROM inserted
-                GROUP BY post_id
-            )
-        UPDATE statistics
-        SET reach = statistics.reach + rc.reach_count,
-            updated_at = ?
-        FROM reach_counts rc
-        WHERE statistics.post_id = rc.post_id
-          AND statistics.created_at = (
-              SELECT MAX(created_at)
-              FROM statistics s
-              WHERE s.post_id = rc.post_id
-                AND s.deleted_at IS NULL
-          );
+				  AND p.deleted_at IS NULL
+			),
+			inserted AS (
+				INSERT INTO new_feeds (user_id, post_id)
+				SELECT u.id, fp.post_id
+				FROM users u
+				CROSS JOIN featured_posts fp
+				WHERE NOT EXISTS (
+					SELECT 1
+					FROM new_feeds nf
+					WHERE nf.user_id = u.id
+					  AND nf.post_id = fp.post_id
+				)
+				ORDER BY RANDOM()
+				LIMIT ?
+				RETURNING post_id
+			),
+			reach_counts AS (
+				SELECT post_id, COUNT(*) as reach_count
+				FROM inserted
+				GROUP BY post_id
+			),
+			update_stats AS (
+				UPDATE statistics
+				SET reach = statistics.reach + rc.reach_count,
+					updated_at = ?
+				FROM reach_counts rc
+				WHERE statistics.post_id = rc.post_id
+				  AND statistics.created_at = (
+					  SELECT MAX(created_at)
+					  FROM statistics s
+					  WHERE s.post_id = rc.post_id
+						AND s.deleted_at IS NULL
+				  )
+				RETURNING rc.post_id
+			)
+		UPDATE posts
+		SET is_featured_post = true,
+			updated_at = ?
+		WHERE id IN (SELECT post_id FROM inserted);
     `
 
-	result := tx.Exec(query, 3, 5, 10, 10, averageTimeToPush, now, numUsers, now)
+	result := tx.Exec(query, 3, 5, 10, 10, averageTimeToPush, now, numUsers, now, now)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -359,4 +366,53 @@ func (r *rNewFeed) CreateManyFeaturedPosts(
 	global.Logger.Info("Pushed featured posts to newfeed", zap.Int("num_users", numUsers), zap.Int64("rows_affected", result.RowsAffected))
 
 	return nil
+}
+
+func (r *rNewFeed) DeleteExpiredFeaturedPostsFromNewFeeds(ctx context.Context) error {
+	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
+
+	query := `
+		WITH expired_posts AS (
+			SELECT id
+			FROM posts
+			WHERE is_featured_post = true
+				AND created_at < ?
+				AND deleted_at IS NULL
+		),
+		deleted_new_feeds AS (
+			DELETE FROM new_feeds
+			WHERE post_id IN (SELECT id FROM expired_posts)
+			RETURNING post_id
+		)
+		UPDATE posts
+		SET is_featured_post = false
+		WHERE id IN (SELECT post_id FROM deleted_new_feeds)
+	`
+
+	if err := r.db.WithContext(ctx).Exec(query, sevenDaysAgo).Error; err != nil {
+		return response.NewServerFailedError(err.Error())
+	}
+
+	return nil
+}
+
+func (r *rNewFeed) ExpireAdvertiseByPostID(ctx context.Context, postID uuid.UUID) error {
+	today := time.Now().Truncate(24 * time.Hour)
+	yesterday := today.AddDate(0, 0, -1)
+
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.Advertise{}).
+			Where("post_id = ?", postID).
+			Update("end_date", yesterday).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&models.Post{}).
+			Where("id = ?", postID).
+			Update("is_advertisement", 2).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
