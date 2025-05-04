@@ -80,6 +80,14 @@ func (r *rMessage) CreateOne(
 	return err
 }
 
+func (r *rMessage) CreateMany(ctx context.Context, messages []*entities.Message) error {
+	messageModels := make([]*models.Message, 0, len(messages))
+	for _, m := range messages {
+		messageModels = append(messageModels, mapper.ToMessageModel(m))
+	}
+	return r.db.WithContext(ctx).Create(&messageModels).Error
+}
+
 func (r *rMessage) GetMessagesByConversationId(
 	ctx context.Context,
 	query *query.GetMessagesByConversationIdQuery,

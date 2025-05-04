@@ -226,18 +226,37 @@ func (r *rConversationDetail) UpdateOneStatus(
 func (r *rConversationDetail) CreateMany(
 	ctx context.Context,
 	entities []*conversationEntity.ConversationDetail,
-) error {
+) ([]*conversationEntity.ConversationDetail, error) {
 	var conversationDetails []*models.ConversationDetail
+	var userIds []uuid.UUID
+	var conversationIds []uuid.UUID
+
 	for _, entity := range entities {
 		conversationDetails = append(conversationDetails, mapper.ToConversationDetailModel(entity))
+		userIds = append(userIds, entity.UserId)
+		conversationIds = append(conversationIds, entity.ConversationId)
 	}
 
-	res := r.db.WithContext(ctx).Create(conversationDetails)
-	if res.Error != nil {
-		return response.NewServerFailedError(res.Error.Error())
+	if err := r.db.WithContext(ctx).Create(&conversationDetails).Error; err != nil {
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
-	return nil
+	var createdModels []models.ConversationDetail
+	if err := r.db.WithContext(ctx).
+		Model(&models.ConversationDetail{}).
+		Where("user_id IN ? AND conversation_id IN ?", userIds, conversationIds).
+		Preload("User").
+		Preload("Conversation").
+		Find(&createdModels).Error; err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+
+	var result []*conversationEntity.ConversationDetail
+	for _, model := range createdModels {
+		result = append(result, mapper.FromConversationDetailModel(&model))
+	}
+
+	return result, nil
 }
 
 func (r *rConversationDetail) TransferOwnerRole(

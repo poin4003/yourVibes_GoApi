@@ -28,6 +28,18 @@ migrate:
 swag:
 	swag init -g ./cmd/server/main.go -o ./cmd/swag/docs
 
+# gRPC code generation
+PROTO_DIR := ./cmd/proto
+OUT_DIR := ./internal/infrastructure/pkg/grpc
+
+gen-grpc:
+	@echo Generating gRPC code for $(FILE).proto...
+	protoc -I=$(PROTO_DIR) \
+		--go_out=$(OUT_DIR) \
+		--go-grpc_out=$(OUT_DIR) \
+		$(PROTO_DIR)/$(FILE).proto
+
+
 docker_build:
 	docker-compose up -d --build
 
@@ -37,4 +49,4 @@ docker_stop:
 docker_up:
 	docker-compose up -d
 
-.PHONY: dev
+.PHONY: dev prod cloud migrate swag gen-grpc docker_build docker_stop docker_up

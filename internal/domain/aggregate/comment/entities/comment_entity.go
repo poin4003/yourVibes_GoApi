@@ -45,13 +45,14 @@ func (cu *CommentUpdate) ValidateCommentUpdate() error {
 }
 
 func NewComment(
+	commentId uuid.UUID,
 	postId uuid.UUID,
 	userId uuid.UUID,
 	parentId *uuid.UUID,
 	content string,
 ) (*Comment, error) {
 	comment := &Comment{
-		ID:              uuid.New(),
+		ID:              commentId,
 		PostId:          postId,
 		UserId:          userId,
 		ParentId:        parentId,

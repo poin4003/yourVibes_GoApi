@@ -12,6 +12,7 @@ type Config struct {
 	GoogleSetting   GoogleSetting          `mapstructure:"google"`
 	RabbitMQSetting RabbitMQSetting        `mapstructure:"rabbitmq"`
 	ModerateService ModerateServiceSetting `mapstructure:"moderate_service"`
+	GrpcServer      GrpcServer             `mapstructure:"grpc_server"`
 }
 
 type ServerSetting struct {
@@ -93,4 +94,9 @@ type RabbitMQSetting struct {
 
 type ModerateServiceSetting struct {
 	HealthURL string `mapstructure:"health_url"`
+}
+
+type GrpcServer struct {
+	Port int    `mapstructure:"port"`
+	Host string `mapstructure:"host"`
 }

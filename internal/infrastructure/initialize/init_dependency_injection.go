@@ -11,6 +11,7 @@ import (
 	reportProducer "github.com/poin4003/yourVibes_GoApi/internal/application/report/producer"
 	statisticConsumer "github.com/poin4003/yourVibes_GoApi/internal/application/statistic/consumer"
 	userProducer "github.com/poin4003/yourVibes_GoApi/internal/application/user/producer"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/grpc/comment_pb"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/rabbitmq"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/socket_hub"
 	adminCacheImpl "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/transient/admin"
@@ -20,6 +21,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/middlewares"
 	"github.com/poin4003/yourVibes_GoApi/internal/interfaces/api/routers"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
 	"gorm.io/gorm"
 
 	commentServiceImpl "github.com/poin4003/yourVibes_GoApi/internal/application/comment/services/implement"
@@ -87,6 +89,7 @@ func InitDependencyInjection(
 	redis *redis.Client,
 	notificationSocketHub *socket_hub.NotificationSocketHub,
 	messageSocketHub *socket_hub.MessageSocketHub,
+	grpcClient *grpc.ClientConn,
 ) *routers.RouterGroup {
 	// 1. Initialize Repository
 	userRepo := userRepoImpl.NewUserRepositoryImplement(db)
@@ -124,6 +127,9 @@ func InitDependencyInjection(
 	commentNotificationPublisher := commentProducer.NewNotificationPublisher(rabbitmqConnection)
 	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
+	// Init grpc
+	commentCensorGrpcClient := comment_pb.NewCommentCensorServiceClient(grpcClient)
+
 	// Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, newFeedRepo, userAuthCache)
 	userFriendServiceInit := userServiceImpl.NewUserFriendImplement(userRepo, friendRequestRepo, friendRepo, userCache, userNotificationPublisher)
@@ -132,7 +138,7 @@ func InitDependencyInjection(
 	postUserServiceInit := postServiceImpl.NewPostUserImplement(userRepo, friendRepo, newFeedRepo, postRepo, mediaRepo, postLikeRepo, advertiseRepo, postCache, commentCache, postEventPublisher)
 	postLikeServiceInit := postServiceImpl.NewPostLikeImplement(userRepo, postRepo, postLikeRepo, postCache, postEventPublisher)
 	postShareServiceInit := postServiceImpl.NewPostShareImplement(userRepo, postRepo, mediaRepo, newFeedRepo, friendRepo, postCache, postEventPublisher)
-	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentCache, postCache, commentNotificationPublisher)
+	commentUserServiceInit := commentServiceImpl.NewCommentUserImplement(commentRepo, userRepo, postRepo, likeUserCommentRepo, commentCache, postCache, commentNotificationPublisher, commentCensorGrpcClient)
 	likeCommentServiceInit := commentServiceImpl.NewCommentLikeImplement(userRepo, commentRepo, likeUserCommentRepo, commentCache, commentNotificationPublisher)
 	advertiseServiceInit := advertiseServiceImpl.NewAdvertiseImplement(advertiseRepo, billRepo, voucherRepo, postCache)
 	billServiceInit := advertiseServiceImpl.NewBillImplement(advertiseRepo, billRepo, postRepo, notificationRepo)
@@ -145,7 +151,7 @@ func InitDependencyInjection(
 	conversationServiceInit := messageServiceImpl.NewConversationImplement(conversationRepo, userCache)
 	messageServiceInit := messageServiceImpl.NewMessageImplement(messageRepo, messagePublisher)
 	messageMQServiceInit := messageServiceImpl.NewMessageMQImplement(conversationDetailRepo, messageSocketHub)
-	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo)
+	conversationDetailServiceInit := messageServiceImpl.NewConversationDetailImplement(conversationRepo, messageRepo, conversationDetailRepo, userRepo, messagePublisher)
 	notificationServiceInit := notificationServiceImpl.NewNotification(notificationRepo, notificationSocketHub)
 	notificationUserInit := notificationServiceImpl.NewNotificationUserImplement(userRepo, notificationRepo)
 	statisticServiceInit := statisticServiceImpl.NewStatisticImplement(statisticRepo)

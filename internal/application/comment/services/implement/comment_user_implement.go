@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/grpc/comment_pb"
 	"sync"
 
 	"github.com/google/uuid"
@@ -31,6 +32,7 @@ type sCommentUser struct {
 	commentCache          cache.ICommentCache
 	postCache             cache.IPostCache
 	notificationPublisher *producer.NotificationPublisher
+	commentGrpcClient     comment_pb.CommentCensorServiceClient
 }
 
 func NewCommentUserImplement(
@@ -41,6 +43,7 @@ func NewCommentUserImplement(
 	commentCache cache.ICommentCache,
 	postCache cache.IPostCache,
 	notificationPublisher *producer.NotificationPublisher,
+	commentGrpcClient comment_pb.CommentCensorServiceClient,
 ) *sCommentUser {
 	return &sCommentUser{
 		commentRepo:           commentRepo,
@@ -50,6 +53,7 @@ func NewCommentUserImplement(
 		commentCache:          commentCache,
 		postCache:             postCache,
 		notificationPublisher: notificationPublisher,
+		commentGrpcClient:     commentGrpcClient,
 	}
 }
 
@@ -94,12 +98,26 @@ func (s *sCommentUser) CreateComment(
 		}
 	}
 
+	// 3. Censor content of comment
+	commentId := uuid.New()
+
+	censorGrpcReq := &comment_pb.CommentCensorRequest{
+		CommentId: commentId.String(),
+		Content:   command.Content,
+	}
+	censorGrpcResp, err := s.commentGrpcClient.CheckComment(ctx, censorGrpcReq)
+	if err != nil {
+		return nil, response.NewServerFailedError(err.Error())
+	}
+	censoredContent := censorGrpcResp.CensorContent
+
 	// 4. Create a comment
 	newComment, _ := commentEntity.NewComment(
+		commentId,
 		command.PostId,
 		command.UserId,
 		command.ParentId,
-		command.Content,
+		censoredContent,
 	)
 
 	commentCreated, err := s.commentRepo.CreateOne(ctx, newComment)

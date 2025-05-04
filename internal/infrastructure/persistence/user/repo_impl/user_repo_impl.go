@@ -51,7 +51,7 @@ func (r *rUser) GetById(
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	return mapper.FromUserModel(&userModel), nil

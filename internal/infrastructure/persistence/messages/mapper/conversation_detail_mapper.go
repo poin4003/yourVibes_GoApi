@@ -7,10 +7,11 @@ import (
 
 func ToConversationDetailModel(conversationDetail *entities.ConversationDetail) *models.ConversationDetail {
 	cd := &models.ConversationDetail{
-		UserId:         conversationDetail.UserId,
-		ConversationId: conversationDetail.ConversationId,
-		LastMessStatus: conversationDetail.LastMessStatus,
-		LastMess:       conversationDetail.LastMess,
+		UserId:           conversationDetail.UserId,
+		ConversationId:   conversationDetail.ConversationId,
+		LastMessStatus:   conversationDetail.LastMessStatus,
+		LastMess:         conversationDetail.LastMess,
+		ConversationRole: conversationDetail.ConversationRole,
 	}
 	return cd
 }

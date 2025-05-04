@@ -2,6 +2,8 @@ package implement
 
 import (
 	"context"
+	"github.com/poin4003/yourVibes_GoApi/global"
+	"go.uber.org/zap"
 
 	"github.com/poin4003/yourVibes_GoApi/internal/application/messages/producer"
 
@@ -50,9 +52,11 @@ func (s *sMessage) CreateMessage(
 	command *messageCommand.CreateMessageCommand,
 ) error {
 	// 1. Publish to rabbitmq (push websocket)
-	if err := s.messagePublisher.PublishMessage(ctx, command); err != nil {
-		return response.NewServerFailedError(err.Error())
-	}
+	go func(createMessageCommand *messageCommand.CreateMessageCommand) {
+		if err := s.messagePublisher.PublishMessage(ctx, command); err != nil {
+			global.Logger.Error("Failed to push message to rabbitmq", zap.Error(err))
+		}
+	}(command)
 
 	// 2. Create message in db
 	newMessage, _ := messageEntity.NewMessage(
