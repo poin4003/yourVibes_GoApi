@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func InitGrpcServer() *grpc.ClientConn {
-	connection := fmt.Sprintf("%s:%d", global.Config.GrpcServer.Host, global.Config.GrpcServer.Port)
+func InitCommentGrpcConn() *grpc.ClientConn {
+	connection := fmt.Sprintf("%s:%d", global.Config.CommentCensorGrpcConn.Host, global.Config.CommentCensorGrpcConn.Port)
 	fmt.Printf("Connecting to %s\n", connection)
 	conn, err := grpc.NewClient(connection, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

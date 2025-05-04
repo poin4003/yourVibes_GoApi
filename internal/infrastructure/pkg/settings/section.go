@@ -1,18 +1,18 @@
 package settings
 
 type Config struct {
-	Server          ServerSetting          `mapstructure:"server"`
-	PostgreSql      PostgreSqlSetting      `mapstructure:"postgresql"`
-	Logger          LoggerSetting          `mapstructure:"logger"`
-	Media           MediaSetting           `mapstructure:"media"`
-	Redis           RedisSetting           `mapstructure:"redis"`
-	Authentication  AuthenticationSetting  `mapstructure:"authentication"`
-	MailService     MailServiceSetting     `mapstructure:"mail_service"`
-	MomoSetting     MomoSetting            `mapstructure:"momo"`
-	GoogleSetting   GoogleSetting          `mapstructure:"google"`
-	RabbitMQSetting RabbitMQSetting        `mapstructure:"rabbitmq"`
-	ModerateService ModerateServiceSetting `mapstructure:"moderate_service"`
-	GrpcServer      GrpcServer             `mapstructure:"grpc_server"`
+	Server                ServerSetting          `mapstructure:"server"`
+	PostgreSql            PostgreSqlSetting      `mapstructure:"postgresql"`
+	Logger                LoggerSetting          `mapstructure:"logger"`
+	Media                 MediaSetting           `mapstructure:"media"`
+	Redis                 RedisSetting           `mapstructure:"redis"`
+	Authentication        AuthenticationSetting  `mapstructure:"authentication"`
+	MailService           MailServiceSetting     `mapstructure:"mail_service"`
+	MomoSetting           MomoSetting            `mapstructure:"momo"`
+	GoogleSetting         GoogleSetting          `mapstructure:"google"`
+	RabbitMQSetting       RabbitMQSetting        `mapstructure:"rabbitmq"`
+	ModerateService       ModerateServiceSetting `mapstructure:"moderate_service"`
+	CommentCensorGrpcConn CommentCensorGrpcConn  `mapstructure:"comment_censor_grpc_conn"`
 }
 
 type ServerSetting struct {
@@ -96,7 +96,7 @@ type ModerateServiceSetting struct {
 	HealthURL string `mapstructure:"health_url"`
 }
 
-type GrpcServer struct {
+type CommentCensorGrpcConn struct {
 	Port int    `mapstructure:"port"`
 	Host string `mapstructure:"host"`
 }

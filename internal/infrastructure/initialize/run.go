@@ -15,7 +15,7 @@ func Run() *gin.Engine {
 		InitRedis(),
 		socket_hub.NewNotificationSocketHub(),
 		socket_hub.NewMessageSocketHub(),
-		InitGrpcServer(),
+		InitCommentGrpcConn(),
 	)
 	response.InitCustomCode()
 	InitWatchDog()

@@ -89,7 +89,7 @@ func InitDependencyInjection(
 	redis *redis.Client,
 	notificationSocketHub *socket_hub.NotificationSocketHub,
 	messageSocketHub *socket_hub.MessageSocketHub,
-	grpcClient *grpc.ClientConn,
+	commentCensorGrpcConn *grpc.ClientConn,
 ) *routers.RouterGroup {
 	// 1. Initialize Repository
 	userRepo := userRepoImpl.NewUserRepositoryImplement(db)
@@ -128,7 +128,7 @@ func InitDependencyInjection(
 	messagePublisher := messageProducer.NewMessagePublisher(rabbitmqConnection)
 
 	// Init grpc
-	commentCensorGrpcClient := comment_pb.NewCommentCensorServiceClient(grpcClient)
+	commentCensorGrpcClient := comment_pb.NewCommentCensorServiceClient(commentCensorGrpcConn)
 
 	// Initialize Service
 	userAuthServiceInit := userServiceImpl.NewUserLoginImplement(userRepo, settingRepo, newFeedRepo, userAuthCache)
