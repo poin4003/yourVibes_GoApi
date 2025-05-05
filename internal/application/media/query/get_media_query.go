@@ -1,6 +1,7 @@
 package query
 
 import (
+	"io"
 	"os"
 	"time"
 )
@@ -11,7 +12,8 @@ type MediaQuery struct {
 }
 
 type MediaQueryResult struct {
-	File       *os.File
+	File       io.ReadSeeker
+	RawFile    *os.File
 	ModTime    time.Time
 	Headers    map[string]string
 	StatusCode int
