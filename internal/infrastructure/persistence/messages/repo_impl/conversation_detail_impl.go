@@ -156,7 +156,7 @@ func (r *rConversationDetail) DeleteById(
 		}
 
 		// Check if owner leave conversation
-		if isOwner {
+		if authenticationUserId == userId && isOwner {
 			return response.NewCustomError(
 				response.ErrCantLeaveConversationIfIsOwners,
 				"Owners can't leave conversation",

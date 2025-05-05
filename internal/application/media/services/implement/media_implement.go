@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
 	"io"
@@ -42,16 +43,19 @@ func (s *sMedia) GetMedia(
 	}
 	fileSize := fileInfo.Size()
 
-	// 4. Prepare result
 	result = &mediaQuery.MediaQueryResult{
 		RawFile: file,
 		ModTime: fileInfo.ModTime(),
 		Headers: make(map[string]string),
 	}
 
-	// 5. Handle range header for streaming
 	if query.RangeHeader == "" {
-		query.RangeHeader = "bytes=0-" + strconv.FormatInt(fileSize-1, 10)
+		result.File = file
+		result.StatusCode = http.StatusOK
+		result.Headers["Content-Length"] = strconv.FormatInt(fileSize, 10)
+		result.Headers["Content-Type"] = "video/mp4"
+		result.Headers["Accept-Ranges"] = "bytes"
+		return result, nil
 	}
 
 	start, end, err := media.ParseRange(query.RangeHeader, fileSize)
@@ -60,13 +64,12 @@ func (s *sMedia) GetMedia(
 		return nil, response.NewServerFailedError(err.Error())
 	}
 
+	result.File = io.NewSectionReader(file, start, end-start+1)
+	result.StatusCode = http.StatusPartialContent
 	result.Headers["Accept-Ranges"] = "bytes"
 	result.Headers["Content-Type"] = "video/mp4"
 	result.Headers["Content-Length"] = strconv.FormatInt(end-start+1, 10)
-	result.Headers["Content-Range"] = "bytes " + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10) + "/" + strconv.FormatInt(fileSize, 10)
-	result.StatusCode = http.StatusPartialContent
-
-	result.File = io.NewSectionReader(file, start, end-start+1)
+	result.Headers["Content-Range"] = fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize)
 
 	return result, nil
 }
