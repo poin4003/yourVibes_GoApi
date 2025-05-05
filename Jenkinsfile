@@ -85,6 +85,8 @@ pipeline {
                            docker run -d --name yourvibes_api_server -p 8080:8080 \
                                -e YOURVIBES_SERVER_CONFIG_FILE=prod \
                                -v yourvibes_config:/config \
+                               -v /etc/letsencrypt/live/yourvibes.duckdns.org/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro \
+                               -v /etc/letsencrypt/live/yourvibes.duckdns.org/privkey.pem:/etc/ssl/certs/privkey.pem:ro \
                                -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro \
                                -v yourvibes_goapi_yourvibes_storage:/storages \
                                -v yourvibes_goapi_tmp_volume:/tmp \

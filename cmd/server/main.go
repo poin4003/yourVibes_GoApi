@@ -6,6 +6,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
+	"os"
 )
 
 // @title API Documentation YourVibes backend
@@ -29,13 +30,25 @@ import (
 func main() {
 	r := initialize.Run()
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
-		//ginSwagger.URL("http://localhost:8080/swagger/doc.json"),
 		ginSwagger.DocExpansion("none"),
 		ginSwagger.DefaultModelsExpandDepth(-1),
 	))
-	certFile := "/etc/letsencrypt/live/yourvibes.duckdns.org/fullchain.pem"
-	keyFile := "/etc/letsencrypt/live/yourvibes.duckdns.org/privkey.pem"
-	if err := r.RunTLS(":8080", certFile, keyFile); err != nil {
-		log.Fatalf("Failed to start server with TLS: %v", err)
+
+	configMode := os.Getenv("YOURVIBES_SERVER_CONFIG_FILE")
+	if configMode == "" {
+		configMode = "dev"
+	}
+
+	if configMode == "prod" {
+		certFile := "/etc/ssl/certs/fullchain.pem"
+		keyFile := "/etc/ssl/certs/privkey.pem"
+		log.Printf("Starting server in production mode with TLS on port :8080")
+		if err := r.RunTLS(":8080", certFile, keyFile); err != nil {
+			log.Fatalf("Failed to start server with TLS: %v", err)
+		}
+	} else {
+		if err := r.Run(":8080"); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
 	}
 }
