@@ -38,8 +38,14 @@ func InitRouter(routerGroup routers.RouterGroup) *gin.Engine {
 	MainGroup := r.Group("/v1/2024")
 	{
 		MainGroup.GET("/checkStatus", func(c *gin.Context) {
+			forwardedProto := c.GetHeader("X-Forwarded-Proto")
+			if forwardedProto == "" {
+				forwardedProto = c.Request.Proto
+			}
+
 			c.JSON(200, gin.H{
-				"status": "Ok",
+				"status":   "Ok",
+				"protocol": forwardedProto,
 			})
 		})
 	}

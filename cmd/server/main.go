@@ -5,6 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/initialize"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"log"
 )
 
 // @title API Documentation YourVibes backend
@@ -16,9 +17,9 @@ import (
 // @contact.url https://github.com/poin4003/yourVibes_GoApi
 // @contact.email pchuy4003@gmail.com
 
-// @host yourvibes.duckdns.org:8080
+// @host localhost:8080
 // @BasePath /v1/2024
-// @schema https
+// @schema http
 
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in header
@@ -32,5 +33,9 @@ func main() {
 		ginSwagger.DocExpansion("none"),
 		ginSwagger.DefaultModelsExpandDepth(-1),
 	))
-	r.Run(":8080")
+	certFile := "/etc/letsencrypt/live/yourvibes.duckdns.org/fullchain.pem"
+	keyFile := "/etc/letsencrypt/live/yourvibes.duckdns.org/privkey.pem"
+	if err := r.RunTLS(":8080", certFile, keyFile); err != nil {
+		log.Fatalf("Failed to start server with TLS: %v", err)
+	}
 }
