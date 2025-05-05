@@ -1,11 +1,14 @@
 package media
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/IP"
+	"io"
 	"mime/multipart"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -18,44 +21,56 @@ import (
 
 func SaveMedia(fileHeader *multipart.FileHeader) (string, error) {
 	// 1. Open file from file header
-	file, err := fileHeader.Open()
+	srcFile, err := fileHeader.Open()
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer srcFile.Close()
 
-	// 2. Create uuid for file name
-	uniqueFileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+	// 2. Create unique file name
+	rawFileName := fmt.Sprintf("raw_%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+	processedFileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
 
-	// 3. Define path to save file
 	mediaFolder := global.Config.Media.Folder
 
-	// 4. Ensure the directory exists
 	err = os.MkdirAll(mediaFolder, os.ModePerm)
 	if err != nil {
 		return "", fmt.Errorf("failed to create media directory: %w", err)
 	}
 
-	filePath := filepath.Join(mediaFolder, uniqueFileName)
+	rawPath := filepath.Join(mediaFolder, rawFileName)
+	finalPath := filepath.Join(mediaFolder, processedFileName)
 
-	// 5. Create file in directory
-	outFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0666)
+	// 3. Save raw file temporarily
+	rawOut, err := os.Create(rawPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to create file: %w", err)
+		return "", fmt.Errorf("failed to create raw file: %w", err)
 	}
-	defer outFile.Close()
+	defer rawOut.Close()
 
-	// 6. Copy data into file
-	_, err = outFile.ReadFrom(file)
+	_, err = io.Copy(rawOut, srcFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to write data to file: %w", err)
+		return "", fmt.Errorf("failed to save raw file: %w", err)
 	}
 
-	// 7. Generate the file URL
+	// 4. Run ffmpeg to move moov atom (faststart)
+	cmd := exec.Command("ffmpeg", "-i", rawPath, "-movflags", "+faststart", "-c", "copy", finalPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("ffmpeg error: %v - %s", err, stderr.String())
+	}
+
+	// 5. (Optional) Remove raw file
+	os.Remove(rawPath)
+
+	// 6. Return URL
 	fileUrl := fmt.Sprintf("%s:%d/v1/2024/media/%s",
 		global.Config.Server.ServerEndpoint,
 		global.Config.Server.Port,
-		uniqueFileName)
+		processedFileName)
 
 	return fileUrl, nil
 }
@@ -84,42 +99,48 @@ func GetUrlMedia() string {
 }
 
 func saveMediaWithoutUrl(fileHeader *multipart.FileHeader) (string, error) {
-	// 1. Open file from file header
-	file, err := fileHeader.Open()
+	srcFile, err := fileHeader.Open()
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer srcFile.Close()
 
-	// 2. Create uuid for file name
-	uniqueFileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+	rawFileName := fmt.Sprintf("raw_%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+	finalFileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
 
-	// 3. Define path to save file
 	mediaFolder := global.Config.Media.Folder
 
-	// 4. Ensure the directory exists
 	err = os.MkdirAll(mediaFolder, os.ModePerm)
 	if err != nil {
 		return "", fmt.Errorf("failed to create media directory: %w", err)
 	}
 
-	filePath := filepath.Join(mediaFolder, uniqueFileName)
+	rawPath := filepath.Join(mediaFolder, rawFileName)
+	finalPath := filepath.Join(mediaFolder, finalFileName)
 
-	// 5. Create file in directory
-	outFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0666)
+	rawOut, err := os.Create(rawPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to create file: %w", err)
+		return "", fmt.Errorf("failed to create raw file: %w", err)
 	}
-	defer outFile.Close()
+	defer rawOut.Close()
 
-	// 6. Copy data into file
-	_, err = outFile.ReadFrom(file)
+	_, err = io.Copy(rawOut, srcFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to write data to file: %w", err)
+		return "", fmt.Errorf("failed to save raw file: %w", err)
 	}
 
-	// 7. return filename
-	return uniqueFileName, nil
+	cmd := exec.Command("ffmpeg", "-i", rawPath, "-movflags", "+faststart", "-c", "copy", finalPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("ffmpeg error: %v - %s", err, stderr.String())
+	}
+
+	_ = os.Remove(rawPath)
+
+	return finalFileName, nil
 }
 
 func SaveManyMedia(media []multipart.FileHeader) ([]string, error) {
