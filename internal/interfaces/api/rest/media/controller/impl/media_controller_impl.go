@@ -35,14 +35,9 @@ func (c *cMedia) GetMedia(ctx *gin.Context) {
 		return
 	}
 
-	defer result.RawFile.Close()
+	defer result.File.Close()
 
-	// 3. Set headers and serve content
-	for key, value := range result.Headers {
-		ctx.Header(key, value)
-	}
-	if result.StatusCode != 0 {
-		ctx.Status(result.StatusCode)
-	}
+	ctx.Header("Content-Type", "video/mp4")
+
 	http.ServeContent(ctx.Writer, ctx.Request, fileName, result.ModTime, result.File)
 }

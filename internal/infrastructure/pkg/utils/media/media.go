@@ -1,14 +1,12 @@
 package media
 
 import (
-	"errors"
 	"fmt"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/IP"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -222,37 +220,4 @@ func DeleteMediaByFilename(fileName string) error {
 	}
 
 	return nil
-}
-
-func ParseRange(rangeHeader string, fileSize int64) (start, end int64, err error) {
-	const prefix = "bytes="
-	if !strings.HasPrefix(rangeHeader, prefix) {
-		return 0, 0, errors.New("invalid range format")
-	}
-
-	rangeStr := strings.TrimPrefix(rangeHeader, prefix)
-	rangeParts := strings.Split(rangeStr, "-")
-	if len(rangeParts) != 2 {
-		return 0, 0, errors.New("invalid range format")
-	}
-
-	start, err = strconv.ParseInt(rangeParts[0], 10, 64)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if rangeParts[1] == "" {
-		end = fileSize - 1
-	} else {
-		end, err = strconv.ParseInt(rangeParts[1], 10, 64)
-		if err != nil {
-			return 0, 0, err
-		}
-	}
-
-	if start < 0 || end < start || end >= fileSize {
-		return 0, 0, errors.New("range out of bounds")
-	}
-
-	return start, end, nil
 }
