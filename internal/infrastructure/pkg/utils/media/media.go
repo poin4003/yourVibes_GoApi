@@ -90,7 +90,18 @@ func GetUrlMedia() string {
 		ipv4 = global.Config.Server.ServerEndpoint
 	}
 
-	fileUrl := fmt.Sprintf("http://%s:%d/v1/2024/media/",
+	configMode := os.Getenv("YOURVIBES_SERVER_CONFIG_FILE")
+	if configMode == "" {
+		configMode = "dev"
+	}
+
+	protocol := "http"
+	if configMode == "prod" {
+		protocol = "https"
+	}
+
+	fileUrl := fmt.Sprintf("%s://%s:%d/v1/2024/media/",
+		protocol,
 		ipv4,
 		global.Config.Server.Port,
 	)

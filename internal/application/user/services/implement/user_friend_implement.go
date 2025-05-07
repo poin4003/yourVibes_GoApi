@@ -16,6 +16,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/pointer"
 	"go.uber.org/zap"
+	"sort"
 	"sync"
 )
 
@@ -430,6 +431,10 @@ func (s *sUserFriend) GetFriends(
 	for userResult := range userResultsChan {
 		userResults = append(userResults, userResult)
 	}
+
+	sort.Slice(userResults, func(i, j int) bool {
+		return userResults[i].UserActiveStatus && !userResults[j].UserActiveStatus
+	})
 
 	return &userQuery.FriendQueryResult{
 		Users:          userResults,

@@ -5,6 +5,7 @@ import (
 	"github.com/poin4003/yourVibes_GoApi/internal/domain/cache"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/media"
+	"sort"
 	"sync"
 
 	"github.com/google/uuid"
@@ -99,6 +100,10 @@ func (s *sConversation) GetManyConversation(
 	for conversationResult := range conversationResultsChan {
 		conversationResults = append(conversationResults, conversationResult)
 	}
+
+	sort.Slice(conversationResults, func(i, j int) bool {
+		return conversationResults[i].ActiveStatus && !conversationResults[j].ActiveStatus
+	})
 
 	return &conversationQuery.GetManyConversationQueryResult{
 		Conversation:   conversationResults,
