@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/internal/consts"
 	voucherEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/voucher/entities"
-	response2 "github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
+	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/payment"
 
 	advertiseCommand "github.com/poin4003/yourVibes_GoApi/internal/application/advertise/command"
@@ -48,7 +48,7 @@ func (s *sAdvertise) CreateAdvertise(
 	// 1.1. Check if the post has had any ads before by bill
 	billStatus, err := s.billRepo.CheckExists(ctx, command.PostId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 1.2. If bill has exists
@@ -56,7 +56,7 @@ func (s *sAdvertise) CreateAdvertise(
 		// 1.2.1. Get latest ad
 		latestAds, err := s.advertiseRepo.GetLatestAdsByPostId(ctx, command.PostId)
 		if err != nil {
-			return nil, response2.NewServerFailedError(err.Error())
+			return nil, response.NewServerFailedError(err.Error())
 		}
 
 		// 1.2.2. Check payment status
@@ -64,7 +64,7 @@ func (s *sAdvertise) CreateAdvertise(
 			// 1.2.2.1. Check ads expiration date
 			today := time.Now()
 			if !today.After(latestAds.EndDate) {
-				return nil, response2.NewCustomError(response2.ErrAdsExpired)
+				return nil, response.NewCustomError(response.ErrAdsExpired)
 			}
 		}
 	}
@@ -107,12 +107,12 @@ func (s *sAdvertise) CreateAdvertise(
 		command.EndDate,
 	)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	advertiseCreated, err := s.advertiseRepo.CreateOne(ctx, newAdvertise)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	billEntity, err := advertiseEntity.NewBill(
@@ -121,12 +121,12 @@ func (s *sAdvertise) CreateAdvertise(
 		voucherId,
 	)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	newBill, err := s.billRepo.CreateOne(ctx, billEntity)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 5. Call momo api to handle payment
@@ -140,7 +140,7 @@ func (s *sAdvertise) CreateAdvertise(
 	)
 
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	// 6. Delete post cache
@@ -178,11 +178,11 @@ func (s *sAdvertise) GetAdvertise(
 	// 1. Get advertise detail
 	advertise, err := s.advertiseRepo.GetOne(ctx, query.AdvertiseId)
 	if err != nil {
-		return nil, response2.NewServerFailedError(err.Error())
+		return nil, response.NewServerFailedError(err.Error())
 	}
 
 	if advertise == nil {
-		return nil, response2.NewDataNotFoundError("advertise not found")
+		return nil, response.NewDataNotFoundError("advertise not found")
 	}
 
 	return &advertiseQuery.GetOneAdvertiseResult{
@@ -200,4 +200,24 @@ func (s *sAdvertise) GetAdvertiseWithStatistic(
 	}
 
 	return mapper.NewAdvertiseDetailAndStatisticResult(advertise), nil
+}
+
+func (s *sAdvertise) GetShortAdvertiseByUserId(
+	ctx context.Context,
+	query *advertiseQuery.GetManyAdvertiseByUserId,
+) (result *advertiseQuery.GetManyAdvertiseResultsByUserId, err error) {
+	advertiseEntities, paging, err := s.advertiseRepo.GetAdvertiseByUserId(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var advertiseResults []*common.ShortAdvertiseResult
+	for _, advertise := range advertiseEntities {
+		advertiseResults = append(advertiseResults, mapper.NewShortAdvertiseResult(advertise))
+	}
+
+	return &advertiseQuery.GetManyAdvertiseResultsByUserId{
+		Advertises:     advertiseResults,
+		PagingResponse: paging,
+	}, nil
 }

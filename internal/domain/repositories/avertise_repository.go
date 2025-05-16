@@ -22,6 +22,7 @@ type (
 		DeleteMany(ctx context.Context, condition map[string]interface{}) error
 		GetLatestAdsByPostId(ctx context.Context, postId uuid.UUID) (*entities.Advertise, error)
 		CheckExists(ctx context.Context, postId uuid.UUID) (bool, error)
+		GetAdvertiseByUserId(ctx context.Context, query *query.GetManyAdvertiseByUserId) ([]*entities.ShortAdvertise, *response.PagingResponse, error)
 	}
 	IBillRepository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*entities.Bill, error)

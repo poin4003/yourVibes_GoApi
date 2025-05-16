@@ -26,11 +26,22 @@ type GetManyAdvertiseQuery struct {
 	Page         int
 }
 
+type GetManyAdvertiseByUserId struct {
+	UserId uuid.UUID
+	Limit  int
+	Page   int
+}
+
 type GetOneAdvertiseResult struct {
 	Advertise *common.AdvertiseDetailResult
 }
 
 type GetManyAdvertiseResults struct {
 	Advertises     []*common.AdvertiseWithBillResult
+	PagingResponse *response.PagingResponse
+}
+
+type GetManyAdvertiseResultsByUserId struct {
+	Advertises     []*common.ShortAdvertiseResult
 	PagingResponse *response.PagingResponse
 }

@@ -33,6 +33,13 @@ type AdvertiseWithStatisticDto struct {
 	Statistics      []*StatisticDto          `json:"statistics"`
 }
 
+type ShortAdvertiseDto struct {
+	Post      ShortPostForAdvertiseDto `json:"post"`
+	StartDate time.Time                `json:"start_date"`
+	EndDate   time.Time                `json:"end_date"`
+	BillPrice int                      `json:"bill_price"`
+}
+
 func ToAdvertiseWithBillDto(
 	advertiseResult common.AdvertiseWithBillResult,
 ) *AdvertiseWithBillDto {
@@ -79,4 +86,15 @@ func ToAdvertiseWithStatisticDto(
 	}
 
 	return advertiseDto
+}
+
+func ToShortAdvertiseDto(advertiseResult common.ShortAdvertiseResult) *ShortAdvertiseDto {
+	var advertise = &ShortAdvertiseDto{
+		Post:      *ToShortPostForAdvertiseDto(advertiseResult.Post),
+		StartDate: advertiseResult.StartDate,
+		EndDate:   advertiseResult.EndDate,
+		BillPrice: advertiseResult.BillPrice,
+	}
+
+	return advertise
 }

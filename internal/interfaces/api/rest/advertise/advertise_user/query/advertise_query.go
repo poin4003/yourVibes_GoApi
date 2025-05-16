@@ -14,6 +14,11 @@ type AdvertiseQueryObject struct {
 	Page   int    `form:"page,omitempty"`
 }
 
+type AdvertiseByUserIdQueryObject struct {
+	Limit int `form:"limit,omitempty"`
+	Page  int `form:"page,omitempty"`
+}
+
 func ValidateAdvertiseQueryObject(input interface{}) error {
 	query, ok := input.(*AdvertiseQueryObject)
 	if !ok {
@@ -22,6 +27,18 @@ func ValidateAdvertiseQueryObject(input interface{}) error {
 
 	return validation.ValidateStruct(query,
 		validation.Field(&query.PostId, validation.Required),
+		validation.Field(&query.Limit, validation.Min(0)),
+		validation.Field(&query.Page, validation.Min(0)),
+	)
+}
+
+func ValidateAdvertiseByUserIdQueryObject(input interface{}) error {
+	query, ok := input.(*AdvertiseByUserIdQueryObject)
+	if !ok {
+		return fmt.Errorf("validate AdvertiseByUserIdQueryObject failed")
+	}
+
+	return validation.ValidateStruct(query,
 		validation.Field(&query.Limit, validation.Min(0)),
 		validation.Field(&query.Page, validation.Min(0)),
 	)
@@ -43,5 +60,13 @@ func (req *AdvertiseQueryObject) ToGetManyAdvertiseQuery() (*advertiseQuery.GetM
 		IsDescending: true,
 		Page:         req.Page,
 		Limit:        req.Limit,
+	}, nil
+}
+
+func (req *AdvertiseByUserIdQueryObject) ToGetAdvertiseByUserIdQuery(userId uuid.UUID) (*advertiseQuery.GetManyAdvertiseByUserId, error) {
+	return &advertiseQuery.GetManyAdvertiseByUserId{
+		UserId: userId,
+		Page:   req.Page,
+		Limit:  req.Limit,
 	}, nil
 }

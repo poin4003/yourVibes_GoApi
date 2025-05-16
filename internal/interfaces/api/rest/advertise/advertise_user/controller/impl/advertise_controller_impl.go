@@ -207,3 +207,57 @@ func (c *cAdvertise) GetAdvertiseWithStatistic(ctx *gin.Context) {
 
 	pkgResponse.OK(ctx, advertiseDto)
 }
+
+// GetAdvertiseByUserId godoc
+// @Summary Get many short advertise by user id
+// @Description Get many short advertise by user id
+// @Tags advertise_user
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit of ads per page"
+// @Param page query int false "Page number for pagination"
+// @Security ApiKeyAuth
+// @Router /advertise/short_advertise [get]
+func (c *cAdvertise) GetAdvertiseByUserId(ctx *gin.Context) {
+	// 1. Get query
+	queryInput, exists := ctx.Get("validatedQuery")
+	if !exists {
+		ctx.Error(pkgResponse.NewServerFailedError("Missing validated query"))
+		return
+	}
+
+	// 2. Convert to AdvertiseQueryObject
+	advertiseByUserIdQueryObject, ok := queryInput.(*advertiseQuery.AdvertiseByUserIdQueryObject)
+	if !ok {
+		ctx.Error(pkgResponse.NewServerFailedError("Invalid register request type"))
+		return
+	}
+
+	// 3. Get userId from token
+	userIdClaim, err := extensions.GetUserID(ctx)
+	if err != nil {
+		ctx.Error(pkgResponse.NewInvalidTokenError(err.Error()))
+		return
+	}
+
+	// 3. Call service to handle get many
+	getManyAdvertiseQuery, err := advertiseByUserIdQueryObject.ToGetAdvertiseByUserIdQuery(userIdClaim)
+	if err != nil {
+		ctx.Error(pkgResponse.NewServerFailedError(err.Error()))
+		return
+	}
+
+	result, err := c.advertiseServices.GetShortAdvertiseByUserId(ctx, getManyAdvertiseQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 6. Convert to dto
+	var advertiseDtos []*response.ShortAdvertiseDto
+	for _, advertiseResult := range result.Advertises {
+		advertiseDtos = append(advertiseDtos, response.ToShortAdvertiseDto(*advertiseResult))
+	}
+
+	pkgResponse.OK(ctx, advertiseDtos)
+}

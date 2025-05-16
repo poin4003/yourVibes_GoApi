@@ -46,6 +46,21 @@ func FromAdvertiseModel(a *models.Advertise) *entities.Advertise {
 	return advertise
 }
 
+func FromAdvertiseModelToShortAdvertiseEntity(a *models.Advertise) *entities.ShortAdvertise {
+	if a == nil {
+		return nil
+	}
+
+	var advertise = &entities.ShortAdvertise{
+		Post:      FromPostModelToShortPostEntity(&a.Post),
+		StartDate: a.StartDate,
+		EndDate:   a.EndDate,
+		BillPrice: a.Bill.Price,
+	}
+
+	return advertise
+}
+
 func FromAdvertiseModelForAdvertiseDetail(a *models.Advertise) *entities.Advertise {
 	var bill = &entities.Bill{
 		ID:          a.Bill.ID,
