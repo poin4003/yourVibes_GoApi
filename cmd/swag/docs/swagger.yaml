@@ -276,7 +276,7 @@ definitions:
       name:
         type: string
     type: object
-host: localhost:8080
+host: yourvibes.duckdns.org:8080
 info:
   contact:
     email: pchuy4003@gmail.com
