@@ -437,11 +437,13 @@ func (r *rAdvertise) GetAdvertiseByUserId(
 
 	db := r.db.WithContext(ctx).
 		Model(&models.Advertise{}).
+		Select("DISTINCT ON (posts.id) posts.id as post_id, advertises.id, start_date, end_date").
 		Joins("JOIN posts ON posts.id = advertises.post_id").
 		Joins("JOIN users ON users.id = posts.user_id").
 		Joins("LEFT JOIN bills ON bills.advertise_id = advertises.id").
 		Where("posts.user_id = ?", query.UserId).
-		Where("posts.is_advertisement != 0")
+		Where("posts.is_advertisement != 0").
+		Order("posts.id, bills.price DESC")
 
 	if err := db.Count(&total).Error; err != nil {
 		return nil, nil, response.NewServerFailedError(err.Error())
