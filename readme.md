@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/fc6470e9-e762-4791-bbcb-4b5d6d1044ee)![image](https://github.com/user-attachments/assets/303088a9-b022-481a-840b-22eba15e208e)# YourVibes Go API
+# YourVibes Go API
 
 ## Overview
 YourVibes Go API is a backend service built using a **Domain-Driven Design (DDD) Monolithic Structure**, designed to power a social media platform with features like posting, commenting, messaging, and more. It integrates with various services and clients to provide a seamless user experience.
