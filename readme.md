@@ -1,4 +1,4 @@
-# YourVibes Go API
+![image](https://github.com/user-attachments/assets/fc6470e9-e762-4791-bbcb-4b5d6d1044ee)![image](https://github.com/user-attachments/assets/303088a9-b022-481a-840b-22eba15e208e)# YourVibes Go API
 
 ## Overview
 YourVibes Go API is a backend service built using a **Domain-Driven Design (DDD) Monolithic Structure**, designed to power a social media platform with features like posting, commenting, messaging, and more. It integrates with various services and clients to provide a seamless user experience.
@@ -16,6 +16,8 @@ The DDD layers are structured as follows (as depicted in the architecture diagra
 - **Application Layer**: Orchestrates the use cases and coordinates the domain logic with external systems (e.g., APIs, databases).
 - **Interface Layer**: Handles external communication, such as HTTP APIs (using Gin-Gonic) and gRPC endpoints.
 - **Infrastructure Layer**: Manages external dependencies like databases (PostgreSQL), caching (Redis), message queues (RabbitMQ), and external services (AI censor service).
+
+![Domain driven design](https://github.com/poin4003/images/blob/master/yourvibes_ddd_structure.png?raw=true)
 
 ### Purpose of DDD Structure
 - **Separation of Concerns**: Each layer has a distinct responsibility, making the codebase easier to maintain and test.
@@ -42,7 +44,7 @@ The YourVibes ecosystem consists of several components working together to deliv
 
 The ecosystem architecture is illustrated below:
 
-![Ecosystem Architecture](C:\\Users\\pchuy\\Downloads\\YourVibes_architechture_design-Page-1.drawio.png)
+![Ecosystem Architecture](https://github.com/poin4003/images/blob/master/yourvibes_architect_design.png?raw=true)
 
 ---
 
@@ -50,7 +52,7 @@ The ecosystem architecture is illustrated below:
 
 The database schema, stored in PostgreSQL, is designed to support the core functionalities of the platform. Below is the Entity-Relationship Diagram (ERD):
 
-![Database ERD](database-erd.png)
+![Database ERD](https://github.com/poin4003/images/blob/master/yourvibes_database.png?raw=true)
 
 Key tables include:
 - **users**: Stores user information (e.g., name, email, password, role).
