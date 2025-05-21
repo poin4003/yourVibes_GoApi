@@ -222,9 +222,7 @@ For a full list of dependencies, check the `go.mod` file.
    - If Swagger fails due to CORS, update the `@host` to `localhost:8080` and `@schema` to `http` in `main.go`.
 
 ### Makefile Commands
-- `make docker`: Build Docker containers.
-- `make swagger`: Generate Swagger documentation.
-- `make gen-grpc`: Generate gRPC code.
+- read `Makefile` for more information 
 
 ---
 
