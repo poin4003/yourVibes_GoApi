@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/response"
 )
@@ -10,6 +12,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		defer func() {
 			if rec := recover(); rec != nil {
 				// If server panic return 500
+				fmt.Println("Panic đây: ", rec)
 				response.ErrorResponse(ctx, response.ErrServerFailed)
 				ctx.Abort()
 			}
@@ -20,6 +23,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		// If context has a error
 		if len(ctx.Errors) > 0 {
 			lastErr := ctx.Errors.Last()
+			fmt.Println("Error lỗi này r: ", lastErr.Err)
 			if customErr, ok := lastErr.Err.(response.CustomError); ok {
 				response.ErrorResponse(ctx, customErr.Code, customErr.MessageDetail)
 			} else {
