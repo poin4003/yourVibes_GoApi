@@ -2,11 +2,12 @@ package implement
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	notificationEntity "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/notification/entities"
 	postValidator "github.com/poin4003/yourVibes_GoApi/internal/domain/aggregate/post/validator"
 	"github.com/poin4003/yourVibes_GoApi/internal/infrastructure/pkg/utils/truncate"
-	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/poin4003/yourVibes_GoApi/global"
