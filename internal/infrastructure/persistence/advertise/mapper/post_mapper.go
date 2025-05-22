@@ -72,3 +72,48 @@ func FromPostModel(postModel *models.Post) *advetiseEntity.PostForAdvertise {
 		Media:           medias,
 	}
 }
+
+func FromPostModelToShortPostEntity(postModel *models.Post) *advetiseEntity.ShortPostForAdvertise {
+	if postModel == nil {
+		return nil
+	}
+
+	var parentPost *advetiseEntity.ShortPostForAdvertise
+	if postModel.ParentPost != nil {
+		var medias []*advetiseEntity.Media
+		for _, media := range postModel.ParentPost.Media {
+			medias = append(medias, &advetiseEntity.Media{
+				ID:        media.ID,
+				MediaUrl:  media.MediaUrl,
+				PostId:    media.PostId,
+				Status:    media.Status,
+				CreatedAt: media.CreatedAt,
+				UpdatedAt: media.UpdatedAt,
+			})
+		}
+		parentPost = &advetiseEntity.ShortPostForAdvertise{
+			ID:      postModel.ParentPost.ID,
+			Content: postModel.ParentPost.Content,
+			Media:   medias,
+		}
+	}
+
+	var medias []*advetiseEntity.Media
+	for _, media := range postModel.Media {
+		medias = append(medias, &advetiseEntity.Media{
+			ID:        media.ID,
+			MediaUrl:  media.MediaUrl,
+			PostId:    media.PostId,
+			Status:    media.Status,
+			CreatedAt: media.CreatedAt,
+			UpdatedAt: media.UpdatedAt,
+		})
+	}
+
+	return &advetiseEntity.ShortPostForAdvertise{
+		ID:         postModel.ID,
+		ParentPost: parentPost,
+		Content:    postModel.Content,
+		Media:      medias,
+	}
+}

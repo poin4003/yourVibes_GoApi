@@ -7,6 +7,7 @@ type (
 		CreateAdvertise(ctx *gin.Context)
 		GetManyAdvertise(ctx *gin.Context)
 		GetAdvertiseWithStatistic(ctx *gin.Context)
+		GetAdvertiseByUserId(ctx *gin.Context)
 	}
 	IBillController interface {
 		ConfirmPayment(ctx *gin.Context)

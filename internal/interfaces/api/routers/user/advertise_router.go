@@ -51,6 +51,11 @@ func (r *advertiseRouter) InitAdvertiseRouter(Router *gin.RouterGroup) {
 			r.advertiseController.GetManyAdvertise,
 		)
 
+		advertiseRouterPrivate.GET("/short_advertise",
+			helpers.ValidateQuery(&advertiseQuery.AdvertiseByUserIdQueryObject{}, advertiseQuery.ValidateAdvertiseByUserIdQueryObject),
+			r.advertiseController.GetAdvertiseByUserId,
+		)
+
 		advertiseRouterPrivate.GET("/statistic/:advertise_id", r.advertiseController.GetAdvertiseWithStatistic)
 	}
 }

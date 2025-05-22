@@ -26,6 +26,13 @@ type PostForAdvertiseDto struct {
 	Media           []*MediaDto            `json:"media"`
 }
 
+type ShortPostForAdvertiseDto struct {
+	ID         uuid.UUID                 `json:"id"`
+	Content    string                    `json:"content"`
+	Media      []*MediaDto               `json:"media"`
+	ParentPost *ShortPostForAdvertiseDto `json:"parent_post"`
+}
+
 func ToPostForAdvertiseDto(postResult *common.PostForAdvertiseResult) *PostForAdvertiseDto {
 	var parentPost *PostForAdvertiseDto
 
@@ -63,5 +70,27 @@ func ToPostForAdvertiseDto(postResult *common.PostForAdvertiseResult) *PostForAd
 		CreatedAt:       postResult.CreatedAt,
 		UpdatedAt:       postResult.UpdatedAt,
 		Media:           ToMediaDto(postResult.Media),
+	}
+}
+
+func ToShortPostForAdvertiseDto(postResult *common.ShortPostForAdvertiseResult) *ShortPostForAdvertiseDto {
+	if postResult == nil {
+		return nil
+	}
+
+	var parentPost *ShortPostForAdvertiseDto
+	if postResult.ParentPost != nil {
+		parentPost = &ShortPostForAdvertiseDto{
+			ID:      postResult.ParentPost.ID,
+			Content: postResult.ParentPost.Content,
+			Media:   ToMediaDto(postResult.ParentPost.Media),
+		}
+	}
+
+	return &ShortPostForAdvertiseDto{
+		ID:         postResult.ID,
+		ParentPost: parentPost,
+		Content:    postResult.Content,
+		Media:      ToMediaDto(postResult.Media),
 	}
 }

@@ -23,3 +23,10 @@ type PostForAdvertise struct {
 	UpdatedAt       time.Time
 	Media           []*Media
 }
+
+type ShortPostForAdvertise struct {
+	ID         uuid.UUID
+	Content    string
+	Media      []*Media
+	ParentPost *ShortPostForAdvertise
+}

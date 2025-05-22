@@ -200,7 +200,11 @@ func (r *rAdvertise) GetMany(
 	}
 	offset := (page - 1) * limit
 
-	if err := db.Count(&total).
+	if err := db.Count(&total).Error; err != nil {
+		return nil, nil, err
+	}
+
+	if err := db.
 		Offset(offset).
 		Limit(limit).
 		Preload("Bill").
@@ -209,6 +213,12 @@ func (r *rAdvertise) GetMany(
 		}).
 		Preload("Post.User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("users.id, users.email")
+		}).
+		Preload("Post.ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", true)
+		}).
+		Preload("Post.ParentPost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, family_name, name, avatar_url")
 		}).
 		Find(&advertises).
 		Error; err != nil {
@@ -416,4 +426,70 @@ func (r *rAdvertise) getAverageStatistics(
 	}
 
 	return statEntities
+}
+
+func (r *rAdvertise) GetAdvertiseByUserId(
+	ctx context.Context,
+	query *query.GetManyAdvertiseByUserId,
+) ([]*entities.ShortAdvertise, *response.PagingResponse, error) {
+	var advertises []*models.Advertise
+	var total int64
+
+	db := r.db.WithContext(ctx).
+		Model(&models.Advertise{}).
+		Select("DISTINCT ON (posts.id) posts.id as post_id, advertises.id, start_date, end_date").
+		Joins("JOIN posts ON posts.id = advertises.post_id").
+		Joins("JOIN users ON users.id = posts.user_id").
+		Joins("LEFT JOIN bills ON bills.advertise_id = advertises.id").
+		Where("posts.user_id = ?", query.UserId).
+		Where("posts.is_advertisement != 0").
+		Order("posts.id, bills.price DESC")
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	limit := query.Limit
+	page := query.Page
+	if limit <= 0 {
+		limit = 10
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	if err := db.
+		Offset(offset).
+		Limit(limit).
+		Preload("Bill", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, advertise_id, price")
+		}).
+		Preload("Post", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, parent_id, content, status").
+				Where("status = ?", true)
+		}).
+		Preload("Post.Media").
+		Preload("Post.ParentPost", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, content, status").
+				Where("status = ?", true)
+		}).
+		Preload("Post.ParentPost.Media").
+		Find(&advertises).
+		Error; err != nil {
+		return nil, nil, response.NewServerFailedError(err.Error())
+	}
+
+	pagingResponse := &response.PagingResponse{
+		Limit: limit,
+		Page:  page,
+		Total: total,
+	}
+
+	var advertiseEntities []*entities.ShortAdvertise
+	for _, advertise := range advertises {
+		advertiseEntities = append(advertiseEntities, mapper.FromAdvertiseModelToShortAdvertiseEntity(advertise))
+	}
+
+	return advertiseEntities, pagingResponse, nil
 }

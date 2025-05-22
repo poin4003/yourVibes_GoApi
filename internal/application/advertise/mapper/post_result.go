@@ -50,3 +50,48 @@ func NewPostResult(
 		Media:           NewMediaResult(post.Media),
 	}
 }
+
+func NewShortPostResult(post *advertiseEntity.ShortPostForAdvertise) *common.ShortPostForAdvertiseResult {
+	if post == nil {
+		return nil
+	}
+
+	var parentPost *common.ShortPostForAdvertiseResult
+	if post.ParentPost != nil {
+		var medias []*common.MediaResult
+		for _, media := range post.ParentPost.Media {
+			medias = append(medias, &common.MediaResult{
+				ID:        media.ID,
+				MediaUrl:  media.MediaUrl,
+				PostId:    media.PostId,
+				Status:    media.Status,
+				CreatedAt: media.CreatedAt,
+				UpdatedAt: media.UpdatedAt,
+			})
+		}
+		parentPost = &common.ShortPostForAdvertiseResult{
+			ID:      post.ParentPost.ID,
+			Content: post.ParentPost.Content,
+			Media:   medias,
+		}
+	}
+
+	var medias []*common.MediaResult
+	for _, media := range post.Media {
+		medias = append(medias, &common.MediaResult{
+			ID:        media.ID,
+			MediaUrl:  media.MediaUrl,
+			PostId:    media.PostId,
+			Status:    media.Status,
+			CreatedAt: media.CreatedAt,
+			UpdatedAt: media.UpdatedAt,
+		})
+	}
+
+	return &common.ShortPostForAdvertiseResult{
+		ID:         post.ID,
+		ParentPost: parentPost,
+		Content:    post.Content,
+		Media:      medias,
+	}
+}

@@ -146,3 +146,18 @@ func NewAdvertiseDetailAndStatisticResult(
 		Statistics:      statisticResults,
 	}
 }
+
+func NewShortAdvertiseResult(a *entities.ShortAdvertise) *common.ShortAdvertiseResult {
+	if a == nil {
+		return nil
+	}
+
+	var advertise = &common.ShortAdvertiseResult{
+		Post:      NewShortPostResult(a.Post),
+		StartDate: a.StartDate,
+		EndDate:   a.EndDate,
+		BillPrice: a.BillPrice,
+	}
+
+	return advertise
+}

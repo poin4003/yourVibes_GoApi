@@ -276,7 +276,7 @@ definitions:
       name:
         type: string
     type: object
-host: yourvibes.duckdns.org:8080
+host: localhost:8080
 info:
   contact:
     email: pchuy4003@gmail.com
@@ -608,6 +608,28 @@ paths:
       summary: Get a list of advertise
       tags:
       - admin_advertise_report
+  /advertise/short_advertise:
+    get:
+      consumes:
+      - application/json
+      description: Get many short advertise by user id
+      parameters:
+      - description: Limit of ads per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get many short advertise by user id
+      tags:
+      - advertise_user
   /advertise/statistic/{advertise_id}:
     get:
       consumes:

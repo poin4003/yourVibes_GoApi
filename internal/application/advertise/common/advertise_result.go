@@ -40,6 +40,13 @@ type AdvertiseDetailResult struct {
 	Bill         *BillWithoutAdvertiseResult
 }
 
+type ShortAdvertiseResult struct {
+	Post      *ShortPostForAdvertiseResult
+	StartDate time.Time
+	EndDate   time.Time
+	BillPrice int
+}
+
 type AdvertiseForStatisticResult struct {
 	ID              uuid.UUID
 	PostId          uuid.UUID

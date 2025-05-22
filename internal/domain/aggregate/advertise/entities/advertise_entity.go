@@ -18,6 +18,13 @@ type Advertise struct {
 	Bill      *Bill
 }
 
+type ShortAdvertise struct {
+	Post      *ShortPostForAdvertise
+	StartDate time.Time
+	EndDate   time.Time
+	BillPrice int
+}
+
 type AdvertiseForStatistic struct {
 	ID               uuid.UUID
 	PostId           uuid.UUID

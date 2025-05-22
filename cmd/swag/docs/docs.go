@@ -491,6 +491,41 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/advertise/short_advertise": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get many short advertise by user id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "advertise_user"
+                ],
+                "summary": "Get many short advertise by user id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit of ads per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/advertise/statistic/{advertise_id}": {
             "get": {
                 "security": [
@@ -3631,7 +3666,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "yourvibes.duckdns.org:8080",
+	Host:             "localhost:8080",
 	BasePath:         "/v1/2024",
 	Schemes:          []string{},
 	Title:            "API Documentation YourVibes backend",
