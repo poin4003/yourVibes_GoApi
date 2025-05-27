@@ -205,7 +205,7 @@ func (s *sPostNewFeed) DelayPostCreatedAt(
 	ctx context.Context,
 	postId uuid.UUID,
 ) error {
-	if err := s.postRepo.DelayPostCreatedAt(ctx, postId, 192*time.Hour); err != nil {
+	if err := s.postRepo.DelayPostCreatedAt(ctx, postId, 240*time.Hour); err != nil {
 		return err
 	}
 
