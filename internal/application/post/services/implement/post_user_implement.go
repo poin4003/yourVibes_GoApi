@@ -206,7 +206,7 @@ func (s *sPostUser) ApprovePost(
 		userFound.AvatarUrl,
 		userFound.ID,
 		consts.NEW_POST_PERSONAL,
-		command.PostId.String(),
+		newPost.ID.String(),
 		truncate.TruncateContent(newPost.Content, 20),
 	)
 	if err != nil {
