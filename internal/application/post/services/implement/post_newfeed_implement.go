@@ -276,7 +276,7 @@ func (s *sPostNewFeed) PushFeaturePostToNewFeed(
 func (s *sPostNewFeed) CheckExpiryOfFeaturePost(
 	ctx context.Context,
 ) error {
-	if err := s.newFeedRepo.DeleteExpiredAdvertiseFromNewFeeds(ctx); err != nil {
+	if err := s.newFeedRepo.DeleteExpiredFeaturedPostsFromNewFeeds(ctx); err != nil {
 		return response.NewServerFailedError(err.Error())
 	}
 
