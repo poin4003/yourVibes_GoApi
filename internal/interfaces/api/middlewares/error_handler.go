@@ -23,7 +23,6 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		// If context has a error
 		if len(ctx.Errors) > 0 {
 			lastErr := ctx.Errors.Last()
-			fmt.Println("Error lỗi này r: ", lastErr.Err)
 			if customErr, ok := lastErr.Err.(response.CustomError); ok {
 				response.ErrorResponse(ctx, customErr.Code, customErr.MessageDetail)
 			} else {
