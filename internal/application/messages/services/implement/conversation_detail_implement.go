@@ -88,9 +88,17 @@ func (s *sConversationDetail) CreateConversationDetail(
 		return err
 	}
 
+	UserCommand := conversationDetailCommand.UserCommand{
+		ID:         member.UserId.String(),
+		AvatarUrl:  member.User.AvatarUrl,
+		Name:       member.User.Name,
+		FamilyName: member.User.FamilyName,
+	}
+
 	createMessageCommand := &conversationDetailCommand.CreateMessageCommand{
 		ConversationId: command.ConversationId,
 		UserId:         command.UserId,
+		User:           UserCommand,
 		ParentId:       nil,
 		ParentContent:  nil,
 		Content:        fmt.Sprintf("%s %s join the conversation", member.User.FamilyName, member.User.Name),
@@ -154,12 +162,20 @@ func (s *sConversationDetail) DeleteConversationDetailById(
 		return err
 	}
 
+	UserCommand := conversationDetailCommand.UserCommand{
+		ID:         userFound.ID.String(),
+		AvatarUrl:  userFound.AvatarUrl,
+		Name:       userFound.Name,
+		FamilyName: userFound.FamilyName,
+	}
+
 	createMessageCommand := &conversationDetailCommand.CreateMessageCommand{
 		ConversationId: *command.ConversationId,
 		UserId:         *command.UserId,
 		ParentId:       nil,
 		ParentContent:  nil,
-		Content:        fmt.Sprintf("%s %sleft the conversation", userFound.FamilyName, userFound.Name),
+		User:           UserCommand,
+		Content:        fmt.Sprintf("%s %s left the conversation", userFound.FamilyName, userFound.Name),
 		CreatedAt:      time.Now(),
 	}
 	// 3. Publish to rabbitmq (push websocket)
