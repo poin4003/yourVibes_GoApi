@@ -2,6 +2,8 @@ FROM golang:1.23.2-alpine3.20 AS builder
 
 WORKDIR /build
 
+ENV GOPROXY=https://goproxy.cn,direct
+
 ARG BUILD_ENVIRONMENT=prod
 ENV YOURVIBES_SERVER_CONFIG_FILE=$BUILD_ENVIRONMENT
 
