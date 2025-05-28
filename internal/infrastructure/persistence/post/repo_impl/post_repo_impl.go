@@ -384,6 +384,7 @@ func (r *rPost) GetTrendingPost(
 		Where("deleted_at is NULL").
 		Where("is_advertisement = ?", 0).
 		Where("privacy = ?", consts.PUBLIC).
+		Where("created_at >= ? AND created_at <= ?", averageTimeToGet, now).
 		Count(&total).
 		Error; err != nil {
 		return nil, nil, response.NewServerFailedError(err.Error())
