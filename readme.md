@@ -108,7 +108,7 @@ For a full list of dependencies, check the `go.mod` file.
 ### Prerequisites
 - Go (latest version)
 - PostgreSQL, Redis, RabbitMQ
-- YourVibes AI Service (to be documented later)
+- YourVibes AI Service ([yourvibes_ai_service](https://github.com/poin4003/yourvibes_ai_service.git))
 
 ### Steps
 
@@ -201,7 +201,7 @@ For a full list of dependencies, check the `go.mod` file.
 
 5. **Start Services**
    - Start Redis, PostgreSQL, and RabbitMQ.
-   - Start the YourVibes AI Service (documentation pending).
+   - Start the YourVibes AI Service.
 
 6. **Run the Server**
    - For development (HTTP):

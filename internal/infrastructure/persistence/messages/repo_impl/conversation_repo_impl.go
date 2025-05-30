@@ -270,19 +270,16 @@ func (r *rConversation) DeleteById(
 func (r *rConversation) findExistingTwoUserConversation(ctx context.Context, user1, user2 uuid.UUID) (*models.Conversation, error) {
 	var conversation models.Conversation
 
-	// Truy vấn để tìm conversation có chính xác 2 người và chứa cả user1, user2
+	subQuery := r.db.Model(&models.ConversationDetail{}).
+		Select("conversation_id").
+		Where("user_id IN ?", []uuid.UUID{user1, user2}).
+		Group("conversation_id").
+		Having("COUNT(DISTINCT user_id) = 2")
+
 	if err := r.db.WithContext(ctx).
 		Model(&models.Conversation{}).
-		Joins("JOIN conversation_details cd1 ON conversations.id = cd1.conversation_id").
-		Joins("JOIN conversation_details cd2 ON conversations.id = cd2.conversation_id").
-		Where("cd1.user_id = ? AND cd2.user_id = ?", user1, user2).
-		// Đếm số lượng người tham gia trong conversation
-		Where("conversations.id IN (?)",
-			r.db.Model(&models.ConversationDetail{}).
-				Select("conversation_id").
-				Group("conversation_id").
-				Having("COUNT(DISTINCT user_id) = 2"),
-		).
+		Where("id IN (?)", subQuery).
+		Preload("ConversationDetail").
 		First(&conversation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
